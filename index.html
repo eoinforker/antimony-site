@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antimony</title>
+<meta name="description" content="Antimony makes things for people who make things. Our first product is Orbe, the creator's side of every sponsorship deal.">
+<meta property="og:title" content="Antimony">
+<meta property="og:description" content="We make things for people who make things. Makers of Orbe.">
+<meta property="og:image" content="assets/og-image-1200x630.png">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<script>if (location.hash === "#night" || location.hash === "#day") document.documentElement.dataset.theme = location.hash.slice(1);</script>
+<style>
+@font-face { font-family: "Schibsted Grotesk"; src: url("assets/fonts/SchibstedGrotesk-Latin-VF.woff2") format("woff2"); font-weight: 400 900; font-display: swap; }
+@font-face { font-family: "Commit Mono"; src: url("assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 400 600; font-display: swap; }
+:root {
+  --bg: #F3F0E8; --fg: #0B1412; --rule: #DCD8CD; --muted: #6E6B63; --accent: #2448FF; --bar: #0B1412; --barfg: #F3F0E8; --frame: #DCD8CD;
+  --sky: #94E6FF; --ink: #0B1412;
+  --sans: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Commit Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="day"]) { --bg: #0B1412; --fg: #F3F0E8; --rule: #23322F; --muted: #8E9C98; --accent: #94E6FF; --bar: #F3F0E8; --barfg: #0B1412; --frame: rgba(148,230,255,.45); } }
+:root[data-theme="night"] { --bg: #0B1412; --fg: #F3F0E8; --rule: #23322F; --muted: #8E9C98; --accent: #94E6FF; --bar: #F3F0E8; --barfg: #0B1412; --frame: rgba(148,230,255,.45); }
+* { box-sizing: border-box; margin: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+img { display: block; }
+.wrap { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 48px; }
+.label { font: 500 11.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.n { font: 500 12px var(--mono); letter-spacing: .08em; color: var(--accent); }
+.bar { display: inline-block; background: var(--bar); color: var(--barfg); font: 500 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; padding: 5px 10px 4px; }
+
+/* Day and night versions of each image */
+.night { display: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="day"]) .day { display: none; } :root:not([data-theme="day"]) .night { display: block; } }
+:root[data-theme="night"] .day { display: none; } :root[data-theme="night"] .night { display: block; }
+
+/* Hero: full screen, the crystal revealed by light bending through it, drifting very slowly */
+.hero { position: relative; min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; overflow: hidden; }
+.art { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.art img { width: 100%; height: 100%; object-fit: cover; object-position: 72% 50%; animation: drift 48s ease-in-out infinite alternate; transform-origin: 72% 50%; }
+@keyframes drift { from { transform: scale(1) translate3d(0,0,0); } to { transform: scale(1.06) translate3d(-1.2%, -1.5%, 0); } }
+@media (prefers-reduced-motion: reduce) { .art img { animation: none; } }
+.frame { position: absolute; inset: 14px; border: 1px solid var(--frame); pointer-events: none; z-index: 2; }
+.frame i { position: absolute; width: 14px; height: 14px; border: 0 solid var(--fg); }
+.frame i:nth-child(1) { left: -8px; top: -8px; border-left-width: 1px; border-top-width: 1px; }
+.frame i:nth-child(2) { right: -8px; top: -8px; border-right-width: 1px; border-top-width: 1px; }
+.frame i:nth-child(3) { left: -8px; bottom: -8px; border-left-width: 1px; border-bottom-width: 1px; }
+.frame i:nth-child(4) { right: -8px; bottom: -8px; border-right-width: 1px; border-bottom-width: 1px; }
+header, .hero-body, .hero-foot { position: relative; z-index: 1; }
+header .wrap { display: flex; justify-content: space-between; align-items: center; height: 100px; }
+header .logo img { height: 20px; }
+nav { display: flex; gap: 34px; align-items: center; }
+nav a { font: 500 11.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+nav a:hover { color: var(--accent); }
+.hero-body { flex: 1; display: flex; align-items: center; }
+h1 { font-weight: 600; font-size: clamp(46px, 8.2vw, 128px); letter-spacing: -.05em; line-height: .94; max-width: 11ch; margin-top: 28px; }
+.lede { font-size: clamp(17px, 1.5vw, 21px); line-height: 1.45; color: var(--muted); max-width: 30em; margin-top: 30px; }
+.hero-foot .wrap { display: flex; justify-content: space-between; align-items: center; height: 90px; }
+
+/* Orbe: in Orbe's own sky */
+.orbe { background: var(--sky); color: var(--ink); padding: 140px 0; }
+.orbe .wrap { display: grid; grid-template-columns: 1fr 1.25fr; gap: 64px; align-items: center; }
+.orbe .tile { width: min(100%, 420px); aspect-ratio: 1; border-radius: 22%; overflow: hidden; box-shadow: 0 0 0 1px rgba(11,20,18,.12); }
+.orbe .tile img { width: 100%; height: 100%; }
+.orbe .n, .orbe .label { color: var(--ink); }
+.orbe h2 { font-weight: 700; font-size: clamp(40px, 5.6vw, 86px); letter-spacing: -.05em; line-height: .95; margin-top: 22px; }
+.orbe p { font-size: 19px; line-height: 1.5; max-width: 30em; margin-top: 28px; }
+.btn { display: inline-flex; align-items: center; gap: 12px; margin-top: 36px; background: var(--ink); color: #F3F0E8; font-weight: 600; font-size: 17px; padding: 16px 24px; border-radius: 8px; }
+.btn::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sky); }
+.btn:hover { background: #1C2A27; }
+
+/* Principles and letters */
+.section { padding: 140px 0; border-bottom: 1px solid var(--rule); }
+.section h3 { font-weight: 600; font-size: clamp(30px, 3.4vw, 48px); letter-spacing: -.035em; line-height: 1.02; max-width: 16ch; margin-top: 22px; }
+.cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; margin-top: 80px; }
+.cols div { border-top: 1px solid var(--fg); padding-top: 22px; }
+.cols b { display: block; font-weight: 600; font-size: 24px; letter-spacing: -.02em; margin-top: 18px; }
+.cols p { color: var(--muted); font-size: 17px; line-height: 1.5; margin-top: 12px; }
+.list { list-style: none; padding: 0; margin-top: 64px; border-top: 1px solid var(--rule); }
+.list li { display: grid; grid-template-columns: 90px 1fr auto; gap: 20px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid var(--rule); }
+.list b { font-weight: 600; font-size: 22px; letter-spacing: -.02em; }
+
+/* Footer: the wordmark, full width */
+footer { padding: 90px 0 36px; }
+footer .big { width: 100%; height: auto; }
+footer .row { display: flex; justify-content: space-between; align-items: center; margin-top: 44px; gap: 20px; flex-wrap: wrap; }
+footer .row nav { gap: 28px; }
+
+@media (max-width: 760px) {
+  .wrap { padding: 0 24px; }
+  .frame { inset: 8px; }
+  header .wrap { height: 80px; }
+  header .logo img { height: 15px; }
+  header nav { display: none; }
+  .art { opacity: .6; }
+  .art img { object-position: 78% 40%; }
+  .hero-foot .wrap { height: 80px; }
+  .orbe { padding: 90px 0; }
+  .orbe .wrap { grid-template-columns: 1fr; gap: 40px; }
+  .orbe .tile { width: 140px; }
+  .section { padding: 90px 0; }
+  .cols { grid-template-columns: 1fr; gap: 36px; margin-top: 50px; }
+  .list li { grid-template-columns: 64px 1fr; }
+  .list li .label { grid-column: 2; }
+  footer .row { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="art" aria-hidden="true"><img class="day" src="assets/art-day.svg" alt=""><img class="night" src="assets/art-night.svg" alt=""></div>
+  <div class="frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <header><div class="wrap">
+    <a class="logo" href="./" aria-label="Antimony">
+      <img class="day" src="assets/antimony-lockup-horizontal-ink.svg" alt="Antimony">
+      <img class="night" src="assets/antimony-lockup-horizontal-paper.svg" alt="Antimony">
+    </a>
+    <nav><a href="#orbe">Orbe</a><a href="#principles">Principles</a><a href="#letters">Letters</a></nav>
+  </div></header>
+  <div class="hero-body"><div class="wrap">
+    <span class="bar">Makers of Orbe</span>
+    <h1>We make things for people who make things.</h1>
+    <p class="lede">Antimony is a London company building tools that sit on the side of the people who make the work. Our first product is Orbe.</p>
+  </div></div>
+  <div class="hero-foot"><div class="wrap">
+    <span class="label">[ Scroll ]</span>
+    <span class="label">51.51° N, 0.13° W</span>
+  </div></div>
+</section>
+
+<section class="orbe" id="orbe"><div class="wrap">
+  <div class="tile"><img src="assets/orbe-mark-on-sky.svg" alt="Orbe"></div>
+  <div>
+    <span class="n">[001]</span> <span class="label">&nbsp;Orbe</span>
+    <h2>Brands are getting agents. Creators get Orbe.</h2>
+    <p>The creator's side of every sponsorship deal. Orbe prices and negotiates each offer inside the creator's own rules, waits for one tap on anything binding, and holds the brand's money until the work is delivered. Free for creators; brands pay when the work is delivered.</p>
+    <a class="btn" href="https://eoinforker.github.io/orbe-site/">Open Orbe</a>
+  </div>
+</div></section>
+
+<section class="section" id="principles"><div class="wrap">
+  <span class="bar">Principles</span>
+  <h3>Three things we will not trade, at any size.</h3>
+  <div class="cols">
+    <div><span class="n">[01]</span><b>Never alone.</b><p>Every product we make sits on the side of the person who made the work, never across the table from them.</p></div>
+    <div><span class="n">[02]</span><b>Paid when you are.</b><p>We earn when the people we serve earn. Orbe is free for creators; brands pay when the work is delivered.</p></div>
+    <div><span class="n">[03]</span><b>Built to last.</b><p>We build for the next forty years, not the next round: plain records, clear rules, nothing we would be embarrassed to explain.</p></div>
+  </div>
+</div></section>
+
+<section class="section" id="letters"><div class="wrap">
+  <span class="bar">Letters</span>
+  <h3>Numbered letters, when they are ready.</h3>
+  <ul class="list">
+    <li><span class="n">[001]</span><b>Antimony 001: Never alone</b><span class="label">Soon</span></li>
+  </ul>
+</div></section>
+
+<footer><div class="wrap">
+  <img class="big day" src="assets/antimony-wordmark-ink.svg" alt="Antimony">
+  <img class="big night" src="assets/antimony-wordmark-paper.svg" alt="Antimony">
+  <div class="row">
+    <span class="label">© MMXXVI Antimony · London</span>
+    <nav><a href="#orbe">Orbe</a><a href="#principles">Principles</a><a href="#letters">Letters</a></nav>
+  </div>
+</div></footer>
+</body>
+</html>
