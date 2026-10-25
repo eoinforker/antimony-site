@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0B0C0C"><meta name="description" content="Antimony builds software for the people who make the work. Our first product is Orbe.">
+<meta name="theme-color" content="#121211"><meta name="description" content="Antimony builds software for the people who make the work. Our first product is Orbe.">
 <meta property="og:title" content="Antimony"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <title>Antimony</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -8,60 +8,88 @@
 @font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
 @font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: swap; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { background: #0B0C0C; height: 100%; }
-body { color: #EEEAE0; font: 400 17px/1.55 "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; overflow: hidden; }
+html, body { height: 100%; background: #121211; overflow: hidden; }
+body { color: #EEEAE0; font: 400 15px/1.6 "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; }
 a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .22em; text-decoration-color: rgba(238,234,224,.3); transition: text-decoration-color .3s ease; }
 a:hover { text-decoration-color: currentColor; }
 :focus-visible { outline: 1px solid #94E6FF; outline-offset: 4px; }
 ::selection { background: #94E6FF; color: #0B0C0C; }
-/* the stone, at the scale of a building: taller than the screen, its right side off the page */
-.stone { position: fixed; height: 132vh; width: 132vh; top: -17vh; left: calc(74vw - 66vh); display: block; }
-.print { transition: transform 2.4s cubic-bezier(.2,.7,.2,1); transform-origin: 50px 52px; }
-.page { position: relative; height: 100%; display: grid; grid-template-rows: auto 1fr auto; padding: max(34px, env(safe-area-inset-top, 0px)) 0 max(30px, env(safe-area-inset-bottom, 0px)); padding-inline: max(48px, env(safe-area-inset-left, 0px)) max(48px, env(safe-area-inset-right, 0px)); }
-header svg { height: 22px; width: auto; display: block; color: #EEEAE0; --lit: #94E6FF; }
-main { align-self: center; max-width: 25em; }
-h1 { font-weight: 400; font-size: clamp(36px, 3.8vw, 60px); line-height: 1.04; letter-spacing: -.022em; text-wrap: balance; margin-bottom: 30px; }
-main p { color: rgba(238,234,224,.66); max-width: 23em; text-wrap: pretty; } main p + p { margin-top: .7em; }
-footer { display: flex; gap: 36px; font-size: 14px; color: rgba(238,234,224,.42); }
-footer .credit { margin-left: auto; text-align: right; max-width: 26em; }
-@media (max-width: 760px) {
-  body { overflow: auto; }
-  .stone { height: 118vw; width: 118vw; top: -8vw; left: 12vw; position: absolute; }
-  .page { min-height: 100%; height: auto; padding-inline: 24px; grid-template-rows: auto 1fr auto; }
-  main { align-self: end; padding-top: 92vw; margin-bottom: 44px; }
-  h1 { font-size: 36px; margin-bottom: 20px; }
-  footer { flex-wrap: wrap; gap: 8px 24px; } footer .credit { margin-left: 0; text-align: left; flex-basis: 100%; }
-}
-@media (prefers-reduced-motion: reduce) { .print { transition: none; } }
+#wall { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+.wm { position: fixed; left: max(40px, env(safe-area-inset-left, 0px)); top: max(36px, env(safe-area-inset-top, 0px)); height: 18px; width: auto; color: #EEEAE0; --lit: #94E6FF; opacity: .92; }
+.col { position: fixed; left: max(40px, env(safe-area-inset-left, 0px)); bottom: max(36px, env(safe-area-inset-bottom, 0px)); max-width: 27em; color: rgba(238,234,224,.62); text-wrap: pretty; }
+.col em { color: #EEEAE0; }
+.cr { position: fixed; right: max(40px, env(safe-area-inset-right, 0px)); bottom: max(36px, env(safe-area-inset-bottom, 0px)); font-size: 12.5px; color: rgba(238,234,224,.34); text-align: right; max-width: 22em; }
+.col, .cr, .wm { opacity: 0; transition: opacity 1.6s ease; } .on .col, .on .cr { opacity: 1; } .on .wm { opacity: .92; }
+@media (max-width: 700px) { .wm { left: 24px; top: max(28px, env(safe-area-inset-top, 0px)); } .col { left: 24px; right: 24px; bottom: max(28px, env(safe-area-inset-bottom, 0px)); font-size: 15.5px; } .cr { display: none; } }
 </style></head>
 <body>
-<svg class="stone" viewBox="0 0 100 100" aria-hidden="true">
-<defs>
-  <clipPath id="t"><rect width="100" height="100" rx="22"/></clipPath><clipPath id="g"><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"/></clipPath>
-  <mask id="m"><rect width="100" height="100" fill="#fff"/><path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z" fill="#000"/><path d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" fill="#000"/></mask>
-  <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="2.4" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .05 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>
-  <linearGradient id="fall" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1C1B19"/><stop offset=".55" stop-color="#141311"/><stop offset="1" stop-color="#0F0F0E"/></linearGradient>
-</defs>
-<g clip-path="url(#t)">
-  <g mask="url(#m)"><rect width="100" height="100" fill="url(#fall)"/><rect width="100" height="100" fill="#fff" filter="url(#grain)"/></g>
-  <g clip-path="url(#g)"><g class="print"><image href="assets/prints/18972.webp" x="24" y="14" width="52" height="76.4" preserveAspectRatio="xMidYMid slice"/></g>
-    <path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" fill-opacity=".07"/></g>
-</g>
-</svg>
-<div class="page">
-  <header><svg viewBox="-20 -830 4186 1070" role="img" aria-label="Antimony"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg></header>
-  <main>
-    <h1>Software for the people who make the work.</h1>
-    <p>Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator&#39;s side of every sponsorship deal.</p>
-    <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
-  </main>
-  <footer><span>London</span><a href="https://eoinforker.github.io/orbe-site/">Orbe</a><span class="credit">In the stone: Utagawa Hiroshige, <i>Autumn Moon over Ishiyama Temple</i>, 1857. Art Institute of Chicago.</span></footer>
-</div>
+<svg id="wall" aria-label="A wall of dark stone with a crack through it at sixteen degrees, opening into a crystal; through the crystal, a print of the moon"></svg>
+<svg class="wm" viewBox="-20 -830 4186 1070" role="img" aria-label="Antimony"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg>
+<p class="col"><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator&#39;s side of every sponsorship deal. We sit on their side of the table, and we mean to stay there for a long time.</p>
+<p class="cr">Through the crystal: Utagawa Hiroshige, <i>Autumn Moon over Ishiyama Temple</i>, 1857. Art Institute of Chicago.</p>
 <script>
-// the print sits behind the crystal like a view through glass: it shifts a little, the other way, as you move
-(() => { if (matchMedia("(prefers-reduced-motion: reduce)").matches || !matchMedia("(pointer: fine)").matches) return;
-  const p = document.querySelector(".print");
-  addEventListener("pointermove", e => { const x = e.clientX / innerWidth - .5, y = e.clientY / innerHeight - .5; p.style.transform = `translate(${-x * 1.4}px, ${-y * 1.4}px) scale(1.04)`; });
+(() => { "use strict";
+const G = {"ang": 16, "gw": 38.4, "gh": 60, "pd": 25.2, "mar": 6.5}, NS = "http://www.w3.org/2000/svg", svg = document.getElementById("wall");
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches, fine = matchMedia("(pointer: fine)").matches;
+const k = Math.tan(G.ang * Math.PI / 180), d = [Math.sin(G.ang * Math.PI / 180), -Math.cos(G.ang * Math.PI / 180)];
+const el = (n, a, p = svg) => { const e = document.createElementNS(NS, n); for (const q in a) e.setAttribute(q, a[q]); p.appendChild(e); return e; };
+const P = pts => "M" + pts.map(p => p[0].toFixed(1) + " " + p[1].toFixed(1)).join("L") + "Z";
+// the crystal and its cavity, as in the mark: a hexagon sheared to the seam's angle
+const hex = (cx, cy, w, h, pd) => [[cx, cy - h / 2], [cx + w / 2, cy - h / 2 + pd], [cx + w / 2, cy + h / 2 - pd], [cx, cy + h / 2], [cx - w / 2, cy + h / 2 - pd], [cx - w / 2, cy - h / 2 + pd]];
+const shear = (pts, cy) => pts.map(([x, y]) => [x + (cy - y) * k, y]);
+let W, H, t0 = performance.now(), crack, light, print, img, rim, ox = 0, oy = 0, tx = 0, ty = 0, done = still;
+function build() {
+  W = innerWidth; H = innerHeight; svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = "";
+  const narrow = W < 700, gh = narrow ? Math.min(H * .34, W * .62) : Math.min(H * .38, W * .3), s = gh / G.gh;
+  const cx = narrow ? W * .56 : W * .62, cy = narrow ? H * .36 : H * .47;
+  const gem = shear(hex(cx, cy, G.gw * s, G.gh * s, G.pd * s), cy), cav = shear(hex(cx, cy, (G.gw + G.mar * 2) * s, (G.gh + G.mar * 2.3) * s, (G.pd + G.mar * .55) * s), cy);
+  const defs = el("defs", {});
+  // stone: a slow fall of light from the upper left, and a fine grain
+  const lg = el("radialGradient", { id: "fall", cx: "18%", cy: "8%", r: "115%" }, defs);
+  el("stop", { offset: "0", "stop-color": "#1D1C1A" }, lg); el("stop", { offset: ".55", "stop-color": "#131312" }, lg); el("stop", { offset: "1", "stop-color": "#0C0C0B" }, lg);
+  const f = el("filter", { id: "grain", x: "0", y: "0", width: "100%", height: "100%" }, defs);
+  el("feTurbulence", { type: "fractalNoise", baseFrequency: ".85", numOctaves: "3", seed: "9" }, f);
+  el("feColorMatrix", { values: "0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .06 0" }, f);
+  const gc = el("clipPath", { id: "gem" }, defs); el("path", { d: P(gem) }, gc);
+  el("rect", { width: W, height: H, fill: "url(#fall)" }); el("rect", { width: W, height: H, filter: "url(#grain)" });
+  // the crack: hairline at the edges of the screen, widening to the cavity, like the seam in the mark
+  const L = Math.hypot(W, H), top = gem[0], bot = gem[3], w0 = s * 2.4, w1 = .55;
+  crack = { top, bot, w0, w1, L };
+  light = el("path", { fill: "#070808" });
+  el("path", { d: P(cav), fill: "#070808" });
+  // where the light from the upper left catches the far edge of each cut
+  rim = el("path", { fill: "none", stroke: "rgba(238,234,224,.10)", "stroke-width": "1", d: "M" + [cav[1], cav[2], cav[3]].map(p => p.join(" ")).join("L") });
+  const g = el("g", { "clip-path": "url(#gem)" });
+  print = el("g", {}, g);
+  const bw = (Math.max(...gem.map(p => p[0])) - Math.min(...gem.map(p => p[0]))) * 1.35, bh = gh * 1.25;
+  img = el("image", { href: "assets/prints/18972.webp", x: cx - bw / 2, y: cy - bh * .55, width: bw, height: bh, preserveAspectRatio: "xMidYMin slice", opacity: still ? 1 : 0 }, print);
+  el("path", { d: P([gem[0], gem[1], gem[2], gem[3]]), fill: "#fff", "fill-opacity": ".06" }, g);
+  el("path", { d: P(gem), fill: "none", stroke: "rgba(255,255,255,.14)", "stroke-width": ".8" }, g);
+  draw(done ? 1 : 0);
+}
+// the crack grows out of the crystal, up and down, the first time the page opens
+function draw(e) {
+  const { top, bot, w0, w1, L } = crack, n = [Math.cos(16 * Math.PI / 180), Math.sin(16 * Math.PI / 180)];
+  // half widths along the crack, from the cavity outwards: it narrows fast, then runs on as a hairline
+  const prof = [[0, w0], [.05, w0 * .62], [.16, w0 * .3], [.34, w0 * .14], [1, w1]], reach = e * L * .75;
+  const side = (p, dir, sgn) => prof.filter(([f]) => f * L * .75 <= reach + 1e-6).concat(reach < L * .75 ? [[reach / (L * .75), null]] : [])
+    .map(([f, w], i, A) => { if (w === null) { const [f0, w0_] = A[i - 1], nx = prof.find(q => q[0] > f0), t = nx ? (f - f0) / (nx[0] - f0) : 0; w = w0_ + ((nx ? nx[1] : w1) - w0_) * t; }
+      const q = [p[0] + dir[0] * f * L * .75, p[1] + dir[1] * f * L * .75]; return [q[0] + sgn * n[0] * w, q[1] + sgn * n[1] * w]; });
+  const up = [d[0], d[1]], dn = [-d[0], -d[1]];
+  const tl = side(top, up, -1), tr = side(top, up, 1), bl = side(bot, dn, -1), br = side(bot, dn, 1);
+  light.setAttribute("d", P([...tl.slice().reverse(), ...bl, ...br.slice().reverse(), ...tr]));
+}
+const ease = t => 1 - Math.pow(1 - t, 3);
+function tick(now) {
+  const t = (now - t0) / 1000;
+  if (!done) { const e = ease(Math.min(1, Math.max(0, (t - .3) / 1.8))); draw(e); img.setAttribute("opacity", ease(Math.min(1, Math.max(0, (t - 1.4) / 1.6)))); if (t > 3.2) done = true; }
+  ox += (tx - ox) * .05; oy += (ty - oy) * .05; print.setAttribute("transform", `translate(${ox.toFixed(2)} ${oy.toFixed(2)})`);
+  requestAnimationFrame(tick);
+}
+if (fine && !still) addEventListener("pointermove", e => { tx = -(e.clientX / innerWidth - .5) * 10; ty = -(e.clientY / innerHeight - .5) * 8; });
+addEventListener("resize", build);
+build(); requestAnimationFrame(tick);
+setTimeout(() => document.body.classList.add("on"), still ? 0 : 1500);
 })();
 </script>
 </body></html>
