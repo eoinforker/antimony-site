@@ -6,7 +6,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* One screen. The bands lift, the crystal builds in pixels on black; then the ground turns to paper,
-   every pixel flies down into the small mark at the foot, and two paragraphs are all that is left. */
+   every pixel flies down to the foot and hands over to the mark, drawn as a clean vector, and two paragraphs are all that is left. */
 @font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
 @font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: block; }
 :root { --ink: #060808; --paper: #F4F3EE; --text: #26292A; --soft: #6E716D; --sky: #94E6FF; --cobalt: #2448FF;
@@ -31,7 +31,9 @@ body.said main p:nth-child(2) { transition-delay: .35s; }
 main em { font-style: italic; }
 main a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; text-decoration-color: rgba(38,41,42,.35); transition: text-decoration-color .2s; }
 main a:hover { text-decoration-color: var(--text); }
-.mark { position: fixed; z-index: 3; left: 50%; bottom: calc(44px + env(safe-area-inset-bottom, 0px)); width: 60px; height: 60px; transform: translateX(-50%); border-radius: 4px; cursor: pointer; background: none; border: 0; }
+.mark { position: fixed; z-index: 3; left: 50%; bottom: calc(44px + env(safe-area-inset-bottom, 0px)); width: 60px; height: 60px; transform: translateX(-50%); border-radius: 4px; cursor: pointer; background: none; border: 0; display: grid; place-items: center; }
+.vec { width: 40px; height: 40px; display: block; opacity: 0; transition: transform .5s cubic-bezier(.2,.7,.2,1); }
+.mark:hover .vec { transform: rotate(-6deg) scale(1.06); }
 @media (max-width: 600px) { body { font-size: 17.5px; } main { padding-top: 13vh; } }
 @media (prefers-reduced-motion: reduce) { .load { display: none; } body, main p { transition: none; } }
 </style>
@@ -41,12 +43,12 @@ main a:hover { text-decoration-color: var(--text); }
   <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator's side of every sponsorship deal.</p>
   <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
 </main>
-<button class="mark" id="mark" aria-label="Antimony. Play the opening again"></button>
+<button class="mark" id="mark" aria-label="Antimony. Play the opening again"><svg class="vec" id="vec" viewBox="0 0 100 100" aria-hidden="true"><defs><mask id="cut"><rect x="-10" y="-10" width="120" height="120" fill="#fff"/><g fill="none" stroke="#000" stroke-width="5.2" stroke-linejoin="miter" stroke-miterlimit="8"><polyline points="22,71 50,15 78,71"/><polyline points="50,3 50,15"/><polyline points="22,71 50,58 78,71"/></g></mask></defs><g mask="url(#cut)"><path d="M50 5L78 29V71L50 95L22 71V29Z" fill="#0B0D0C"/><path d="M50 5L78 29V71L50 15Z" fill="#2448FF"/><path d="M78 71L50 95V58Z" fill="#2448FF"/></g></svg></button>
 <script>
 (() => {
 "use strict";
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const c = document.getElementById("c"), x = c.getContext("2d");
+const c = document.getElementById("c"), x = c.getContext("2d"), vec = document.getElementById("vec");
 // the mark on its 100-unit grid: four facets and the A with its reflected crossbar
 const FACETS = [ { p: [[50,5],[22,29],[22,71],[50,15]], k: 2 }, { p: [[78,71],[78,29],[50,5],[50,15]], k: 1 }, { p: [[50,15],[22,71],[50,58],[78,71]], k: 3 }, { p: [[22,71],[50,95],[78,71],[50,58]], k: 4 } ];
 const LINES = [[[22,71],[50,15]], [[50,15],[78,71]], [[22,71],[50,58]], [[50,58],[78,71]], [[50,2],[50,15]]];
@@ -72,7 +74,7 @@ function layout() {
   const d = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; c.width = W * d; c.height = H * d; x.setTransform(d, 0, 0, d, 0, 0);
   const bs = Math.min(H * 0.7, W * 0.86), bn = W < 600 ? 44 : 60;
   big = { s: bs, n: bn, cs: bs / bn, ox: W / 2 - bs / 2, oy: H * 0.47 - bs / 2 };
-  const ss = 52, sn = 18, rect = document.getElementById("mark").getBoundingClientRect();
+  const ss = 40, sn = 22, rect = document.getElementById("mark").getBoundingClientRect();
   small = { s: ss, n: sn, cs: ss / sn, ox: rect.left + rect.width / 2 - ss / 2, oy: rect.top + rect.height / 2 - ss / 2 };
   const B = sample(bn, 1.25), S = sample(sn, 3.2);
   // every pixel of the mark at the foot is one pixel of the big crystal, of the same kind; the rest fall away
@@ -104,11 +106,12 @@ function frame() {
       if (near || flick) col = p.b.k === 1 ? "#F2F1EC" : "#94E6FF";
       if (near) { X += (Math.random() - .5) * 2; }
     }
-    if (f >= 1 && p.s) { const near = Math.hypot(X - mx, Y - my) < 30; if (near && Math.random() < .25) col = p.b.k === 1 ? "#0B0D0C" : "#2448FF"; }
+    if (p.s) alpha = 1 - Math.max(0, Math.min(1, (f - 0.86) / 0.14));
     S *= a < 1 ? a : 1; if (S <= 0.05 || alpha <= 0.01) continue;
     x.globalAlpha = alpha; x.fillStyle = col; x.fillRect(X + (big.cs - S) / 2 * (1 - e), Y + (big.cs - S) / 2 * (1 - e), S, S);
   }
   x.globalAlpha = 1;
+  vec.style.opacity = Math.max(0, Math.min(1, (f - 0.84) / 0.16));
   document.body.classList.toggle("paper", t > BUILD + HOLD + FLY * 0.8);
   document.body.classList.toggle("said", t > BUILD + HOLD + FLY + 0.5);
   requestAnimationFrame(frame);
