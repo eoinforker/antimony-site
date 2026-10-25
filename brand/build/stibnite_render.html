@@ -1,0 +1,41 @@
+<!doctype html><html><body style="margin:0;background:#000"><canvas id="c" width="1600" height="1600"></canvas>
+<script type="module">
+import * as THREE from "./three.js";
+const c = document.getElementById("c"), r = new THREE.WebGLRenderer({ canvas: c, antialias: true, preserveDrawingBuffer: true, alpha: true });
+r.setSize(1600, 1600, false); r.toneMapping = THREE.ACESFilmicToneMapping; r.outputColorSpace = THREE.SRGBColorSpace;
+const s = new THREE.Scene(), cam = new THREE.PerspectiveCamera(30, 1, .1, 100);
+// a soft studio: one large warm key from the upper left, a cool fill, and a gradient environment for the metal to reflect
+const pm = new THREE.PMREMGenerator(r);
+const env = new THREE.Scene(); const g = new THREE.SphereGeometry(10, 32, 16);
+const mat = new THREE.ShaderMaterial({ side: THREE.BackSide, uniforms: {}, vertexShader: "varying vec3 p; void main(){ p = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }",
+  fragmentShader: "varying vec3 p; void main(){ float y = normalize(p).y; float x = normalize(p).x; vec3 c = mix(vec3(.05,.06,.08), vec3(1.,.95,.86), smoothstep(.1,.9,y*.6 - x*.5 + .3)); c += vec3(.7,.8,1.)*smoothstep(.85,1.,-x)*.6; gl_FragColor = vec4(c,1.); }" });
+env.add(new THREE.Mesh(g, mat)); s.environment = pm.fromScene(env).texture;
+const key = new THREE.DirectionalLight(0xfff1dc, 3.2); key.position.set(-4, 6, 5); s.add(key);
+// stibnite: long prisms with striations along their length and pointed terminations, radiating from one seed
+let seed = 51; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const metal = new THREE.MeshPhysicalMaterial({ color: 0xb9bcc0, metalness: 1, roughness: .22, clearcoat: .3, clearcoatRoughness: .3 });
+function needle(len, w) {
+  const sh = new THREE.Shape(); const n = 4; // rhombic cross section, as stibnite's prisms are
+  for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2; const rr = k % 2 ? w * .62 : w; const x = Math.cos(a) * rr, y = Math.sin(a) * rr; k ? sh.lineTo(x, y) : sh.moveTo(x, y); }
+  const body = new THREE.ExtrudeGeometry(sh, { depth: len, bevelEnabled: false, steps: 1 });
+  const tip = new THREE.ConeGeometry(w, w * 1.1, 4); tip.rotateX(Math.PI / 2); tip.rotateZ(Math.PI / 4); tip.translate(0, 0, len + w * .55);
+  const grp = new THREE.Group(); grp.add(new THREE.Mesh(body, metal), new THREE.Mesh(tip, metal)); return grp;
+}
+const spray = new THREE.Group();
+for (let i = 0; i < 130; i++) {
+  const len = 1.2 + Math.pow(rnd(), .7) * 3.2, w = .018 + Math.pow(rnd(), 2) * .07;
+  const nd = needle(len, w);
+  const th = (rnd() - .5) * (rnd() < .7 ? .9 : 1.6), ph = (rnd() - .5) * .9;     // fan upward, a little forward and back
+  nd.rotation.set(-Math.PI / 2 + ph, 0, 0); nd.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), th);
+  nd.rotateZ(rnd() * Math.PI);
+  nd.position.set((rnd() - .5) * .25, -1.6 + (rnd() - .5) * .12, (rnd() - .5) * .25);
+  spray.add(nd);
+}
+// the matrix it grew from: a dark rough stone at the base
+const stone = new THREE.Mesh(new THREE.IcosahedronGeometry(.75, 2), new THREE.MeshStandardMaterial({ color: 0x3a3631, roughness: .95, flatShading: true }));
+const pos = stone.geometry.attributes.position; for (let i = 0; i < pos.count; i++) { const v = new THREE.Vector3().fromBufferAttribute(pos, i); v.multiplyScalar(.85 + rnd() * .3); v.y *= .55; pos.setXYZ(i, v.x, v.y, v.z); }
+stone.geometry.computeVertexNormals(); stone.position.set(0, -1.85, 0); s.add(stone);
+s.add(spray); spray.rotation.y = .4;
+cam.position.set(0, .4, 9.2); cam.lookAt(0, .35, 0);
+r.setClearColor(0x000000, 0); r.render(s, cam); window.done = true;
+</script></body></html>
