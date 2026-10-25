@@ -5,11 +5,12 @@
 <title>Antimony</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-/* One screen. The bands lift, the crystal builds in pixels on black; then the ground turns to paper,
-   every pixel flies down to the foot and hands over to the mark, drawn as a clean vector, and two paragraphs are all that is left. */
+/* One screen. The bands lift and the mark builds itself as its own recursion, a Five made of Fives, on black.
+   Each small Five folds into one cell, the Five flies down to the foot and hands over to the vector, the ground turns to paper,
+   and two paragraphs are all that is left. */
 @font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
 @font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: block; }
-:root { --ink: #060808; --paper: #F4F3EE; --text: #26292A; --soft: #6E716D; --sky: #94E6FF; --cobalt: #2448FF;
+:root { --ink: #060808; --paper: #F4F3EE; --text: #26292A; --sky: #94E6FF; --cobalt: #2448FF;
   --serif: "Timeless Serif", "Iowan Old Style", Georgia, serif; color-scheme: light; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
@@ -31,98 +32,90 @@ body.said main p:nth-child(2) { transition-delay: .35s; }
 main em { font-style: italic; }
 main a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; text-decoration-color: rgba(38,41,42,.35); transition: text-decoration-color .2s; }
 main a:hover { text-decoration-color: var(--text); }
-.mark { position: fixed; z-index: 3; left: 50%; bottom: calc(44px + env(safe-area-inset-bottom, 0px)); width: 60px; height: 60px; transform: translateX(-50%); border-radius: 4px; cursor: pointer; background: none; border: 0; display: grid; place-items: center; }
-.vec { width: 40px; height: 40px; display: block; opacity: 0; transition: transform .5s cubic-bezier(.2,.7,.2,1); }
-.mark:hover .vec { transform: rotate(-6deg) scale(1.06); }
+.mark { position: fixed; z-index: 3; left: 50%; bottom: calc(40px + env(safe-area-inset-bottom, 0px)); width: 72px; height: 60px; transform: translateX(-50%); border-radius: 4px; cursor: pointer; background: none; border: 0; display: grid; place-items: center; }
+.vec { grid-area: 1 / 1; width: 46px; height: auto; display: block; opacity: 0; }
+/* on hover the mark opens into its recursion */
+.vec .r { opacity: 0; transition: opacity .35s ease; } .vec .f { transition: opacity .35s ease; }
+.mark:hover .vec .r, .mark:focus-visible .vec .r { opacity: 1; } .mark:hover .vec .f, .mark:focus-visible .vec .f { opacity: 0; }
 @media (max-width: 600px) { body { font-size: 17.5px; } main { padding-top: 13vh; } }
 @media (prefers-reduced-motion: reduce) { .load { display: none; } body, main p { transition: none; } }
 </style>
+</head><body>
 <div class="load" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
 <canvas id="c" aria-hidden="true"></canvas>
 <main>
   <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator's side of every sponsorship deal.</p>
   <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
 </main>
-<button class="mark" id="mark" aria-label="Antimony. Play the opening again"><svg class="vec" id="vec" viewBox="0 0 100 100" aria-hidden="true"><defs><mask id="cut"><rect x="-10" y="-10" width="120" height="120" fill="#fff"/><g fill="none" stroke="#000" stroke-width="5.2" stroke-linejoin="miter" stroke-miterlimit="8"><polyline points="22,71 50,15 78,71"/><polyline points="50,3 50,15"/><polyline points="22,71 50,58 78,71"/></g></mask></defs><g mask="url(#cut)"><path d="M50 5L78 29V71L50 95L22 71V29Z" fill="#0B0D0C"/><path d="M50 5L78 29V71L50 15Z" fill="#2448FF"/><path d="M78 71L50 95V58Z" fill="#2448FF"/></g></svg></button>
+<button class="mark" id="mark" aria-label="Antimony. Play the opening again"><svg class="vec" id="vec" viewBox="0 0 126.795 100" aria-hidden="true"><g class="f"><path d="M62.13 0L91.46 0L83.6 29.33L54.27 29.33ZM17.33 35.33L46.66 35.33L38.8 64.67L9.47 64.67ZM87.99 35.33L117.33 35.33L109.47 64.67L80.13 64.67ZM7.86 70.67L37.19 70.67L29.33 100L0 100ZM78.53 70.67L107.86 70.67L100 100L70.67 100Z" fill="#0B0D0C"/><path d="M52.66 35.33L81.99 35.33L74.13 64.67L44.8 64.67Z" fill="#2448FF"/></g><g class="r"><path d="M72.49 0L81.1 0L78.79 8.6L70.19 8.6ZM59.35 10.36L67.96 10.36L65.65 18.97L57.05 18.97ZM69.72 10.36L78.32 10.36L76.01 18.97L67.41 18.97ZM80.08 10.36L88.68 10.36L86.38 18.97L77.77 18.97ZM56.57 20.73L65.18 20.73L62.87 29.33L54.27 29.33ZM77.3 20.73L85.91 20.73L83.6 29.33L75 29.33ZM27.69 35.33L36.3 35.33L33.99 43.94L25.39 43.94ZM14.55 45.7L23.15 45.7L20.85 54.3L12.24 54.3ZM24.91 45.7L33.52 45.7L31.21 54.3L22.61 54.3ZM35.28 45.7L43.88 45.7L41.58 54.3L32.97 54.3ZM11.77 56.06L20.38 56.06L18.07 64.67L9.47 64.67ZM32.5 56.06L41.11 56.06L38.8 64.67L30.2 64.67ZM98.36 35.33L106.96 35.33L104.66 43.94L96.05 43.94ZM85.22 45.7L93.82 45.7L91.52 54.3L82.91 54.3ZM95.58 45.7L104.19 45.7L101.88 54.3L93.28 54.3ZM105.95 45.7L114.55 45.7L112.24 54.3L103.64 54.3ZM82.44 56.06L91.04 56.06L88.74 64.67L80.13 64.67ZM103.17 56.06L111.77 56.06L109.47 64.67L100.86 64.67ZM18.22 70.67L26.83 70.67L24.52 79.27L15.92 79.27ZM5.08 81.03L13.69 81.03L11.38 89.64L2.78 89.64ZM15.45 81.03L24.05 81.03L21.75 89.64L13.14 89.64ZM25.81 81.03L34.42 81.03L32.11 89.64L23.51 89.64ZM2.31 91.4L10.91 91.4L8.6 100L0 100ZM23.03 91.4L31.64 91.4L29.33 100L20.73 100ZM88.89 70.67L97.5 70.67L95.19 79.27L86.59 79.27ZM75.75 81.03L84.35 81.03L82.05 89.64L73.44 89.64ZM86.11 81.03L94.72 81.03L92.41 89.64L83.81 89.64ZM96.48 81.03L105.08 81.03L102.78 89.64L94.17 89.64ZM72.97 91.4L81.58 91.4L79.27 100L70.67 100ZM93.7 91.4L102.31 91.4L100 100L91.4 100Z" fill="#0B0D0C"/><path d="M63.03 35.33L71.63 35.33L69.32 43.94L60.72 43.94ZM49.88 45.7L58.49 45.7L56.18 54.3L47.58 54.3ZM60.25 45.7L68.85 45.7L66.55 54.3L57.94 54.3ZM70.61 45.7L79.22 45.7L76.91 54.3L68.31 54.3ZM47.11 56.06L55.71 56.06L53.41 64.67L44.8 64.67ZM67.84 56.06L76.44 56.06L74.13 64.67L65.53 64.67Z" fill="#2448FF"/></g></svg></button>
 <script>
 (() => {
 "use strict";
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const c = document.getElementById("c"), x = c.getContext("2d"), vec = document.getElementById("vec");
-// the mark on its 100-unit grid: four facets and the A with its reflected crossbar
-const FACETS = [ { p: [[50,5],[22,29],[22,71],[50,15]], k: 2 }, { p: [[78,71],[78,29],[50,5],[50,15]], k: 1 }, { p: [[50,15],[22,71],[50,58],[78,71]], k: 3 }, { p: [[22,71],[50,95],[78,71],[50,58]], k: 4 } ];
-const LINES = [[[22,71],[50,15]], [[50,15],[78,71]], [[22,71],[50,58]], [[50,58],[78,71]], [[50,2],[50,15]]];
-// each class has a colour on black and a colour on paper
-const DARK  = ["#F2F1EC", "#94E6FF", "#16201E", "#2C3A37", "#1E2A27"];
-const LIGHT = ["#0B0D0C", "#2448FF", "#C6CAC4", "#DCDED8", "#B9BEB8"];
+// The Five: antimony's five outer electrons around a nucleus, on a 3 by 3 grid of 100 units, leaning forward 15 degrees.
+// Index 2 is the nucleus. Recursion: every cell of the Five is itself a Five.
+const G = 6, S = (100 - 2 * G) / 3, K = Math.tan(15 * Math.PI / 180), VW = 100 + 100 * K;
+const FIVE = [[1, 0], [0, 1], [1, 1], [2, 1], [0, 2], [2, 2]];
+const CELLS = [];
+FIVE.forEach(([pc, pr], pi) => FIVE.forEach(([cc, cr], ci) => {
+  const px = pc * (S + G), py = pr * (S + G), u = S / 100;
+  CELLS.push({ pi, ci, nuc: pi === 2, x: px + cc * (S + G) * u, y: py + cr * (S + G) * u, z: S * u, px, py, pz: S,
+    d: Math.hypot(px + S / 2 - 50, py + S / 2 - 50) / 70 * 0.55 + ci * 0.07 + Math.random() * 0.12, n: Math.random() * 20 });
+}));
 const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const mix = (a, b, t) => { const A = rgb(a), B = rgb(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(",")})`; };
-const inP = (u, v, p) => { let k = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [a, b] = p[i], [d, e] = p[j]; if ((b > v) !== (e > v) && u < (d - a) * (v - b) / (e - b) + a) k = !k; } return k; };
-const sd = (u, v, [[a, b], [d, e]]) => { const dx = d - a, dy = e - b, t = Math.max(0, Math.min(1, ((u - a) * dx + (v - b) * dy) / (dx * dx + dy * dy))); return Math.hypot(u - a - t * dx, v - b - t * dy); };
-function sample(n, lineW) {
-  const out = [];
-  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
-    const u = (i + .5) / n * 100, v = (j + .5) / n * 100; let k = -1;
-    if (LINES.some(s => sd(u, v, s) < lineW)) k = 0; else for (const f of FACETS) if (inP(u, v, f.p)) { k = f.k; break; }
-    if (k >= 0) out.push({ i, j, u, v, k });
-  }
-  return out;
-}
-let W, H, big, small, P = [], T0, mx = -1e9, my = -1e9;
-const BUILD = 1.3, HOLD = 3.2, FLY = 1.6;   // seconds: the build starts, the flight starts, the flight lasts
+const clamp = v => Math.max(0, Math.min(1, v));
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const BUILD = 1.2, FOLD = 3.9, FOLDT = 0.9, FLY = 5.2, FLYT = 1.4;   // seconds
+let W, H, big, small, T0, mx = -1e9, my = -1e9;
 function layout() {
   const d = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; c.width = W * d; c.height = H * d; x.setTransform(d, 0, 0, d, 0, 0);
-  const bs = Math.min(H * 0.7, W * 0.86), bn = W < 600 ? 44 : 60;
-  big = { s: bs, n: bn, cs: bs / bn, ox: W / 2 - bs / 2, oy: H * 0.47 - bs / 2 };
-  const ss = 40, sn = 22, rect = document.getElementById("mark").getBoundingClientRect();
-  small = { s: ss, n: sn, cs: ss / sn, ox: rect.left + rect.width / 2 - ss / 2, oy: rect.top + rect.height / 2 - ss / 2 };
-  const B = sample(bn, 1.25), S = sample(sn, 3.2);
-  // every pixel of the mark at the foot is one pixel of the big crystal, of the same kind; the rest fall away
-  const pool = [[], [], [], [], []]; B.forEach(b => pool[b.k].push(b)); pool.forEach(p => p.sort(() => Math.random() - .5));
-  P = B.map(b => ({ b, s: null, d: Math.random() * 0.9 + b.v / 100 * 0.7, n: Math.random() * 20, w: Math.random() * 0.35 }));
-  const byB = new Map(P.map(p => [p.b, p]));
-  for (const s of S) { const src = pool[s.k].pop() || pool.find(p => p.length)?.pop(); if (src) byB.get(src).s = s; }
+  const u = Math.min(W * 0.72 / VW, H * 0.5 / 100);
+  big = { u, ox: W / 2 - VW * u / 2, oy: H * 0.45 - 50 * u };
+  const r = vec.getBoundingClientRect();
+  small = { u: r.width / VW, ox: r.left, oy: r.top };
 }
-const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+function quad(o, cx, cy, cz, grow) {
+  // a cell on the leaning lattice; grow scales it about its own centre as it arrives
+  const h = cz * (1 - grow) / 2, a = cx + h, b = cy + h, z = cz * grow;
+  const P = (p, q) => [o.ox + (p + K * (100 - q)) * o.u, o.oy + q * o.u];
+  const pts = [P(a, b), P(a + z, b), P(a + z, b + z), P(a, b + z)];
+  x.beginPath(); x.moveTo(...pts[0]); for (let i = 1; i < 4; i++) x.lineTo(...pts[i]); x.closePath(); x.fill();
+  return pts;
+}
 function frame() {
   const t = still ? 99 : (performance.now() - T0) / 1000;
-  const f = Math.max(0, Math.min(1, (t - BUILD - HOLD) / FLY));
+  const fold = ease(clamp((t - FOLD) / FOLDT)), fly = ease(clamp((t - FLY) / FLYT)), paper = clamp((t - FLY - FLYT * 0.45) / (FLYT * 0.4));
+  const o = { u: big.u + (small.u - big.u) * fly, ox: big.ox + (small.ox - big.ox) * fly, oy: big.oy + (small.oy - big.oy) * fly - Math.sin(fly * Math.PI) * 24 };
   x.clearRect(0, 0, W, H);
-  for (const p of P) {
-    const a = Math.max(0, Math.min(1, (t - BUILD - p.d) / 0.25)); if (a <= 0) continue;
-    const e = ease(Math.max(0, Math.min(1, (f - p.w * 0.6) / (1 - p.w * 0.6 + 1e-6))));
-    const bx = big.ox + p.b.i * big.cs, by = big.oy + p.b.j * big.cs;
-    let X, Y, S, col, alpha = 1;
-    if (p.s) {
-      const sx = small.ox + p.s.i * small.cs, sy = small.oy + p.s.j * small.cs;
-      X = bx + (sx - bx) * e; Y = by + (sy - by) * e - Math.sin(e * Math.PI) * 30 * (1 - p.w); S = (big.cs - 1) + ((small.cs - .35) - (big.cs - 1)) * e;
-      col = a < 1 ? "#F2F1EC" : mix(DARK[p.b.k], LIGHT[p.b.k], Math.max(0, Math.min(1, (f - 0.78) / 0.22)));
-    } else {
-      X = bx + (bx - W / 2) * e * 0.25; Y = by + e * 40; S = (big.cs - 1) * (1 - e); alpha = 1 - e;
-      col = a < 1 ? "#F2F1EC" : DARK[p.b.k];
+  for (const k of CELLS) {
+    const a = clamp((t - BUILD - k.d) / 0.3); if (a <= 0) continue;
+    const grow = a < 1 ? 1 - Math.pow(1 - a, 3) : 1;
+    // fold: each small cell slides out to fill its parent, so six small cells become one
+    const cx = k.x + (k.px - k.x) * fold, cy = k.y + (k.py - k.y) * fold, cz = k.z + (k.pz - k.z) * fold;
+    let col = k.nuc ? mix("#94E6FF", "#2448FF", paper) : mix("#F2F1EC", "#0B0D0C", paper);
+    if (a < 1) col = k.nuc ? "#F2F1EC" : "#94E6FF";   // a cell arrives in the other colour, then settles
+    else if (fold === 0) {
+      const sx = big.ox + (k.x + k.z / 2 + K * (100 - k.y - k.z / 2)) * big.u, sy = big.oy + (k.y + k.z / 2) * big.u;
+      const near = Math.hypot(sx - mx, sy - my) < big.u * 18, flick = t > BUILD + 1.4 && Math.sin(t * 3 + k.n * 7) > .997;
+      if (near || flick) col = k.nuc ? "#F2F1EC" : "#94E6FF";
     }
-    if (f <= 0 && a >= 1) {   // while the crystal stands, it answers the pointer and flickers now and then
-      const near = Math.hypot(bx - mx, by - my) < big.cs * 6, flick = t > BUILD + 2 && Math.sin(t * 3 + p.n * 7) > .996;
-      if (near || flick) col = p.b.k === 1 ? "#F2F1EC" : "#94E6FF";
-      if (near) { X += (Math.random() - .5) * 2; }
-    }
-    if (p.s) alpha = 1 - Math.max(0, Math.min(1, (f - 0.86) / 0.14));
-    S *= a < 1 ? a : 1; if (S <= 0.05 || alpha <= 0.01) continue;
-    x.globalAlpha = alpha; x.fillStyle = col; x.fillRect(X + (big.cs - S) / 2 * (1 - e), Y + (big.cs - S) / 2 * (1 - e), S, S);
+    x.fillStyle = col; quad(o, cx, cy, cz, grow);
   }
-  x.globalAlpha = 1;
-  vec.style.opacity = Math.max(0, Math.min(1, (f - 0.84) / 0.16));
-  document.body.classList.toggle("paper", t > BUILD + HOLD + FLY * 0.8);
-  document.body.classList.toggle("said", t > BUILD + HOLD + FLY + 0.5);
-  requestAnimationFrame(frame);
+  const done = t > FLY + FLYT;
+  c.style.opacity = done ? 0 : 1; vec.style.opacity = done ? 1 : 0;
+  document.body.classList.toggle("paper", paper > 0);
+  document.body.classList.toggle("said", t > FLY + FLYT + 0.3);
+  if (t < FLY + FLYT + 0.5 || still) requestAnimationFrame(frame); else running = false;
 }
-function play() { T0 = performance.now(); layout(); document.body.classList.remove("paper", "said"); }
+let running = false;
+function play() { T0 = performance.now(); layout(); document.body.classList.remove("paper", "said"); if (!running) { running = true; requestAnimationFrame(frame); } }
 addEventListener("pointermove", e => { mx = e.clientX; my = e.clientY; });
 addEventListener("pointerleave", () => mx = my = -1e9);
-addEventListener("resize", () => { const t0 = T0; layout(); T0 = t0; });
+addEventListener("resize", layout);
 document.getElementById("mark").addEventListener("click", play);
-(document.fonts ? document.fonts.load('400 19px "Timeless Serif"') : Promise.resolve()).catch(() => {}).finally(() => { play(); requestAnimationFrame(frame); });
+(document.fonts ? document.fonts.load('400 19px "Timeless Serif"') : Promise.resolve()).catch(() => {}).finally(play);
 })();
 </script>
-
-</html>
+</body></html>
