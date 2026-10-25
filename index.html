@@ -1,252 +1,124 @@
 <!doctype html>
-<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#050707">
-<meta name="description" content="Antimony builds software for the people who make the work. Makers of Orbe.">
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#F4F3EE">
+<meta name="description" content="Antimony builds software for the people who make the work. Our first product is Orbe.">
 <meta property="og:title" content="Antimony"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <title>Antimony</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap">
 <style>
-/* Everything is drawn by one pixel engine: the crystal in the opening, the Orbe product view, and the wordmark at the foot.
-   Around it, panels type themselves in and sit inside corner brackets (after Arasaka), and the list of what we make is
-   a ruled table with filters (after fal's careers page). One mono face, one condensed face, one accent. */
-@font-face { font-family: "Commit Mono"; src: url("assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 400 600; font-display: block; }
-:root { --ink: #050707; --ink-2: #0C1211; --rule: rgba(242,241,236,.16); --text: #C4CCC9; --dim: #6D7A77; --paper: #F2F1EC; --sky: #94E6FF; --cobalt: #2448FF;
-  --mono: "Commit Mono", ui-monospace, Menlo, monospace; --cond: "Archivo", "Helvetica Neue", Arial, sans-serif;
-  --g: max(22px, env(safe-area-inset-left, 0px)); --gr: max(22px, env(safe-area-inset-right, 0px)); color-scheme: dark; }
+/* One screen. The bands lift, the crystal builds in pixels on black; then the ground turns to paper,
+   every pixel flies down into the small mark at the foot, and two paragraphs are all that is left. */
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: block; }
+:root { --ink: #060808; --paper: #F4F3EE; --text: #26292A; --soft: #6E716D; --sky: #94E6FF; --cobalt: #2448FF;
+  --serif: "Timeless Serif", "Iowan Old Style", Georgia, serif; color-scheme: light; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { background: var(--ink); } body { background: var(--ink); color: var(--text); font: 400 14px/1.6 var(--mono); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-a { color: inherit; text-decoration: none; } button { all: unset; cursor: pointer; }
-:focus-visible { outline: 1px solid var(--sky); outline-offset: 3px; }
+html, body { height: 100%; }
+body { background: var(--ink); color: var(--text); font: 400 19px/1.5 var(--serif); -webkit-font-smoothing: antialiased; overflow: hidden; transition: background-color .7s cubic-bezier(.4,0,.2,1); }
+body.paper { background: var(--paper); }
+a { color: inherit; }
+:focus-visible { outline: 1px solid var(--text); outline-offset: 3px; }
 ::selection { background: var(--sky); color: var(--ink); }
-.up { text-transform: uppercase; letter-spacing: .08em; }
-.k { color: var(--sky); }
-/* the opening */
-.load { position: fixed; inset: 0; z-index: 50; display: grid; grid-template-columns: repeat(6, 1fr); pointer-events: none; }
+#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.load { position: fixed; inset: 0; z-index: 10; display: grid; grid-template-columns: repeat(6, 1fr); pointer-events: none; }
 .load i { background: linear-gradient(180deg, var(--ink), var(--cobalt) 40%, var(--sky) 62%, var(--paper) 80%, var(--ink)); background-size: 100% 300%; animation: band 1.4s cubic-bezier(.6,0,.2,1) forwards; }
 .load i:nth-child(2) { animation-delay: .05s } .load i:nth-child(3) { animation-delay: .1s } .load i:nth-child(4) { animation-delay: .15s } .load i:nth-child(5) { animation-delay: .2s } .load i:nth-child(6) { animation-delay: .25s }
 @keyframes band { 0% { background-position: 0 0 } 70% { background-position: 0 100%; transform: none } 100% { background-position: 0 100%; transform: translateY(-101%) } }
-/* the mark: the name, typed, with the cursor */
-.mark { position: fixed; z-index: 20; top: calc(20px + env(safe-area-inset-top, 0px)); left: var(--g); font: 600 14px var(--mono); letter-spacing: .22em; color: var(--paper); mix-blend-mode: difference; }
-.mark::after { content: ""; display: inline-block; width: .62em; height: 1.05em; margin-left: .3em; background: var(--sky); vertical-align: -.16em; animation: blink 1.06s steps(1) infinite; }
-@keyframes blink { 50% { opacity: 0 } }
-/* sections */
-section { position: relative; }
-.hero { height: 100svh; min-height: 560px; }
-.hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.hero .copy { position: absolute; left: var(--g); right: var(--gr); bottom: calc(38px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 18px; max-width: 760px; }
-.type { white-space: pre-wrap; min-height: 1.6em; }
-.type::after { content: "▌"; color: var(--sky); animation: blink 1.06s steps(1) infinite; }
-.type.done::after { content: ""; }
-.cond { font-family: var(--cond); font-weight: 700; font-stretch: 70%; text-transform: uppercase; line-height: .88; letter-spacing: -.005em; color: var(--paper); }
-.hero h1 { font-size: clamp(46px, 7.4vw, 122px); }
-.reveal { display: block; overflow: hidden; }
-.reveal > span { display: block; transform: translateY(105%); transition: transform .9s cubic-bezier(.2,.7,.2,1); }
-.in .reveal > span { transform: none; }
-.in .reveal:nth-child(2) > span { transition-delay: .08s } .in .reveal:nth-child(3) > span { transition-delay: .16s }
-/* the brackets */
-.bracket { position: relative; padding: 18px 22px; }
-.bracket::before, .bracket::after, .bracket > .c1, .bracket > .c2 { content: ""; position: absolute; width: 12px; height: 12px; border: 0 solid var(--paper); }
-.bracket::before { left: 0; top: 0; border-width: 1px 0 0 1px; } .bracket::after { right: 0; top: 0; border-width: 1px 1px 0 0; }
-.bracket > .c1 { left: 0; bottom: 0; border-width: 0 0 1px 1px; } .bracket > .c2 { right: 0; bottom: 0; border-width: 0 1px 1px 0; }
-/* Orbe */
-.orbe { padding: 16vh var(--gr) 14vh var(--g); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 90px); align-items: center; }
-.frame { position: relative; border: 1px solid var(--rule); aspect-ratio: 844 / 900; max-width: 620px; width: 100%; justify-self: end; background: var(--ink-2); }
-.frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.frame { margin-bottom: 30px; }
-.frame figcaption { position: absolute; left: 0; right: 0; top: calc(100% + 10px); color: var(--dim); font-size: 12px; line-height: 1.4; }
-.orbe h2 { font-size: clamp(40px, 5.4vw, 92px); }
-.orbe h2 .k { color: var(--sky); }
-.orbe .body { max-width: 34em; color: var(--text); }
-.spec { display: grid; grid-template-columns: 110px 1fr; column-gap: 18px; row-gap: 4px; font-size: 12.5px; margin-top: 4px; }
-.spec dt { color: var(--dim); } .spec dd { color: var(--paper); }
-.go { font-size: 13px; color: var(--sky); border-bottom: 1px solid var(--sky); justify-self: start; padding-bottom: 2px; }
-.go:hover { color: var(--paper); border-color: var(--paper); }
-.stack { display: grid; gap: 22px; align-content: center; }
-/* the table */
-.make { padding: 6vh var(--gr) 16vh var(--g); }
-.make h2 { font-size: clamp(36px, 4.4vw, 74px); }
-.filters { display: flex; gap: 6px; flex-wrap: wrap; margin: 30px 0 8px; }
-.filters button { font-size: 12px; padding: 6px 11px; border: 1px solid var(--rule); color: var(--dim); }
-.filters button[aria-pressed="true"] { background: var(--paper); color: var(--ink); border-color: var(--paper); }
-.filters button:hover { color: var(--paper); }
-.rows { border-top: 1px solid var(--rule); }
-.row { display: grid; grid-template-columns: 140px minmax(0, 1fr) 200px 120px; gap: 20px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid var(--rule); transition: background .25s; }
-.row[hidden] { display: none; }
-.row .kind { color: var(--dim); font-size: 12px; }
-.row b { font: 600 clamp(20px, 1.8vw, 26px)/1.2 var(--cond); font-stretch: 100%; color: var(--paper); text-transform: none; letter-spacing: -.01em; }
-.row p { font-size: 13px; color: var(--dim); margin-top: 6px; }
-.row .st { font-size: 12px; }
-.row .act { font-size: 12px; color: var(--sky); justify-self: end; }
-a.row:hover { background: rgba(148,230,255,.05); }
-a.row:hover b { color: var(--sky); }
-/* the foot: the name in pixels */
-.foot { border-top: 1px solid var(--rule); }
-.foot canvas { display: block; width: 100%; height: clamp(120px, 21vw, 360px); }
-.fine { display: flex; justify-content: space-between; gap: 16px; padding: 14px var(--gr) calc(16px + env(safe-area-inset-bottom, 0px)) var(--g); color: var(--dim); font-size: 12px; border-top: 1px solid var(--rule); }
-.fine a:hover { color: var(--paper); }
-@media (max-width: 860px) {
-  .orbe { grid-template-columns: 1fr; padding-top: 10vh; } .frame { justify-self: stretch; max-width: none; margin-bottom: 44px; }
-  .row { grid-template-columns: 1fr auto; } .row .kind { grid-column: 1 / -1; } .row .st { display: none; }
-}
-@media (prefers-reduced-motion: reduce) { .load { display: none; } .reveal > span { transform: none; transition: none; } .type::after, .mark::after { animation: none; } }
+main { position: relative; z-index: 2; max-width: 640px; margin: 0 auto; padding: 16vh max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px)); }
+main p { opacity: 0; transform: translateY(6px); transition: opacity 1.1s ease, transform 1.4s cubic-bezier(.2,.7,.2,1); text-wrap: pretty; }
+main p + p { margin-top: 1.4em; }
+body.said main p { opacity: 1; transform: none; }
+body.said main p:nth-child(2) { transition-delay: .35s; }
+main em { font-style: italic; }
+main a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; text-decoration-color: rgba(38,41,42,.35); transition: text-decoration-color .2s; }
+main a:hover { text-decoration-color: var(--text); }
+.mark { position: fixed; z-index: 3; left: 50%; bottom: calc(44px + env(safe-area-inset-bottom, 0px)); width: 60px; height: 60px; transform: translateX(-50%); border-radius: 4px; cursor: pointer; background: none; border: 0; }
+@media (max-width: 600px) { body { font-size: 17.5px; } main { padding-top: 13vh; } }
+@media (prefers-reduced-motion: reduce) { .load { display: none; } body, main p { transition: none; } }
 </style>
-
 <div class="load" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-<a class="mark" href="#top" aria-label="Antimony">ANTIMONY</a>
-
-<section class="hero" id="top">
-  <canvas id="c-crystal" aria-label="The Antimony crystal, built from pixels"></canvas>
-  <div class="copy">
-    <span class="type up" data-type="ANTIMONY //: MAKERS OF ORBE" data-at="1.9"></span>
-    <h1 class="cond"><span class="reveal"><span>Software for</span></span><span class="reveal"><span>the people who</span></span><span class="reveal"><span>make the work.</span></span></h1>
-  </div>
-</section>
-
-<section class="orbe" id="orbe">
-  <figure class="frame"><canvas id="c-orbe" aria-label="Orbe rating a made-up creator's uploads against channels their size"></canvas><figcaption>Orbe, rating a made-up creator against channels their size.</figcaption></figure>
-  <div class="stack">
-    <span class="type up" data-type="001 //: ORBE"></span>
-    <h2 class="cond"><span class="reveal"><span>The creator's side</span></span><span class="reveal"><span class="k">of every sponsorship deal.</span></span></h2>
-    <p class="body">Brands are getting agents. Orbe is the creator's: it negotiates inside their own rules, waits for one tap on anything binding, and holds the brand's money until the work is delivered.</p>
-    <dl class="spec up">
-      <dt>For</dt><dd>Creators and their managers</dd>
-      <dt>Does</dt><dd>Prices, negotiates, holds payment</dd>
-      <dt>Costs</dt><dd>Nothing for creators</dd>
-      <dt>Status</dt><dd>In preview</dd>
-    </dl>
-    <a class="go up" href="https://eoinforker.github.io/orbe-site/">~ Visit Orbe ↗</a>
-  </div>
-</section>
-
-<section class="make" id="make">
-  <span class="type up" data-type="002 //: WHAT WE MAKE"></span>
-  <h2 class="cond" style="margin-top:14px"><span class="reveal"><span>Products and letters.</span></span></h2>
-  <div class="filters" role="group" aria-label="Show"><button aria-pressed="true" data-f="all">All</button><button aria-pressed="false" data-f="product">Products</button><button aria-pressed="false" data-f="letter">Letters</button></div>
-  <div class="rows">
-    <a class="row" data-k="product" href="https://eoinforker.github.io/orbe-site/"><span class="kind up">Product</span><div><b>Orbe</b><p>The creator's side of every sponsorship deal.</p></div><span class="st up">In preview</span><span class="act up">Visit ↗</span></a>
-    <div class="row" data-k="letter"><span class="kind up">Letter</span><div><b>Antimony 001: Never alone</b><p>Why we are building Orbe, and why the company is called Antimony.</p></div><span class="st up">In preparation</span><span class="act up" style="color:var(--dim)">Soon</span></div>
-    <div class="row" data-k="product"><span class="kind up">Product</span><div><b style="color:var(--dim)">Unannounced</b><p>For the people who make the work.</p></div><span class="st up">In development</span><span class="act up" style="color:var(--dim)">Later</span></div>
-  </div>
-</section>
-
-<footer class="foot">
-  <canvas id="c-name" aria-label="Antimony"></canvas>
-  <div class="fine up"><span>© 2026 Antimony</span><a href="https://eoinforker.github.io/orbe-site/">Orbe ↗</a></div>
-</footer>
-
+<canvas id="c" aria-hidden="true"></canvas>
+<main>
+  <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator's side of every sponsorship deal.</p>
+  <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
+</main>
+<button class="mark" id="mark" aria-label="Antimony. Play the opening again"></button>
 <script>
 (() => {
 "use strict";
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const T0 = performance.now();
-const now = () => (performance.now() - T0) / 1000;
-
-// ── the pixel engine: a canvas of square cells, each with a colour; cells build in when the field starts,
-//    jitter near the pointer, and now and then flick to the accent ──
-function field(canvas, sample, opts = {}) {
-  const x = canvas.getContext("2d"); let W = 0, H = 0, cs = 4, cells = [], start = Infinity, mx = -1e9, my = -1e9, live = false;
-  function build() {
-    const r = canvas.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); if (!r.width) return;
-    W = r.width; H = r.height; canvas.width = Math.round(W * d); canvas.height = Math.round(H * d); x.setTransform(d, 0, 0, d, 0, 0);
-    ({ cs, cells } = sample(W, H));
-  }
-  function draw() {
-    const t = now() - start; x.clearRect(0, 0, W, H);
-    for (const k of cells) {
-      const a = still ? 1 : Math.max(0, Math.min(1, (t - k.d) / 0.22)); if (a <= 0) continue;
-      const near = Math.hypot(k.x - mx, k.y - my) < cs * (opts.reach || 6);
-      const flick = !still && t > 3 && Math.sin(now() * 3 + k.n * 7) > 0.996;
-      const s = cs * a - (opts.gap ?? 1);
-      x.fillStyle = a < 1 ? "#F2F1EC" : (near || flick) ? (k.col === "#94E6FF" ? "#F2F1EC" : "#94E6FF") : k.col;
-      const j = near && !still ? (Math.random() - .5) * cs * .6 : 0;
-      x.fillRect(k.x + (cs - s) / 2 + j, k.y + (cs - s) / 2 + j * .4, s, s);
-    }
-  }
-  canvas.addEventListener("pointermove", e => { const r = canvas.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; });
-  canvas.addEventListener("pointerleave", () => mx = my = -1e9);
-  new ResizeObserver(build).observe(canvas); build();
-  return { rebuild: build, go(delay = 0) { if (start === Infinity) start = now() + delay; live = true; }, draw, get live() { return live; } };
-}
-
-// the crystal
-const FACETS = [ { p: [[50,5],[22,29],[22,71],[50,15]], col: "#16201E" }, { p: [[78,71],[78,29],[50,5],[50,15]], col: "#94E6FF" }, { p: [[50,15],[22,71],[50,58],[78,71]], col: "#2C3A37" }, { p: [[22,71],[50,95],[78,71],[50,58]], col: "#1E2A27" } ];
+const c = document.getElementById("c"), x = c.getContext("2d");
+// the mark on its 100-unit grid: four facets and the A with its reflected crossbar
+const FACETS = [ { p: [[50,5],[22,29],[22,71],[50,15]], k: 2 }, { p: [[78,71],[78,29],[50,5],[50,15]], k: 1 }, { p: [[50,15],[22,71],[50,58],[78,71]], k: 3 }, { p: [[22,71],[50,95],[78,71],[50,58]], k: 4 } ];
 const LINES = [[[22,71],[50,15]], [[50,15],[78,71]], [[22,71],[50,58]], [[50,58],[78,71]], [[50,2],[50,15]]];
+// each class has a colour on black and a colour on paper
+const DARK  = ["#F2F1EC", "#94E6FF", "#16201E", "#2C3A37", "#1E2A27"];
+const LIGHT = ["#0B0D0C", "#2448FF", "#C6CAC4", "#DCDED8", "#B9BEB8"];
+const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mix = (a, b, t) => { const A = rgb(a), B = rgb(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(",")})`; };
 const inP = (u, v, p) => { let k = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [a, b] = p[i], [d, e] = p[j]; if ((b > v) !== (e > v) && u < (d - a) * (v - b) / (e - b) + a) k = !k; } return k; };
 const sd = (u, v, [[a, b], [d, e]]) => { const dx = d - a, dy = e - b, t = Math.max(0, Math.min(1, ((u - a) * dx + (v - b) * dy) / (dx * dx + dy * dy))); return Math.hypot(u - a - t * dx, v - b - t * dy); };
-const crystal = field(document.getElementById("c-crystal"), (W, H) => {
-  const narrow = W < 860, size = narrow ? Math.min(W * 1.05, H * 0.56) : Math.min(H * 0.84, W * 0.44);
-  const ox = narrow ? W / 2 - size / 2 : W * 0.74 - size / 2, oy = narrow ? H * 0.1 : H * 0.47 - size / 2, cs = Math.max(5, Math.round(size / (narrow ? 46 : 62))), cells = [];
-  for (let gy = 0; gy < size; gy += cs) for (let gx = 0; gx < size; gx += cs) {
-    const u = (gx + cs / 2) / size * 100, v = (gy + cs / 2) / size * 100; let col = null;
-    if (LINES.some(s => sd(u, v, s) < 1.25)) col = "#F2F1EC"; else for (const f of FACETS) if (inP(u, v, f.p)) { col = f.col; break; }
-    if (col) cells.push({ x: ox + gx, y: oy + gy, col, d: Math.random() * 0.9 + (v / 100) * 0.7, n: Math.random() * 20 });
+function sample(n, lineW) {
+  const out = [];
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const u = (i + .5) / n * 100, v = (j + .5) / n * 100; let k = -1;
+    if (LINES.some(s => sd(u, v, s) < lineW)) k = 0; else for (const f of FACETS) if (inP(u, v, f.p)) { k = f.k; break; }
+    if (k >= 0) out.push({ i, j, u, v, k });
   }
-  // a few loose pixels drifting off the crystal's edge, as in fal's scattered clusters
-  for (let i = 0; i < 70; i++) { const a = Math.random() * 6.283, r = size * (0.42 + Math.random() * 0.35); cells.push({ x: Math.round((ox + size / 2 + Math.cos(a) * r) / cs) * cs, y: Math.round((oy + size / 2 + Math.sin(a) * r * 1.1) / cs) * cs, col: Math.random() < .3 ? "#94E6FF" : "#2C3A37", d: 1.2 + Math.random() * 1.6, n: Math.random() * 20 }); }
-  return { cs, cells };
-});
-
-// Orbe: the real product view, dithered into the same pixels
-const img = new Image(); img.src = "assets/orbe-card.png";
-const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => v / 16);
-const orbe = field(document.getElementById("c-orbe"), (W, H) => {
-  if (!img.complete || !img.naturalWidth) return { cs: 4, cells: [] };
-  const cs = W < 500 ? 3 : 3.5, cols = Math.floor(W / cs), rows = Math.floor(H / cs);
-  const o = document.createElement("canvas"); o.width = cols; o.height = rows; const g = o.getContext("2d", { willReadFrequently: true });
-  g.drawImage(img, 0, 0, cols, rows); const px = g.getImageData(0, 0, cols, rows).data, cells = [];
-  for (let y = 0; y < rows; y++) for (let x2 = 0; x2 < cols; x2++) {
-    const i = (y * cols + x2) * 4, r = px[i], gg = px[i + 1], b = px[i + 2], L = (0.299 * r + 0.587 * gg + 0.114 * b) / 255;
-    let col = null;
-    if (b > r + 50) col = "#94E6FF";                                  // Orbe's blue chip turns to the accent
-    else if (L < 0.42) col = "#F2F1EC";                               // the type, in paper
-    else if (L < 0.72 + BAYER[(y % 4) * 4 + (x2 % 4)] * 0.12) col = "#3A4A47";   // the mid-tones, dithered
-    else if (BAYER[(y % 4) * 4 + (x2 % 4)] > 0.86) col = "#1C2725";   // the card's ground, a sparse screen
-    if (col) cells.push({ x: x2 * cs, y: y * cs, col, d: y / rows * 1.1 + Math.random() * 0.35, n: Math.random() * 20 });
-  }
-  return { cs, cells };
-}, { gap: 0, reach: 9 });
-img.onload = () => orbe.rebuild();
-if (document.fonts) document.fonts.ready.then(() => name.rebuild());
-
-// the name, set in the mono face and built from pixels
-const name = field(document.getElementById("c-name"), (W, H) => {
-  const cs = Math.max(4, Math.round(W / 190)), cols = Math.floor(W / cs), rows = Math.floor(H / cs);
-  const o = document.createElement("canvas"); o.width = cols; o.height = rows; const g = o.getContext("2d", { willReadFrequently: true });
-  g.fillStyle = "#000"; g.fillRect(0, 0, cols, rows); g.fillStyle = "#fff"; g.textBaseline = "middle"; g.textAlign = "center";
-  let fs = rows * 0.9; g.font = `600 ${fs}px "Commit Mono", monospace`; const w = g.measureText("ANTIMONY").width; if (w > cols * 0.94) { fs *= cols * 0.94 / w; g.font = `600 ${fs}px "Commit Mono", monospace`; }
-  g.fillText("ANTIMONY", cols / 2, rows * 0.54);
-  const px = g.getImageData(0, 0, cols, rows).data, cells = [];
-  for (let y = 0; y < rows; y++) for (let x2 = 0; x2 < cols; x2++) if (px[(y * cols + x2) * 4] > 110) cells.push({ x: x2 * cs, y: y * cs, col: x2 / cols > 0.0 && x2 / cols < 0.125 && y / rows < 0.5 ? "#94E6FF" : "#F2F1EC", d: x2 / cols * 0.9 + Math.random() * 0.4, n: Math.random() * 20 });
-  return { cs, cells };
-}, { reach: 5 });
-
-// typing, as a terminal prints
-function type(el, delay = 0) {
-  if (el.dataset.started) return; el.dataset.started = 1; const s = el.dataset.type;
-  if (still) { el.textContent = s; el.classList.add("done"); return; }
-  setTimeout(() => { let i = 0; const t = setInterval(() => { el.textContent = s.slice(0, ++i); if (i >= s.length) { clearInterval(t); setTimeout(() => el.classList.add("done"), 1600); } }, 34); }, delay * 1000);
+  return out;
 }
-
-// the opening, then each section as it arrives
-crystal.go(1.3);
-setTimeout(() => document.querySelector(".hero").classList.add("in"), still ? 0 : 2300);
-type(document.querySelector(".hero .type"), still ? 0 : 1.9);
-const io = new IntersectionObserver(es => es.forEach(e => {
-  if (!e.isIntersecting) return; const s = e.target; s.classList.add("in");
-  s.querySelectorAll(".type").forEach(t => type(t, 0.1));
-  if (s.id === "orbe") orbe.go(0.2); if (s.classList.contains("foot")) name.go(0.1);
-  io.unobserve(s);
-}), { threshold: 0.28 });
-document.querySelectorAll(".orbe, .make, .foot").forEach(s => io.observe(s));
-
-// the filters
-document.querySelectorAll(".filters button").forEach(b => b.addEventListener("click", () => {
-  document.querySelectorAll(".filters button").forEach(o => o.setAttribute("aria-pressed", o === b));
-  document.querySelectorAll(".row").forEach(r => r.hidden = b.dataset.f !== "all" && r.dataset.k !== b.dataset.f);
-}));
-
-(function loop() { crystal.draw(); if (orbe.live) orbe.draw(); if (name.live) name.draw(); requestAnimationFrame(loop); })();
+let W, H, big, small, P = [], T0, mx = -1e9, my = -1e9;
+const BUILD = 1.3, HOLD = 3.2, FLY = 1.6;   // seconds: the build starts, the flight starts, the flight lasts
+function layout() {
+  const d = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; c.width = W * d; c.height = H * d; x.setTransform(d, 0, 0, d, 0, 0);
+  const bs = Math.min(H * 0.7, W * 0.86), bn = W < 600 ? 44 : 60;
+  big = { s: bs, n: bn, cs: bs / bn, ox: W / 2 - bs / 2, oy: H * 0.47 - bs / 2 };
+  const ss = 52, sn = 18, rect = document.getElementById("mark").getBoundingClientRect();
+  small = { s: ss, n: sn, cs: ss / sn, ox: rect.left + rect.width / 2 - ss / 2, oy: rect.top + rect.height / 2 - ss / 2 };
+  const B = sample(bn, 1.25), S = sample(sn, 3.2);
+  // every pixel of the mark at the foot is one pixel of the big crystal, of the same kind; the rest fall away
+  const pool = [[], [], [], [], []]; B.forEach(b => pool[b.k].push(b)); pool.forEach(p => p.sort(() => Math.random() - .5));
+  P = B.map(b => ({ b, s: null, d: Math.random() * 0.9 + b.v / 100 * 0.7, n: Math.random() * 20, w: Math.random() * 0.35 }));
+  const byB = new Map(P.map(p => [p.b, p]));
+  for (const s of S) { const src = pool[s.k].pop() || pool.find(p => p.length)?.pop(); if (src) byB.get(src).s = s; }
+}
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+function frame() {
+  const t = still ? 99 : (performance.now() - T0) / 1000;
+  const f = Math.max(0, Math.min(1, (t - BUILD - HOLD) / FLY));
+  x.clearRect(0, 0, W, H);
+  for (const p of P) {
+    const a = Math.max(0, Math.min(1, (t - BUILD - p.d) / 0.25)); if (a <= 0) continue;
+    const e = ease(Math.max(0, Math.min(1, (f - p.w * 0.6) / (1 - p.w * 0.6 + 1e-6))));
+    const bx = big.ox + p.b.i * big.cs, by = big.oy + p.b.j * big.cs;
+    let X, Y, S, col, alpha = 1;
+    if (p.s) {
+      const sx = small.ox + p.s.i * small.cs, sy = small.oy + p.s.j * small.cs;
+      X = bx + (sx - bx) * e; Y = by + (sy - by) * e - Math.sin(e * Math.PI) * 30 * (1 - p.w); S = (big.cs - 1) + ((small.cs - .35) - (big.cs - 1)) * e;
+      col = a < 1 ? "#F2F1EC" : mix(DARK[p.b.k], LIGHT[p.b.k], Math.max(0, Math.min(1, (f - 0.78) / 0.22)));
+    } else {
+      X = bx + (bx - W / 2) * e * 0.25; Y = by + e * 40; S = (big.cs - 1) * (1 - e); alpha = 1 - e;
+      col = a < 1 ? "#F2F1EC" : DARK[p.b.k];
+    }
+    if (f <= 0 && a >= 1) {   // while the crystal stands, it answers the pointer and flickers now and then
+      const near = Math.hypot(bx - mx, by - my) < big.cs * 6, flick = t > BUILD + 2 && Math.sin(t * 3 + p.n * 7) > .996;
+      if (near || flick) col = p.b.k === 1 ? "#F2F1EC" : "#94E6FF";
+      if (near) { X += (Math.random() - .5) * 2; }
+    }
+    if (f >= 1 && p.s) { const near = Math.hypot(X - mx, Y - my) < 30; if (near && Math.random() < .25) col = p.b.k === 1 ? "#0B0D0C" : "#2448FF"; }
+    S *= a < 1 ? a : 1; if (S <= 0.05 || alpha <= 0.01) continue;
+    x.globalAlpha = alpha; x.fillStyle = col; x.fillRect(X + (big.cs - S) / 2 * (1 - e), Y + (big.cs - S) / 2 * (1 - e), S, S);
+  }
+  x.globalAlpha = 1;
+  document.body.classList.toggle("paper", t > BUILD + HOLD + FLY * 0.8);
+  document.body.classList.toggle("said", t > BUILD + HOLD + FLY + 0.5);
+  requestAnimationFrame(frame);
+}
+function play() { T0 = performance.now(); layout(); document.body.classList.remove("paper", "said"); }
+addEventListener("pointermove", e => { mx = e.clientX; my = e.clientY; });
+addEventListener("pointerleave", () => mx = my = -1e9);
+addEventListener("resize", () => { const t0 = T0; layout(); T0 = t0; });
+document.getElementById("mark").addEventListener("click", play);
+(document.fonts ? document.fonts.load('400 19px "Timeless Serif"') : Promise.resolve()).catch(() => {}).finally(() => { play(); requestAnimationFrame(frame); });
 })();
 </script>
 
