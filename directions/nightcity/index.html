@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0C0C"><meta name="description" content="Antimony builds software for the people who make the work. Our first product is Orbe.">
+<title>Antimony, Night City</title>
+<style>
+/* Night City. A corporate ident on a deep field: one typed line; the seam drawn at 16 degrees; it opens into the cavity; the crystal is drawn and lit; the stone closes around it; the caps arrive, cut on the seam. Then it settles to the corner and the page arrives. */
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: block; }
+@font-face { font-family: "Commit Mono"; src: url("assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
+:root { --ink: #0B0C0C; --stone: #141311; --paper: #EEEAE0; --sky: #94E6FF; --prussian: #1F3F7A; --dim: rgba(238,234,224,.52); --faint: rgba(238,234,224,.34); --hair: rgba(238,234,224,.12); --g: 40px; color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--ink); }
+body { background: var(--grain, none) var(--ink); color: var(--paper); font: 400 18px/1.56 "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; min-height: 100svh; overflow-x: hidden; }
+body.opening { overflow: hidden; }
+a { color: inherit; text-decoration: none; }
+::selection { background: var(--sky); color: var(--ink); }
+:focus-visible { outline: 1px solid var(--sky); outline-offset: 4px; }
+svg { display: block; overflow: visible; }
+
+/* the ident */
+#field { position: fixed; inset: 0; z-index: 30; pointer-events: none; background: var(--grain, none), radial-gradient(120% 90% at 50% 47%, #0A0C0D 0%, #050606 55%, #020202 100%); }
+#line { position: fixed; left: 0; right: 0; top: 38px; z-index: 32; text-align: center; font: 400 11.5px/1.9 "Commit Mono", ui-monospace, monospace; letter-spacing: .16em; color: var(--paper); pointer-events: none; padding: 0 20px; }
+#line .lab { color: var(--sky); }
+#line i { font-style: normal; visibility: hidden; }
+#line i.on { visibility: visible; }
+#ident { position: absolute; left: 0; top: 0; z-index: 31; }
+#ident a { position: absolute; display: block; border-radius: 4px; }
+#emb, #caps { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+
+/* the page: one quiet column, headed by the lockup the ident settles into */
+.page { opacity: 0; }
+body.done .page { opacity: 1; }
+main { position: relative; z-index: 1; padding: 0 var(--g); min-height: 100svh; }
+.col { max-width: 560px; margin: 0 auto; padding: max(150px, 26vh) 0 120px; }
+.slot { height: 28px; margin-bottom: 60px; }
+.col p { text-wrap: pretty; }
+.col p + p { margin-top: 1em; }
+.col a.in { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; text-decoration-color: rgba(238,234,224,.35); transition: text-decoration-color .3s ease; }
+.col a.in:hover { text-decoration-color: var(--sky); }
+.made { list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 26px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--hair); font-size: 15px; line-height: 1; color: var(--dim); }
+.made li { display: flex; align-items: center; height: 20px; }
+.made li.where { margin-left: auto; }
+.made a { display: inline-flex; align-items: center; gap: 9px; transition: color .35s ease; }
+.made img { width: 18px; height: 18px; border-radius: 4.5px; filter: grayscale(1) brightness(.92); opacity: .6; transition: filter .45s ease, opacity .45s ease; }
+.made a:hover, .made a:focus-visible { color: var(--paper); }
+.made a:hover img, .made a:focus-visible img { filter: none; opacity: 1; }
+.made .by { color: var(--faint); margin-left: -3px; transition: color .35s ease; }
+.made a:hover .by { color: var(--dim); }
+
+@media (max-width: 720px) {
+  :root { --g: 20px; }
+  body { font-size: 17px; }
+  .col { padding-top: 26px; }
+  .slot { height: 26px; margin-bottom: 92px; }
+  .made { margin-top: 34px; gap: 16px 22px; }
+  .made li.where { margin-left: 0; }
+  #line { font-size: 10.5px; letter-spacing: .1em; top: 30px; }
+  #line .lab { display: block; }
+}
+@media (prefers-reduced-motion: reduce) { .made img, .made a, .col a.in { transition: none; } }
+</style></head>
+<body class="opening">
+<div id="field" aria-hidden="true"></div>
+<div id="line" aria-hidden="true"></div>
+<div id="ident"><a href="./" aria-label="Antimony, home"></a></div>
+<div class="page">
+<main>
+  <div class="col">
+    <div class="slot" aria-hidden="true"></div>
+    <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a class="in" href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator’s side of every sponsorship deal.</p>
+    <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
+    <ul class="made">
+      <li><a href="https://eoinforker.github.io/orbe-site/"><img src="assets/work/orbe.svg" alt="">Orbe <span class="by">by Antimony</span></a></li>
+      <li><a href="https://immiscible.ai"><img src="assets/work/immiscible.svg" alt="">immiscible</a></li>
+      <li><a href="https://idyll.day"><img src="assets/work/idyll.svg" alt="">Idyll</a></li>
+      <li class="where">London</li>
+    </ul>
+  </div>
+</main>
+</div>
+<script>
+(() => { "use strict";
+const LOOPS = ["M62.94 0.00 L22.00 0.00 L20.56 0.05 L19.13 0.19 L17.71 0.42 L16.31 0.75 L14.93 1.17 L13.58 1.67 L12.27 2.27 L11.00 2.95 L9.78 3.71 L8.61 4.55 L7.49 5.46 L6.44 6.44 L5.46 7.49 L4.55 8.61 L3.71 9.78 L2.95 11.00 L2.27 12.27 L1.67 13.58 L1.17 14.93 L0.75 16.31 L0.42 17.71 L0.19 19.13 L0.05 20.56 L0.00 22.00 L0.00 78.00 L0.05 79.44 L0.19 80.87 L0.42 82.29 L0.75 83.69 L1.17 85.07 L1.67 86.42 L2.27 87.73 L2.95 89.00 L3.71 90.22 L4.55 91.39 L5.46 92.51 L6.44 93.56 L7.49 94.54 L8.61 95.45 L9.78 96.29 L11.00 97.05 L12.27 97.73 L13.58 98.33 L14.93 98.83 L16.31 99.25 L17.71 99.58 L19.13 99.81 L20.56 99.95 L22.00 100.00 L34.16 100.00 L36.96 85.18 L21.81 60.20 L26.79 42.80 L56.22 17.86Z", "M66.59 0.00 L78.00 0.00 L79.44 0.05 L80.87 0.19 L82.29 0.42 L83.69 0.75 L85.07 1.17 L86.42 1.67 L87.73 2.27 L89.00 2.95 L90.22 3.71 L91.39 4.55 L92.51 5.46 L93.56 6.44 L94.54 7.49 L95.45 8.61 L96.29 9.78 L97.05 11.00 L97.73 12.27 L98.33 13.58 L98.83 14.93 L99.25 16.31 L99.58 17.71 L99.81 19.13 L99.95 20.56 L100.00 22.00 L100.00 78.00 L99.95 79.44 L99.81 80.87 L99.58 82.29 L99.25 83.69 L98.83 85.07 L98.33 86.42 L97.73 87.73 L97.05 89.00 L96.29 90.22 L95.45 91.39 L94.54 92.51 L93.56 93.56 L92.51 94.54 L91.39 95.45 L90.22 96.29 L89.00 97.05 L87.73 97.73 L86.42 98.33 L85.07 98.83 L83.69 99.25 L82.29 99.58 L80.87 99.81 L79.44 99.95 L78.00 100.00 L38.02 100.00 L43.74 85.17 L73.21 60.20 L78.19 42.80 L63.07 17.85Z"], LETTERS = ["M111 -95 351 -695H386L628 -95Q643 -57 663.5 -42.5Q684 -28 723 -23V0H460V-23Q497 -27 512.0 -35.5Q527 -44 527 -59Q527 -71 517 -96L463 -236L335.0 -324.0L207 -236L155 -96Q148 -75 148 -66Q148 -47 166.5 -37.0Q185 -27 228 -23V0H15V-23Q52 -27 73.5 -40.5Q95 -54 111 -95ZM444.5154639175258 -286.0 336 -563 227.48453608247422 -286.0 336.0 -374.0Z", "M989.58 -122V-573Q989.58 -612 979.08 -632.5Q968.58 -653 947.08 -661.0Q925.58 -669 888.58 -672V-695H1060.58L1463.58 -178V-575Q1463.58 -614 1453.08 -634.0Q1442.58 -654 1421.58 -661.5Q1400.58 -669 1362.58 -672V-695H1604.58V-672Q1566.58 -669 1545.58 -661.5Q1524.58 -654 1514.08 -633.5Q1503.58 -613 1503.58 -574L1504.58 0H1476.58L1029.58 -573V-123Q1029.58 -83 1040.08 -62.5Q1050.58 -42 1071.58 -34.0Q1092.58 -26 1130.58 -23V0H888.58V-23Q926.58 -26 947.58 -34.0Q968.58 -42 979.08 -62.5Q989.58 -83 989.58 -122Z", "M1984.16 -112V-657H1901.16Q1850.16 -657 1821.16 -647.5Q1792.16 -638 1773.66 -608.5Q1755.16 -579 1748.16 -519H1727.16L1737.16 -695H2325.16L2335.16 -519H2314.16Q2306.16 -580 2288.16 -609.5Q2270.16 -639 2241.16 -648.0Q2212.16 -657 2161.16 -657H2077.16V-112Q2078.16 -77 2088.66 -59.0Q2099.16 -41 2119.66 -33.5Q2140.16 -26 2177.16 -23V0H1888.16V-23Q1939.16 -27 1961.16 -45.0Q1983.16 -63 1984.16 -112Z", "M2580.7400000000002 -112V-583Q2579.7400000000002 -618 2569.2400000000002 -636.0Q2558.7400000000002 -654 2538.2400000000002 -661.5Q2517.7400000000002 -669 2480.7400000000002 -672V-695H2770.7400000000002V-672Q2719.7400000000002 -668 2697.2400000000002 -650.0Q2674.7400000000002 -632 2673.7400000000002 -583V-112Q2674.7400000000002 -62 2696.7400000000002 -44.5Q2718.7400000000002 -27 2773.7400000000002 -23V0H2483.7400000000002V-23Q2534.7400000000002 -27 2557.2400000000002 -44.5Q2579.7400000000002 -62 2580.7400000000002 -112Z", "M3042.32 -101 3057.32 -582Q3058.32 -632 3041.82 -650.0Q3025.32 -668 2979.32 -672V-695H3157.32L3403.32 -146L3617.32 -695H3789.32V-672Q3750.32 -668 3734.82 -646.5Q3719.32 -625 3721.32 -588L3741.32 -94Q3742.32 -66 3749.82 -52.0Q3757.32 -38 3773.32 -32.0Q3789.32 -26 3821.32 -23V0H3569.32V-23Q3603.32 -26 3619.82 -32.0Q3636.32 -38 3642.32 -51.5Q3648.32 -65 3647.32 -94L3626.32 -616L3390.32 0H3365.32L3099.32 -595L3084.32 -101Q3083.32 -68 3091.82 -52.5Q3100.32 -37 3118.82 -31.5Q3137.32 -26 3175.32 -23V0H2951.32V-23Q2985.32 -26 3003.82 -32.0Q3022.32 -38 3031.82 -54.0Q3041.32 -70 3042.32 -101Z", "M3997.9 -349Q3997.9 -452 4043.9 -533.0Q4089.9 -614 4167.9 -659.0Q4245.9 -704 4337.9 -704Q4429.9 -704 4508.9 -659.0Q4587.9 -614 4634.9 -533.0Q4681.9 -452 4681.9 -349Q4681.9 -246 4634.9 -164.5Q4587.9 -83 4508.9 -37.5Q4429.9 8 4337.9 8Q4245.9 8 4167.9 -37.5Q4089.9 -83 4043.9 -164.5Q3997.9 -246 3997.9 -349ZM4567.9 -349Q4567.9 -444 4538.4 -516.0Q4508.9 -588 4456.4 -627.5Q4403.9 -667 4336.9 -667Q4270.9 -667 4219.4 -627.5Q4167.9 -588 4139.4 -515.5Q4110.9 -443 4110.9 -349Q4110.9 -254 4139.4 -181.0Q4167.9 -108 4219.4 -68.0Q4270.9 -28 4336.9 -28Q4403.9 -28 4456.4 -68.0Q4508.9 -108 4538.4 -181.0Q4567.9 -254 4567.9 -349Z", "M4979.4800000000005 -122V-573Q4979.4800000000005 -612 4968.9800000000005 -632.5Q4958.4800000000005 -653 4936.9800000000005 -661.0Q4915.4800000000005 -669 4878.4800000000005 -672V-695H5050.4800000000005L5453.4800000000005 -178V-575Q5453.4800000000005 -614 5442.9800000000005 -634.0Q5432.4800000000005 -654 5411.4800000000005 -661.5Q5390.4800000000005 -669 5352.4800000000005 -672V-695H5594.4800000000005V-672Q5556.4800000000005 -669 5535.4800000000005 -661.5Q5514.4800000000005 -654 5503.9800000000005 -633.5Q5493.4800000000005 -613 5493.4800000000005 -574L5494.4800000000005 0H5466.4800000000005L5019.4800000000005 -573V-123Q5019.4800000000005 -83 5029.9800000000005 -62.5Q5040.4800000000005 -42 5061.4800000000005 -34.0Q5082.4800000000005 -26 5120.4800000000005 -23V0H4878.4800000000005V-23Q4916.4800000000005 -26 4937.4800000000005 -34.0Q4958.4800000000005 -42 4968.9800000000005 -62.5Q4979.4800000000005 -83 4979.4800000000005 -122Z", "M5973.06 -112V-281L5771.06 -625Q5761.06 -643 5754.56 -651.0Q5748.06 -659 5736.56 -664.5Q5725.06 -670 5703.06 -672V-695H5951.06V-674Q5917.06 -671 5900.06 -662.5Q5883.06 -654 5883.06 -637Q5883.06 -627 5892.06 -610L6047.06 -340L6199.06 -617Q6208.06 -635 6208.06 -645Q6208.06 -660 6192.06 -665.5Q6176.06 -671 6137.06 -674V-695H6326.06V-674Q6301.06 -671 6290.56 -668.0Q6280.06 -665 6271.06 -654.5Q6262.06 -644 6249.06 -620L6066.06 -288V-112Q6067.06 -62 6089.06 -44.5Q6111.06 -27 6166.06 -23V0H5876.06V-23Q5927.06 -27 5949.56 -44.5Q5972.06 -62 5973.06 -112Z"];
+const Q = { seam: "M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z", cav: [[60.75,14.02],[78.19,42.8],[73.21,60.2],[39.25,88.97],[21.81,60.2],[26.79,42.8]], gem: "M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z", facet: "M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" };
+const NS = "http://www.w3.org/2000/svg", SKY = "#94E6FF", PAPER = "#EEEAE0", STONE = "#141311", INK = "#0B0C0C";
+const T16 = Math.tan(16 * Math.PI / 180), S16 = Math.sin(16 * Math.PI / 180), C16 = Math.cos(16 * Math.PI / 180);
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let seen = false; try { seen = sessionStorage.getItem("nc-seen") === "1"; } catch (e) {}
+const $ = s => document.querySelector(s), body = document.body;
+
+/* a fine grain, baked once */
+(() => { const c = document.createElement("canvas"), n = 192; c.width = c.height = n; const g = c.getContext("2d"), im = g.createImageData(n, n), d = im.data;
+  for (let i = 0; i < d.length; i += 4) { const v = Math.random() > .5 ? 255 : 0; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = v ? Math.random() * 11 : Math.random() * 16; }
+  g.putImageData(im, 0, 0); document.documentElement.style.setProperty("--grain", `url(${c.toDataURL()})`); })();
+
+/* the Break, drawn to order */
+let uid = 0;
+const CAV = "M" + Q.cav.map(p => p.join(" ")).join("L") + "Z";
+function solid(stone, opening = false) {
+  const id = "b" + (++uid);
+  const svg = document.createElementNS(NS, "svg"); svg.setAttribute("viewBox", "0 0 100 100"); svg.setAttribute("aria-hidden", "true");
+  svg.innerHTML = `<defs><linearGradient id="${id}g" x1="58" y1="21.5" x2="42" y2="81.5" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#CFF5FF"/><stop offset=".46" stop-color="${SKY}"/><stop offset="1" stop-color="#7FD6F4"/></linearGradient></defs>
+    ${opening ? `<g class="hair" fill="none" stroke="${SKY}" stroke-linecap="round" stroke-linejoin="round"><path class="ax" d="M50 51.5L64.77 0"/><path class="ax" d="M50 51.5L35.23 100"/><path class="cv" d="${CAV}"/><path class="gl" d="${Q.gem}"/></g>` : ""}
+    <g class="stone">${LOOPS.map(d => `<path d="${d}" fill="${stone}"/>`).join("")}</g>
+    <g class="crys"><path class="gf" d="${Q.gem}" fill="url(#${id}g)"/><path class="fc" d="${Q.facet}" fill="#fff" opacity=".28"/></g>`;
+  svg.crys = svg.querySelector(".crys"); svg.fc = svg.querySelector(".fc");
+  return svg;
+}
+/* the serif caps from the logo set, the A cut by the crystal; they arrive behind an edge slanted on the seam */
+const CVB = [-15, -697, 6345, 699], CA = CVB[2] / CVB[3];
+function caps(color) {
+  const id = "k" + (++uid);
+  const svg = document.createElementNS(NS, "svg"); svg.setAttribute("viewBox", CVB.join(" ")); svg.setAttribute("aria-hidden", "true");
+  svg.innerHTML = `<defs><linearGradient id="${id}w" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="700" y2="0"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>
+    <mask id="${id}r" maskUnits="userSpaceOnUse" x="-2000" y="-800" width="${CVB[2] + 4000}" height="900"><g class="wipe"><rect x="-9000" y="-760" width="9000" height="820" fill="#fff" transform="skewX(-16)"/><rect x="0" y="-760" width="700" height="820" fill="url(#${id}w)" transform="skewX(-16)"/></g></mask></defs>
+    <g fill="${color}" mask="url(#${id}r)">${LETTERS.map(d => `<path d="${d}"/>`).join("")}</g>`;
+  svg.wipe = svg.querySelector(".wipe");
+  return svg;
+}
+
+/* the ident */
+const ident = $("#ident"), emb = solid(PAPER, true), cap = caps(PAPER);
+emb.id = "emb"; cap.id = "caps"; ident.append(emb, cap);
+const hair = emb.querySelector(".hair"), axes = [...hair.querySelectorAll(".ax")], cv = hair.querySelector(".cv"), gl = hair.querySelector(".gl");
+const pieces = [...emb.querySelectorAll(".stone path")], gf = emb.querySelector(".gf");
+const axLen = axes.map(p => p.getTotalLength()), glLen = gl.getTotalLength();
+axes.forEach((p, i) => p.style.strokeDasharray = `${axLen[i]} ${axLen[i] + 1}`); gl.style.strokeDasharray = `${glLen} ${glLen + 1}`;
+
+const marks = [emb];
+
+/* the typed line */
+const LAB = "ANTIMONY //:", TXT = "software for the people who make the work", ln = $("#line");
+ln.innerHTML = `<span class="lab">${[...LAB].map(c => `<i>${c}</i>`).join("")}<i> </i></span>${[...TXT].map(c => `<i>${c}</i>`).join("")}`;
+const chars = [...ln.querySelectorAll("i")];
+
+/* timeline, in seconds */
+const T = {}; { let c = .35; T.type0 = c; c += chars.length * .075; T.type1 = c; c += .6; T.fade0 = c; c += .6; T.fade1 = c;
+  T.ax0 = T.fade1 - .1; T.ax1 = T.ax0 + .65;          // the seam, drawn from the crystal's centre outwards
+  T.cv0 = T.ax1 - .1; T.cv1 = T.cv0 + .65;            // it opens into the cavity
+  T.gl0 = T.cv1 - .25; T.gl1 = T.gl0 + .6;            // the crystal is drawn
+  T.lt0 = T.gl1 - .1; T.lt1 = T.lt0 + .55;            // and lights
+  T.st0 = T.lt1 - .15; T.st1 = T.st0 + .7;            // the stone closes around it
+  T.wd0 = T.st1 - .25; T.wd1 = T.wd0 + .8;            // the caps arrive
+  T.set0 = T.wd1 + .7; T.set1 = T.set0 + .95;         // hold, then settle
+  T.page0 = T.set1 - .35; T.page1 = T.page0 + .8; T.end = T.page1; }
+const cl = v => v < 0 ? 0 : v > 1 ? 1 : v, k = (t, a, b) => cl((t - a) / (b - a));
+const inOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2, out3 = t => 1 - Math.pow(1 - t, 3), outX = t => t >= 1 ? 1 : 1 - Math.pow(2, -9 * t), out4 = t => 1 - Math.pow(1 - t, 4);
+
+/* geometry of the two ident states */
+let C, H;
+function layout() {
+  const W = innerWidth, Hh = innerHeight, phone = W < 720;
+  const s = phone ? 88 : 104, ch = phone ? 10.5 : 12, cw = ch * CA, gap = phone ? 24 : 28;
+  const top = Math.round(Hh * .47 - (s + gap + ch) / 2);
+  C = { e: [Math.round(W / 2 - s / 2), top, s], w: [W / 2 - cw / 2, top + s + gap, cw] };
+  const r = $(".slot").getBoundingClientRect(), x = r.left, y = r.top + scrollY, es = r.height, hh = phone ? 9 : 9.5, hw = hh * CA;
+  H = { e: [x, y, es], w: [x + es + (phone ? 13 : 15), y + (es - hh) / 2, hw] };
+  const a = ident.querySelector("a"); Object.assign(a.style, { left: x - 6 + "px", top: y - 6 + "px", width: es + 27 + hw + "px", height: es + 12 + "px" });
+}
+function place(e) {
+  const L = (a, b) => a + (b - a) * e;
+  const es = L(C.e[2], H.e[2]); emb.style.transform = `translate(${L(C.e[0], H.e[0])}px,${L(C.e[1], H.e[1])}px)`; emb.style.width = emb.style.height = es + "px";
+  const ww = L(C.w[2], H.w[2]); cap.style.transform = `translate(${L(C.w[0], H.w[0])}px,${L(C.w[1], H.w[1])}px)`; cap.style.width = ww + "px"; cap.style.height = ww / CA + "px";
+}
+
+let lastE = -1;
+function render(t) {
+  // the typed line
+  const n = Math.floor((t - T.type0) / .075) + 1;
+  chars.forEach((c, i) => c.classList.toggle("on", i < n));
+  ln.style.opacity = 1 - inOut(k(t, T.fade0, T.fade1));
+  ln.style.visibility = t >= T.fade1 ? "hidden" : "visible";
+  // the seam, a hairline at 16 degrees, from the centre outwards
+  const ax = out3(k(t, T.ax0, T.ax1));
+  axes.forEach((p, i) => p.style.strokeDashoffset = axLen[i] * (1 - ax));
+  // it opens into the cavity: the side vertices part from the seam's axis
+  const o = inOut(k(t, T.cv0, T.cv1));
+  cv.setAttribute("d", "M" + Q.cav.map(([x, y]) => { const ax0 = 50 + (51.5 - y) * T16, px = ax0 + (x - ax0) * o; return px.toFixed(3) + " " + y; }).join("L") + "Z");
+  cv.style.opacity = t < T.cv0 ? 0 : 1;
+  // the crystal, drawn then lit
+  gl.style.strokeDashoffset = glLen * (1 - inOut(k(t, T.gl0, T.gl1)));
+  gl.style.opacity = t < T.gl0 ? 0 : 1;
+  const lt = out3(k(t, T.lt0, T.lt1));
+  gf.style.opacity = lt; emb.fc.style.opacity = (.28 * lt).toFixed(3);
+  // the stone closes around it in one move, along the seam's normal
+  const sc = outX(k(t, T.st0, T.st1)), d = 24 * (1 - sc);
+  pieces[0].setAttribute("transform", `translate(${(-d * C16).toFixed(3)} ${(-d * S16).toFixed(3)})`);
+  pieces[1].setAttribute("transform", `translate(${(d * C16).toFixed(3)} ${(d * S16).toFixed(3)})`);
+  const so = out3(k(t, T.st0, T.st0 + .22)); pieces.forEach(p => p.style.opacity = so);
+  hair.style.opacity = 1 - inOut(k(t, T.st0 - .2, T.st0 + .25));
+  hair.style.visibility = t >= T.st0 + .25 ? "hidden" : "visible";
+  // the caps arrive behind a slanted edge
+  const wd = inOut(k(t, T.wd0, T.wd1));
+  cap.wipe.setAttribute("transform", `translate(${(-1000 + wd * (CVB[2] + 2200)).toFixed(1)} 0)`);
+  // settle into the head of the column
+  const e = inOut(k(t, T.set0, T.set1));
+  if (e !== lastE) { place(e); lastE = e; }
+  $("#field").style.opacity = 1 - inOut(k(t, T.set0 + .15, T.set1));
+  $(".page").style.opacity = out3(k(t, T.page0, T.page1));
+}
+
+let t0 = 0, raf = 0, ended = false;
+function finish() {
+  if (ended) return; ended = true; cancelAnimationFrame(raf); lastE = -1; render(T.end + 1);
+  body.classList.remove("opening"); body.classList.add("done"); $("#field").style.display = "none"; ln.style.display = "none";
+  $(".page").style.opacity = ""; try { sessionStorage.setItem("nc-seen", "1"); } catch (e) {}
+}
+function loop(now) { const t = (now - t0) / 1000; if (t >= T.end) return finish(); render(t); raf = requestAnimationFrame(loop); }
+const skip = () => { if (!ended) finish(); };
+addEventListener("resize", () => { layout(); lastE = -1; render(ended ? T.end + 1 : (performance.now() - t0) / 1000); });
+
+/* the faintest parallax between stone and crystal */
+let px = innerWidth / 2, py = innerHeight / 2, pend = false;
+function tilt() { pend = false; for (const s of marks) { const r = s.getBoundingClientRect(); if (!r.width || r.bottom < 0 || r.top > innerHeight) continue;
+  const dx = (px - (r.left + r.width / 2)) / innerWidth, dy = (py - (r.top + r.height / 2)) / innerHeight;
+  const tx = Math.max(-1.4, Math.min(1.4, -dx * 2.4)), ty = Math.max(-1.4, Math.min(1.4, -dy * 2.4));
+  s.crys.setAttribute("transform", `translate(${tx.toFixed(3)} ${ty.toFixed(3)})`);
+  s.fc.setAttribute("opacity", (.28 + Math.max(-.07, Math.min(.07, dx * .14))).toFixed(3)); } }
+if (!still) addEventListener("pointermove", e => { if (e.pointerType !== "mouse") return; px = e.clientX; py = e.clientY; if (!pend) { pend = true; requestAnimationFrame(tilt); } }, { passive: true });
+
+layout();
+const q = new URLSearchParams(location.search), at = q.has("t") ? parseFloat(q.get("t")) : null;
+window.__T = T; window.__render = render;
+if (at !== null) { render(at); if (at >= T.end) finish(); }
+else if (still || seen) finish();
+else {
+  render(0);
+  ["pointerdown", "keydown", "wheel", "touchstart"].forEach(ev => addEventListener(ev, skip, { passive: true, once: true }));
+  const go = () => { t0 = performance.now(); raf = requestAnimationFrame(loop); };
+  (document.fonts ? Promise.all([document.fonts.load('400 12px "Commit Mono"'), document.fonts.load('400 18px "Timeless Serif"'), document.fonts.load('italic 400 18px "Timeless Serif"')]) : Promise.resolve()).catch(() => {}).finally(go);
+}
+})();
+</script>
+</body></html>

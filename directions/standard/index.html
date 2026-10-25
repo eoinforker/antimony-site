@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EEEAE0">
+<meta name="description" content="Antimony builds software for the people who make the work. Our first product is Orbe.">
+<title>Antimony, Standard</title>
+<style>
+/* Standard: paper, one deep panel, hairlines and a large serif. The opening sets the caps wordmark from slices, lights the crystal in the A, and carries it into the Break. */
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: block; }
+:root {
+  --paper: #EEEAE0; --ink: #0B0C0C; --stone: #141311; --text: #1C1D1D; --dim: #6E6C66;
+  --rule: rgba(11,12,12,.16); --sky: #94E6FF; --prussian: #1F3F7A; --panel: #0C1F33;
+  --gut: clamp(20px, 3.4vw, 48px);
+  color-scheme: light;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: #F2EEE6; -webkit-text-size-adjust: 100%; }
+body {
+  background-color: #F2EEE6; color: var(--text);
+  font: 400 19px/1.55 "Timeless Serif", Georgia, serif;
+  -webkit-font-smoothing: antialiased; overflow-x: clip;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .07 0 0 0 0 .06 0 0 0 0 .05 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.09'/%3E%3C/svg%3E");
+}
+a { color: inherit; }
+::selection { background: var(--sky); color: var(--ink); }
+:focus-visible { outline: 1px solid var(--prussian); outline-offset: 4px; }
+ul { list-style: none; }
+
+.wrap { padding: 0 var(--gut); max-width: 1520px; margin: 0 auto; }
+hr { border: 0; height: 1px; background: var(--rule); }
+
+/* Masthead: the mark and the title case wordmark. */
+header { display: flex; align-items: center; gap: 16px; padding: 28px 0 26px; }
+.mark { width: 44px; height: 44px; display: block; flex: none; overflow: visible; }
+.title { height: 25px; width: auto; display: block; color: var(--ink); margin-top: 3px; }
+
+/* Statement and the two paragraphs. */
+.intro { padding: clamp(56px, 9vw, 132px) 0 clamp(56px, 7vw, 104px); display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--gut); row-gap: clamp(36px, 5vw, 72px); }
+h1 { grid-column: 1 / -1; font-weight: 400; font-size: clamp(42px, 7.1vw, 112px); line-height: .98; letter-spacing: -.028em; color: var(--ink); max-width: 11.5em; text-wrap: balance; font-variation-settings: "wght" 400; }
+.copy { grid-column: 2; max-width: 30em; }
+.copy p { text-wrap: pretty; }
+.copy p + p { margin-top: 1.1em; }
+.copy a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; text-decoration-color: rgba(28,29,29,.35); transition: text-decoration-color .6s; }
+.copy a:hover { text-decoration-color: var(--prussian); }
+
+/* Contents: one numbered line per thing made here. */
+.work { padding: clamp(28px, 3.4vw, 48px) 0 clamp(40px, 5vw, 72px); }
+.work li a {
+  position: relative; display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--gut); align-items: center;
+  text-decoration: none; color: var(--ink); padding: .1em 0 .14em;
+  font-size: clamp(34px, 4.4vw, 68px); line-height: 1.08; letter-spacing: -.022em;
+}
+.work .l { display: grid; grid-template-columns: 1.55em 1fr; align-items: baseline; }
+.work .n { font-variant-numeric: lining-nums tabular-nums; }
+.work .nm { display: flex; align-items: baseline; flex-wrap: nowrap; white-space: nowrap; column-gap: .3em; }
+.work .by { font-size: .36em; letter-spacing: 0; color: var(--dim); font-variation-settings: "wght" 300; transition: color .7s; }
+.work li a:hover .by { color: var(--text); }
+.work .nm img { align-self: center; width: .56em; height: .56em; margin-right: .06em; border-radius: 22%; filter: grayscale(1) contrast(.9); opacity: .78; transition: filter .7s cubic-bezier(.2,.7,.1,1), opacity .7s; transform: translateY(.04em); }
+.work .ln { font-size: 19px; line-height: 1.45; letter-spacing: 0; color: var(--dim); max-width: 26em; transition: color .7s; }
+.work .ln::after { content: " \2192"; opacity: 0; transition: opacity .7s; }
+.work li a::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--sky);
+  transform: scaleX(0); transform-origin: 0 50%; transition: transform .8s cubic-bezier(.2,.7,.1,1);
+}
+.work li a:hover::after, .work li a:focus-visible::after { transform: scaleX(1); }
+.work li a:hover img, .work li a:focus-visible img { filter: none; opacity: 1; }
+.work li a:hover .ln, .work li a:focus-visible .ln { color: var(--text); }
+.work li a:hover .ln::after, .work li a:focus-visible .ln::after { opacity: 1; }
+.work li a:focus-visible { outline: none; }
+
+
+/* The line Break: one hairline weight, rounded joins, transparent inside. */
+.defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.lb { fill: none; stroke: currentColor; stroke-linejoin: round; stroke-linecap: round; overflow: visible; display: block; }
+.intro { position: relative; }
+.intro > :not(.ghost) { position: relative; }
+.ghost { position: absolute; z-index: 0; pointer-events: none; color: var(--ink); opacity: .13; stroke-width: 1px;
+  height: calc(100% + 40px); width: auto; aspect-ratio: 112 / 132; right: max(-4vw, -60px); top: -20px; }
+
+/* About the mark: five readings, each lit in sky over the dim whole. */
+.reading { background-color: var(--panel); color: #EEEAE0; padding: clamp(64px, 8vw, 120px) 0 clamp(64px, 8vw, 112px); }
+.rdtop { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--gut); align-items: baseline; margin-bottom: clamp(48px, 7vw, 104px); }
+.rdtop h2 { font-weight: 400; font-size: clamp(38px, 4.8vw, 74px); line-height: 1.05; letter-spacing: -.022em; }
+.rdtop p { color: rgba(238,234,224,.62); max-width: 26em; }
+.rds { display: flex; align-items: center; justify-content: space-between; }
+.rd { flex: 0 1 172px; display: grid; justify-items: center; gap: 22px; }
+.rd svg { width: 100%; height: auto; }
+.rd .dim { color: rgba(238,234,224,.2); stroke-width: 1.25px; }
+.rd .hi { color: var(--sky); stroke-width: 1.75px; opacity: .25; transition: opacity 1.2s cubic-bezier(.2,.7,.1,1); }
+.rd .glow { color: var(--sky); fill: var(--sky); fill-opacity: .16; stroke: none; opacity: 0; transition: opacity 1.2s; }
+.rds.lit .hi { opacity: 1; }
+.rds.lit .glow { opacity: 1; }
+.rds.lit .rd:nth-of-type(2) .hi { transition-delay: .18s; } .rds.lit .rd:nth-of-type(3) .hi { transition-delay: .36s; }
+.rds.lit .rd:nth-of-type(4) .hi { transition-delay: .54s; } .rds.lit .rd:nth-of-type(5) .hi, .rds.lit .glow { transition-delay: .72s; }
+.rd figcaption { font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; color: rgba(238,234,224,.72); font-variant-numeric: lining-nums; }
+.plus { color: rgba(238,234,224,.35); font-size: 15px; margin-top: -34px; flex: none; }
+
+.nc { margin-top: clamp(72px, 9vw, 128px); padding-top: clamp(64px, 8vw, 112px); border-top: 1px solid rgba(238,234,224,.14); display: grid; justify-items: center; gap: 26px; }
+.nck { width: clamp(64px, 6vw, 84px); height: auto; color: #EEEAE0; stroke-width: 1.25px; }
+.nct { font-size: clamp(13px, 1.2vw, 16px); font-variation-settings: "wght" 220; letter-spacing: .62em; margin-right: -.62em; color: #EEEAE0; line-height: 1; }
+
+/* The end: the wordmark edge to edge on a flat sky panel. */
+.end { background: var(--sky); color: var(--panel); padding: clamp(48px, 6vw, 96px) 0 clamp(36px, 4vw, 56px); }
+.end .big { display: block; width: 100%; height: auto; color: var(--panel); }
+.end hr { background: rgba(12,31,51,.4); margin: clamp(32px, 4vw, 56px) 0 clamp(22px, 2.6vw, 36px); }
+.end .row { display: grid; grid-template-columns: 1fr 1fr auto 1fr 1fr; align-items: center; column-gap: var(--gut);
+  font-size: clamp(26px, 3.3vw, 52px); line-height: 1.1; letter-spacing: -.02em; }
+.end .row a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .16em; text-decoration-color: transparent; transition: text-decoration-color .6s; }
+.end .row a:hover, .end .row a:focus-visible { text-decoration-color: currentColor; }
+.end .row > :nth-child(2) { justify-self: end; } .end .row > :nth-child(5) { justify-self: end; }
+.end .emb { width: clamp(40px, 3.6vw, 56px); height: auto; stroke-width: 1.5px; }
+.end .row span { color: rgba(12,31,51,.6); }
+
+/* The page arrives as a whole after the opening. */
+#page { opacity: 1; overflow-x: clip; }
+.run #page { opacity: 0; }
+.run .mark { visibility: hidden; }
+
+/* The opening. */
+#intro { position: fixed; inset: 0; z-index: 30; display: none; cursor: default; }
+.run #intro { display: block; }
+#intro .half { position: absolute; inset: 0; background: #000; will-change: transform; }
+#intro canvas, #intro svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+@media (max-width: 760px) {
+  body { font-size: 17.5px; }
+  header { padding: 20px 0 18px; gap: 12px; }
+  .mark { width: 36px; height: 36px; }
+  .title { height: 21px; }
+  .intro { grid-template-columns: 1fr; }
+  .copy { grid-column: 1; }
+  .work li a { grid-template-columns: 1fr; row-gap: 4px; padding: .16em 0 .3em; }
+  .work .l { grid-template-columns: 1.45em 1fr; }
+  .work .ln { padding-left: 1.45em; font-size: 16.5px; }
+    .work .ln { padding-left: calc(1.45 * clamp(34px, 4.4vw, 68px)); }
+  .ghost { height: auto; width: 118%; right: -38%; top: 8px; opacity: .1; }
+  .rdtop { grid-template-columns: 1fr; row-gap: 14px; }
+  .rds { flex-wrap: wrap; justify-content: center; row-gap: 36px; column-gap: 8px; }
+  .rd { flex: 0 0 28%; gap: 14px; } .plus { display: none; }
+  .rd figcaption { font-size: 10px; letter-spacing: .14em; }
+  .end .row { grid-template-columns: 1fr 1fr; row-gap: 14px; }
+  .end .emb { grid-column: 1 / -1; grid-row: 1; justify-self: center; margin-bottom: 18px; }
+  .end .row > :nth-child(2) { justify-self: end; } .end .row > :nth-child(5) { justify-self: end; }
+}
+@media (prefers-reduced-motion: reduce) { .run #intro { display: none; } .run #page { opacity: 1; overflow-x: clip; } .run .mark { visibility: visible; } }
+</style>
+</head>
+<body>
+<div id="intro" aria-hidden="true">
+  <div class="half" id="hA"></div><div class="half" id="hB"></div>
+  <canvas id="cv"></canvas>
+  <svg id="ov" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <mask id="oMask" maskUnits="userSpaceOnUse" x="-20" y="-20" width="140" height="140">
+        <rect width="100" height="100" rx="22" fill="#fff"/>
+        <path fill="#000" d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z"/>
+        <path fill="#000" d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z"/>
+      </mask>
+      <linearGradient id="oLight" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#C8F4FF"/><stop offset=".55" stop-color="#94E6FF"/><stop offset="1" stop-color="#7DD9F6"/>
+      </linearGradient>
+    </defs>
+    <line id="oLine" stroke="#EEEAE0" stroke-width="1" opacity="0"/>
+    <g id="oTile" opacity="0"><rect width="100" height="100" rx="22" fill="#141311" mask="url(#oMask)"/></g>
+    <polygon id="oGem" fill="url(#oLight)" opacity="0"/>
+    <polygon id="oFacet" fill="#fff" opacity="0"/>
+  </svg>
+</div>
+
+<div id="page">
+<svg class="defs" aria-hidden="true" width="0" height="0" focusable="false">
+  <defs>
+    <mask id="lbGap" maskUnits="userSpaceOnUse" x="-20" y="-20" width="140" height="140"><rect x="-20" y="-20" width="140" height="140" fill="#fff"/><path fill="#000" d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z"/></mask>
+    <mask id="lbIn" maskUnits="userSpaceOnUse" x="-20" y="-20" width="140" height="140"><rect width="100" height="100" rx="22" fill="#fff"/><path fill="#000" d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z"/></mask>
+    <g id="lb-stone"><rect width="100" height="100" rx="22" mask="url(#lbGap)" vector-effect="non-scaling-stroke"/></g>
+    <g id="lb-seam"><g mask="url(#lbIn)"><path d="M67.46 -12L54.85 21.5L37.65 81.5L31.9 112" vector-effect="non-scaling-stroke"/><path d="M68.96 -12L62.35 21.5L45.15 81.5L33.4 112" vector-effect="non-scaling-stroke"/></g></g>
+    <mask id="lbTile" maskUnits="userSpaceOnUse" x="-20" y="-20" width="140" height="140"><rect width="100" height="100" rx="22" fill="#fff"/></mask>
+    <g id="lb-seam-x"><g mask="url(#lbTile)"><path d="M67.46 -12L54.85 21.5L37.65 81.5L31.9 112" vector-effect="non-scaling-stroke"/><path d="M68.96 -12L62.35 21.5L45.15 81.5L33.4 112" vector-effect="non-scaling-stroke"/></g></g>
+    <path id="lb-cav" d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" vector-effect="non-scaling-stroke"/>
+    <path id="lb-gem" d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z" vector-effect="non-scaling-stroke"/>
+    <path id="lb-ray" d="M58.6 21.5L41.4 81.5" vector-effect="non-scaling-stroke"/>
+    <path id="lb-light" d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" vector-effect="non-scaling-stroke"/>
+    <g id="lb-all"><use href="#lb-stone"/><use href="#lb-seam"/><use href="#lb-cav"/><use href="#lb-gem"/><use href="#lb-ray"/></g>
+  </defs>
+</svg>
+  <div class="wrap">
+    <header>
+      <svg class="mark" id="mark" viewBox="0 0 100 100" role="img" aria-label="The Antimony mark">
+        <defs>
+          <mask id="mMask" maskUnits="userSpaceOnUse" x="-20" y="-20" width="140" height="140">
+            <rect width="100" height="100" rx="22" fill="#fff"/>
+            <path fill="#000" d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z"/>
+            <path fill="#000" d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z"/>
+          </mask>
+          <linearGradient id="mLight" gradientUnits="userSpaceOnUse" x1="50" y1="21.5" x2="50" y2="81.5">
+            <stop offset="0" stop-color="#C8F4FF"/><stop offset=".55" stop-color="#94E6FF"/><stop offset="1" stop-color="#7DD9F6"/>
+          </linearGradient>
+          <radialGradient id="mGlint" gradientUnits="userSpaceOnUse" cx="56" cy="38" r="20">
+            <stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </radialGradient>
+          <clipPath id="mGemClip"><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"/></clipPath>
+        </defs>
+        <rect width="100" height="100" rx="22" fill="#141311" mask="url(#mMask)"/>
+        <path fill="url(#mLight)" d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"/>
+        <path id="mFacet" fill="#fff" fill-opacity=".28" d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z"/>
+        <g clip-path="url(#mGemClip)"><circle id="mGlintC" cx="56" cy="38" r="20" fill="url(#mGlint)" opacity=".35"/></g>
+      </svg>
+      <svg class="title" viewBox="-10.0 -735.0 4332.76 960.0" role="img" aria-label="Antimony"><path d="M111 -95 351 -695H386L628 -95Q643 -57 663.5 -42.5Q684 -28 723 -23V0H460V-23Q497 -27 512.0 -35.5Q527 -44 527 -59Q527 -71 517 -96L463 -236L335.0 -324.0L207 -236L155 -96Q148 -75 148 -66Q148 -47 166.5 -37.0Q185 -27 228 -23V0H15V-23Q52 -27 73.5 -40.5Q95 -54 111 -95ZM442.94 -290.0 336 -563 229.05 -290.0 336.0 -386.0Z" fill="currentColor"/><path d="M807.68 -93V-353Q807.68 -389 804.68 -405.5Q801.68 -422 788.68 -431.5Q775.68 -441 746.68 -443V-462L880.68 -510H893.68V-407Q957.68 -510 1058.67 -510Q1120.67 -510 1160.17 -472.0Q1199.67 -434 1199.67 -364V-93Q1199.67 -58 1215.17 -42.5Q1230.67 -27 1270.67 -23V0H1041.67V-23Q1081.67 -27 1097.67 -43.0Q1113.67 -59 1113.67 -93V-333Q1113.67 -386 1088.67 -414.5Q1063.67 -443 1017.68 -443Q945.68 -443 893.68 -375V-93Q893.68 -58 909.18 -42.5Q924.68 -27 965.68 -23V0H735.68V-23Q776.68 -27 792.18 -42.5Q807.68 -58 807.68 -93Z" fill="currentColor"/><path d="M1364.36 -122V-456H1290.36V-477Q1348.36 -492 1377.86 -529.5Q1407.36 -567 1425.36 -631H1450.36V-500H1594.36V-456H1450.36V-137Q1450.36 -94 1469.36 -72.5Q1488.36 -51 1522.36 -51Q1542.36 -51 1557.86 -59.5Q1573.36 -68 1587.36 -81L1601.36 -75Q1589.36 -42 1560.36 -16.5Q1531.36 9 1481.36 9Q1427.36 9 1395.86 -24.0Q1364.36 -57 1364.36 -122Z" fill="currentColor"/><path d="M1692.04 -93V-361Q1692.04 -393 1689.04 -408.0Q1686.04 -423 1673.04 -431.5Q1660.04 -440 1631.04 -443V-462L1765.04 -510H1778.04V-93Q1778.04 -59 1794.04 -43.0Q1810.04 -27 1850.04 -23V0H1621.04V-23Q1661.04 -27 1676.54 -42.5Q1692.04 -58 1692.04 -93ZM1666.04 -665Q1666.04 -691 1684.04 -708.5Q1702.04 -726 1728.04 -726Q1754.04 -726 1771.54 -708.5Q1789.04 -691 1789.04 -665Q1789.04 -639 1771.54 -621.0Q1754.04 -603 1728.04 -603Q1702.04 -603 1684.04 -621.0Q1666.04 -639 1666.04 -665Z" fill="currentColor"/><path d="M1958.72 -353Q1958.72 -389 1955.72 -405.5Q1952.72 -422 1939.72 -431.5Q1926.72 -441 1897.72 -443V-462L2031.72 -510H2044.72V-413Q2078.72 -459 2118.72 -484.5Q2158.72 -510 2209.72 -510Q2256.72 -510 2290.72 -484.5Q2324.72 -459 2334.72 -418Q2367.72 -462 2406.72 -486.0Q2445.72 -510 2495.72 -510Q2558.72 -510 2594.72 -474.0Q2630.72 -438 2630.72 -368V-96Q2630.72 -62 2647.22 -44.5Q2663.72 -27 2702.72 -23V0H2475.72V-23Q2513.72 -27 2529.22 -44.0Q2544.72 -61 2544.72 -96V-352Q2544.72 -397 2520.22 -421.0Q2495.72 -445 2453.72 -445Q2423.72 -445 2392.72 -431.5Q2361.72 -418 2337.72 -391V-96Q2337.72 -61 2353.22 -44.0Q2368.72 -27 2406.72 -23V0H2182.72V-23Q2220.72 -27 2236.22 -44.0Q2251.72 -61 2251.72 -96V-344Q2251.72 -394 2229.72 -419.5Q2207.72 -445 2166.72 -445Q2135.72 -445 2103.22 -428.0Q2070.72 -411 2044.72 -379V-96Q2044.72 -61 2060.22 -44.0Q2075.72 -27 2113.72 -23V0H1887.72V-23Q1925.72 -27 1942.22 -44.5Q1958.72 -62 1958.72 -96Z" fill="currentColor"/><path d="M2740.4 -251Q2740.4 -330 2774.4 -388.0Q2808.4 -446 2864.4 -476.5Q2920.4 -507 2983.4 -507Q3046.4 -507 3102.4 -476.5Q3158.4 -446 3192.9 -388.0Q3227.4 -330 3227.4 -251Q3227.4 -173 3192.9 -114.5Q3158.4 -56 3102.4 -24.5Q3046.4 7 2983.4 7Q2920.4 7 2864.9 -24.5Q2809.4 -56 2774.9 -114.5Q2740.4 -173 2740.4 -251ZM3124.4 -251Q3124.4 -350 3088.9 -412.0Q3053.4 -474 2983.4 -474Q2914.4 -474 2878.9 -412.0Q2843.4 -350 2843.4 -251Q2843.4 -152 2878.9 -89.0Q2914.4 -26 2983.4 -26Q3052.4 -26 3088.4 -89.5Q3124.4 -153 3124.4 -251Z" fill="currentColor"/><path d="M3346.08 -93V-353Q3346.08 -389 3343.08 -405.5Q3340.08 -422 3327.08 -431.5Q3314.08 -441 3285.08 -443V-462L3419.08 -510H3432.08V-407Q3496.08 -510 3597.08 -510Q3659.08 -510 3698.58 -472.0Q3738.08 -434 3738.08 -364V-93Q3738.08 -58 3753.58 -42.5Q3769.08 -27 3809.08 -23V0H3580.08V-23Q3620.08 -27 3636.08 -43.0Q3652.08 -59 3652.08 -93V-333Q3652.08 -386 3627.08 -414.5Q3602.08 -443 3556.08 -443Q3484.08 -443 3432.08 -375V-93Q3432.08 -58 3447.58 -42.5Q3463.08 -27 3504.08 -23V0H3274.08V-23Q3315.08 -27 3330.58 -42.5Q3346.08 -58 3346.08 -93Z" fill="currentColor"/><path d="M3807.75 -478V-500H4036.75V-478Q4000.75 -476 3985.75 -469.5Q3970.75 -463 3970.75 -448Q3970.75 -439 3974.75 -428L4088.75 -115L4204.76 -418Q4210.76 -438 4210.76 -443Q4210.76 -458 4196.26 -466.5Q4181.76 -475 4146.76 -478V-500H4308.76V-478Q4284.76 -475 4274.26 -470.5Q4263.76 -466 4257.26 -456.0Q4250.76 -446 4241.76 -420L4044.75 93Q3998.75 218 3908.75 218Q3867.75 218 3842.25 198.5Q3816.75 179 3816.75 146Q3816.75 122 3830.25 107.5Q3843.75 93 3865.75 93Q3880.75 93 3889.25 101.0Q3897.75 109 3906.75 124Q3915.75 140 3925.25 148.5Q3934.75 157 3953.75 156Q3967.75 156 3986.75 133.5Q4005.75 111 4018.75 73L4043.75 7L3874.75 -425Q3865.75 -447 3860.75 -455.5Q3855.75 -464 3843.75 -470.0Q3831.75 -476 3807.75 -478Z" fill="currentColor"/></svg>
+    </header>
+    <hr>
+    <section class="intro">
+      <svg class="ghost lb" viewBox="-6 -16 112 132" aria-hidden="true"><use href="#lb-all"/></svg>
+      <h1>Software for the people who make the work.</h1>
+      <div class="copy">
+        <p><i>Antimony</i> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator's side of every sponsorship deal.</p>
+        <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
+      </div>
+    </section>
+    <hr>
+    <section class="work" aria-label="Made here">
+      <ul>
+        <li><a href="https://eoinforker.github.io/orbe-site/"><span class="l"><span class="n">01</span><span class="nm"><img src="assets/work/orbe.svg" alt="">Orbe<span class="by">by Antimony</span></span></span><span class="ln">The creator's side of every sponsorship deal.</span></a></li>
+        <li><a href="https://immiscible.ai"><span class="l"><span class="n">02</span><span class="nm"><img src="assets/work/immiscible.svg" alt="">immiscible</span></span><span class="ln">Rules, approvals and a signed record for what AI agents spend and do.</span></a></li>
+        <li><a href="https://idyll.day"><span class="l"><span class="n">03</span><span class="nm"><img src="assets/work/idyll.svg" alt="">Idyll</span></span><span class="ln">Social without the scroll.</span></a></li>
+      </ul>
+    </section>
+  </div>
+  <section class="reading" aria-labelledby="rdh">
+    <div class="wrap">
+      <div class="rdtop"><h2 id="rdh">The Break</h2><p>A stone, split at sixteen degrees, with a crystal grown in the break.</p></div>
+      <div class="rds"><figure class="rd"><svg class="lb" viewBox="-6 -16 112 132" aria-hidden="true"><use class="dim" href="#lb-all"/><use class="hi" href="#lb-stone"/></svg><figcaption>Stone</figcaption></figure><span class="plus" aria-hidden="true">+</span><figure class="rd"><svg class="lb" viewBox="-6 -16 112 132" aria-hidden="true"><use class="dim" href="#lb-all"/><use class="hi" href="#lb-seam-x"/></svg><figcaption>Seam, 16&deg;</figcaption></figure><span class="plus" aria-hidden="true">+</span><figure class="rd"><svg class="lb" viewBox="-6 -16 112 132" aria-hidden="true"><use class="dim" href="#lb-all"/><use class="hi" href="#lb-cav"/></svg><figcaption>Cavity</figcaption></figure><span class="plus" aria-hidden="true">+</span><figure class="rd"><svg class="lb" viewBox="-6 -16 112 132" aria-hidden="true"><use class="dim" href="#lb-all"/><use class="hi" href="#lb-gem"/></svg><figcaption>Crystal</figcaption></figure><span class="plus" aria-hidden="true">+</span><figure class="rd"><svg class="lb" viewBox="-6 -16 112 132" aria-hidden="true"><use class="dim" href="#lb-all"/><use class="glow" href="#lb-light"/><use class="hi" href="#lb-light"/></svg><figcaption>Light</figcaption></figure></div>
+      <div class="nc" role="img" aria-label="Antimony">
+        <svg class="lb nck" viewBox="-4 -4 108 108" aria-hidden="true"><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z" fill="#94E6FF" stroke="none"/><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" fill-opacity=".28" stroke="none"/><use href="#lb-stone"/><use href="#lb-seam"/><use href="#lb-cav"/></svg>
+        <span class="nct" aria-hidden="true">ANTIMONY</span>
+      </div>
+    </div>
+  </section>
+  <footer class="end">
+    <div class="wrap">
+      <svg class="big" viewBox="-10.0 -735.0 4332.76 960.0" role="img" aria-label="Antimony"><path d="M111 -95 351 -695H386L628 -95Q643 -57 663.5 -42.5Q684 -28 723 -23V0H460V-23Q497 -27 512.0 -35.5Q527 -44 527 -59Q527 -71 517 -96L463 -236L335.0 -324.0L207 -236L155 -96Q148 -75 148 -66Q148 -47 166.5 -37.0Q185 -27 228 -23V0H15V-23Q52 -27 73.5 -40.5Q95 -54 111 -95ZM442.94 -290.0 336 -563 229.05 -290.0 336.0 -386.0Z" fill="currentColor"/><path d="M807.68 -93V-353Q807.68 -389 804.68 -405.5Q801.68 -422 788.68 -431.5Q775.68 -441 746.68 -443V-462L880.68 -510H893.68V-407Q957.68 -510 1058.67 -510Q1120.67 -510 1160.17 -472.0Q1199.67 -434 1199.67 -364V-93Q1199.67 -58 1215.17 -42.5Q1230.67 -27 1270.67 -23V0H1041.67V-23Q1081.67 -27 1097.67 -43.0Q1113.67 -59 1113.67 -93V-333Q1113.67 -386 1088.67 -414.5Q1063.67 -443 1017.68 -443Q945.68 -443 893.68 -375V-93Q893.68 -58 909.18 -42.5Q924.68 -27 965.68 -23V0H735.68V-23Q776.68 -27 792.18 -42.5Q807.68 -58 807.68 -93Z" fill="currentColor"/><path d="M1364.36 -122V-456H1290.36V-477Q1348.36 -492 1377.86 -529.5Q1407.36 -567 1425.36 -631H1450.36V-500H1594.36V-456H1450.36V-137Q1450.36 -94 1469.36 -72.5Q1488.36 -51 1522.36 -51Q1542.36 -51 1557.86 -59.5Q1573.36 -68 1587.36 -81L1601.36 -75Q1589.36 -42 1560.36 -16.5Q1531.36 9 1481.36 9Q1427.36 9 1395.86 -24.0Q1364.36 -57 1364.36 -122Z" fill="currentColor"/><path d="M1692.04 -93V-361Q1692.04 -393 1689.04 -408.0Q1686.04 -423 1673.04 -431.5Q1660.04 -440 1631.04 -443V-462L1765.04 -510H1778.04V-93Q1778.04 -59 1794.04 -43.0Q1810.04 -27 1850.04 -23V0H1621.04V-23Q1661.04 -27 1676.54 -42.5Q1692.04 -58 1692.04 -93ZM1666.04 -665Q1666.04 -691 1684.04 -708.5Q1702.04 -726 1728.04 -726Q1754.04 -726 1771.54 -708.5Q1789.04 -691 1789.04 -665Q1789.04 -639 1771.54 -621.0Q1754.04 -603 1728.04 -603Q1702.04 -603 1684.04 -621.0Q1666.04 -639 1666.04 -665Z" fill="currentColor"/><path d="M1958.72 -353Q1958.72 -389 1955.72 -405.5Q1952.72 -422 1939.72 -431.5Q1926.72 -441 1897.72 -443V-462L2031.72 -510H2044.72V-413Q2078.72 -459 2118.72 -484.5Q2158.72 -510 2209.72 -510Q2256.72 -510 2290.72 -484.5Q2324.72 -459 2334.72 -418Q2367.72 -462 2406.72 -486.0Q2445.72 -510 2495.72 -510Q2558.72 -510 2594.72 -474.0Q2630.72 -438 2630.72 -368V-96Q2630.72 -62 2647.22 -44.5Q2663.72 -27 2702.72 -23V0H2475.72V-23Q2513.72 -27 2529.22 -44.0Q2544.72 -61 2544.72 -96V-352Q2544.72 -397 2520.22 -421.0Q2495.72 -445 2453.72 -445Q2423.72 -445 2392.72 -431.5Q2361.72 -418 2337.72 -391V-96Q2337.72 -61 2353.22 -44.0Q2368.72 -27 2406.72 -23V0H2182.72V-23Q2220.72 -27 2236.22 -44.0Q2251.72 -61 2251.72 -96V-344Q2251.72 -394 2229.72 -419.5Q2207.72 -445 2166.72 -445Q2135.72 -445 2103.22 -428.0Q2070.72 -411 2044.72 -379V-96Q2044.72 -61 2060.22 -44.0Q2075.72 -27 2113.72 -23V0H1887.72V-23Q1925.72 -27 1942.22 -44.5Q1958.72 -62 1958.72 -96Z" fill="currentColor"/><path d="M2740.4 -251Q2740.4 -330 2774.4 -388.0Q2808.4 -446 2864.4 -476.5Q2920.4 -507 2983.4 -507Q3046.4 -507 3102.4 -476.5Q3158.4 -446 3192.9 -388.0Q3227.4 -330 3227.4 -251Q3227.4 -173 3192.9 -114.5Q3158.4 -56 3102.4 -24.5Q3046.4 7 2983.4 7Q2920.4 7 2864.9 -24.5Q2809.4 -56 2774.9 -114.5Q2740.4 -173 2740.4 -251ZM3124.4 -251Q3124.4 -350 3088.9 -412.0Q3053.4 -474 2983.4 -474Q2914.4 -474 2878.9 -412.0Q2843.4 -350 2843.4 -251Q2843.4 -152 2878.9 -89.0Q2914.4 -26 2983.4 -26Q3052.4 -26 3088.4 -89.5Q3124.4 -153 3124.4 -251Z" fill="currentColor"/><path d="M3346.08 -93V-353Q3346.08 -389 3343.08 -405.5Q3340.08 -422 3327.08 -431.5Q3314.08 -441 3285.08 -443V-462L3419.08 -510H3432.08V-407Q3496.08 -510 3597.08 -510Q3659.08 -510 3698.58 -472.0Q3738.08 -434 3738.08 -364V-93Q3738.08 -58 3753.58 -42.5Q3769.08 -27 3809.08 -23V0H3580.08V-23Q3620.08 -27 3636.08 -43.0Q3652.08 -59 3652.08 -93V-333Q3652.08 -386 3627.08 -414.5Q3602.08 -443 3556.08 -443Q3484.08 -443 3432.08 -375V-93Q3432.08 -58 3447.58 -42.5Q3463.08 -27 3504.08 -23V0H3274.08V-23Q3315.08 -27 3330.58 -42.5Q3346.08 -58 3346.08 -93Z" fill="currentColor"/><path d="M3807.75 -478V-500H4036.75V-478Q4000.75 -476 3985.75 -469.5Q3970.75 -463 3970.75 -448Q3970.75 -439 3974.75 -428L4088.75 -115L4204.76 -418Q4210.76 -438 4210.76 -443Q4210.76 -458 4196.26 -466.5Q4181.76 -475 4146.76 -478V-500H4308.76V-478Q4284.76 -475 4274.26 -470.5Q4263.76 -466 4257.26 -456.0Q4250.76 -446 4241.76 -420L4044.75 93Q3998.75 218 3908.75 218Q3867.75 218 3842.25 198.5Q3816.75 179 3816.75 146Q3816.75 122 3830.25 107.5Q3843.75 93 3865.75 93Q3880.75 93 3889.25 101.0Q3897.75 109 3906.75 124Q3915.75 140 3925.25 148.5Q3934.75 157 3953.75 156Q3967.75 156 3986.75 133.5Q4005.75 111 4018.75 73L4043.75 7L3874.75 -425Q3865.75 -447 3860.75 -455.5Q3855.75 -464 3843.75 -470.0Q3831.75 -476 3807.75 -478Z" fill="currentColor"/></svg>
+      <hr>
+      <nav class="row" aria-label="Made here">
+        <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>
+        <a href="https://immiscible.ai">immiscible</a>
+        <svg class="lb emb" viewBox="-4 -14 108 128" aria-hidden="true"><use href="#lb-all"/></svg>
+        <a href="https://idyll.day">Idyll</a>
+        <span>London</span>
+      </nav>
+    </div>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const root = document.documentElement, body = document.body;
+
+  /* The crystal in the masthead mark leans toward the pointer: the glint drifts inside the gem and the facet brightens a touch. */
+  const mark = document.getElementById('mark'), glint = document.getElementById('mGlintC'), facet = document.getElementById('mFacet');
+  let pq = false, px = 0, py = 0;
+  addEventListener('pointermove', e => { px = e.clientX; py = e.clientY; if (!pq) { pq = true; requestAnimationFrame(lean); } }, { passive: true });
+  function lean() {
+    pq = false;
+    const r = mark.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const dx = px - cx, dy = py - cy, d = Math.hypot(dx, dy) || 1, k = Math.min(1, 380 / (d + 120));
+    glint.setAttribute('cx', (50 + dx / d * 9 * (0.4 + k)).toFixed(2));
+    glint.setAttribute('cy', (51.5 + dy / d * 16 * (0.4 + k)).toFixed(2));
+    glint.setAttribute('opacity', (0.25 + 0.45 * k).toFixed(3));
+    facet.setAttribute('fill-opacity', (0.22 + 0.14 * Math.max(0, dx / d) * k).toFixed(3));
+  }
+
+  const rds = document.querySelector('.rds');
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { rds.classList.add('lit'); io.disconnect(); } }), { threshold: .35 });
+    io.observe(rds);
+  } else rds.classList.add('lit');
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let seen = false;
+  try { seen = sessionStorage.getItem('antimony-standard-seen') === '1'; } catch (e) {}
+  if (reduce || seen || location.hash === '#skip') return;
+  try { sessionStorage.setItem('antimony-standard-seen', '1'); } catch (e) {}
+  body.classList.add('run');
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  scrollTo(0, 0);
+
+  const CAPS = ["M111 -95 351 -695H386L628 -95Q643 -57 663.5 -42.5Q684 -28 723 -23V0H460V-23Q497 -27 512.0 -35.5Q527 -44 527 -59Q527 -71 517 -96L463 -236L335.0 -324.0L207 -236L155 -96Q148 -75 148 -66Q148 -47 166.5 -37.0Q185 -27 228 -23V0H15V-23Q52 -27 73.5 -40.5Q95 -54 111 -95ZM444.51 -286.0 336 -563 227.48 -286.0 336.0 -374.0Z", "M989.58 -122V-573Q989.58 -612 979.08 -632.5Q968.58 -653 947.08 -661.0Q925.58 -669 888.58 -672V-695H1060.58L1463.58 -178V-575Q1463.58 -614 1453.08 -634.0Q1442.58 -654 1421.58 -661.5Q1400.58 -669 1362.58 -672V-695H1604.58V-672Q1566.58 -669 1545.58 -661.5Q1524.58 -654 1514.08 -633.5Q1503.58 -613 1503.58 -574L1504.58 0H1476.58L1029.58 -573V-123Q1029.58 -83 1040.08 -62.5Q1050.58 -42 1071.58 -34.0Q1092.58 -26 1130.58 -23V0H888.58V-23Q926.58 -26 947.58 -34.0Q968.58 -42 979.08 -62.5Q989.58 -83 989.58 -122Z", "M1984.16 -112V-657H1901.16Q1850.16 -657 1821.16 -647.5Q1792.16 -638 1773.66 -608.5Q1755.16 -579 1748.16 -519H1727.16L1737.16 -695H2325.16L2335.16 -519H2314.16Q2306.16 -580 2288.16 -609.5Q2270.16 -639 2241.16 -648.0Q2212.16 -657 2161.16 -657H2077.16V-112Q2078.16 -77 2088.66 -59.0Q2099.16 -41 2119.66 -33.5Q2140.16 -26 2177.16 -23V0H1888.16V-23Q1939.16 -27 1961.16 -45.0Q1983.16 -63 1984.16 -112Z", "M2580.74 -112V-583Q2579.74 -618 2569.24 -636.0Q2558.74 -654 2538.24 -661.5Q2517.74 -669 2480.74 -672V-695H2770.74V-672Q2719.74 -668 2697.24 -650.0Q2674.74 -632 2673.74 -583V-112Q2674.74 -62 2696.74 -44.5Q2718.74 -27 2773.74 -23V0H2483.74V-23Q2534.74 -27 2557.24 -44.5Q2579.74 -62 2580.74 -112Z", "M3042.32 -101 3057.32 -582Q3058.32 -632 3041.82 -650.0Q3025.32 -668 2979.32 -672V-695H3157.32L3403.32 -146L3617.32 -695H3789.32V-672Q3750.32 -668 3734.82 -646.5Q3719.32 -625 3721.32 -588L3741.32 -94Q3742.32 -66 3749.82 -52.0Q3757.32 -38 3773.32 -32.0Q3789.32 -26 3821.32 -23V0H3569.32V-23Q3603.32 -26 3619.82 -32.0Q3636.32 -38 3642.32 -51.5Q3648.32 -65 3647.32 -94L3626.32 -616L3390.32 0H3365.32L3099.32 -595L3084.32 -101Q3083.32 -68 3091.82 -52.5Q3100.32 -37 3118.82 -31.5Q3137.32 -26 3175.32 -23V0H2951.32V-23Q2985.32 -26 3003.82 -32.0Q3022.32 -38 3031.82 -54.0Q3041.32 -70 3042.32 -101Z", "M3997.9 -349Q3997.9 -452 4043.9 -533.0Q4089.9 -614 4167.9 -659.0Q4245.9 -704 4337.9 -704Q4429.9 -704 4508.9 -659.0Q4587.9 -614 4634.9 -533.0Q4681.9 -452 4681.9 -349Q4681.9 -246 4634.9 -164.5Q4587.9 -83 4508.9 -37.5Q4429.9 8 4337.9 8Q4245.9 8 4167.9 -37.5Q4089.9 -83 4043.9 -164.5Q3997.9 -246 3997.9 -349ZM4567.9 -349Q4567.9 -444 4538.4 -516.0Q4508.9 -588 4456.4 -627.5Q4403.9 -667 4336.9 -667Q4270.9 -667 4219.4 -627.5Q4167.9 -588 4139.4 -515.5Q4110.9 -443 4110.9 -349Q4110.9 -254 4139.4 -181.0Q4167.9 -108 4219.4 -68.0Q4270.9 -28 4336.9 -28Q4403.9 -28 4456.4 -68.0Q4508.9 -108 4538.4 -181.0Q4567.9 -254 4567.9 -349Z", "M4979.48 -122V-573Q4979.48 -612 4968.98 -632.5Q4958.48 -653 4936.98 -661.0Q4915.48 -669 4878.48 -672V-695H5050.48L5453.48 -178V-575Q5453.48 -614 5442.98 -634.0Q5432.48 -654 5411.48 -661.5Q5390.48 -669 5352.48 -672V-695H5594.48V-672Q5556.48 -669 5535.48 -661.5Q5514.48 -654 5503.98 -633.5Q5493.48 -613 5493.48 -574L5494.48 0H5466.48L5019.48 -573V-123Q5019.48 -83 5029.98 -62.5Q5040.48 -42 5061.48 -34.0Q5082.48 -26 5120.48 -23V0H4878.48V-23Q4916.48 -26 4937.48 -34.0Q4958.48 -42 4968.98 -62.5Q4979.48 -83 4979.48 -122Z", "M5973.06 -112V-281L5771.06 -625Q5761.06 -643 5754.56 -651.0Q5748.06 -659 5736.56 -664.5Q5725.06 -670 5703.06 -672V-695H5951.06V-674Q5917.06 -671 5900.06 -662.5Q5883.06 -654 5883.06 -637Q5883.06 -627 5892.06 -610L6047.06 -340L6199.06 -617Q6208.06 -635 6208.06 -645Q6208.06 -660 6192.06 -665.5Q6176.06 -671 6137.06 -674V-695H6326.06V-674Q6301.06 -671 6290.56 -668.0Q6280.06 -665 6271.06 -654.5Q6262.06 -644 6249.06 -620L6066.06 -288V-112Q6067.06 -62 6089.06 -44.5Q6111.06 -27 6166.06 -23V0H5876.06V-23Q5927.06 -27 5949.56 -44.5Q5972.06 -62 5973.06 -112Z"];
+  const LET = [[5, 733], [878, 1615], [1717, 2345], [2470, 2784], [2941, 3831], [3988, 4692], [4868, 5604], [5693, 6336]];
+  const VBX = -10, VBY = -705, VBW = 6338.06, VBH = 715;
+  const KITE = [[336, -563], [390.25, -424.5], [444.52, -286], [336, -374], [227.48, -286], [281.75, -424.5]];
+  const GEM = [[58.6, 21.5], [70.58, 46.7], [67.82, 56.3], [41.4, 81.5], [29.42, 56.3], [32.18, 46.7]];
+  const T16 = Math.tan(16 * Math.PI / 180);
+  const PANEL = [12, 31, 51];
+
+  const intro = document.getElementById('intro'), cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  const ov = document.getElementById('ov'), gem = document.getElementById('oGem'), fac = document.getElementById('oFacet');
+  const tile = document.getElementById('oTile'), line = document.getElementById('oLine');
+  const hA = document.getElementById('hA'), hB = document.getElementById('hB');
+
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const span = (t, a, b) => clamp((t - a) / (b - a));
+  const eOut = x => x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+  const eIO = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const lerp = (a, b, k) => a + (b - a) * k;
+
+  let W, H, dpr, s, x0, y0, off, pieces, big, home, cx, cy;
+
+  function layout() {
+    W = innerWidth; H = innerHeight; dpr = Math.min(2, devicePixelRatio || 1);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ov.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const ww = Math.min(W - 2 * Math.max(20, W * .07), 1240);
+    s = ww / VBW; x0 = (W - ww) / 2; y0 = Math.round(H / 2 - VBH * s / 2);
+    /* The wordmark, set once in paper and thinned so the large size stays fine. */
+    off = document.createElement('canvas');
+    off.width = Math.ceil(ww * dpr); off.height = Math.ceil(VBH * s * dpr) + 2;
+    const o = off.getContext('2d');
+    o.setTransform(dpr * s, 0, 0, dpr * s, -VBX * dpr * s, -VBY * dpr * s);
+    o.fillStyle = '#EEEAE0';
+    const paths = CAPS.map(d => new Path2D(d));
+    paths.forEach(p => o.fill(p));
+    o.globalCompositeOperation = 'destination-out';
+    o.lineWidth = 15; o.lineJoin = 'round';
+    paths.forEach(p => o.stroke(p));
+    /* Pieces: horizontal slices of each letter, arriving out of order. */
+    const hp = VBH * s, rows = [];
+    let yy = 0, seed = 7;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const avg = Math.max(2, hp / 16);
+    while (yy < hp) { const h = Math.max(1.5, avg * (0.35 + rnd() * 1.3)); rows.push([yy, Math.min(h, hp - yy)]); yy += h; }
+    pieces = [];
+    LET.forEach(([a, b], li) => rows.forEach(([ry, rh]) => {
+      const sx = (a - VBX) * s, sw = (b - a) * s;
+      const dir = rnd() < .5 ? -1 : 1;
+      pieces.push({ sx, sy: ry, sw, sh: rh, t0: rnd() * 900, dx: dir * (0.12 + rnd() * rnd() * 0.9) * Math.min(W * .16, 180) });
+    }));
+    pieces.sort((p, q) => p.t0 - q.t0);
+    /* Where the mark stands large, and where it comes home. */
+    const bs = Math.round(Math.min(W, H) * (W < 600 ? .36 : .26));
+    big = { x: (W - bs) / 2, y: (H - bs) / 2 - bs * .015, s: bs };
+    const r = document.getElementById('mark').getBoundingClientRect();
+    home = { x: r.left, y: r.top, s: r.width };
+    cx = big.x + 50 / 100 * bs; cy = big.y + 51.5 / 100 * bs;
+  }
+
+  const kp = () => KITE.map(([X, Y]) => [x0 + (X - VBX) * s, y0 + (Y - VBY) * s]);
+  const gp = b => GEM.map(([X, Y]) => [b.x + X / 100 * b.s, b.y + Y / 100 * b.s]);
+  const pts = a => a.map(p => p[0].toFixed(2) + ',' + p[1].toFixed(2)).join(' ');
+
+  function drawWord(t) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    for (const p of pieces) {
+      const u = t - p.t0;
+      if (u < 0) break;
+      const k = eOut(clamp(u / 950));
+      const dx = Math.round(p.dx * (1 - k) * dpr) / dpr;
+      ctx.drawImage(off, p.sx * dpr, p.sy * dpr, p.sw * dpr, p.sh * dpr, x0 + p.sx + dx, y0 + p.sy, p.sw, p.sh);
+    }
+  }
+
+  /* Timeline, in milliseconds. */
+  const T = { word: 700, light: 2350, grow: 950, travel: 3950, tdur: 1150, line: 5100, ldur: 600, split: 5750, sdur: 850, home: 6350, hdur: 800 };
+  const END = T.home + T.hdur + 600;
+  let t0 = null, raf = 0, ended = false;
+
+  const page = document.getElementById('page');
+  function render(t) {
+
+    /* 1. The wordmark assembles from slices. */
+    const tw = t - T.word;
+    const wFade = 1 - eIO(span(t, T.travel, T.travel + 750));
+    if (tw >= 0 && wFade > 0) { if (tw < 2300 || !drawWord.done) { drawWord(tw); if (tw >= 2300) drawWord.done = true; } }
+    cv.style.opacity = wFade;
+
+    /* 2. A single point of sky in the A, which becomes the crystal. */
+    const g1 = eIO(span(t, T.light + 400, T.light + 400 + T.grow));
+    const K = kp();
+    const ctr = [x0 + (336 - VBX) * s, y0 + (-440 - VBY) * s];
+    const px1 = Math.max(1.25, s * 6);
+    let poly = K.map(([x, y], i) => {
+      const sq = [[0, -1], [1, -1], [1, 1], [0, 1], [-1, 1], [-1, -1]][i];
+      return [lerp(ctr[0] + sq[0] * px1, x, g1), lerp(ctr[1] + sq[1] * px1, y, g1)];
+    });
+    const gemOp = eOut(span(t, T.light, T.light + 380)).toFixed(3);
+
+    /* 3. The crystal travels, and grows into the Break. */
+    const mv = eIO(span(t, T.travel, T.travel + T.tdur));
+    const back = eIO(span(t, T.home, T.home + T.hdur));
+    const box = { x: lerp(big.x, home.x, back), y: lerp(big.y, home.y, back), s: lerp(big.s, home.s, back) };
+    if (mv > 0) { const G = gp(box); poly = poly.map((p, i) => [lerp(p[0], G[i][0], mv), lerp(p[1], G[i][1], mv)]); }
+    gem.setAttribute('points', pts(poly));
+    gem.setAttribute('opacity', gemOp);
+    fac.setAttribute('points', pts(poly.slice(0, 4)));
+    fac.setAttribute('opacity', (0.28 * eIO(span(t, T.light + 700, T.light + 400 + T.grow + 200))).toFixed(3));
+
+    /* The stone comes up out of the dark as the ground lifts to the panel colour. */
+    const gr = eIO(span(t, T.travel + 450, T.travel + T.tdur + 350));
+    const bg = `rgb(${PANEL.map(c => Math.round(c * gr)).join(',')})`;
+    hA.style.background = bg; hB.style.background = bg;
+    tile.setAttribute('transform', `translate(${box.x.toFixed(2)} ${box.y.toFixed(2)}) scale(${(box.s / 100).toFixed(4)})`);
+    tile.setAttribute('opacity', eIO(span(t, T.travel + 600, T.travel + T.tdur + 250)).toFixed(3));
+
+    /* 4. The seam runs out across the panel as a hairline, then the panel parts along it. */
+    const ln = eOut(span(t, T.line, T.line + T.ldur));
+    const reach = Math.hypot(W, H);
+    const ux = T16 / Math.hypot(T16, 1), uy = -1 / Math.hypot(T16, 1);
+    const L = reach * ln;
+    line.setAttribute('x1', (cx - ux * L).toFixed(1)); line.setAttribute('y1', (cy - uy * L).toFixed(1));
+    line.setAttribute('x2', (cx + ux * L).toFixed(1)); line.setAttribute('y2', (cy + uy * L).toFixed(1));
+    line.setAttribute('opacity', (ln > 0 ? 0.55 * (1 - span(t, T.split, T.split + 300)) : 0).toFixed(3));
+    const sp = eIO(span(t, T.split, T.split + T.sdur));
+    if (t >= T.split) {
+      const xt = cx + cy * T16, xb = cx - (H - cy) * T16;
+      hA.style.clipPath = `polygon(0 0, ${xt}px 0, ${xb}px ${H}px, 0 ${H}px)`;
+      hB.style.clipPath = `polygon(${xt}px 0, ${W}px 0, ${W}px ${H}px, ${xb}px ${H}px)`;
+      const D = (W + H * T16) * 1.05 * sp, nx = Math.cos(16 * Math.PI / 180), ny = Math.sin(16 * Math.PI / 180);
+      hA.style.transform = `translate(${(-nx * D).toFixed(1)}px, ${(-ny * D).toFixed(1)}px)`;
+      hB.style.transform = `translate(${(nx * D).toFixed(1)}px, ${(ny * D).toFixed(1)}px)`;
+    }
+
+    /* 5. The mark goes home to the masthead, then the page arrives as a whole. */
+    page.style.opacity = eIO(span(t, T.home + T.hdur - 250, T.home + T.hdur + 550)).toFixed(3);
+  }
+  function frame(now) {
+    if (t0 === null) t0 = now;
+    const t = now - t0;
+    render(t);
+    if (t >= END) return finish();
+    raf = requestAnimationFrame(frame);
+  }
+
+  function finish() {
+    if (ended) return; ended = true;
+    cancelAnimationFrame(raf);
+    intro.remove();
+    page.style.opacity = '';
+    body.classList.remove('run');
+    ['pointerdown', 'keydown', 'wheel', 'touchmove', 'scroll'].forEach(e => removeEventListener(e, skip));
+  }
+  function skip() { if (!ended) { finish(); } }
+
+  const go = () => {
+    layout();
+    ['pointerdown', 'keydown', 'wheel', 'touchmove', 'scroll'].forEach(e => addEventListener(e, skip, { passive: true }));
+    if (/[?&]cap/.test(location.search)) { window.__seek = render; window.__end = finish; return; }
+    raf = requestAnimationFrame(frame);
+  };
+  addEventListener('resize', () => { if (!ended) { layout(); drawWord.done = false; } });
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(go);
+})();
+</script>
+</body>
+</html>
