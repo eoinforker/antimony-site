@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antimony, Certificate</title>
+<meta name="description" content="Antimony builds software for the people who make the work.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="assets/fonts/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: swap; }
+:root {
+  --ink: #0B0C0C; --stone: #141311; --paper: #EEEAE0; --sky: #94E6FF; --prussian: #1F3F7A; --cobalt: #2448FF;
+  --gx: clamp(20px, 4.4vw, 64px); --gy: clamp(22px, 4.6vh, 48px);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+html { background: var(--paper); }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 400 17px/1.55 "Timeless Serif", "Iowan Old Style", Georgia, serif;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+#paper { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+#frame { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+#plate { position: fixed; z-index: 2; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; will-change: transform, opacity; }
+#plate canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.page {
+  position: relative; z-index: 3;
+  min-height: 100vh; min-height: 100svh;
+  display: grid; grid-template-rows: auto 1fr auto;
+  padding: var(--gy) var(--gx);
+}
+header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+.wordmark { display: block; width: 118px; color: var(--ink); --lit: var(--prussian); }
+.wordmark svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+main { align-self: start; padding-top: clamp(64px, 15vh, 150px); max-width: 452px; }
+main p { margin: 0 0 1em; hyphens: manual; }
+main em { font-style: italic; }
+main a { color: inherit; text-decoration: none; }
+main a .c { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .22em; text-decoration-color: rgba(31,63,122,.55); }
+main a:hover .c { text-decoration-color: var(--prussian); }
+
+/* typing */
+.c.u { color: transparent; text-decoration-color: transparent !important; }
+.c.h { background: var(--sky); color: var(--ink); }
+.c.k { position: relative; }
+.c.k::after { content: ""; position: absolute; left: 100%; top: .14em; bottom: .02em; width: .48em; background: var(--sky); }
+.c.k.off::after { visibility: hidden; }
+
+footer { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }
+.colophon { max-width: 452px; width: 100%; }
+.micro { display: block; width: 100%; height: 4px; margin: 0 0 14px; color: var(--prussian); }
+.mentions { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 22px; font-size: 15px; }
+.mentions a { color: var(--ink); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color .2s; }
+.mentions a:hover, .mentions a:focus-visible { border-bottom-color: var(--prussian); outline: none; }
+.mentions .where { color: rgba(11,12,12,.5); margin-left: auto; }
+.reveal { transition: opacity .7s cubic-bezier(.2,.7,.1,1); }
+.pre-open .reveal { opacity: 0; }
+
+.seal-wrap { position: relative; width: 132px; height: 132px; flex: none; margin: 0 -10px -10px 0; }
+#seal { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.seal-wrap .jp {
+  position: absolute; right: calc(100% + 4px); bottom: 12px; writing-mode: vertical-rl; white-space: nowrap;
+  font: 400 9px/1 "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif; letter-spacing: .3em; color: rgba(31,63,122,.8);
+}
+.measure { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; fill: none; stroke: var(--prussian); stroke-width: .45; opacity: 0; transition: opacity .35s ease; pointer-events: none; }
+.measure text { stroke: none; fill: var(--prussian); font: 400 6.4px "Timeless Serif", serif; letter-spacing: .04em; }
+.measure path:last-of-type { stroke-dasharray: 60; stroke-dashoffset: 60; transition: stroke-dashoffset .5s cubic-bezier(.2,.7,.1,1); }
+.seal-wrap:hover .measure { opacity: 1; }
+.seal-wrap:hover .measure path:last-of-type { stroke-dashoffset: 0; }
+.pre-open .seal-wrap { visibility: hidden; }
+
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .wordmark { width: 96px; }
+  main { padding-top: 13vh; }
+  .seal-wrap { width: 92px; height: 92px; margin: 0 -6px -6px 0; }
+  .mentions { gap: 6px 18px; }
+  .mentions .where { margin-left: 0; flex-basis: 100%; }
+  footer { align-items: flex-end; }
+}
+@media (prefers-reduced-motion: reduce) { .reveal { transition: none; } }
+</style>
+</head>
+<body class="pre-open">
+<canvas id="paper" aria-hidden="true"></canvas>
+<canvas id="frame" aria-hidden="true"></canvas>
+<div id="plate" aria-hidden="true"><canvas id="rose"></canvas><canvas id="cut"></canvas><canvas id="stone"></canvas></div>
+
+<div class="page">
+  <header>
+    <a class="wordmark reveal" href="./" aria-label="Antimony">
+      <svg viewBox="-20 -830 4186 1070" role="img" aria-hidden="true"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg>
+    </a>
+  </header>
+
+  <main id="copy">
+    <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator's side of every sponsorship deal.</p>
+    <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
+  </main>
+
+  <footer>
+    <div class="colophon reveal">
+      <svg class="micro" id="micro" aria-hidden="true" preserveAspectRatio="none"></svg>
+      <ul class="mentions">
+        <li><a href="https://eoinforker.github.io/orbe-site/">Orbe</a></li>
+        <li><a href="https://immiscible.ai">immiscible</a></li>
+        <li><a href="https://idyll.day">Idyll</a></li>
+        <li class="where">London</li>
+      </ul>
+    </div>
+    <div class="seal-wrap" id="sealWrap">
+      <span class="jp" aria-hidden="true">アンチモン</span>
+      <svg class="measure" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 34V-6" stroke-dasharray="1 1.4"/><path d="M50 -2A52 52 0 0 1 64.33 0.01"/><text x="58.6" y="-8.6" text-anchor="middle">16°</text></svg>
+      <canvas id="seal" role="img" aria-label="The Antimony seal: the Break at the heart of a guilloche rosette"></canvas>
+    </div>
+  </footer>
+</div>
+
+<script>
+(() => {
+"use strict";
+const PRUSSIAN = "#1F3F7A", COBALT = "#2448FF", SKY = "#94E6FF", STONE = "#141311", PAPER = "#EEEAE0";
+const DEG = Math.PI / 180, TAN16 = Math.tan(16 * DEG);
+const G = {
+  tile: null,
+  big: { cav: "M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z", seam: "M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z" },
+  small: { cav: "M61.24 12.3L79.95 41.9L74.45 61.1L38.76 90.7L20.05 61.1L25.55 41.9Z", seam: "M66.46 -12L69.96 -12L63.6 21.5L46.4 81.5L34.4 112L30.9 112L36.4 81.5L53.6 21.5Z" },
+  gem: "M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z",
+  facet: "M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z"
+};
+const tileP = new Path2D(); tileP.roundRect ? tileP.roundRect(0, 0, 100, 100, 22) : tileP.rect(0, 0, 100, 100);
+const P = s => new Path2D(s);
+const gemP = P(G.gem), facetP = P(G.facet);
+const cutBig = [P(G.big.cav), P(G.big.seam)], cutSmall = [P(G.small.cav), P(G.small.seam)];
+const CX = 50, CY = 51.5; // the crystal's centre: the heart of the rosette
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let seen = false; try { seen = sessionStorage.getItem("sb-cert") === "1"; sessionStorage.setItem("sb-cert", "1"); } catch (e) {}
+const animate = !reduce && !seen;
+const SLOW = Math.max(1, +(new URLSearchParams(location.search).get("slow") || 1));
+const later = (f, ms) => setTimeout(f, ms * SLOW);
+later.iv = (f, ms) => setInterval(f, ms * SLOW);
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+const $ = id => document.getElementById(id);
+
+/* ---------- seeded random ---------- */
+let seed = 51;
+const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+/* ---------- paper: grain, mottle and security fibres, baked once ---------- */
+function bakePaper() {
+  const c = $("paper"), w = Math.ceil(innerWidth), h = Math.ceil(Math.max(innerHeight, screen.height || 0));
+  c.width = w; c.height = h; c.style.height = h + "px";
+  const x = c.getContext("2d");
+  x.fillStyle = PAPER; x.fillRect(0, 0, w, h);
+  // mottle: a few very soft clouds
+  for (let i = 0; i < 10; i++) {
+    const r = 120 + rnd() * 380, px = rnd() * w, py = rnd() * h, g = x.createRadialGradient(px, py, 0, px, py, r);
+    const dark = false; g.addColorStop(0, dark ? "rgba(20,19,17,.009)" : "rgba(255,255,255,.02)"); g.addColorStop(1, "rgba(0,0,0,0)");
+    x.fillStyle = g; x.fillRect(px - r, py - r, 2 * r, 2 * r);
+  }
+  // grain
+  const id = x.getImageData(0, 0, w, h), d = id.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const n = (rnd() + rnd() - 1) * 9;
+    d[i] += n; d[i + 1] += n; d[i + 2] += n * .92;
+  }
+  x.putImageData(id, 0, 0);
+  // security fibres: short curled hairlines in sky and Prussian, as in banknote paper
+  const nf = Math.round(w * h / 44000);
+  x.lineCap = "round";
+  for (let i = 0; i < nf; i++) {
+    const px = rnd() * w, py = rnd() * h, L = 5 + rnd() * 9, a = rnd() * Math.PI * 2, bend = (rnd() - .5) * 1.6;
+    x.strokeStyle = rnd() < .62 ? "rgba(92,190,230,.55)" : "rgba(31,63,122,.32)";
+    x.lineWidth = .55 + rnd() * .35;
+    x.beginPath(); x.moveTo(px, py);
+    x.quadraticCurveTo(px + Math.cos(a + bend) * L * .6, py + Math.sin(a + bend) * L * .6, px + Math.cos(a) * L, py + Math.sin(a) * L);
+    x.stroke();
+  }
+}
+
+/* ---------- the rosette: families of hairline curves, as a rose engine cuts them ---------- */
+// all in unit radius; rotated so the rosette's axis lies on the seam, 16 degrees from vertical
+function buildCurves(dens) {
+  const C = [], rot = -90 * DEG + 16 * DEG; // axis up the seam
+  const polar = (fn, n, phase) => { const a = new Float32Array(2 * (n + 1)); for (let i = 0; i <= n; i++) { const t = i / n * Math.PI * 2, r = fn(t, phase); a[2 * i] = r * Math.cos(t + rot); a[2 * i + 1] = r * Math.sin(t + rot); } return a; };
+  const epi = (c, d, m, n, phase, spin) => { const a = new Float32Array(2 * (n + 1)); for (let i = 0; i <= n; i++) { const t = i / n * Math.PI * 2; const x = c * Math.cos(t) + d * Math.cos(m * t + phase), y = c * Math.sin(t) + d * Math.sin(m * t + phase); const cs = Math.cos(rot + spin), sn = Math.sin(rot + spin); a[2 * i] = x * cs - y * sn; a[2 * i + 1] = x * sn + y * cs; } return a; };
+  const ring = r => ({ pts: polar(() => r, 360), lw: 1, k: "ring" });
+  C.push(ring(.985), ring(.975));
+  // outer: two ribbons interlaced
+  const KA = Math.max(6, Math.round(16 * dens));
+  for (let k = 0; k < KA; k++) for (const base of [0, Math.PI]) { const ph = base + k / KA * .7 * Math.PI; C.push({ pts: polar(t => .892 + .058 * Math.sin(26 * t + ph), 1500, ph), lw: .8 }); }
+  C.push(ring(.812));
+  // the rose: epitrochoid loops, each copy turned a hair further, as a rose engine indexes
+  const KB = Math.max(8, Math.round(22 * dens));
+  for (let k = 0; k < KB; k++) { const sp = k / KB * (2 * Math.PI / 13) * .5; C.push({ pts: epi(.618, .152, -12, 1800, 0, sp), lw: .75 }); }
+  C.push(ring(.452));
+  // inner: a two-frequency net
+  const KC = Math.max(10, Math.round(30 * dens));
+  for (let k = 0; k < KC; k++) { const ph = k / KC * 2 * Math.PI; C.push({ pts: polar(t => .382 + .03 * Math.sin(14 * t + ph) + .03 * Math.sin(42 * t - 3 * ph), 2000, ph), lw: .65 }); }
+  C.push(ring(.31));
+  return C;
+}
+
+function strokeCurve(x, cu, cx, cy, R, alpha, color, lwScale) {
+  const p = cu.pts;
+  x.beginPath(); x.moveTo(cx + p[0] * R, cy + p[1] * R);
+  for (let i = 2; i < p.length; i += 2) x.lineTo(cx + p[i] * R, cy + p[i + 1] * R);
+  x.globalAlpha = alpha; x.strokeStyle = color; x.lineWidth = cu.lw * lwScale; x.stroke(); x.globalAlpha = 1;
+}
+function datum(x, cx, cy, R, lw, alpha) {
+  // a hairline on the seam's angle, through the crystal's centre, crossing the plate
+  const dx = TAN16 / Math.hypot(1, TAN16), dy = -1 / Math.hypot(1, TAN16);
+  x.globalAlpha = alpha; x.strokeStyle = PRUSSIAN; x.lineWidth = lw;
+  x.beginPath();
+  x.moveTo(cx + dx * .34 * R, cy + dy * .34 * R); x.lineTo(cx + dx * 1.04 * R, cy + dy * 1.04 * R);
+  x.moveTo(cx - dx * .34 * R, cy - dy * .34 * R); x.lineTo(cx - dx * 1.04 * R, cy - dy * 1.04 * R);
+  x.stroke(); x.globalAlpha = 1;
+}
+
+/* ---------- the Break ---------- */
+// engraved: the stone cut in hairlines parallel to the seam; solid: for small sizes
+function drawMark(x, ox, oy, T, mode, p) {
+  const s = T / 100, cuts = mode === "solid" ? cutSmall : cutBig;
+  const off = document.createElement("canvas"); off.width = Math.ceil(T * DPR) + 2; off.height = off.width;
+  const o = off.getContext("2d"); o.scale(DPR * s, DPR * s);
+  o.save(); o.clip(tileP);
+  if (mode === "solid") { o.fillStyle = STONE; o.fillRect(0, 0, 100, 100); }
+  else {
+    const nx = Math.cos(16 * DEG), ny = Math.sin(16 * DEG), dx = Math.sin(16 * DEG), dy = -Math.cos(16 * DEG);
+    const step = 100 / 44, N = 66;
+    o.strokeStyle = STONE; o.lineCap = "butt";
+    const shown = Math.floor(p * N);
+    for (let i = 0; i < shown; i++) {
+      const u = (i - N / 2) * step; // across the seam
+      const px = CX + nx * u, py = CY + ny * u;
+      // swell: the stone a touch heavier toward its lower left, lighter near the crystal
+      const w = step * (.6 + .14 * Math.tanh(-u / 30) + .06 * Math.cos(u / 9));
+      o.lineWidth = Math.max(.25, w);
+      o.beginPath(); o.moveTo(px - dx * 90, py - dy * 90); o.lineTo(px + dx * 90, py + dy * 90); o.stroke();
+    }
+  }
+  o.restore();
+  o.globalCompositeOperation = "destination-out";
+  cuts.forEach(c => o.fill(c));
+  x.drawImage(off, ox, oy, off.width / DPR, off.height / DPR);
+  return off;
+}
+function drawGem(x, ox, oy, T, a) {
+  if (a <= 0) return;
+  x.save(); x.translate(ox, oy); x.scale(T / 100, T / 100);
+  x.globalAlpha = a; x.fillStyle = SKY; x.fill(gemP);
+  x.fillStyle = "rgba(255,255,255,.28)"; x.fill(facetP);
+  x.restore(); x.globalAlpha = 1;
+}
+
+/* ---------- the seal at rest ---------- */
+let sealCurves = null;
+function drawSeal() {
+  const cv = $("seal"), r = cv.getBoundingClientRect(), S = r.width;
+  cv.width = Math.round(S * DPR); cv.height = cv.width;
+  const x = cv.getContext("2d"); x.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const R = S / 2 * .96, cx = S / 2, cy = S / 2;
+  sealCurves = sealCurves || buildCurves(.42);
+  for (const cu of sealCurves) strokeCurve(x, cu, cx, cy, R, cu.k === "ring" ? .8 : .42, PRUSSIAN, S < 110 ? .5 : .55);
+  datum(x, cx, cy, R, .6, .9);
+  const T = R * .42, ox = cx - CX / 100 * T, oy = cy - CY / 100 * T;
+  drawMark(x, ox, oy, T, "solid", 1);
+  drawGem(x, ox, oy, T, 1);
+}
+
+/* ---------- the plate frame: a guilloche border round the viewport ---------- */
+function framePath(W, H, inset, rad) {
+  // returns a function s -> [x, y, nx, ny] along a rounded rectangle, clockwise from the top left
+  const w = W - 2 * inset - 2 * rad, h = H - 2 * inset - 2 * rad, q = Math.PI / 2 * rad;
+  const L = 2 * w + 2 * h + 4 * q, x0 = inset, y0 = inset;
+  const segs = [
+    [w, s => [x0 + rad + s, y0, 0, -1]],
+    [q, s => { const a = -Math.PI / 2 + s / rad; return [x0 + rad + w + Math.cos(a) * rad, y0 + rad + Math.sin(a) * rad, Math.cos(a), Math.sin(a)]; }],
+    [h, s => [x0 + 2 * rad + w, y0 + rad + s, 1, 0]],
+    [q, s => { const a = s / rad; return [x0 + rad + w + Math.cos(a) * rad, y0 + rad + h + Math.sin(a) * rad, Math.cos(a), Math.sin(a)]; }],
+    [w, s => [x0 + rad + w - s, y0 + 2 * rad + h, 0, 1]],
+    [q, s => { const a = Math.PI / 2 + s / rad; return [x0 + rad + Math.cos(a) * rad, y0 + rad + h + Math.sin(a) * rad, Math.cos(a), Math.sin(a)]; }],
+    [h, s => [x0, y0 + rad + h - s, -1, 0]],
+    [q, s => { const a = Math.PI + s / rad; return [x0 + rad + Math.cos(a) * rad, y0 + rad + Math.sin(a) * rad, Math.cos(a), Math.sin(a)]; }]
+  ];
+  return { L, at(s) { s = ((s % L) + L) % L; for (const [len, f] of segs) { if (s <= len) return f(s); s -= len; } return segs[0][1](0); } };
+}
+
+/* ---------- microprint: reads as a hairline; zoom in and it says ANTIMONY ---------- */
+function micro() {
+  const svg = $("micro"), w = Math.max(200, Math.round(svg.getBoundingClientRect().width));
+  svg.setAttribute("viewBox", `0 0 ${w} 4`);
+  const unit = "ANTIMONY · LONDON · ";
+  const reps = Math.ceil(w / 52);
+  svg.innerHTML = `<line x1="0" x2="${w}" y1=".35" y2=".35" stroke="currentColor" stroke-width=".3" opacity=".7"/><text x="0" y="3.1" font-family="Timeless Serif, serif" font-size="1.9" letter-spacing=".08" fill="currentColor" textLength="${w}" lengthAdjust="spacing">${unit.repeat(reps)}</text>`;
+}
+
+/* ---------- typing: the certificate filled in by a precise machine ---------- */
+function prepType() {
+  const chars = [];
+  const walk = n => {
+    for (const ch of [...n.childNodes]) {
+      if (ch.nodeType === 3) {
+        const frag = document.createDocumentFragment();
+        for (const c of ch.textContent.replace(/\s+/g, " ")) { const s = document.createElement("span"); s.className = "c"; s.textContent = c; frag.appendChild(s); chars.push(s); }
+        ch.replaceWith(frag);
+      } else if (ch.nodeType === 1) walk(ch);
+    }
+  };
+  const paras = [...$("copy").querySelectorAll("p")].map(p => { const start = chars.length; walk(p); return [start, chars.length]; });
+  // trim leading spaces created by whitespace
+  return { chars, paras };
+}
+function typeOn(T, done) {
+  const { chars, paras } = T, H = 5;
+  chars.forEach(c => c.classList.add("u"));
+  let pi = 0, pos = paras[0][0], last = null;
+  const step = () => {
+    const [a, b] = paras[pi];
+    const n = 2 + (Math.random() < .85 ? 1 : 0);
+    const to = Math.min(b, pos + n);
+    for (let i = pos; i < to; i++) chars[i].classList.remove("u");
+    for (let i = Math.max(a, pos - H - 3); i < to; i++) chars[i].classList.toggle("h", i >= to - H);
+    if (last) last.classList.remove("k"); last = chars[to - 1]; last.classList.add("k");
+    pos = to;
+    if (pos >= b) {
+      later(() => {
+        for (let i = a; i < b; i++) chars[i].classList.remove("h");
+        pi++;
+        if (pi < paras.length) { pos = paras[pi][0]; later(step, 70); }
+        else blink();
+      }, 60);
+      return;
+    }
+    later(step, 18 + Math.random() * 10 + (Math.random() < .1 ? 16 : 0));
+  };
+  const blink = () => {
+    let k = 0; const t = later.iv(() => { last.classList.toggle("off"); if (++k >= 6) { clearInterval(t); last.classList.remove("k", "off"); done && done(); } }, 260);
+  };
+  step();
+}
+
+/* ---------- opening ---------- */
+function opening() {
+  const W = innerWidth, H = innerHeight, phone = W < 640;
+  const S = Math.min(W, H) * (phone ? .9 : .82), R = S / 2 * .96;
+  const plate = $("plate"), rose = $("rose"), cut = $("cut"), stone = $("stone");
+  const left = (W - S) / 2, top = (H - S) / 2;
+  plate.style.width = plate.style.height = S + "px";
+  plate.style.transform = `translate(${left}px, ${top}px)`;
+  [rose, cut, stone].forEach(c => { c.width = c.height = Math.round(S * DPR); });
+  const rx = rose.getContext("2d"), cx2 = cut.getContext("2d"), sx = stone.getContext("2d");
+  [rx, cx2, sx].forEach(c => c.setTransform(DPR, 0, 0, DPR, 0, 0));
+  const curves = buildCurves(1), N = curves.length;
+  const c0 = S / 2;
+  const T = R * .42, mox = c0 - CX / 100 * T, moy = c0 - CY / 100 * T;
+
+  // frame
+  const fr = $("frame"); fr.width = Math.round(W * DPR); fr.height = Math.round(H * DPR);
+  const fx = fr.getContext("2d"); fx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const inset = phone ? 10 : 18, band = phone ? 7 : 10, F = framePath(W, H, inset + band / 2, phone ? 10 : 16), KF = phone ? 7 : 10, lam = phone ? 12 : 16;
+  let sPrev = 0;
+
+  const t0 = performance.now();
+  const D = { frameA: 0, frameB: 1300, roseA: 40, roseB: 1250, markA: 1080, markB: 1480, gemA: 1380, gemB: 1620, recA: 1620, recDur: 820 };
+  const ease = t => t < 0 ? 0 : t > 1 ? 1 : 1 - Math.pow(1 - t, 2.2);
+  let drawn = 0, receding = false, markP = -1;
+  const sealR = () => $("seal").getBoundingClientRect();
+
+  const tick = () => {
+    const t = (performance.now() - t0) / SLOW;
+    // frame border, cut by a moving point
+    const fp = ease((t - D.frameA) / (D.frameB - D.frameA)), sNow = fp * F.L;
+    if (sNow > sPrev) {
+      fx.lineWidth = .55; fx.strokeStyle = PRUSSIAN; fx.globalAlpha = .5;
+      for (let k = 0; k < KF; k++) {
+        const ph = k / KF * Math.PI;
+        fx.beginPath();
+        for (let s = sPrev, first = true; s <= sNow + .01; s += 2, first = false) {
+          const [x, y, nx, ny] = F.at(s), o = Math.sin(s / lam * Math.PI * 2 + ph) * band / 2;
+          first ? fx.moveTo(x + nx * o, y + ny * o) : fx.lineTo(x + nx * o, y + ny * o);
+        }
+        fx.stroke();
+      }
+      fx.globalAlpha = .75;
+      for (const off of [-band / 2 - 3, band / 2 + 3]) {
+        fx.beginPath();
+        for (let s = sPrev, first = true; s <= sNow + .01; s += 4, first = false) { const [x, y, nx, ny] = F.at(s); first ? fx.moveTo(x + nx * off, y + ny * off) : fx.lineTo(x + nx * off, y + ny * off); }
+        fx.stroke();
+      }
+      fx.globalAlpha = 1;
+      sPrev = Math.max(0, sNow - 2);
+    }
+    // rosette: outer to inner, converging on the heart
+    const rp = ease((t - D.roseA) / (D.roseB - D.roseA)), want = Math.floor(rp * N);
+    while (drawn < want) { const cu = curves[drawn++]; strokeCurve(rx, cu, c0, c0, R, cu.k === "ring" ? .8 : .5, PRUSSIAN, .62); }
+    cx2.clearRect(0, 0, S, S);
+    if (drawn < N && drawn > 0) { for (let j = Math.max(0, drawn - 2); j < drawn; j++) strokeCurve(cx2, curves[j], c0, c0, R, .9, COBALT, .8); }
+    if (drawn >= N && !rx._datum) { rx._datum = 1; datum(rx, c0, c0, R, .7, .85); }
+    // the Break resolves at the heart
+    const mp = Math.min(1, Math.max(0, (t - D.markA) / (D.markB - D.markA)));
+    if (mp > 0 && mp !== markP) { markP = mp; sx.clearRect(0, 0, S, S); drawMark(sx, mox, moy, T, "engraved", ease(mp)); drawGem(sx, mox, moy, T, Math.min(1, Math.max(0, (t - D.gemA) / (D.gemB - D.gemA)))); }
+    else if (t > D.gemA && t < D.gemB + 40) { sx.clearRect(0, 0, S, S); drawMark(sx, mox, moy, T, "engraved", 1); drawGem(sx, mox, moy, T, Math.min(1, (t - D.gemA) / (D.gemB - D.gemA))); }
+    // recede: the plate becomes the seal
+    if (t >= D.recA && !receding) {
+      receding = true;
+      document.body.classList.remove("pre-open");
+      $("sealWrap").style.visibility = "hidden";
+      const r = sealR(), k = r.width / S;
+      plate.style.transition = `transform ${D.recDur * SLOW}ms cubic-bezier(.65,0,.2,1)`;
+      plate.style.transform = `translate(${r.left}px, ${r.top}px) scale(${k})`;
+      fr.style.transition = `opacity ${600 * SLOW}ms ease`; fr.style.opacity = "0";
+      later(() => { typeOn(TYPE); }, 20);
+      later(() => { $("sealWrap").style.visibility = ""; plate.style.transition = `opacity ${260 * SLOW}ms ease`; plate.style.opacity = "0"; later(() => { plate.remove(); fr.remove(); }, 300); }, D.recDur + 20);
+      return;
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+/* ---------- start ---------- */
+bakePaper();
+micro();
+drawSeal();
+const TYPE = prepType();
+if (animate) { TYPE.chars.forEach(c => c.classList.add("u")); opening(); }
+else { $("plate").remove(); $("frame").remove(); document.body.classList.remove("pre-open"); }
+
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { micro(); drawSeal(); }, 120); });
+document.fonts && document.fonts.ready.then(micro);
+})();
+</script>
+</body>
+</html>

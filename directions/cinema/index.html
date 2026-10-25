@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Antimony, Cinema</title>
+<meta name="description" content="Antimony builds software for the people who make the work. London.">
+<meta name="theme-color" content="#0B0C0C">
+<link rel="preload" href="assets/fonts/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/TimelessSerifItalicVF.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: "Timeless Serif"; src: url(assets/fonts/TimelessSerifVF.woff2) format("woff2"); font-weight: 200 700; font-style: normal; font-display: block; }
+@font-face { font-family: "Timeless Serif"; src: url(assets/fonts/TimelessSerifItalicVF.woff2) format("woff2"); font-weight: 200 700; font-style: italic; font-display: block; }
+/* Shippori Mincho (SIL OFL), subset to the four kana of アンチモン */
+@font-face { font-family: "Mincho Sb"; src: url(assets/fonts/shippori-mincho-antimony.woff2) format("woff2"); unicode-range: U+30A2, U+30C1, U+30E2, U+30F3; font-display: block; }
+
+:root {
+  --ink: #0B0C0C;
+  --black: #050505;
+  --paper: #EEEAE0;
+  --sky: #94E6FF;
+  --dim: rgba(238, 234, 224, .46);
+  --faint: rgba(238, 234, 224, .2);
+  --hair: rgba(238, 234, 224, .16);
+  --bar: 0px;
+  --ease: cubic-bezier(.66, 0, .2, 1);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--black); color-scheme: dark; -webkit-text-size-adjust: 100%; }
+body {
+  min-height: 100vh; min-height: 100dvh;
+  background: var(--ink);
+  background-image: radial-gradient(130% 110% at 50% 50%, transparent 62%, rgba(0, 0, 0, .32) 100%);
+  color: var(--paper);
+  font-family: "Timeless Serif", "Iowan Old Style", Georgia, serif;
+  font-size: 17px; line-height: 1.56;
+  font-variation-settings: "wght" 380;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+a { color: inherit; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* The page */
+main {
+  position: relative; z-index: 2;
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; align-items: center;
+  padding: 96px clamp(22px, 11vw, 176px);
+}
+.col { width: min(448px, 100%); }
+.still { position: absolute; left: 71%; top: 50%; width: min(32vh, 22vw); aspect-ratio: 1; transform: translate(-50%, -50%); pointer-events: none; }
+.mark { display: block; width: 100%; height: 100%; transform-origin: 0 0; position: relative; z-index: 6; }
+.stone { fill: #171818; transition: fill 1.6s ease; }
+.opening .stone { fill: #232424; }
+.mark svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.copy p + p { margin-top: .82em; }
+.copy em { font-style: italic; }
+.copy a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; text-decoration-color: rgba(238, 234, 224, .34); transition: color .2s, text-decoration-color .2s; }
+.copy a:hover, .copy a:focus-visible { color: var(--sky); text-decoration-color: var(--sky); outline: none; }
+
+/* typed characters */
+.c { visibility: hidden; position: relative; }
+.c.fade { transition: background-color .36s ease, color .36s ease; }
+.c.on { visibility: visible; }
+.c.hl { background: var(--sky); color: var(--ink); }
+.c.cur::after {
+  content: ""; position: absolute; left: 100%; top: .14em; width: .5em; height: 1.08em;
+  background: var(--sky);
+}
+.c.cur.off::after { opacity: 0; }
+
+.made {
+  margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--hair); transition: border-color 1s ease;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px;
+  font-size: 14px; color: var(--dim); list-style: none;
+}
+.made li { display: flex; align-items: center; height: 22px; transition: opacity .8s ease; }
+.made a { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; transition: color .2s; }
+.made img { width: 18px; height: 18px; border-radius: 4px; filter: grayscale(1) brightness(.8) contrast(1.05); opacity: .62; transition: filter .25s, opacity .25s; }
+.made a:hover, .made a:focus-visible { color: var(--paper); outline: none; }
+.made a:hover img, .made a:focus-visible img { filter: none; opacity: 1; }
+.made .ldn { margin-left: auto; color: var(--faint); letter-spacing: .02em; }
+
+/* The tagline */
+.tag {
+  position: fixed; z-index: 4; top: 22px; left: 50%; transform: translateX(-50%);
+  width: max-content; max-width: calc(100% - 44px); text-align: center;
+  font-size: 9.5px; letter-spacing: .42em; text-transform: uppercase; color: var(--dim);
+  margin-right: -.42em; /* trailing tracking */
+}
+/* grain: baked once, moved on the compositor */
+.grain { position: fixed; z-index: 9; inset: -60px; pointer-events: none; opacity: .055; background-size: 240px 240px; animation: grain .64s steps(1) infinite; transition: opacity 1.4s ease; }
+@keyframes grain {
+  0% { transform: translate(0, 0); } 12.5% { transform: translate(-37px, 21px); } 25% { transform: translate(19px, -44px); }
+  37.5% { transform: translate(-52px, -13px); } 50% { transform: translate(31px, 38px); } 62.5% { transform: translate(-11px, 51px); }
+  75% { transform: translate(46px, 7px); } 87.5% { transform: translate(-24px, -33px); }
+}
+
+/* ---------- The opening ---------- */
+.bar { position: fixed; z-index: 5; left: 0; right: 0; height: var(--bar); background: var(--black); display: none; }
+.bar.top { top: 0; }
+.bar.bot { bottom: 0; }
+.subs { position: absolute; left: 0; right: 0; top: clamp(16px, 4.2vh, 34px); text-align: center; opacity: 0; }
+.subs .jp { display: block; font-family: "Mincho Sb", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif; font-size: 16px; letter-spacing: .4em; margin-right: -.4em; line-height: 1.4; color: rgba(238, 234, 224, .9); }
+.subs .en { display: block; margin-top: 7px; margin-right: -.52em; font-size: 9px; letter-spacing: .52em; text-transform: uppercase; color: rgba(238, 234, 224, .5); }
+.beam { position: fixed; z-index: 1; inset: 0; pointer-events: none; opacity: 0; background: rgba(226, 230, 236, .035); }
+.rake { position: fixed; z-index: 1; inset: 0; pointer-events: none; opacity: 0; overflow: hidden; }
+.rake::before { content: ""; position: absolute; top: -20%; bottom: -20%; left: -90%; width: 90%; background: linear-gradient(100deg, transparent, rgba(232, 234, 236, .04) 50%, transparent); transform: skewX(-16deg); }
+.run .rake { opacity: 1; }
+.run .rake::before { animation: rake 2.2s cubic-bezier(.3, 0, .4, 1) forwards; }
+@keyframes rake { from { transform: translateX(0) skewX(-16deg); } to { transform: translateX(300%) skewX(-16deg); } }
+.open .rake { opacity: 0; transition: opacity 1s ease .3s; }
+
+.opening .bar { display: block; }
+.opening .tag, .opening .made li { opacity: 0; }
+.opening .made { border-top-color: transparent; }
+.opening .mark { opacity: 0; }
+
+.run .beam { animation: flicker .9s linear forwards; }
+.run .mark { animation: flicker-mark .9s linear forwards; }
+.run .subs { animation: subs .45s ease .55s forwards; }
+.run .weave { animation: weave .42s steps(1) infinite; }
+@keyframes flicker {
+  0% { opacity: 0; } 6% { opacity: .9; } 9% { opacity: .15; } 15% { opacity: 1; } 19% { opacity: .35; }
+  27% { opacity: .95; } 32% { opacity: .6; } 42% { opacity: 1; } 50% { opacity: .82; } 64% { opacity: 1; } 100% { opacity: 1; }
+}
+@keyframes flicker-mark {
+  0% { opacity: 0; } 6% { opacity: .5; } 9% { opacity: .06; } 15% { opacity: .78; } 19% { opacity: .22; }
+  27% { opacity: .9; } 32% { opacity: .62; } 42% { opacity: 1; } 50% { opacity: .86; } 64% { opacity: 1; } 100% { opacity: 1; }
+}
+@keyframes subs { from { opacity: 0; } to { opacity: 1; } }
+@keyframes weave {
+  0% { transform: translate(0, 0); } 17% { transform: translate(.4px, -.6px); } 33% { transform: translate(-.3px, .3px); }
+  50% { transform: translate(.2px, .7px); } 67% { transform: translate(-.5px, -.2px); } 83% { transform: translate(.3px, .1px); }
+}
+
+/* the bars leave */
+.open .bar { transition: transform .8s var(--ease); }
+.open .bar.top { transform: translateY(-100%); }
+.open .bar.bot { transform: translateY(100%); }
+.open .beam { animation: none; opacity: 1; transition: opacity 1.2s ease; }
+.open .beam.rest { opacity: 0; }
+.tag { transition: opacity 1s ease .5s; }
+.open .tag { opacity: 1; }
+
+@media (max-width: 640px) {
+  body { font-size: 16px; line-height: 1.55; }
+  main { flex-direction: column; align-items: flex-start; justify-content: flex-start; padding: max(150px, 19vh) 22px 96px; }
+  .still { position: relative; left: 0; top: 0; transform: none; width: 40px; margin-bottom: 26px; }
+  .stone { fill: #1D1E1E; }
+  .tag { top: 24px; font-size: 8.5px; letter-spacing: .36em; margin-right: -.36em; max-width: 280px; line-height: 2.1; }
+  .tag span { display: block; }
+  .made { gap: 12px 20px; }
+  .made .ldn { margin-left: 0; }
+  .subs .jp { font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .grain { animation: none; }
+}
+</style>
+</head>
+<body>
+<div class="beam" aria-hidden="true"></div>
+<div class="rake" aria-hidden="true"></div>
+
+<div class="bar top" aria-hidden="true"></div>
+<div class="bar bot" aria-hidden="true">
+  <div class="subs"><span class="jp" lang="ja">アンチモン</span><span class="en">Antimony</span></div>
+</div>
+
+<p class="tag">Software for the people <span>who make the work.</span></p>
+
+<main>
+  <div class="still">
+    <span class="mark" role="img" aria-label="Antimony"><span class="weave" style="display:block;width:100%;height:100%">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <defs>
+          <mask id="cut" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+            <rect width="100" height="100" fill="#fff"/>
+            <path fill="#000" d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z"/>
+            <path fill="#000" d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z"/>
+          </mask>
+        </defs>
+        <rect class="stone" width="100" height="100" rx="22" mask="url(#cut)"/>
+        <path fill="#94E6FF" d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"/>
+        <path fill="#fff" fill-opacity=".28" d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z"/>
+      </svg>
+    </span></span>
+  </div>
+  <div class="col">
+
+    <div class="copy">
+      <div class="vh">
+        <p>Antimony builds software for the people who make the work. Our first product is Orbe, the creator’s side of every sponsorship deal.</p>
+        <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
+      </div>
+      <div class="typed" aria-hidden="true">
+        <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/" tabindex="-1">Orbe</a>, the creator’s side of every sponsorship deal.</p>
+        <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
+      </div>
+    </div>
+
+    <ul class="made">
+      <li><a href="https://eoinforker.github.io/orbe-site/"><img src="assets/work/orbe.svg" alt="">Orbe</a></li>
+      <li><a href="https://immiscible.ai"><img src="assets/work/immiscible.svg" alt="">immiscible</a></li>
+      <li><a href="https://idyll.day"><img src="assets/work/idyll.svg" alt="">Idyll</a></li>
+      <li class="ldn">London</li>
+    </ul>
+  </div>
+</main>
+
+<div class="grain" aria-hidden="true"></div>
+
+<script>
+(() => {
+  const root = document.documentElement, body = document.body;
+  const $ = (s) => document.querySelector(s);
+
+  /* grain, baked once */
+  try {
+    const q = Math.min(2, devicePixelRatio || 1), n = Math.round(240 * q), cv = document.createElement("canvas"); cv.width = cv.height = n;
+    const cx = cv.getContext("2d"), im = cx.createImageData(n, n), d = im.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = Math.random(), w = r > .5;
+      const a = Math.abs(r - .5) * 2;
+      d[i] = d[i + 1] = d[i + 2] = w ? 238 : 0;
+      d[i + 3] = Math.pow(a, 1.6) * 255;
+    }
+    cx.putImageData(im, 0, 0);
+    $(".grain").style.backgroundImage = `url(${cv.toDataURL()})`;
+  } catch (e) {}
+
+  addEventListener("resize", () => setBar(), { passive: true });
+
+  function setBar() {
+    const h = Math.max(0, (innerHeight - innerWidth / 2.39) / 2);
+    root.style.setProperty("--bar", h + "px");
+    return h;
+  }
+
+  /* typing: split the copy into characters, keeping em and a */
+  const typed = $(".typed"), paras = [...typed.querySelectorAll("p")], chars = [], starts = [];
+  paras.forEach((p) => {
+    starts.push(chars.length);
+    const walk = (node) => {
+      [...node.childNodes].forEach((ch) => {
+        if (ch.nodeType === 3) {
+          const frag = document.createDocumentFragment();
+          for (const t of ch.textContent) { const s = document.createElement("span"); s.className = "c"; s.textContent = t; frag.appendChild(s); chars.push(s); }
+          ch.replaceWith(frag);
+        } else walk(ch);
+      });
+    };
+    walk(p);
+  });
+  starts.push(chars.length);
+  const showAll = () => chars.forEach((c) => c.classList.add("on"));
+
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let seen = false;
+  try { seen = sessionStorage.getItem("antimony-cinema") === "1"; sessionStorage.setItem("antimony-cinema", "1"); } catch (e) {}
+
+  const finish = () => {
+    showAll();
+    typed.querySelector("a").removeAttribute("tabindex");
+  };
+
+  if (reduce || seen) {
+    finish();
+    if (!reduce) body.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 420, easing: "ease-out" });
+    return;
+  }
+
+  /* ---------- the opening ---------- */
+  const mark = $(".mark"), beam = $(".beam"), grain = $(".grain");
+  body.classList.add("opening");
+  setBar();
+  grain.style.opacity = ".09";
+
+  // place the mark at the centre of the frame
+  const r = mark.getBoundingClientRect();
+  const frameH = Math.min(innerHeight, innerWidth / 2.39);
+  const S = Math.max(64, Math.min(232, frameH * .42));
+  const k = S / r.width;
+  const dx = innerWidth / 2 - S / 2 - r.left, dy = innerHeight / 2 - S / 2 - r.top;
+  const from = `translate(${dx}px, ${dy}px) scale(${k})`;
+  mark.style.transform = from;
+
+  const T = { light: 120, open: 1300 };
+  T.type = T.open + 620;
+
+  requestAnimationFrame(() => setTimeout(() => body.classList.add("run"), T.light));
+
+  setTimeout(() => {
+    // projector settles, the bars open
+    body.classList.add("open");
+    mark.style.opacity = "1";
+    $(".weave").style.animation = "none";
+    beam.style.opacity = "1";
+    requestAnimationFrame(() => beam.classList.add("rest"));
+    grain.style.opacity = "";
+    mark.animate([{ transform: from }, { transform: "none" }], { duration: 860, easing: "cubic-bezier(.62,0,.18,1)", fill: "forwards" })
+      .finished.then(() => { mark.style.transform = "none"; });
+  }, T.open);
+
+  setTimeout(type, T.type);
+
+  function type() {
+    let i = 0, para = 0, cur = null;
+    const WIN = 9;
+    const hl = new Set();
+    const step = () => {
+      const n = 2 + (Math.random() < .72 ? 1 : 0) + (Math.random() < .18 ? 1 : 0);
+      const end = Math.min(i + n, starts[para + 1]);
+      for (; i < end; i++) { chars[i].classList.add("on", "hl"); hl.add(chars[i]); }
+      // the highlight runs just behind the newest characters
+      const lo = Math.max(starts[para], i - WIN);
+      hl.forEach((c) => { if (chars.indexOf(c) < lo) { c.classList.remove("hl"); hl.delete(c); } });
+      if (cur) cur.classList.remove("cur");
+      cur = chars[i - 1]; cur.classList.add("cur");
+      if (i >= starts[para + 1]) {
+        // line complete: the highlight clears
+        const done = [...hl]; hl.clear();
+        setTimeout(() => done.forEach((c) => { c.classList.add("fade"); c.classList.remove("hl"); }), 90);
+        para++;
+        if (para >= paras.length) return end_();
+        return setTimeout(step, 120);
+      }
+      const ch = chars[i - 1].textContent;
+      const pause = /[.,]/.test(ch) ? 40 : 0;
+      setTimeout(step, 18 + Math.random() * 16 + pause);
+    };
+    const end_ = () => {
+      const lis = document.querySelectorAll(".made li");
+      lis.forEach((li) => { li.style.opacity = "0"; });
+      body.classList.remove("opening");
+      lis.forEach((li, j) => setTimeout(() => { li.style.opacity = ""; }, 80 + j * 120));
+      typed.querySelector("a").removeAttribute("tabindex");
+      // a few blinks, then the cursor goes
+      let b = 0; const blink = setInterval(() => { cur.classList.toggle("off"); if (++b >= 6) { clearInterval(blink); cur.classList.remove("cur", "off"); } }, 260);
+    };
+    step();
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antimony, Dither</title>
+<meta name="description" content="Antimony builds software for the people who make the work. London.">
+<meta name="theme-color" content="#EEEAE0">
+<link rel="preload" href="assets/fonts/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin>
+<script>
+  /* Decide before first paint whether the opening plays: not on a second visit, not under reduced motion. */
+  (function () {
+    var seen = false;
+    try { seen = sessionStorage.getItem('antimony-dither') === '1'; } catch (e) {}
+    var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!seen && !still) document.documentElement.className = 'op';
+  })();
+</script>
+<style>
+@font-face { font-family: "Timeless"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
+@font-face { font-family: "Timeless"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: swap; }
+
+:root {
+  --ink: #0B0C0C;
+  --stone: #141311;
+  --paper: #EEEAE0;
+  --sky: #94E6FF;
+  --prussian: #1F3F7A;
+  --cobalt: #2448FF;
+  --soft: rgba(11, 12, 12, .56);
+  --hair: rgba(11, 12, 12, .22);
+  --mark: 160px;
+}
+* { box-sizing: border-box; }
+html { background: var(--paper); -webkit-text-size-adjust: 100%; }
+html.op { background: var(--ink); }
+body {
+  margin: 0; min-height: 100vh; min-height: 100svh;
+  background: var(--paper); color: var(--ink);
+  font-family: "Timeless", "Iowan Old Style", Georgia, serif;
+  font-size: 16px; line-height: 1.55; font-weight: 400;
+  font-kerning: normal; font-feature-settings: "kern", "liga";
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+/* Paper grain: baked once as an SVG turbulence tile, multiplied over the page. */
+body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 5;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .07  0 0 0 0 .07  0 0 0 0 .06  0 0 0 .55 -.2'/></filter><rect width='240' height='240' filter='url(%23n)'/></svg>");
+  opacity: .42; will-change: transform;
+}
+a { color: inherit; }
+::selection { background: var(--sky); color: var(--ink); }
+
+.page {
+  position: relative; min-height: 100vh; min-height: 100svh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 34px 24px 96px;
+}
+
+
+.tag {
+  margin: 0; font-size: 10.5px; line-height: 1.7; letter-spacing: .42em; text-transform: uppercase;
+  color: var(--soft); text-align: center; font-weight: 420; padding-left: .42em;
+}
+
+.jp {
+  position: fixed; right: 23px; top: 50%; transform: translateY(-50%); z-index: 4;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  color: var(--soft); pointer-events: none;
+}
+.jp b {
+  writing-mode: vertical-rl; font-weight: 400; font-size: 11px; letter-spacing: .5em;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+}
+
+/* The mark at rest. */
+.stage { position: relative; margin-top: 84px; }
+#mark { display: block; width: var(--mark); height: var(--mark); }
+#trail { position: absolute; left: -64px; top: -64px; pointer-events: none; image-rendering: pixelated; }
+
+.word { display: block; width: 112px; margin: 36px auto 0; color: var(--ink); --lit: var(--prussian); }
+
+.copy { width: 100%; max-width: 452px; margin-top: 48px; }
+.copy p { margin: 0 0 1em; font-size: 16px; line-height: 1.6; letter-spacing: .002em; hanging-punctuation: first; }
+.copy p em { font-style: italic; }
+.copy p a { text-decoration: none; background-image: linear-gradient(var(--prussian), var(--prussian)); background-size: 100% 1px; background-repeat: no-repeat; background-position: 0 92%; color: var(--prussian); }
+.copy p a:hover { background-color: rgba(148, 230, 255, .55); }
+.copy .rest { color: transparent; }
+.copy .rest a, .copy .rest em { color: transparent; background-image: none; }
+.copy mark { background: var(--sky); color: var(--ink); padding: 0; }
+.copy mark a { color: var(--ink); }
+.copy .cur { display: inline-block; width: .5em; height: 1.08em; vertical-align: -.2em; background: var(--sky); margin-left: 1px; }
+
+.rule { width: 32px; height: 1px; background: var(--hair); margin: 10px 0 18px; border: 0; }
+.made { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 26px; font-size: 14px; }
+.made a { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
+.made .px { position: relative; width: 24px; height: 24px; flex: none; }
+.made .px canvas, .made .px img { position: absolute; inset: 0; width: 24px; height: 24px; image-rendering: pixelated; }
+.made .px img { display: none; border-radius: 5px; }
+.made span.n { border-bottom: 1px solid transparent; }
+.made a:hover span.n, .made a:focus-visible span.n { border-bottom-color: var(--hair); }
+.made a:focus-visible { outline: 1px dotted var(--ink); outline-offset: 4px; }
+
+
+/* The opening layers. */
+#veil { position: fixed; inset: 0; background: var(--ink); z-index: 20; display: none; }
+html.op #veil { display: block; }
+#ink { position: fixed; left: 0; top: 0; z-index: 21; pointer-events: none; display: none; image-rendering: pixelated; }
+#inv { position: fixed; z-index: 21; pointer-events: none; display: none; }
+#bits { position: fixed; z-index: 22; image-rendering: pixelated; pointer-events: none; display: none; }
+#spill { position: fixed; inset: 0; z-index: 23; pointer-events: none; }
+html.op .made { visibility: hidden; }
+html.op body { overflow: hidden; }
+html.op .copy p:not(.on) { color: transparent; }
+html.op .copy p:not(.on) a, html.op .copy p:not(.on) em { color: transparent; background-image: none; }
+
+@media (max-width: 640px) {
+  .page { padding: 30px 20px 120px; }
+  .tag { font-size: 9px; letter-spacing: .3em; padding: 0 22px; max-width: 320px; }
+  .stage { margin-top: 56px; }
+  .copy { margin-top: 36px; }
+  .copy p { font-size: 15.5px; }
+  .jp { display: none; }
+  .page { align-items: center; }
+  .copy { width: 100%; max-width: 452px; }
+  .made { gap: 12px 22px; }
+}
+@media (max-height: 760px) and (min-width: 641px) { .stage { margin-top: 30px; } .copy { margin-top: 34px; } }
+</style>
+</head>
+<body>
+<div id="veil" aria-hidden="true"></div>
+<canvas id="ink" aria-hidden="true"></canvas>
+<canvas id="inv" aria-hidden="true"></canvas>
+<canvas id="bits" aria-hidden="true"></canvas>
+<canvas id="spill" aria-hidden="true"></canvas>
+
+
+<div class="jp" aria-hidden="true"><b>アンチモン</b></div>
+
+<main class="page">
+  <p class="tag">Software for the people who make the work.</p>
+
+  <div class="stage" id="stage">
+    <svg id="mark" viewBox="0 0 100 100" role="img" aria-label="The Antimony mark: a stone split at sixteen degrees, a sky crystal grown in the break">
+      <defs>
+      </defs>
+      <image id="stonebits" x="0" y="0" width="100" height="100" preserveAspectRatio="none" style="image-rendering:pixelated"/>
+      <path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z" fill="#94E6FF"/>
+      <path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" fill-opacity=".28"/>
+    </svg>
+    <canvas id="trail" aria-hidden="true"></canvas>
+  </div>
+
+  <svg class="word" viewBox="-20 -830 4186 1070" role="img" aria-label="antimony"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg>
+
+  <div class="copy">
+    <p id="p1"><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator&#8217;s side of every sponsorship deal.</p>
+    <p id="p2">We sit on their side of the table, and we mean to stay there for a long time.</p>
+    <hr class="rule">
+    <ul class="made" aria-label="Made here">
+      <li><a href="https://eoinforker.github.io/orbe-site/"><span class="px" data-src="assets/work/orbe.svg"></span><span class="n">Orbe</span></a></li>
+      <li><a href="https://immiscible.ai"><span class="px" data-src="assets/work/immiscible.svg"></span><span class="n">immiscible</span></a></li>
+      <li><a href="https://idyll.day"><span class="px" data-src="assets/work/idyll.svg"></span><span class="n">Idyll</span></a></li>
+    </ul>
+  </div>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var G = {"seam":"M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z","cav":"M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z","gem":"M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z","facet":"M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z","small":{"cav":"M61.24 12.3L79.95 41.9L74.45 61.1L38.76 90.7L20.05 61.1L25.55 41.9Z","gem":"M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z","seam":"M66.46 -12L69.96 -12L63.6 21.5L46.4 81.5L34.4 112L30.9 112L36.4 81.5L53.6 21.5Z","facet":"M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z"}};
+  var TILE = 'M22 0H78A22 22 0 0 1 100 22V78A22 22 0 0 1 78 100H22A22 22 0 0 1 0 78V22A22 22 0 0 1 22 0Z';
+  var C = { ink: [11, 12, 12], paper: [238, 234, 224], sky: [148, 230, 255], facet: [178, 237, 255], stone: [20, 19, 17], lit: [50, 49, 46], prussian: [31, 63, 122] };
+  var root = document.documentElement;
+  var playing = root.className === 'op';
+  var DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+  /* Ordered dithering: the 8 by 8 Bayer matrix, normalised to (0, 1). */
+  var B8 = (function () {
+    var m = [[0]];
+    for (var n = 1; n < 8; n *= 2) {
+      var r = [];
+      for (var y = 0; y < n * 2; y++) { r.push([]); for (var x = 0; x < n * 2; x++) {
+        var q = (y >= n ? 1 : 0) * 2 + (x >= n ? 1 : 0), v = [0, 2, 3, 1][q];
+        r[y][x] = 4 * m[y % n][x % n] + v;
+      } }
+      m = r;
+    }
+    var o = new Float32Array(64);
+    for (var i = 0; i < 64; i++) o[i] = (m[i >> 3][i & 7] + .5) / 64;
+    return o;
+  })();
+  function bayer(x, y) { return B8[((y & 7) << 3) | (x & 7)]; }
+
+  /* Coverage of each layer of the Break at N by N, from the exact paths. */
+  function cover(N, g) {
+    var c = document.createElement('canvas'); c.width = c.height = N;
+    var x = c.getContext('2d', { willReadFrequently: true });
+    function pass(fn) {
+      x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, N, N);
+      x.setTransform(N / 100, 0, 0, N / 100, 0, 0); x.fillStyle = '#fff'; fn();
+      var d = x.getImageData(0, 0, N, N).data, a = new Float32Array(N * N);
+      for (var i = 0; i < N * N; i++) a[i] = d[i * 4 + 3] / 255;
+      return a;
+    }
+    return {
+      stone: pass(function () { x.fill(new Path2D(TILE)); x.globalCompositeOperation = 'destination-out'; x.fill(new Path2D(g.seam)); x.fill(new Path2D(g.cav)); }),
+      gem: pass(function () { x.fill(new Path2D(g.gem)); }),
+      facet: pass(function () { x.fill(new Path2D(g.facet)); })
+    };
+  }
+
+  /* One step of the opening: the Break on ink, the stone drawn in paper and lit from the upper left. */
+  function bitmap(N) {
+    var cv = cover(N, N <= 32 ? G.small : G), c = document.createElement('canvas'); c.width = c.height = N;
+    var x = c.getContext('2d'), im = x.createImageData(N, N), d = im.data;
+    for (var py = 0; py < N; py++) for (var px = 0; px < N; px++) {
+      var i = py * N + px, b = bayer(px, py), col = null;
+      var light = 1 - (N <= 32 ? 0 : .26) * Math.min(1, Math.max(0, ((px + py) / (2 * N) - .2) / .8));
+      if (cv.gem[i] > b) col = cv.facet[i] > b ? C.facet : C.sky;
+      else if (cv.stone[i] * light > b) col = C.paper;
+      if (col) { d[i * 4] = col[0]; d[i * 4 + 1] = col[1]; d[i * 4 + 2] = col[2]; d[i * 4 + 3] = 255; }
+    }
+    x.putImageData(im, 0, 0);
+    return c;
+  }
+
+  /* The mark at rest stays a bitmap: the stone is a field of ordered dither, stone and ink, two pixels a cell,
+     lit from the upper left; its edges are cut to whole pixels. Only the crystal is solid. */
+  (function () {
+    var N = 160, cv = cover(N, G), c = document.createElement('canvas'); c.width = c.height = N;
+    var x = c.getContext('2d'), im = x.createImageData(N, N), d = im.data;
+    for (var y = 0; y < N; y++) for (var X = 0; X < N; X++) {
+      var i = y * N + X; if (cv.stone[i] < .5) continue;
+      var t = .1 + .42 * Math.max(0, 1 - Math.hypot(X / N - .08, y / N - .06) / 1.05);
+      var col = t > bayer(X >> 1, y >> 1) ? C.lit : C.ink;
+      d[i * 4] = col[0]; d[i * 4 + 1] = col[1]; d[i * 4 + 2] = col[2]; d[i * 4 + 3] = 255;
+    }
+    x.putImageData(im, 0, 0);
+    document.getElementById('stonebits').setAttribute('href', c.toDataURL());
+  })();
+
+  var stage = document.getElementById('stage');
+
+  /* The pixel layer: clusters spilt from the seam, then the pointer's trail near the mark. */
+  var spill = document.getElementById('spill'), sx = spill.getContext('2d');
+  var trail = document.getElementById('trail'), tx = trail.getContext('2d');
+  var bits = [], rest = [], clusters = [], raf = 0, cell = 4;
+  function sizeLayers() {
+    spill.width = Math.round(innerWidth * DPR); spill.height = Math.round(innerHeight * DPR);
+    var w = stage.offsetWidth + 128, h = stage.offsetHeight + 128;
+    trail.width = w * DPR; trail.height = h * DPR; trail.style.width = w + 'px'; trail.style.height = h + 'px';
+  }
+  sizeLayers();
+  function markRect() { return document.getElementById('mark').getBoundingClientRect(); }
+
+  function rgb(c, a) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (a == null ? 1 : a) + ')'; }
+
+  /* Clusters leave from the two ends of the seam, travel along its sixteen degrees and settle on the grid. */
+  var SHAPES = [[[0, 0]], [[0, 0], [1, 0]], [[0, 0], [0, 1], [1, 1]], [[0, 0], [1, 0], [1, 1], [2, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 0], [0, 1]]];
+  function makeClusters() {
+    var plan = [
+      [1, 0, 0, 44, 'sky'], [1, 1, 18, 28, 'paper'], [1, 3, -16, 20, 'sky'],
+      [-1, 2, 30, 18, 'sky']
+    ];
+    var tan = Math.tan(16 * Math.PI / 180);
+    clusters = plan.map(function (p, k) {
+      var top = p[0] > 0, sy = top ? 0 : 100, sx0 = 50 + (51.5 - sy) * tan;
+      var dir = [top ? Math.sin(16 * Math.PI / 180) : -Math.sin(16 * Math.PI / 180), top ? -Math.cos(16 * Math.PI / 180) : Math.cos(16 * Math.PI / 180)];
+      var lat = [-dir[1], dir[0]];
+      return { u: sx0 / 100, v: sy / 100, dx: dir[0] * p[3] + lat[0] * p[2], dy: dir[1] * p[3] + lat[1] * p[2], shape: SHAPES[p[1]], col: p[4], t0: 40 + k * 70 + (top ? 0 : 35), dur: 900 + (k % 3) * 160 };
+    });
+  }
+  function easeOut(t) { return 1 - Math.pow(1 - t, 4); }
+
+  var flipT = -1, flipField = null;
+  function drawSpill(now) {
+    sx.setTransform(1, 0, 0, 1, 0, 0); sx.clearRect(0, 0, spill.width, spill.height);
+    if (!clusters.length) return false;
+    var r = markRect(), g = r.width / 40, live = false;
+    clusters.forEach(function (c) {
+      var t = Math.min(1, Math.max(0, (now - c.spawn - c.t0) / c.dur));
+      if (now - c.spawn < c.t0) { live = true; return; }
+      if (t < 1) live = true;
+      var e = easeOut(t), ox = r.left + c.u * r.width + c.dx * e, oy = r.top + c.v * r.height + c.dy * e;
+      var gx = Math.round(ox / g) * g, gy = Math.round(oy / g) * g;
+      var flipped = flipField && flipField(gx, gy);
+      var col = c.col === 'sky' ? C.sky : (flipped ? C.prussian : C.paper);
+      sx.fillStyle = rgb(col);
+      c.last = { x: gx, y: gy, g: g, c: rgb(col) };
+      c.shape.forEach(function (s) {
+        var X = Math.round((gx + s[0] * g) * DPR), Y = Math.round((gy + s[1] * g) * DPR), S = Math.round(g * DPR);
+        sx.fillRect(X, Y, S, S);
+      });
+    });
+    return live;
+  }
+
+  /* Trail: each mark of the pointer is a 2 by 2 cluster that thins out in Bayer order within a second. */
+  var B2 = [0, .5, .75, .25];
+  function drawTrail(now) {
+    tx.setTransform(1, 0, 0, 1, 0, 0); tx.clearRect(0, 0, trail.width, trail.height);
+    var S = cell * DPR;
+    tx.fillStyle = '#94E6FF';
+    rest.forEach(function (q) { tx.fillStyle = q.c; tx.fillRect(Math.round(q.x * DPR), Math.round(q.y * DPR), Math.round(q.s * DPR), Math.round(q.s * DPR)); });
+    bits = bits.filter(function (b) { return now - b.t < 900; });
+    bits.forEach(function (b) {
+      var age = (now - b.t) / 900;
+      tx.fillStyle = b.c;
+      for (var k = 0; k < 4; k++) {
+        if (age > 1 - B2[k] * .9 - .08) continue;
+        tx.fillRect((b.x + (k & 1) * cell) * DPR, (b.y + (k >> 1) * cell) * DPR, S, S);
+      }
+    });
+    return bits.length > 0;
+  }
+  var last = null;
+  stage.addEventListener('pointermove', function (e) {
+    if (root.className === 'op') return;
+    var r = trail.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    if (last && Math.hypot(x - last[0], y - last[1]) < 7) return;
+    last = [x, y];
+    var n = 1 + (Math.random() < .45 ? 1 : 0);
+    for (var i = 0; i < n; i++) {
+      var jx = (Math.random() - .5) * 22, jy = (Math.random() - .5) * 22;
+      bits.push({ x: Math.round((x + jx) / cell) * cell, y: Math.round((y + jy) / cell) * cell, t: performance.now() + i * 40, c: Math.random() < .7 ? '#94E6FF' : (Math.random() < .86 ? '#1F3F7A' : '#2448FF') });
+    }
+    loop();
+  });
+  stage.addEventListener('pointerleave', function () { last = null; });
+
+  var tasks = [];
+  function loop() {
+    if (raf) return;
+    raf = requestAnimationFrame(function step(now) {
+      var a = drawTrail(now), b = drawSpill(now), more = a || b;
+      for (var i = tasks.length - 1; i >= 0; i--) if (tasks[i](now) === false) tasks.splice(i, 1); else more = true;
+      raf = more ? requestAnimationFrame(step) : 0;
+    });
+  }
+
+  /* The mentions: each mark as a 12 by 12 one bit bitmap; on hover it resolves through 24 and 48 to full colour. */
+  var px = [].slice.call(document.querySelectorAll('.made .px'));
+  function rasterMark(src, N, done) {
+    fetch(src).then(function (r) { return r.text(); }).then(function (t) {
+      t = t.replace(/<style[\s\S]*?<\/style>/g, '');
+      var img = new Image();
+      img.onload = function () {
+        var out = {};
+        [12, 24, 48].forEach(function (n) {
+          var c = document.createElement('canvas'); c.width = c.height = n;
+          var x = c.getContext('2d'); x.drawImage(img, 0, 0, n, n);
+          if (n === 12) {
+            var im = x.getImageData(0, 0, n, n), d = im.data;
+            for (var i = 0; i < n * n; i++) {
+              var a = d[i * 4 + 3] / 255, L = (.2126 * d[i * 4] + .7152 * d[i * 4 + 1] + .0722 * d[i * 4 + 2]) / 255;
+              var q = Math.round((1 - L) * 4) / 4;
+              d[i * 4] = 11; d[i * 4 + 1] = 12; d[i * 4 + 2] = 12; d[i * 4 + 3] = a > .5 ? Math.round((.14 + q * .8) * 255) : 0;
+            }
+            x.putImageData(im, 0, 0);
+          }
+          out[n] = c;
+        });
+        done(out);
+      };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(t);
+    }).catch(function () {});
+  }
+  px.forEach(function (el) {
+    var cv = document.createElement('canvas'); cv.width = cv.height = 12; el.appendChild(cv);
+    var img = document.createElement('img'); img.alt = ''; img.src = el.dataset.src; el.appendChild(img);
+    var steps = null, timers = [];
+    rasterMark(el.dataset.src, 12, function (o) { steps = o; show(12); });
+    function show(n) {
+      img.style.display = n === 'v' ? 'block' : 'none';
+      cv.style.display = n === 'v' ? 'none' : 'block';
+      if (n !== 'v') { cv.width = cv.height = n; cv.getContext('2d').drawImage(steps[n], 0, 0); }
+    }
+    var a = el.closest('a');
+    function go(seq) { timers.forEach(clearTimeout); timers = []; if (!steps) return; seq.forEach(function (n, i) { timers.push(setTimeout(function () { show(n); }, i * 55)); }); }
+    a.addEventListener('pointerenter', function () { go([24, 48, 'v']); });
+    a.addEventListener('focus', function () { go([24, 48, 'v']); });
+    a.addEventListener('pointerleave', function () { go([48, 24, 12]); });
+    a.addEventListener('blur', function () { go([48, 24, 12]); });
+  });
+
+  /* Typing: two or three characters a step, a sky block running just ahead, links and italics intact. */
+  function segs(p) {
+    var out = [];
+    p.childNodes.forEach(function (n) {
+      if (n.nodeType === 3) out.push({ t: n.textContent });
+      else out.push({ t: n.textContent, tag: n.tagName.toLowerCase(), href: n.getAttribute && n.getAttribute('href') });
+    });
+    return out;
+  }
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function wrap(s, seg) {
+    if (!s) return '';
+    if (seg.tag === 'a') return '<a href="' + seg.href + '">' + esc(s) + '</a>';
+    if (seg.tag === 'em') return '<em>' + esc(s) + '</em>';
+    return esc(s);
+  }
+  function render(sg, k, hl, cursor) {
+    var html = '', pos = 0, a = k - hl, parts = [[], [], []];
+    sg.forEach(function (seg) {
+      var s = seg.t, e = pos + s.length;
+      var c0 = Math.max(0, Math.min(s.length, a - pos)), c1 = Math.max(0, Math.min(s.length, k - pos));
+      parts[0].push(wrap(s.slice(0, c0), seg)); parts[1].push(wrap(s.slice(c0, c1), seg)); parts[2].push(wrap(s.slice(c1), seg));
+      pos = e;
+    });
+    html = parts[0].join('') + (hl > 0 ? '<mark>' + parts[1].join('') + '</mark>' : parts[1].join('')) + (cursor ? '<span class="cur"></span>' : '') + '<span class="rest">' + parts[2].join('') + '</span>';
+    return html;
+  }
+  function type(p, startAt, cursorAtEnd, onDone) {
+    var sg = segs(p), full = p.innerHTML, len = sg.reduce(function (n, s) { return n + s.t.length; }, 0);
+    var k = 0, hl = 0, next = startAt, phase = 0, blinks = 0, text = p.textContent;
+    p.setAttribute('aria-label', p.textContent);
+    p.innerHTML = render(sg, 0, 0, false);
+    p.classList.add('on');
+    tasks.push(function (now) {
+      if (now < next) return true;
+      if (phase === 0) {
+        /* Keep to the schedule rather than to the frame, so the rhythm holds at any refresh rate. */
+        while (now >= next && k < len) {
+          var n = Math.random() < .2 ? 2 : 3;
+          k = Math.min(len, k + n); hl = Math.min(k, Math.min(9, hl + n));
+          next += 18 + Math.random() * 12 + (/[.,]/.test(text.charAt(k - 1)) ? 12 : 0);
+        }
+        if (k >= len) { phase = 1; next = now + 40; }
+        p.innerHTML = render(sg, k, hl, false);
+        return true;
+      }
+      if (phase === 1) {
+        hl = Math.max(0, hl - 3); next = now + 26;
+        p.innerHTML = render(sg, k, hl, false);
+        if (hl === 0) { phase = cursorAtEnd ? 2 : 3; if (onDone) onDone(); }
+        return true;
+      }
+      if (phase === 2) {
+        blinks++; next = now + 260;
+        p.innerHTML = render(sg, k, 0, blinks % 2 === 1);
+        if (blinks >= 6) phase = 3;
+        return true;
+      }
+      p.innerHTML = full; p.removeAttribute('aria-label');
+      return false;
+    });
+    loop();
+  }
+
+  function finish() {
+    var tr = trail.getBoundingClientRect();
+    clusters.forEach(function (c) {
+      if (!c.last) return;
+      c.shape.forEach(function (s) { rest.push({ x: c.last.x + s[0] * c.last.g - tr.left, y: c.last.y + s[1] * c.last.g - tr.top, s: c.last.g, c: c.last.c }); });
+    });
+    clusters = []; sx.clearRect(0, 0, spill.width, spill.height); spill.style.display = 'none';
+    drawTrail(performance.now());
+    root.className = '';
+    try { sessionStorage.setItem('antimony-dither', '1'); } catch (e) {}
+  }
+
+  if (!playing) return;
+
+  /* The opening. */
+  var ink = document.getElementById('ink'), inv = document.getElementById('inv'), vx = inv.getContext('2d');
+  var bitsEl = document.getElementById('bits'), veil = document.getElementById('veil');
+  var W = innerWidth, H = innerHeight, R = markRect();
+
+  /* The ground is a grid of cells, each a touch different, so the ink is a material and not a void; drawn at
+     the cell size and scaled up crisp, so the whole dissolve costs one small image a frame. */
+  var cellPx = W < 641 ? 3 : 4, cols = Math.ceil(W / cellPx), rows = Math.ceil(H / cellPx);
+  ink.width = cols; ink.height = rows;
+  ink.style.width = cols * cellPx + 'px'; ink.style.height = rows * cellPx + 'px'; ink.style.display = 'block';
+  var ik = ink.getContext('2d'), gim = ik.createImageData(cols, rows), gd = gim.data;
+  for (var i = 0; i < cols * rows; i++) {
+    var v = Math.random(), n = v < .06 ? 3 : v < .18 ? 1.5 : v > .97 ? -1 : 0;
+    gd[i * 4] = 11 + n; gd[i * 4 + 1] = 12 + n; gd[i * 4 + 2] = 12 + n; gd[i * 4 + 3] = 255;
+  }
+  ik.putImageData(gim, 0, 0);
+  veil.style.display = 'none';
+
+  /* The mark on ink, as vector: stone drawn in paper, crystal in sky. */
+  inv.width = Math.round(R.width * DPR); inv.height = Math.round(R.height * DPR);
+  inv.style.left = R.left + 'px'; inv.style.top = R.top + 'px'; inv.style.width = R.width + 'px'; inv.style.height = R.height + 'px';
+  var invImg = document.createElement('canvas'); invImg.width = inv.width; invImg.height = inv.height;
+  (function () {
+    var x = invImg.getContext('2d'), s = inv.width / 100;
+    x.setTransform(s, 0, 0, s, 0, 0);
+    x.fillStyle = '#0B0C0C'; x.fillRect(0, 0, 100, 100);
+    var gr = x.createLinearGradient(0, 0, 100, 100); gr.addColorStop(0, '#EEEAE0'); gr.addColorStop(1, '#E2DED4');
+    x.fillStyle = gr; x.fill(new Path2D(TILE));
+    x.fillStyle = '#0B0C0C'; x.fill(new Path2D(G.seam)); x.fill(new Path2D(G.cav));
+    x.fillStyle = '#94E6FF'; x.fill(new Path2D(G.gem));
+    x.fillStyle = 'rgba(255,255,255,.28)'; x.fill(new Path2D(G.facet));
+  })();
+
+  bitsEl.style.left = R.left + 'px'; bitsEl.style.top = R.top + 'px';
+  bitsEl.style.width = R.width + 'px'; bitsEl.style.height = R.height + 'px';
+  var maps = {};
+  [16, 32, 80, 160].forEach(function (n) { maps[n] = bitmap(n); });
+  var seed = document.createElement('canvas'); seed.width = seed.height = 16;
+  (function () { var x = seed.getContext('2d'); x.fillStyle = '#94E6FF'; x.fillRect(8, 8, 1, 1); })();
+  function showBits(c) { bitsEl.width = c.width; bitsEl.height = c.height; bitsEl.getContext('2d').drawImage(c, 0, 0); bitsEl.style.display = 'block'; }
+
+  /* Dissolve field: each cell of the ground flips at its Bayer value, sooner the nearer it is to the crystal. */
+  var field = new Float32Array(cols * rows), cxm = R.left + R.width * .5, cym = R.top + R.height * .515, far = 0;
+  for (var y = 0; y < rows; y++) for (var x = 0; x < cols; x++) far = Math.max(far, Math.hypot(x * cellPx - cxm, y * cellPx - cym));
+  for (y = 0; y < rows; y++) for (x = 0; x < cols; x++) field[y * cols + x] = .58 * Math.hypot(x * cellPx - cxm, y * cellPx - cym) / far + .42 * bayer(x, y);
+  flipField = function (gx, gy) {
+    if (flipT < 0) return false;
+    var X = Math.min(cols - 1, Math.max(0, (gx / cellPx) | 0)), Y = Math.min(rows - 1, Math.max(0, (gy / cellPx) | 0));
+    return field[Y * cols + X] < flipT;
+  };
+
+  var T0 = performance.now();
+  var cuts = [[0, seed], [150, 16], [450, 32], [720, 80], [960, 160], [1250, 'v']];
+  var ci = 0, typed = false;
+  var DISS0 = 1420, DISS1 = 2120;
+  tasks.push(function (now) {
+    var t = now - T0;
+    while (ci < cuts.length && t >= cuts[ci][0]) {
+      var c = cuts[ci][1];
+      if (c === 'v') {
+        vx.drawImage(invImg, 0, 0); inv.style.display = 'block'; bitsEl.style.display = 'none';
+        makeClusters(); clusters.forEach(function (k) { k.spawn = now; });
+      }
+      else showBits(typeof c === 'number' ? maps[c] : c);
+      ci++;
+    }
+    if (t >= DISS0) {
+      var p = Math.min(1, (t - DISS0) / (DISS1 - DISS0));
+      flipT = p * 1.02;
+      for (var i = 0, n = field.length; i < n; i++) gd[i * 4 + 3] = field[i] < flipT ? 0 : 255;
+      ik.putImageData(gim, 0, 0);
+      /* The mark flips with the ground under it: the same cells, read from the same grid. */
+      vx.globalCompositeOperation = 'copy'; vx.drawImage(invImg, 0, 0);
+      vx.globalCompositeOperation = 'destination-in'; vx.imageSmoothingEnabled = false;
+      vx.drawImage(ink, 0, 0, cols, rows, -R.left * DPR, -R.top * DPR, cols * cellPx * DPR, rows * cellPx * DPR);
+      vx.globalCompositeOperation = 'source-over';
+      if (!typed && p > .22) {
+        typed = true;
+        type(document.getElementById('p1'), now + 60, false, function () {
+          type(document.getElementById('p2'), performance.now() + 70, true, function () {
+            document.querySelector('.made').style.visibility = 'visible';
+            finish();
+          });
+        });
+      }
+      if (p >= 1) { ink.style.display = 'none'; inv.style.display = 'none'; return false; }
+    }
+    return true;
+  });
+  loop();
+
+  addEventListener('resize', function () {
+    if (ink.style.display !== 'none') { ink.style.display = 'none'; inv.style.display = 'none'; bitsEl.style.display = 'none'; clusters = []; }
+  });
+})();
+</script>
+</body>
+</html>

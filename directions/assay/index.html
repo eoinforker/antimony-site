@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antimony, Assay</title>
+<meta name="description" content="Antimony builds software for the people who make the work. London.">
+<meta name="theme-color" content="#0B0C0C">
+<link rel="preload" href="assets/fonts/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: "Timeless"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Timeless"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: swap; }
+
+:root {
+  --ink: #0B0C0C;
+  --paper: #EEEAE0;
+  --sky: #94E6FF;
+  --hair: rgba(238, 234, 224, .34);
+  --mark: clamp(150px, 22vmin, 232px);
+  --col: 404px;
+}
+* { box-sizing: border-box; }
+html { background: var(--ink); color-scheme: dark; }
+body {
+  margin: 0; background: var(--ink); color: var(--paper);
+  font: 400 15px/1.55 "Timeless", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+a { color: inherit; }
+
+/* one axis: the specimen, its name, its caption */
+.plate {
+  position: relative; min-height: 100vh; min-height: 100svh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 72px 24px;
+}
+.stage { position: relative; width: var(--mark); height: var(--mark); flex: none; }
+.mark { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; display: block; }
+
+/* one dimension, read under the pointer */
+.dim, .label { position: absolute; pointer-events: none; opacity: 0; }
+.dim { left: calc(100% + 24px); top: 0; height: 100%; width: 7px; transform-origin: 50% 50%; }
+.dim::before { content: ""; position: absolute; left: 3px; top: 0; bottom: 0; border-left: 1px solid var(--hair); }
+.dim::after { content: ""; position: absolute; left: 0; right: 0; top: 0; bottom: 0; border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); }
+.label {
+  left: calc(100% + 40px); top: 50%; transform: translateY(-50%);
+  font-size: 12px; line-height: 1; letter-spacing: .04em; color: rgba(238, 234, 224, .62);
+  white-space: nowrap; font-feature-settings: "tnum" 1, "lnum" 1;
+}
+.label b { font-weight: 400; color: var(--paper); margin-right: .32em; }
+/* the card, read again under the pointer: weight, melting point, density */
+.label { top: 50%; transform: none; margin-top: -6px; }
+.label .more { display: block; margin-top: 12px; font-size: 11px; line-height: 17px; letter-spacing: .06em; color: rgba(238, 234, 224, .44); }
+.label .more span { display: block; opacity: 0; transform: translateX(-4px); transition: opacity .3s, transform .3s cubic-bezier(.2, .7, .1, 1); }
+.rest .dim, .rest .label { transition: opacity .3s, transform .45s cubic-bezier(.2, .7, .1, 1); }
+.rest .dim { transform: scaleY(.2); }
+.rest.probe .dim, .rest.probe .label { opacity: 1; }
+.rest.probe .dim { transform: none; }
+.probe .label .more span { opacity: 1; transform: none; }
+.probe .label .more span:nth-child(2) { transition-delay: .06s; }
+.probe .label .more span:nth-child(3) { transition-delay: .12s; }
+/* sixteen degrees, measured where the seam leaves the stone */
+.ang { position: absolute; left: 73.5%; top: -20.5%; transform: translateY(-50%); font-size: 10px; line-height: 1; letter-spacing: .06em; color: rgba(238, 234, 224, .5); pointer-events: none; opacity: 0; font-feature-settings: "lnum" 1; }
+#ang { opacity: 0; }
+.rest #ang, .rest .ang { opacity: 0; }
+.rest.probe #ang, .rest.probe .ang { opacity: .8; }
+.rest #ang, .rest .ang { transition: opacity .3s; }
+
+/* two quiet corners: the line at the top, the name at the foot */
+.corner {
+  position: absolute; margin: 0; font-size: 10px; line-height: 14px; letter-spacing: .3em; text-transform: uppercase;
+  color: rgba(238, 234, 224, .42); font-feature-settings: "tnum" 1, "lnum" 1; pointer-events: none;
+  opacity: 0; transition: opacity 1.1s cubic-bezier(.2, .7, .1, 1), letter-spacing 1.6s cubic-bezier(.2, .7, .1, 1);
+}
+.framed .corner { opacity: 1; }
+.tag { top: 30px; left: 34px; letter-spacing: .62em; }
+.framed .tag { letter-spacing: .42em; }
+.jp {
+  bottom: 30px; right: 30px; writing-mode: vertical-rl; text-transform: none; letter-spacing: .5em; font-size: 10px; line-height: 12px;
+  font-family: "Hiragino Mincho ProN", "Hiragino Mincho Pro", "Yu Mincho", "YuMincho", "Noto Serif JP", "Noto Serif CJK JP", serif;
+}
+.jp i { font-style: normal; font-family: "Timeless", Georgia, serif; letter-spacing: .3em; margin-top: 1.1em; color: rgba(238, 234, 224, .62); }
+
+.word { width: calc(var(--mark) * .5); margin: 34px 0 0; color: var(--paper); --lit: var(--sky); }
+.word svg { display: block; width: 100%; height: auto; overflow: visible; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+.copy { width: min(var(--col), 100%); margin-top: 60px; }
+.copy p { margin: 0 0 .9em; color: rgba(238, 234, 224, .86); }
+.copy p em { font-style: italic; color: var(--paper); }
+.copy a.in { text-decoration: none; background: linear-gradient(currentColor, currentColor) 0 100% / 100% 1px no-repeat; padding-bottom: 1px; color: var(--paper); transition: color .2s; }
+.copy a.in:hover, .copy a.in:focus-visible { color: var(--sky); }
+
+.foot {
+  position: relative; display: flex; align-items: center; margin-top: 1.7em; padding-top: 14px;
+  font-size: 13px; line-height: 20px; color: rgba(238, 234, 224, .56);
+}
+.foot::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: rgba(238, 234, 224, .12); transform-origin: 0 0; transition: transform 1s cubic-bezier(.2, .7, .1, 1); }
+.foot li, .foot .where { transition: opacity .6s; }
+.foot li:nth-child(2) { transition-delay: .07s; }
+.foot li:nth-child(3) { transition-delay: .14s; }
+.foot .where { transition-delay: .3s; }
+.typing .foot::before { transform: scaleX(0); }
+.typing .foot li, .typing .foot .where { opacity: 0; }
+
+/* the copy is set, not typed out by a chatbot: unset characters keep their place, the newest carry a block of sky */
+.t-r { color: transparent; }
+.t-h { background-color: var(--sky); color: var(--ink); transition: background-color .32s, color .32s; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.set .t-h { background-color: transparent; color: inherit; }
+.copy a.in.untyped { background-size: 0 1px; }
+.copy a.in { transition: color .2s, background-size .5s cubic-bezier(.2, .7, .1, 1); }
+.cur { display: inline-block; width: .52em; height: 1.02em; margin-left: 2px; vertical-align: -.2em; background: var(--sky); animation: blink .5s steps(1) 4; }
+@keyframes blink { 50% { opacity: 0; } }
+::selection { background: var(--sky); color: var(--ink); }
+.made { display: flex; align-items: center; gap: 20px; margin: 0; padding: 0; list-style: none; }
+.made a { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: inherit; transition: color .2s; }
+.made img { width: 18px; height: 18px; border-radius: 4px; display: block; filter: grayscale(1) brightness(.9); opacity: .7; transition: filter .25s, opacity .25s; }
+.made a:hover, .made a:focus-visible { color: var(--paper); }
+.made a:hover img, .made a:focus-visible img { filter: none; opacity: 1; }
+.copy .where { margin: 0 0 0 auto; padding-left: 16px; color: inherit; line-height: 18px; }
+.made a { line-height: 18px; }
+.made li { display: flex; }
+a:focus-visible { outline: 1px solid var(--sky); outline-offset: 3px; }
+
+/* reveal */
+.after { opacity: 0; transform: translateY(5px); transition: opacity .7s cubic-bezier(.2, .7, .1, 1), transform .7s cubic-bezier(.2, .7, .1, 1); }
+.on .after { opacity: 1; transform: none; }
+.on .copy.after { transition-delay: .12s; }
+
+@media (max-width: 600px) {
+  :root { --mark: clamp(150px, 46vw, 200px); }
+  .plate { justify-content: flex-start; padding: max(15vh, 72px) 20px 40px; }
+  .copy { margin-top: 52px; }
+  .made { gap: 16px; }
+  .dim, .label { display: none; }
+  .tag { top: 22px; left: 20px; max-width: 62%; letter-spacing: .5em; }
+  .framed .tag { letter-spacing: .32em; }
+  .jp { bottom: 24px; right: 18px; }
+}
+@media (max-width: 360px) { .made a span { display: none; } }
+@media (prefers-reduced-motion: reduce) { .after, .corner { transition: none; } }
+</style>
+</head>
+<body>
+<main class="plate" id="plate">
+  <p class="corner tag">Software for the people who make the work.</p>
+  <p class="corner jp" aria-hidden="true">アンチモン<i>Sb 51</i></p>
+  <div class="stage" id="stage">
+    <svg class="mark" id="mark" viewBox="0 0 100 100" role="img" aria-label="The Antimony mark: a stone split at sixteen degrees, a sky crystal grown in the break">
+      <defs>
+        <mask id="cut" maskUnits="userSpaceOnUse" x="-20" y="-20" width="140" height="140">
+          <rect x="-20" y="-20" width="140" height="140" fill="#fff"/>
+          <path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z" fill="#000"/>
+          <path d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" fill="#000"/>
+        </mask>
+        <clipPath id="tile"><rect width="100" height="100" rx="22"/></clipPath>
+        <!-- engraving: lines across the crystal's axis -->
+        <pattern id="pS" patternUnits="userSpaceOnUse" width="240" height="1.5" x="-70" patternTransform="rotate(16 50 51.5)"><rect id="barS" width="240" height=".5" fill="#fff"/></pattern>
+        <pattern id="pG" patternUnits="userSpaceOnUse" width="240" height="1.5" x="-70" patternTransform="rotate(16 50 51.5)"><rect id="barG" width="240" height=".5" fill="#fff"/></pattern>
+        <pattern id="pF" patternUnits="userSpaceOnUse" width="240" height=".75" x="-70" patternTransform="rotate(16 50 51.5)"><rect id="barF" width="240" height=".3" fill="#fff"/></pattern>
+        <mask id="mS" maskUnits="userSpaceOnUse" x="-40" y="-40" width="180" height="180"><rect x="-40" y="-40" width="180" height="180" fill="url(#pS)"/></mask>
+        <mask id="mG" maskUnits="userSpaceOnUse" x="-40" y="-40" width="180" height="180"><rect x="-40" y="-40" width="180" height="180" fill="url(#pG)"/></mask>
+        <mask id="mF" maskUnits="userSpaceOnUse" x="-40" y="-40" width="180" height="180"><rect x="-40" y="-40" width="180" height="180" fill="url(#pF)"/></mask>
+        <clipPath id="win" clipPathUnits="userSpaceOnUse">
+          <rect id="winRect" x="-60" y="-80" width="220" height="0" transform="rotate(16 50 51.5)"/>
+        </clipPath>
+        <clipPath id="band" clipPathUnits="userSpaceOnUse">
+          <rect id="bandRect" x="-60" y="0" width="220" height="0" transform="rotate(16 50 51.5)"/>
+        </clipPath>
+        <mask id="hole" maskUnits="userSpaceOnUse" x="-40" y="-40" width="180" height="180">
+          <rect x="-40" y="-40" width="180" height="180" fill="#fff"/>
+          <rect id="holeRect" x="-60" y="0" width="220" height="0" transform="rotate(16 50 51.5)" fill="#000"/>
+        </mask>
+        <linearGradient id="trail" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#94E6FF" stop-opacity="0"/>
+          <stop offset="1" stop-color="#94E6FF" stop-opacity=".09"/>
+        </linearGradient>
+      </defs>
+
+      <g id="spec" clip-path="url(#win)">
+        <!-- seam and cavity read as true black against the ink -->
+        <g clip-path="url(#tile)" fill="#000"><path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z"/><path d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z"/></g>
+        <!-- the stone, engraved -->
+        <g mask="url(#hole)">
+          <g mask="url(#mS)">
+            <rect id="stoneLines" width="100" height="100" rx="22" fill="#EEEAE0" fill-opacity=".34" mask="url(#cut)"/>
+          </g>
+        </g>
+        <!-- the crystal: engraved while scanned, then closed to solid light -->
+        <g mask="url(#mG)">
+          <path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z" fill="#94E6FF"/>
+          <path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" fill-opacity=".28"/>
+        </g>
+      </g>
+
+      <!-- under the pointer: the same stone read at twice the resolution -->
+      <g clip-path="url(#band)">
+        <g mask="url(#mF)">
+          <rect width="100" height="100" rx="22" fill="#EEEAE0" fill-opacity=".62" mask="url(#cut)"/>
+        </g>
+      </g>
+
+      <!-- the scan head -->
+      <g id="head" transform="rotate(16 50 51.5)" opacity="0" pointer-events="none">
+        <g id="headPos">
+          <rect x="-16" y="-9" width="132" height="9" fill="url(#trail)"/>
+          <line x1="-16" y1="0" x2="116" y2="0" stroke="#94E6FF" stroke-width="1" vector-effect="non-scaling-stroke"/>
+        </g>
+      </g>
+
+      <!-- a protractor where the seam leaves the stone -->
+      <g id="ang" fill="none" stroke="#EEEAE0" stroke-opacity=".5" stroke-width="1" pointer-events="none">
+        <path d="M64.77 -4V-31" vector-effect="non-scaling-stroke"/>
+        <path d="M65.92 -4L73.66 -31" vector-effect="non-scaling-stroke"/>
+        <path d="M64.77 -21A21 21 0 0 1 70.56 -20.19" vector-effect="non-scaling-stroke" stroke-opacity=".8"/>
+      </g>
+    </svg>
+    <i class="dim" aria-hidden="true"></i>
+    <span class="label" aria-hidden="true"><b>Sb</b>51<span class="more"><span>121.760</span><span>630.63 °C</span><span>6.697 g/cm³</span></span></span>
+    <span class="ang" aria-hidden="true">16°</span>
+  </div>
+
+  <h1 class="word after"><span class="sr">Antimony</span><svg viewBox="-20 -830 4186 1070" aria-hidden="true"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg></h1>
+
+  <section class="copy after">
+    <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a class="in" href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator’s side of every sponsorship deal.</p>
+    <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
+    <div class="foot">
+      <ul class="made" aria-label="Made here">
+        <li><a href="https://eoinforker.github.io/orbe-site/"><img src="assets/work/orbe.svg" alt=""><span>Orbe</span></a></li>
+        <li><a href="https://immiscible.ai"><img src="assets/work/immiscible.svg" alt=""><span>immiscible</span></a></li>
+        <li><a href="https://idyll.day"><img src="assets/work/idyll.svg" alt=""><span>Idyll</span></a></li>
+      </ul>
+      <p class="where">London</p>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const plate = $('plate'), svg = $('mark'), stage = $('stage');
+  const winRect = $('winRect'), bandRect = $('bandRect'), holeRect = $('holeRect'), head = $('head'), headPos = $('headPos');
+  const pS = $('pS'), pG = $('pG'), pF = $('pF'), barS = $('barS'), barG = $('barG'), barF = $('barF');
+  const dim = document.querySelector('.dim'), label = document.querySelector('.label');
+  const angG = $('ang'), angT = document.querySelector('.ang');
+  const copy = document.querySelector('.copy');
+
+  // grain: baked once, a faint tooth of paper on the ink
+  try {
+    const N = 160, k = Math.min(2, Math.round(window.devicePixelRatio || 1)), M = N * k, c = document.createElement('canvas'); c.width = c.height = M;
+    const x = c.getContext('2d'), im = x.createImageData(M, M), d = im.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = Math.random();
+      d[i] = 238; d[i + 1] = 234; d[i + 2] = 224; d[i + 3] = r * r * r * 22;
+    }
+    x.putImageData(im, 0, 0); // one grain per device pixel, never smeared by scaling
+    document.body.style.background = `#0B0C0C url(${c.toDataURL()}) 0 0 / ${N}px ${N}px`;
+  } catch (e) {}
+
+  const S0 = -13, S1 = 113;   // scan travel along the crystal's axis, in mark units
+  const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+  const io = (t) => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const out = (t) => 1 - Math.pow(1 - t, 3);
+  const seg = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
+
+  // the engraving is set in screen pixels: a hairline on a fixed pitch, whatever the size of the mark
+  let P = 1.5, L = .5;
+  function rule() {
+    const w = svg.getBoundingClientRect().width || 200, u = 100 / w;
+    const dpr = window.devicePixelRatio || 1;
+    P = 3 * u;                          // 3 px pitch
+    L = (dpr >= 2 ? .75 : 1) * u;       // a hairline: 1 px, or 1.5 device px on dense screens
+    pS.setAttribute('height', P); barS.setAttribute('height', L);
+    pG.setAttribute('height', P);
+    pF.setAttribute('height', P / 2); barF.setAttribute('height', L * .8);
+  }
+  rule();
+  addEventListener('resize', rule, { passive: true });
+  const gem = (k) => barG.setAttribute('height', k >= 1 ? P + .1 : (L + (P - L) * k).toFixed(4));
+  const setWin = (s) => { winRect.setAttribute('height', Math.max(0, s + 80)); };
+
+  let seen = false;
+  try { seen = sessionStorage.getItem('sb-assay') === '1'; sessionStorage.setItem('sb-assay', '1'); } catch (e) {}
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function finish() {
+    setWin(200); gem(1);
+    head.setAttribute('opacity', '0');
+    dim.style.opacity = ''; dim.style.transform = ''; label.style.opacity = '';
+    angG.style.opacity = ''; angT.style.opacity = '';
+    stage.classList.add('rest');
+    plate.classList.add('on', 'framed');
+    armPointer();
+  }
+
+  if (still) { finish(); return; }
+
+  if (seen) {
+    // a returning visit: one quick pass of the head, no annotation, no setting of type
+    const t0 = performance.now(), D = 560;
+    gem(0); head.setAttribute('opacity', '1');
+    requestAnimationFrame(function f(now) {
+      const t = now - t0, k = io(clamp(t / D, 0, 1)), s = S0 + (S1 - S0) * k;
+      setWin(s);
+      headPos.setAttribute('transform', `translate(0 ${s.toFixed(3)})`);
+      gem(out(seg(t, D * .7, D + 220)));
+      head.setAttribute('opacity', (1 - seg(t, D - 60, D + 120)).toFixed(3));
+      if (t > D * .5) plate.classList.add('on', 'framed');
+      if (t < D + 220) requestAnimationFrame(f); else finish();
+    });
+    return;
+  }
+
+  // the setting of the copy: every character keeps its place from the start, so nothing reflows
+  const paras = [];
+  copy.querySelectorAll(':scope > p').forEach((p) => {
+    const nodes = [];
+    let n = 0;
+    const walk = (el) => {
+      [...el.childNodes].forEach((k) => {
+        if (k.nodeType === 3) {
+          const txt = k.textContent, d = document.createElement('span'), h = document.createElement('span'), r = document.createElement('span');
+          h.className = 't-h'; r.className = 't-r'; r.textContent = txt;
+          k.replaceWith(d, h, r);
+          nodes.push({ d, h, r, txt, a: n, b: n + txt.length, link: el.tagName === 'A' ? el : null });
+          n += txt.length;
+        } else if (k.nodeType === 1) walk(k);
+      });
+    };
+    walk(p);
+    paras.push({ p, nodes, len: n });
+  });
+  copy.querySelectorAll('a.in').forEach((a) => a.classList.add('untyped'));
+  copy.classList.add('typing');
+
+  const HI = 6; // characters under the block of sky
+  function draw(q, n, hi) {
+    q.nodes.forEach((o) => {
+      const a = clamp(n - hi - o.a, 0, o.b - o.a), b = clamp(n - o.a, 0, o.b - o.a);
+      const D = o.txt.slice(0, a), H = o.txt.slice(a, b), R = o.txt.slice(b);
+      if (o.d.textContent !== D) o.d.textContent = D;
+      if (o.h.textContent !== H) o.h.textContent = H;
+      if (o.r.textContent !== R) o.r.textContent = R;
+      if (o.link && b === o.b - o.a) o.link.classList.remove('untyped');
+    });
+  }
+  function setType() {
+    let i = 0, n = 0;
+    const step = () => {
+      const q = paras[i];
+      n = Math.min(q.len, n + 2 + (Math.random() < .5 ? 1 : 0));
+      draw(q, n, HI);
+      if (n < q.len) { setTimeout(step, 18 + 26 * Math.pow(Math.random(), 1.7)); return; }
+      q.p.classList.add('set');              // the line is complete: the sky clears
+      i += 1; n = 0;
+      if (i < paras.length) { setTimeout(step, 150); return; }
+      const cur = document.createElement('span'); cur.className = 'cur'; cur.setAttribute('aria-hidden', 'true');
+      q.p.appendChild(cur);
+      cur.addEventListener('animationend', () => cur.remove());
+      copy.classList.remove('typing');     // the rule draws, the work and London come in
+    };
+    step();
+  }
+
+  // the first visit: the specimen by 1.4 seconds, the copy set by about 3.6
+  const T = { scanA: 140, scanB: 1080, closeA: 1060, closeB: 1420, noteA: 1260, noteB: 2050, noteOut: 2380, word: 1100, type: 1220 };
+  const t0 = performance.now();
+  gem(0);
+  let worded = false, typed = false;
+
+  requestAnimationFrame(function frame(now) {
+    const t = now - t0;
+
+    // the scan: the head travels along the crystal's axis and engraves the specimen behind it
+    const s = S0 + (S1 - S0) * io(seg(t, T.scanA, T.scanB));
+    setWin(s);
+    headPos.setAttribute('transform', `translate(0 ${s.toFixed(3)})`);
+    const hO = t < T.scanA ? seg(t, 0, T.scanA) : 1 - seg(t, T.scanB - 60, T.scanB + 120);
+    head.setAttribute('opacity', hO.toFixed(3));
+
+    // the crystal's lines close: it fills with light; the stone stays engraved
+    gem(out(seg(t, T.closeA, T.closeB)));
+
+    // one measurement, then it clears, the angle with it
+    const nIn = out(seg(t, T.noteA, T.noteA + 420)), nOut = seg(t, T.noteB, T.noteOut);
+    dim.style.opacity = (nIn * (1 - nOut)).toFixed(3);
+    dim.style.transform = `scaleY(${(.2 + .8 * nIn).toFixed(4)})`;
+    label.style.opacity = (out(seg(t, T.noteA + 180, T.noteA + 560)) * (1 - nOut)).toFixed(3);
+    const aO = (out(seg(t, T.noteA + 120, T.noteA + 600)) * (1 - nOut)).toFixed(3);
+    angG.style.opacity = aO; angT.style.opacity = aO;
+
+    if (!worded && t >= T.word) { worded = true; plate.classList.add('on', 'framed'); }
+    if (!typed && t >= T.type) { typed = true; setType(); }
+    if (t < T.noteOut) requestAnimationFrame(frame); else finish();
+  });
+
+  // afterwards the pointer is the scan head: near the specimen, a narrow band reads the stone at twice the resolution
+  function armPointer() {
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    const ang = 16 * Math.PI / 180, cs = Math.cos(ang), sn = Math.sin(ang);
+    const H = 12; // band, in mark units
+    let px = 0, py = 0, want = false, cur = 0, raf = 0, rect = null, lastS = 50, probe = false;
+    const measure = () => { rect = svg.getBoundingClientRect(); };
+    measure();
+    addEventListener('resize', measure, { passive: true });
+    addEventListener('scroll', measure, { passive: true });
+    function tick() {
+      raf = 0;
+      const u = (px - rect.left) / rect.width * 100, v = (py - rect.top) / rect.height * 100;
+      // over the stone itself, the card is read again
+      const p = want && u > -2 && u < 102 && v > -2 && v < 102;
+      if (p !== probe) { probe = p; stage.classList.toggle('probe', p); }
+      // into the head's frame: rotate by -16 degrees about the crystal's centre
+      const dx = u - 50, dy = v - 51.5;
+      const fx = dx * cs + dy * sn, fy = -dx * sn + dy * cs;
+      const inside = Math.abs(fx) < 70 && fy > -62 && fy < 64;
+      const target = want && inside ? 1 : 0;
+      cur += (target - cur) * .34;
+      if (Math.abs(target - cur) < .01) cur = target;
+      if (inside) lastS = fy + 51.5;
+      const h = H * cur, y = (lastS - h / 2).toFixed(3);
+      bandRect.setAttribute('y', y); bandRect.setAttribute('height', h.toFixed(3));
+      holeRect.setAttribute('y', y); holeRect.setAttribute('height', h.toFixed(3));
+      headPos.setAttribute('transform', `translate(0 ${(lastS + h / 2).toFixed(3)})`);
+      head.setAttribute('opacity', (cur * .9).toFixed(3));
+      if (cur !== target) raf = requestAnimationFrame(tick);
+    }
+    const ask = () => { if (!raf) raf = requestAnimationFrame(tick); };
+    addEventListener('pointermove', (e) => { px = e.clientX; py = e.clientY; want = true; ask(); }, { passive: true });
+    document.documentElement.addEventListener('pointerleave', () => { want = false; ask(); });
+  }
+})();
+</script>
+</body>
+</html>

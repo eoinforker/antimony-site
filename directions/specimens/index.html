@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antimony, Specimens</title>
+<meta name="description" content="Antimony builds software for the people who make the work.">
+<meta name="theme-color" content="#EEEAE0">
+<link rel="preload" href="assets/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin>
+<script>
+document.documentElement.classList.add('js');
+try { if (sessionStorage.getItem('antimony-specimens')) document.documentElement.classList.add('seen'); } catch (e) {}
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('still');
+</script>
+<style>
+@font-face { font-family: "Timeless"; src: url("assets/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
+@font-face { font-family: "Timeless"; src: url("assets/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: swap; }
+
+:root {
+  --paper: #EEEAE0;
+  --ink: #0B0C0C;
+  --stone: #141311;
+  --sky: #94E6FF;
+  --prussian: #1F3F7A;
+  --cobalt: #2448FF;
+  --muted: #6E6A61;
+  --plate: clamp(232px, 21vw, 292px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--paper); color: var(--ink); -webkit-text-size-adjust: 100%; }
+body { background: var(--paper) var(--tex, none) 0 0 / 256px 256px repeat; font-family: "Timeless", "Iowan Old Style", Georgia, serif; font-size: 15px; line-height: 1.55; font-weight: 400; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: inherit; }
+
+.stage { display: flex; flex-direction: column; align-items: center; padding: clamp(56px, 13vh, 132px) 20px 0; }
+
+.wordmark { display: block; width: clamp(178px, 15.5vw, 214px); height: auto; color: var(--ink); --lit: var(--prussian); overflow: visible; }
+.wordmark-link { display: block; text-decoration: none; }
+
+.plate { position: relative; width: var(--plate); height: var(--plate); margin-top: clamp(30px, 4.4vh, 44px); border: 0; background: transparent; padding: 0; cursor: pointer; display: block; -webkit-tap-highlight-color: transparent; }
+.plate:focus-visible { outline: 1px solid var(--prussian); outline-offset: 6px; }
+.frame { position: absolute; inset: 0; overflow: hidden; }
+.spec { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
+.spec.on { display: block; }
+.frame::after { content: ""; position: absolute; inset: 0; background: var(--grain, none) 0 0 / 256px 256px; mix-blend-mode: multiply; opacity: .85; pointer-events: none; }
+.hairline { position: absolute; left: 0; right: 0; top: 50%; height: 1px; margin-top: -.5px; background: var(--ink); transform: scaleX(0); pointer-events: none; opacity: 0; }
+
+.label { margin-top: 13px; height: 16px; font-size: 11.5px; line-height: 16px; color: var(--muted); white-space: nowrap; text-align: center; }
+.label b { font-weight: 450; font-size: 8.5px; letter-spacing: .26em; text-transform: uppercase; margin-right: .7em; color: var(--ink); opacity: .72; font-variant-numeric: tabular-nums; }
+.label i { font-style: italic; }
+.sub { margin-top: 26px; font-size: 10.5px; letter-spacing: .34em; text-transform: uppercase; font-weight: 450; color: var(--ink); padding-left: .34em; }
+
+.col { width: min(368px, 100%); margin: clamp(52px, 8vh, 84px) 0 0 max(20px, calc(50% - 262px)); padding-bottom: 96px; padding-right: 20px; }
+.col p + p { margin-top: .95em; }
+.col em { font-style: italic; }
+.col a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgba(11,12,12,.32); transition: text-decoration-color .15s; }
+.col a:hover { text-decoration-color: var(--ink); }
+.made { margin-top: 1.9em; display: flex; gap: 22px; flex-wrap: wrap; }
+.made a { text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+.made a:hover { text-decoration: none; }
+.made img { width: 16px; height: 16px; border-radius: 4px; filter: grayscale(1) contrast(.9); opacity: .78; transition: filter .15s, opacity .15s; }
+.made a:hover img, .made a:focus-visible img { filter: none; opacity: 1; }
+.made .here { display: inline-flex; align-items: baseline; gap: 10px; flex-basis: 100%; margin-top: -4px; }
+.hl { background: var(--sky); -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.ahead { visibility: hidden; }
+.caret { display: inline-block; width: .5em; height: 1.08em; margin-left: 2px; vertical-align: -.2em; background: var(--sky); }
+.credit { margin-top: 3.2em; font-size: 11.5px; line-height: 1.5; color: var(--muted); max-width: 300px; }
+
+/* the opening */
+.js .wordmark-link, .js .sub, .js .label, .js .col p { opacity: 0; }
+.js .frame { clip-path: inset(calc(50% - .5px) 0 calc(50% - .5px) 0); }
+.js.go .hairline { opacity: 1; transform: none; animation: gone 0s .05s forwards; }
+.js.go .frame { animation: open .3s cubic-bezier(.75,0,.15,1) both; }
+.js.landed .wordmark-link { opacity: 1; transition: opacity .5s ease; }
+.js.landed .label { opacity: 1; transition: opacity .5s ease .08s; }
+.js.landed .sub { opacity: 1; transition: opacity .5s ease .16s; }
+.js.typing .col p.t { opacity: 1; }
+.js.reveal .col p { opacity: 1; transition: opacity .6s ease; }
+@keyframes gone { to { opacity: 0; } }
+@keyframes open { from { clip-path: inset(calc(50% - .5px) 0 calc(50% - .5px) 0); } to { clip-path: inset(0 0 0 0); } }
+.seen .wordmark-link, .seen .sub, .seen .label, .seen .col p, .still .wordmark-link, .still .sub, .still .label, .still .col p { opacity: 1 !important; transition: none !important; }
+.seen .frame, .still .frame { clip-path: none !important; animation: none !important; }
+.seen .hairline, .still .hairline { display: none; }
+
+/* the black frame before the plate: a tagline resolves, then the frame folds into the plate's hairline */
+.loader { display: none; }
+.js:not(.seen):not(.still) .loader { display: block; position: fixed; inset: 0; z-index: 10; background: var(--ink) var(--tex-ink, none) 0 0 / 256px 256px; color: var(--paper); pointer-events: none; will-change: transform; }
+.loader .tag { position: absolute; left: 0; right: 0; top: 50%; margin-top: -8px; text-align: center; font-size: 10.5px; line-height: 16px; letter-spacing: .4em; padding-left: .4em; text-transform: uppercase; font-weight: 400; white-space: nowrap; }
+.loader .tag span { opacity: 0; }
+.loader .tag span.c { opacity: 1; color: var(--sky); }
+.loader .tag span.c::selection { background: none; }
+.loader .tag span.d { opacity: 1; }
+.loader .jp { position: absolute; right: 28px; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", "Noto Serif CJK JP", serif; font-size: 10px; letter-spacing: .5em; opacity: .55; }
+@media (max-width: 600px) {
+  .loader .tag { font-size: 9px; letter-spacing: .3em; white-space: normal; text-wrap: balance; padding: 0 52px; margin-top: -16px; line-height: 16px; }
+  .loader .jp { right: 18px; }
+}
+
+@media (max-width: 600px) {
+  :root { --plate: min(66vw, 268px); }
+  .stage { padding-top: 72px; }
+  .col { margin-left: 0; padding: 0 24px 72px; width: 100%; max-width: 420px; }
+  .col { margin-left: auto; margin-right: auto; }
+}
+</style>
+</head>
+<body>
+<div class="loader" id="loader" aria-hidden="true">
+  <p class="tag" id="tag">Software for the people who make the work.</p>
+  <span class="jp">アンチモン</span>
+</div>
+<main>
+  <section class="stage">
+    <a class="wordmark-link" href="./" aria-label="Antimony">
+      <svg class="wordmark" viewBox="-20 -830 4186 1070" aria-hidden="true"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg>
+    </a>
+    <button class="plate" id="plate" type="button" aria-label="The Break, shown as one specimen after another. Press to see the next.">
+      <div class="frame" id="frame"></div>
+      <span class="hairline" aria-hidden="true"></span>
+    </button>
+    <p class="label" id="label" aria-hidden="true"><b>No. 1</b><i>The mark</i></p>
+    <p class="sub">A software company</p>
+  </section>
+
+  <section class="col">
+    <p class="t"><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator's side of every sponsorship deal.</p>
+    <p class="t">We sit on their side of the table, and we mean to stay there for a long time.</p>
+    <p class="made">
+      <a href="https://eoinforker.github.io/orbe-site/"><img src="assets/orbe.svg" alt="">Orbe</a>
+      <a href="https://immiscible.ai"><img src="assets/immiscible.svg" alt="">immiscible</a>
+      <a href="https://idyll.day"><img src="assets/idyll.svg" alt="">Idyll</a>
+      <span class="here">London</span>
+    </p>
+    <p class="credit">Seen through the crystal: Utagawa Hiroshige, Satta Peak in Suruga Province, 1852. Art Institute of Chicago.</p>
+  </section>
+</main>
+
+<script>
+(function () {
+  /* paper and ink, baked once: per-pixel grain, a slow tileable mottle and a few fibres */
+  (function bake() {
+    var d = Math.min(window.devicePixelRatio || 1, 2), N = Math.round(256 * d);
+    function tile(base, grain, mottle, fibres, name) {
+      var c = document.createElement('canvas'); c.width = c.height = N;
+      var x = c.getContext('2d'), img = x.createImageData(N, N), px = img.data;
+      var G = 8, g = [], G2 = 32, h = [];
+      for (var i = 0; i < G * G; i++) g.push(Math.random());
+      for (i = 0; i < G2 * G2; i++) h.push(Math.random());
+      function vn(arr, n, u, v) {
+        var X = u * n, Y = v * n, x0 = Math.floor(X), y0 = Math.floor(Y), fx = X - x0, fy = Y - y0;
+        fx = fx * fx * (3 - 2 * fx); fy = fy * fy * (3 - 2 * fy);
+        var a = arr[(y0 % n) * n + x0 % n], b = arr[(y0 % n) * n + (x0 + 1) % n], c2 = arr[((y0 + 1) % n) * n + x0 % n], e = arr[((y0 + 1) % n) * n + (x0 + 1) % n];
+        return (a + (b - a) * fx) + ((c2 + (e - c2) * fx) - (a + (b - a) * fx)) * fy;
+      }
+      for (var y = 0, k = 0; y < N; y++) for (var xx = 0; xx < N; xx++, k += 4) {
+        var m = (vn(g, G, xx / N, y / N) - .5) * mottle * .35 + (vn(h, G2, xx / N, y / N) - .5) * mottle;
+        var r = (Math.random() + Math.random() - 1) * grain + m;
+        px[k] = base[0] + r; px[k + 1] = base[1] + r; px[k + 2] = base[2] + r * 1.1; px[k + 3] = 255;
+      }
+      x.putImageData(img, 0, 0);
+      x.lineCap = 'round';
+      for (i = 0; i < fibres; i++) {
+        var fx0 = Math.random() * N, fy0 = Math.random() * N, len = (6 + Math.random() * 22) * d, ang = Math.random() * 6.283;
+        x.strokeStyle = Math.random() < .55 ? 'rgba(60,52,40,.07)' : 'rgba(255,255,250,.22)';
+        x.lineWidth = (.35 + Math.random() * .5) * d;
+        for (var ox = -N; ox <= N; ox += N) for (var oy = -N; oy <= N; oy += N) {
+          x.beginPath(); x.moveTo(fx0 + ox, fy0 + oy);
+          x.quadraticCurveTo(fx0 + ox + Math.cos(ang + .6) * len * .5, fy0 + oy + Math.sin(ang + .6) * len * .5, fx0 + ox + Math.cos(ang) * len, fy0 + oy + Math.sin(ang) * len);
+          x.stroke();
+        }
+      }
+      c.toBlob(function (bl) { if (bl) document.documentElement.style.setProperty(name, 'url(' + URL.createObjectURL(bl) + ')'); });
+    }
+    tile([11, 12, 12], 6, 3, 0, '--tex-ink');
+    tile([238, 234, 224], 7, 4, 70, '--tex');
+    tile([250, 250, 250], 9, 3, 30, '--grain');
+  })();
+
+  var NS = 'http://www.w3.org/2000/svg';
+  var G = {
+    tile: 'M22 0H78A22 22 0 0 1 100 22V78A22 22 0 0 1 78 100H22A22 22 0 0 1 0 78V22A22 22 0 0 1 22 0Z',
+    cav: 'M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z',
+    gem: 'M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z',
+    seam: 'M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z',
+    facet: 'M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z'
+  };
+  var VB = '-31 -31 162 162';           /* the tile sits at 62% of the plate */
+  var T = Math.tan(16 * Math.PI / 180);
+  var uid = 0;
+
+  function svg(ground, body, defs) {
+    var id = 's' + (++uid);
+    var html = '<svg class="spec" viewBox="' + VB + '" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+      '<defs><mask id="' + id + 'm" maskUnits="userSpaceOnUse" x="-40" y="-40" width="180" height="180">' +
+      '<path d="' + G.tile + '" fill="#fff"/><path d="' + G.seam + '" fill="#000"/><path d="' + G.cav + '" fill="#000"/></mask>' +
+      '<clipPath id="' + id + 'g"><path d="' + G.gem + '"/></clipPath>' +
+      '<clipPath id="' + id + 'f"><path d="' + G.facet + '"/></clipPath>' +
+      (defs || '').replace(/#ID/g, '#' + id).replace(/ID-/g, id + '-') + '</defs>' +
+      '<rect x="-31" y="-31" width="162" height="162" fill="' + ground + '"/>' +
+      body.replace(/#ID/g, '#' + id).replace(/ID-/g, id + '-') + '</svg>';
+    return html;
+  }
+  function stone(fill, extra) { return '<path d="' + G.tile + '" fill="' + fill + '" mask="url(#IDm)"' + (extra || '') + '/>'; }
+  function gem(fill) { return '<path d="' + G.gem + '" fill="' + fill + '"/>'; }
+  function facet(fill, op) { return '<path d="' + G.facet + '" fill="' + fill + '" fill-opacity="' + op + '"/>'; }
+
+  /* hatching: parallel bands at angle a (degrees from vertical), each a tapered quad */
+  function hatch(a, step, wTop, wBot, from, to) {
+    var t = Math.tan(a * Math.PI / 180), c = Math.cos(a * Math.PI / 180), out = '';
+    for (var x0 = from; x0 <= to; x0 += step) {
+      var y1 = -8, y2 = 108;
+      var xa = x0 - (y1 - 50) * t, xb = x0 - (y2 - 50) * t;
+      var w1 = wTop(x0) / c / 2, w2 = wBot(x0) / c / 2;
+      out += 'M' + (xa - w1).toFixed(2) + ' ' + y1 + 'L' + (xa + w1).toFixed(2) + ' ' + y1 + 'L' + (xb + w2).toFixed(2) + ' ' + y2 + 'L' + (xb - w2).toFixed(2) + ' ' + y2 + 'Z';
+    }
+    return out;
+  }
+  function crossHatch(step, w) {
+    /* lines rising to the right at 34 degrees above horizontal */
+    var a = 34 * Math.PI / 180, out = '', k = Math.tan(a), h = w / Math.cos(a) / 2;
+    for (var y0 = -10; y0 <= 140; y0 += step) {
+      out += 'M-5 ' + (y0 - h).toFixed(2) + 'L105 ' + (y0 - 110 * k - h).toFixed(2) + 'L105 ' + (y0 - 110 * k + h).toFixed(2) + 'L-5 ' + (y0 + h).toFixed(2) + 'Z';
+    }
+    return out;
+  }
+  function clamp(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+
+  var S = [];
+
+  /* 1. The plain mark: stone and sky */
+  S.push({ name: 'plain', el: svg('#E3DED2', stone('#141311') + gem('#94E6FF') + facet('#fff', .28)) });
+
+  /* 2. Bitmap: aliased, on black, in sky and paper (drawn to canvas below) */
+  S.push({ name: 'bitmap', canvas: drawBitmap });
+
+  /* 3. Line engraving: stone in parallel hatching at 16 degrees, crystal in cross-hatch */
+  (function () {
+    var dark = function (x0) { return clamp(.42 + (52 - x0) / 120); };
+    var stoneLines = hatch(16, 1.9, function (x) { return .22 + .8 * dark(x); }, function (x) { return .48 + .9 * dark(x); }, -40, 140);
+    var gemA = hatch(16, 1.9, function () { return .42; }, function () { return .62; }, -40, 140);
+    var gemB = crossHatch(2.1, .36);
+    var facetA = hatch(16, 1.9, function () { return .16; }, function () { return .26; }, -40, 140);
+    var ink = '#0B0C0C';
+    var body = '<g mask="url(#IDm)"><path d="' + stoneLines + '" fill="' + ink + '"/></g>' +
+      '<path d="' + G.tile + '" fill="none" stroke="' + ink + '" stroke-width=".55" mask="url(#IDm)"/>' +
+      '<path d="' + G.cav + '" fill="none" stroke="' + ink + '" stroke-width=".45" mask="url(#IDm)"/>' +
+      '<g clip-path="url(#IDg)"><path d="' + gemA + '" fill="' + ink + '"/><path d="' + gemB + '" fill="' + ink + '" clip-path="url(#ID-left)"/></g>' +
+      '<g clip-path="url(#IDf)"><rect x="0" y="0" width="100" height="100" fill="#F5F2EA"/><path d="' + facetA + '" fill="' + ink + '"/></g>' +
+      '<path d="' + G.gem + '" fill="none" stroke="' + ink + '" stroke-width=".6" stroke-linejoin="round"/>' +
+      '<path d="M58.6 21.5L41.4 81.5" stroke="' + ink + '" stroke-width=".45"/>';
+    var defs = '<clipPath id="ID-left"><path d="M58.6 21.5L41.4 81.5L29.42 56.3L32.18 46.7Z"/></clipPath>';
+    S.push({ name: 'engraving', el: svg('#F5F2EA', body, defs) });
+  })();
+
+  /* 4. Ink on cobalt */
+  S.push({ name: 'cobalt', el: svg('#2448FF', stone('#0B0C0C') + gem('#94E6FF') + facet('#fff', .28)) });
+
+  /* 5. Hiroshige seen through the crystal; the stone in deep Prussian with a bokashi fade */
+  (function () {
+    var defs = '<linearGradient id="ID-bk" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="#142B57"/><stop offset=".42" stop-color="#1F3F7A"/><stop offset="1" stop-color="#1F3F7A"/></linearGradient>' +
+      '<filter id="ID-wash" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency=".9 .06" numOctaves="2" seed="7"/>' +
+      '<feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .07 0"/></filter>';
+    var body = stone('url(#ID-bk)') +
+      '<rect x="0" y="0" width="100" height="100" filter="url(#ID-wash)" mask="url(#IDm)"/>' +
+      '<g clip-path="url(#IDg)"><image href="assets/19006.webp" x="16.5" y="1.8" width="153.6" height="111.25" preserveAspectRatio="none"/></g>' +
+      facet('#fff', .2);
+    S.push({ name: 'hiroshige', el: svg('#E8E2D3', body, defs) });
+  })();
+
+  /* 6. Halftone at a 16 degree screen, on ink (canvas) */
+  S.push({ name: 'halftone', canvas: drawHalftone });
+
+  /* 7. Blind emboss: white on white */
+  (function () {
+    var defs = '<filter id="ID-sh" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".55"/></filter>' +
+      '<filter id="ID-hi" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".3"/></filter>' +
+      '<filter id="ID-tx" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="3" seed="2"/>' +
+      '<feColorMatrix type="matrix" values="0 0 0 0 .5  0 0 0 0 .48  0 0 0 0 .44  0 0 0 .9 -.32"/></filter>';
+    var face = '#F3F1EB';
+    var body =
+      '<g transform="translate(.8 1.1)" filter="url(#ID-sh)" opacity=".5">' + stone('#6B665C') + '</g>' +
+      '<g transform="translate(-.45 -.55)" filter="url(#ID-hi)">' + stone('#fff') + '</g>' +
+      stone(face) +
+      '<g transform="translate(.6 .9)" filter="url(#ID-sh)" opacity=".45"><path d="' + G.gem + '" fill="#6B665C"/></g>' +
+      '<g transform="translate(-.4 -.5)" filter="url(#ID-hi)"><path d="' + G.gem + '" fill="#fff"/></g>' +
+      gem('#EEEBE3') + facet('#fff', .75) +
+      '<rect x="-31" y="-31" width="162" height="162" filter="url(#ID-tx)" opacity=".5"/>';
+    S.push({ name: 'emboss', el: svg(face, body, defs) });
+  })();
+
+  /* 8. Risograph: two inks, out of register, with grain */
+  (function () {
+    var defs = '<filter id="ID-gr" x="-10%" y="-10%" width="120%" height="120%">' +
+      '<feTurbulence type="fractalNoise" baseFrequency="1.25" numOctaves="3" seed="11" result="n"/>' +
+      '<feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -12 0 0 0 9.0" result="m"/>' +
+      '<feComposite in="SourceGraphic" in2="m" operator="in"/></filter>' +
+      '<filter id="ID-pp" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="5"/>' +
+      '<feColorMatrix type="matrix" values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .42  0 0 0 1.1 -.55"/></filter>';
+    var body =
+      '<rect x="-31" y="-31" width="162" height="162" filter="url(#ID-pp)" opacity=".35"/>' +
+      '<g style="mix-blend-mode:multiply">' +
+        '<g filter="url(#ID-gr)" transform="translate(-.55 .35)">' + stone('#2C4CE8') + '</g>' +
+        '<g filter="url(#ID-gr)" transform="translate(2.9 -1.9)">' + gem('#7FDBFB') + '<path d="' + G.facet + '" fill="#F3EFE6" fill-opacity=".5"/></g>' +
+      '</g>';
+    S.push({ name: 'riso', el: svg('#F3EEE4', body, defs) });
+  })();
+
+  /* ---- canvas specimens ---- */
+  var probe = document.createElement('canvas').getContext('2d');
+  var P = { tile: new Path2D(G.tile), seam: new Path2D(G.seam), cav: new Path2D(G.cav), gem: new Path2D(G.gem), facet: new Path2D(G.facet) };
+  function region(x, y) {
+    if (probe.isPointInPath(P.gem, x, y)) return probe.isPointInPath(P.facet, x, y) ? 3 : 2;
+    if (!probe.isPointInPath(P.tile, x, y)) return 0;
+    if (probe.isPointInPath(P.seam, x, y) || probe.isPointInPath(P.cav, x, y)) return 0;
+    return 1;
+  }
+  function prep(c) {
+    var px = c.clientWidth || plate.clientWidth, d = Math.min(window.devicePixelRatio || 1, 3);
+    c.width = Math.round(px * d); c.height = Math.round(px * d);
+    var ctx = c.getContext('2d');
+    var k = c.width / 162;
+    return { ctx: ctx, k: k, W: c.width, map: function (u) { return (u + 31) * k; } };
+  }
+  function drawBitmap(c) {
+    var p = prep(c), ctx = p.ctx;
+    ctx.fillStyle = '#0B0C0C'; ctx.fillRect(0, 0, p.W, p.W);
+    var N = 29, s = 100 / N;
+    var cols = [null, '#EEEAE0', '#94E6FF', '#D2F5FF'];
+    for (var j = 0; j < N; j++) for (var i = 0; i < N; i++) {
+      var r = region((i + .5) * s, (j + .5) * s);
+      if (!r) continue;
+      var x0 = Math.round(p.map(i * s)), x1 = Math.round(p.map((i + 1) * s));
+      var y0 = Math.round(p.map(j * s)), y1 = Math.round(p.map((j + 1) * s));
+      ctx.fillStyle = cols[r]; ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+    }
+  }
+  function drawHalftone(c) {
+    var p = prep(c), ctx = p.ctx;
+    ctx.fillStyle = '#0B0C0C'; ctx.fillRect(0, 0, p.W, p.W);
+    var a = 16 * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a), step = 2.05;
+    var cols = [null, '#E9E4D8', '#94E6FF', '#DDF8FF'];
+    for (var v = -60; v <= 60; v++) for (var u = -60; u <= 60; u++) {
+      var x = 50 + (u * ca - v * sa) * step, y = 51.5 + (u * sa + v * ca) * step;
+      if (x < -2 || x > 102 || y < -2 || y > 102) continue;
+      var r = region(x, y);
+      if (!r) continue;
+      var t;
+      if (r === 1) t = .12 + .34 * clamp((x + 100 - y) / 200);
+      else if (r === 2) t = .8; else t = .92;
+      var rad = step * .5 * Math.sqrt(t) * 1.16;
+      ctx.fillStyle = cols[r];
+      ctx.beginPath(); ctx.arc(p.map(x), p.map(y), rad * p.k, 0, 6.2832); ctx.fill();
+    }
+  }
+
+  /* ---- build ---- */
+  var LABELS = ['The mark', 'Bitmap, 29 by 29', 'Line engraving', 'Ink on cobalt', 'Hiroshige, through the crystal', 'Halftone, screen at 16°', 'Blind emboss', 'Risograph, two drums'];
+  var plate = document.getElementById('plate');
+  var frame = document.getElementById('frame');
+  var label = document.getElementById('label');
+  var els = S.map(function (s) {
+    var el;
+    if (s.el) { var w = document.createElement('div'); w.innerHTML = s.el; el = w.firstChild; }
+    else { el = document.createElement('canvas'); el.className = 'spec'; el.setAttribute('aria-hidden', 'true'); }
+    el.dataset.name = s.name;
+    frame.appendChild(el);
+    return el;
+  });
+  function paintCanvases() { S.forEach(function (s, i) { if (s.canvas) s.canvas(els[i]); }); }
+  paintCanvases();
+  var rz; addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(paintCanvases, 150); });
+
+  var cur = -1;
+  function show(i) {
+    i = (i + S.length) % S.length;
+    if (cur >= 0) els[cur].classList.remove('on');
+    els[i].classList.add('on'); cur = i;
+    label.firstChild.textContent = 'No. ' + (i + 1);
+    label.lastChild.textContent = LABELS[i];
+  }
+
+  /* ---- rhythm ---- */
+  var root = document.documentElement;
+  var still = root.classList.contains('still');
+  var seen = root.classList.contains('seen');
+  var BEAT = 880, timer = 0, paused = false;
+  function tick() { show(cur + 1); schedule(BEAT); }
+  function schedule(ms) { clearTimeout(timer); if (!still && !paused) timer = setTimeout(tick, ms); }
+
+  plate.addEventListener('click', function () { show(cur + 1); schedule(BEAT * 1.6); });
+  plate.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') { paused = true; clearTimeout(timer); } });
+  plate.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') { paused = false; schedule(BEAT * .6); } });
+  document.addEventListener('visibilitychange', function () { if (document.hidden) clearTimeout(timer); else schedule(BEAT); });
+
+  if (still || seen) {
+    show(0);
+    if (!still) schedule(BEAT * 1.5);
+    return;
+  }
+
+  /* ---- the copy, set by machine: two or three characters a step, a sky block on the newest ---- */
+  function setType(paras, done) {
+    var segs = [], ends = [], n = 0;
+    paras.forEach(function (p) {
+      var w = document.createTreeWalker(p, NodeFilter.SHOW_TEXT), list = [], t;
+      while ((t = w.nextNode())) list.push(t);
+      list.forEach(function (node) {
+        var txt = node.nodeValue, f = document.createDocumentFragment();
+        var a = document.createElement('span'), h = document.createElement('span'), r = document.createElement('span');
+        h.className = 'hl'; r.className = 'ahead'; r.textContent = txt;
+        f.appendChild(a); f.appendChild(h); f.appendChild(r);
+        node.parentNode.replaceChild(f, node);
+        segs.push({ s: n, t: txt, a: a, h: h, r: r, k: '' });
+        n += txt.length;
+      });
+      ends.push(n);
+    });
+    var pos = 0, tail = 0, pi = 0, LEAD = 7;
+    function cl(v, m) { return v < 0 ? 0 : v > m ? m : v; }
+    function render() {
+      for (var i = 0; i < segs.length; i++) {
+        var g = segs[i], L = g.t.length, x = cl(tail - g.s, L), y = cl(pos - g.s, L), key = x + ',' + y;
+        if (key === g.k) continue;
+        g.k = key;
+        g.a.textContent = g.t.slice(0, x); g.h.textContent = g.t.slice(x, y); g.r.textContent = g.t.slice(y);
+      }
+    }
+    function step() {
+      var end = ends[pi], wait = 18 + Math.random() * 26;
+      if (pos < end) {
+        pos = Math.min(end, pos + 2 + (Math.random() < .5 ? 1 : 0));
+        tail = Math.max(tail, pos - LEAD);
+      } else if (tail < pos) {
+        tail = Math.min(pos, tail + 3);
+      } else {
+        pi++;
+        if (pi >= ends.length) { render(); return done(); }
+        wait = 110;
+      }
+      render();
+      setTimeout(step, wait);
+    }
+    render();
+    step();
+  }
+  function caret(p) {
+    var c = document.createElement('span'); c.className = 'caret'; c.setAttribute('aria-hidden', 'true');
+    p.appendChild(c);
+    var k = 0;
+    (function blink() {
+      k++;
+      if (k > 6) { c.remove(); return; }
+      c.style.visibility = k % 2 ? 'hidden' : 'visible';
+      setTimeout(blink, 300);
+    })();
+  }
+
+  /* ---- the opening ---- */
+  var loader = document.getElementById('loader');
+  var tag = document.getElementById('tag');
+
+  /* 1. a black frame; the tagline resolves glyph by glyph, each one a sky cell for an instant */
+  var chars = tag.textContent.split('');
+  tag.textContent = '';
+  var spans = chars.map(function (ch) { var s = document.createElement('span'); s.textContent = ch; tag.appendChild(s); return s; });
+  var t0 = performance.now();
+  var when = spans.map(function () { return 60 + Math.random() * 380; });
+  (function resolve() {
+    var e = performance.now() - t0, left = 0;
+    for (var i = 0; i < spans.length; i++) {
+      var st = e < when[i] ? '' : e < when[i] + 70 ? 'c' : 'd';
+      if (spans[i].className !== st) spans[i].className = st;
+      if (st !== 'd') left++;
+    }
+    if (left) requestAnimationFrame(resolve);
+  })();
+
+  /* 2. the frame folds to a line on the plate's centre, then to the plate's width */
+  show(6);
+  setTimeout(function () {
+    var r = plate.getBoundingClientRect(), W = innerWidth, H = innerHeight;
+    var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    loader.style.transformOrigin = cx + 'px ' + cy + 'px';
+    var anim = loader.animate([
+      { transform: 'scale(1, 1)', easing: 'cubic-bezier(.7,0,.2,1)' },
+      { transform: 'scale(1, ' + (1 / H) + ')', offset: .56, easing: 'cubic-bezier(.6,0,.15,1)' },
+      { transform: 'scale(' + (r.width / W) + ', ' + (1 / H) + ')' }
+    ], { duration: 320, fill: 'forwards' });
+    anim.onfinish = function () { loader.remove(); opening(); };
+  }, 640);
+
+  /* 3. the plate snaps open on a run of fast cuts, then settles on the plain mark */
+  function opening() {
+    var run = [6, 2, 4, 1, 7, 3, 5, 2, 0];
+    var gaps = [250, 60, 60, 64, 70, 80, 100, 130, 176];
+    root.classList.add('go');
+    var t = 0;
+    run.forEach(function (idx, k) {
+      t += gaps[k];
+      if (k === 0) return;
+      setTimeout(function () { show(idx); }, t);
+    });
+    setTimeout(function () { root.classList.add('landed'); }, t);
+    var paras = [].slice.call(document.querySelectorAll('.col p.t'));
+    setTimeout(function () {
+      root.classList.add('typing');
+      setType(paras, function () {
+        root.classList.add('reveal');
+        caret(paras[paras.length - 1]);
+        try { sessionStorage.setItem('antimony-specimens', '1'); } catch (e) {}
+      });
+    }, 520);
+    setTimeout(function () { schedule(0); }, t + 1250);
+  }
+})();
+</script>
+</body>
+</html>

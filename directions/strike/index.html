@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en-GB" class="js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0C0C">
+<meta name="description" content="Antimony builds software for the people who make the work. Our first product is Orbe, the creator's side of every sponsorship deal.">
+<title>Antimony, Strike</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="assets/fonts/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/prints/18972.webp" as="image">
+<style>
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: swap; }
+:root {
+  --ink: #0B0C0C; --paper: #EEEAE0; --sky: #94E6FF; --stone: #141311;
+  --text: rgba(238, 234, 224, .86); --dim: rgba(238, 234, 224, .42); --faint: rgba(238, 234, 224, .3); --hair: rgba(238, 234, 224, .2);
+  --g: clamp(24px, 4.4vw, 64px);
+  --jp: "Hiragino Mincho ProN", "Hiragino Mincho Pro", "Yu Mincho", YuMincho, "Noto Serif JP", "Noto Serif CJK JP", serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--ink); color-scheme: dark; }
+body { background: var(--ink); color: var(--text); font: 400 17px/1.6 "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; min-height: 100vh; min-height: 100svh; overflow-x: hidden; }
+a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .22em; text-decoration-color: rgba(238, 234, 224, .3); transition: text-decoration-color .15s ease, color .15s ease; }
+a:hover { text-decoration-color: var(--paper); color: var(--paper); }
+:focus-visible { outline: 1px solid var(--sky); outline-offset: 4px; }
+::selection { background: var(--sky); color: var(--ink); }
+
+/* the film: everything the opening needs, behind the page once it is over */
+.film { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+.word { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: center; font-weight: 200; line-height: .74; letter-spacing: .07em; color: var(--paper); white-space: nowrap; opacity: 0; user-select: none; contain: layout paint; }
+.word .ch { position: relative; display: inline-block; }
+.word .ch:last-child { margin-right: -.07em; }
+.word .sl { display: block; will-change: transform; }
+.word .sl + .sl { position: absolute; inset: 0; }
+.strike { position: absolute; left: 0; top: 0; width: 2px; background: var(--sky); transform-origin: 50% 0; opacity: 0; will-change: transform, opacity; }
+.flash { position: absolute; inset: 0; background: var(--paper); opacity: 0; }
+#px { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+.mk { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+.mk svg, .mk canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
+.mk .glow { opacity: 0; }
+
+/* grain on the ink, baked once */
+.grain { position: fixed; inset: -2px; pointer-events: none; z-index: 0; opacity: .75; background-size: 180px 180px; }
+
+/* the frame: the tagline, the vertical name */
+.tag { position: absolute; left: 0; right: 0; top: 17px; text-align: center; font-size: 10px; line-height: 1; letter-spacing: .44em; text-indent: .44em; text-transform: uppercase; color: var(--dim); padding: 0 28px; white-space: nowrap; pointer-events: none; }
+.tate { position: absolute; right: 21px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 7px; font: 400 10px/1 var(--jp); color: var(--dim); user-select: none; }
+
+/* the page */
+.page { position: relative; z-index: 1; min-height: 100vh; min-height: 100svh; padding: var(--g); display: flex; flex-direction: column; }
+.col { width: min(460px, 100%); }
+.seal { position: relative; width: 44px; height: 44px; margin-bottom: 44px; }
+.seal > svg:first-child { width: 100%; height: 100%; display: block; }
+.geo { position: absolute; left: -90%; top: -90%; width: 280%; height: 280%; overflow: visible; pointer-events: none; }
+/* under the pointer only: the seam carried past the tile, measured against the vertical */
+.geo path { fill: none; stroke: var(--paper); stroke-opacity: .5; stroke-dasharray: 1 1; stroke-dashoffset: 1; transition: stroke-dashoffset .45s cubic-bezier(.7, 0, .16, 1); }
+.geo text { fill: var(--paper); fill-opacity: 0; font: 400 21px "Timeless Serif", serif; letter-spacing: .06em; transition: fill-opacity .2s ease; }
+.seal:hover .geo path { stroke-dashoffset: 0; } .seal:hover .geo path + path { transition-delay: .06s; }
+.seal:hover .geo text { fill-opacity: .75; transition-delay: .3s; }
+.col p { text-wrap: pretty; }
+.col p + p { margin-top: 1em; }
+.col em { font-style: italic; color: var(--paper); }
+.ty-h { background: var(--sky); color: var(--ink); }
+.ty-r { color: transparent; }
+a.typing, a.typing:hover { text-decoration-color: transparent; }
+.made { list-style: none; display: flex; flex-wrap: wrap; gap: 10px 26px; margin-top: 30px; font-size: 15px; }
+.made a { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; color: var(--dim); }
+.made a:hover, .made a:focus-visible { color: var(--paper); }
+.made img { width: 18px; height: 18px; border-radius: 4.5px; filter: grayscale(1) brightness(.9) contrast(.9); opacity: .55; transition: filter .15s ease, opacity .15s ease; }
+.made a:hover img, .made a:focus-visible img { filter: none; opacity: 1; }
+.foot { margin-top: auto; padding-top: 56px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px 24px; flex-wrap: wrap; font-size: 12.5px; color: var(--dim); }
+.foot cite { font-style: normal; }
+.foot cite i { font-style: italic; }
+.js .made li, .js .foot, .js .tag, .js .tate { opacity: 0; }
+.js .seal > svg:first-child { visibility: hidden; }
+.js:not(.ty) .col p { visibility: hidden; }
+.done .seal > svg:first-child { visibility: visible; }
+@media (max-width: 600px) {
+  body { font-size: 16.5px; }
+  .page { padding-top: 76px; }
+  .seal { width: 40px; height: 40px; margin-bottom: 36px; }
+  .foot { flex-direction: column; align-items: flex-start; }
+  .tag { font-size: 8px; letter-spacing: .3em; text-indent: .3em; top: 16px; padding: 0 22px; }
+  .tate { right: 13px; top: max(52%, 400px); }
+}
+@media (max-width: 360px) { .tag { letter-spacing: .2em; text-indent: .2em; } }
+</style>
+</head>
+<body>
+<div class="film" aria-hidden="true">
+  <div class="word"></div>
+  <div class="mk">
+    <svg viewBox="0 0 100 100">
+      <defs>
+        <linearGradient id="st" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22211E"/><stop offset=".55" stop-color="#161513"/><stop offset="1" stop-color="#0F0F0E"/></linearGradient>
+        <clipPath id="tc"><rect width="100" height="100" rx="22"/></clipPath>
+        <clipPath id="hl"><path d="M-12 -12H68.21L32.65 112H-12Z"/></clipPath>
+        <clipPath id="hr"><path d="M68.21 -12H112V112H32.65Z"/></clipPath>
+        <mask id="cm"><rect x="-10" y="-20" width="120" height="140" fill="#fff"/><path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" fill="#000"/></mask>
+      </defs>
+      <g class="stone" opacity="0">
+        <g class="hl" clip-path="url(#hl)"><g clip-path="url(#tc)"><rect class="sf" width="100" height="100" fill="url(#st)"/></g></g>
+        <g class="hr" clip-path="url(#hr)"><g clip-path="url(#tc)"><rect class="sf" width="100" height="100" fill="url(#st)"/></g></g>
+        <rect class="whole" width="100" height="100" rx="22" fill="url(#st)"/>
+      </g>
+      <g clip-path="url(#tc)"><path class="glow" d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z" fill="#94E6FF"/></g>
+      <g class="ln" fill="none" stroke="#EEEAE0" stroke-opacity=".6" stroke-linecap="round">
+        <path pathLength="1" d="M64.77 0H78A22 22 0 0 1 100 22V78A22 22 0 0 1 78 100H36.1"/>
+        <path pathLength="1" d="M64.77 0H22A22 22 0 0 0 0 22V78A22 22 0 0 0 22 100H36.1"/>
+      </g>
+    </svg>
+    <canvas class="gemc"></canvas>
+  </div>
+  <div class="strike"></div>
+  <canvas id="px"></canvas>
+  <div class="flash"></div>
+</div>
+<div class="grain" aria-hidden="true"></div>
+
+<main class="page">
+  <p class="tag">Software for the people who make the work</p>
+  <div class="tate" aria-hidden="true"><span>ア</span><span>ン</span><span>チ</span><span>モ</span><span>ン</span></div>
+  <div class="col">
+    <div class="seal">
+      <svg viewBox="0 0 100 100" role="img" aria-label="Antimony">
+        <defs>
+          <linearGradient id="st2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22211E"/><stop offset=".55" stop-color="#161513"/><stop offset="1" stop-color="#0F0F0E"/></linearGradient>
+          <clipPath id="tc2"><rect width="100" height="100" rx="22"/></clipPath>
+          <filter id="sk" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".2126 .7152 .0722 0 0 .2126 .7152 .0722 0 0 .2126 .7152 .0722 0 0 0 0 0 1 0"/><feComponentTransfer><feFuncR type="table" tableValues="0.043 0.054 0.064 0.075 0.118 0.162 0.244 0.364 0.484 0.642 0.949"/><feFuncG type="table" tableValues="0.047 0.080 0.112 0.145 0.236 0.327 0.453 0.613 0.774 0.916 0.988"/><feFuncB type="table" tableValues="0.047 0.128 0.209 0.290 0.435 0.579 0.704 0.810 0.915 1.000 1.000"/></feComponentTransfer></filter><clipPath id="gc2"><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"/></clipPath>
+          <mask id="cm2"><rect width="100" height="100" fill="#fff"/><path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" fill="#000"/></mask>
+        </defs>
+        <g clip-path="url(#tc2)"><rect width="100" height="100" fill="url(#st2)" mask="url(#cm2)"/></g>
+        <g clip-path="url(#gc2)"><image filter="url(#sk)" href="assets/prints/18972.webp" x="24" y="18.7" width="51.61" height="75.82" preserveAspectRatio="none"/><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" fill-opacity=".28"/></g>
+      </svg>
+      <!-- the seal's construction, shown only under the pointer -->
+      <svg class="geo" viewBox="-90 -90 280 280" aria-hidden="true">
+        <path pathLength="1" vector-effect="non-scaling-stroke" d="M64.77 -6V-78"/>
+        <path pathLength="1" vector-effect="non-scaling-stroke" d="M66.49 -6L87.14 -78"/>
+        <path pathLength="1" vector-effect="non-scaling-stroke" d="M64.77 -62A62 62 0 0 1 81.86 -59.6"/>
+        <path pathLength="1" vector-effect="non-scaling-stroke" d="M34.94 104L26.33 134"/>
+        <text x="92" y="-55">16°</text>
+      </svg>
+    </div>
+    <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator&rsquo;s side of every sponsorship deal.</p>
+    <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
+    <ul class="made" aria-label="What we make">
+      <li><a href="https://eoinforker.github.io/orbe-site/"><img src="assets/work/orbe.svg" alt="">Orbe</a></li>
+      <li><a href="https://immiscible.ai"><img src="assets/work/immiscible.svg" alt="">immiscible</a></li>
+      <li><a href="https://idyll.day"><img src="assets/work/idyll.svg" alt="">Idyll</a></li>
+    </ul>
+  </div>
+  <footer class="foot">
+    <span>London</span>
+    <cite>In the crystal: Utagawa Hiroshige, <i>Autumn Moon over Ishiyama Temple</i>, 1857. Art Institute of Chicago.</cite>
+  </footer>
+</main>
+<noscript><style>.js .made li, .js .foot, .js .tag, .js .tate { opacity: 1 !important; } .js .seal > svg:first-child { visibility: visible !important; } .film { display: none; }</style></noscript>
+
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const root = document.documentElement;
+const film = $(".film"), wordEl = $(".word"), strikeEl = $(".strike"), flashEl = $(".flash"), mk = $(".mk");
+const stone = $(".mk .stone"), hl = $(".mk .hl"), hr = $(".mk .hr"), glow = $(".mk .glow"), lns = $$(".mk .ln path"), lnG = $(".mk .ln");
+const sf = $$(".mk .sf");
+const gc = $(".gemc"), g = gc.getContext("2d"), pxc = $("#px"), px = pxc.getContext("2d");
+const seal = $(".seal"), made = $$(".made li"), foot = $(".foot"), tag = $(".tag"), tate = $(".tate");
+
+// timeline, in seconds
+const T = { line0: .06, line1: .5, fill0: .42, fill1: .68, strike: .8, impact: .845, ign: .87, pr0: .98, pr1: 1.4, tag0: 1.02, fly0: 1.38, fly1: 1.84, type0: 1.74, frame0: 1.8 };
+
+const cl = v => v < 0 ? 0 : v > 1 ? 1 : v, seg = (t, a, b) => cl((t - a) / (b - a)), mix = (a, b, k) => a + (b - a) * k;
+function bez(x1, y1, x2, y2) {   // cubic-bezier easing, solved by Newton steps
+  const A = (a, b) => 1 - 3 * b + 3 * a, B = (a, b) => 3 * b - 6 * a, C = a => 3 * a;
+  const f = (t, a, b) => ((A(a, b) * t + B(a, b)) * t + C(a)) * t, d = (t, a, b) => 3 * A(a, b) * t * t + 2 * B(a, b) * t + C(a);
+  return x => { if (x <= 0) return 0; if (x >= 1) return 1; let t = x; for (let i = 0; i < 6; i++) { const s = d(t, x1, x2); if (!s) break; t -= (f(t, x1, x2) - x) / s; } return f(t, y1, y2); };
+}
+const draw = bez(.7, 0, .16, 1), outExpo = bez(.16, 1, .3, 1), inQ = bez(.5, 0, .9, .5), fly = bez(.78, 0, .18, 1), soft = bez(.25, .1, .25, 1);
+const TAN = Math.tan(16 * Math.PI / 180), S16 = Math.sin(16 * Math.PI / 180), C16 = Math.cos(16 * Math.PI / 180);
+// stepped opacity, as a projector would cut it: never a smooth fade
+const steps = (k, n) => Math.floor(k * n) / n;
+
+// a small seeded random, so everything breaks the same way each time
+let seed = 51; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+// grain: one tile of noise, baked once
+(() => {
+  const n = 180, c = document.createElement("canvas"); c.width = c.height = n; const x = c.getContext("2d"), d = x.createImageData(n, n), p = d.data;
+  for (let i = 0; i < p.length; i += 4) { const r = Math.random(); if (r < .5) { const v = r < .38 ? 238 : 0; p[i] = p[i + 1] = p[i + 2] = v; p[i + 3] = v ? 3 + Math.random() * 7 : 8 + Math.random() * 22; } }
+  x.putImageData(d, 0, 0); $(".grain").style.backgroundImage = `url(${c.toDataURL()})`;
+})();
+
+// the word, built from horizontal slices
+const WORD = "ANTIMONY", NS = 5, slices = [];
+for (const c of WORD) {
+  const ch = document.createElement("span"); ch.className = "ch";
+  const cuts = [0]; for (let k = 1; k < NS; k++) cuts.push(k / NS + (rnd() - .5) * .1); cuts.push(1);
+  for (let k = 0; k < NS; k++) {
+    const s = document.createElement("span"); s.className = "sl"; s.textContent = c;
+    s.style.clipPath = `inset(${(cuts[k] * 100).toFixed(1)}% -10% ${((1 - cuts[k + 1]) * 100).toFixed(1)}% -10%)`;
+    ch.appendChild(s);
+    const dir = rnd() < .5 ? -1 : 1, a = .1 + rnd() * .36;
+    slices.push({ el: s, a, x0: dir * (.06 + rnd() * .5), x1: -dir * (.02 + rnd() * .16), x2: dir * (.01 + rnd() * .05), c1: a + .05 + rnd() * .05, c2: a + .14 + rnd() * .07, late: rnd() < .22 });
+  }
+  wordEl.appendChild(ch);
+}
+
+// the copy, set by machine: two or three characters a step, the newest under a block of sky
+const runs = [], paras = $$(".col p"), plan = [];
+let typeEnd = 0, typed = false;
+function setupType() {
+  let total = 0;
+  for (const p of paras) {
+    const a = total, w = document.createTreeWalker(p, NodeFilter.SHOW_TEXT), nodes = [];
+    while (w.nextNode()) nodes.push(w.currentNode);
+    for (const n of nodes) {
+      const text = n.data, done = document.createTextNode(""), h = document.createElement("span"), r = document.createElement("span");
+      h.className = "ty-h"; r.className = "ty-r"; r.textContent = text;
+      n.replaceWith(done, h, r);
+      runs.push({ text, a: total, b: total + text.length, done, h, r, link: h.parentNode.tagName === "A" ? h.parentNode : null, key: "" });
+      total += text.length;
+    }
+    plan.push([a, total]);
+  }
+  $$(".col a").forEach(l => l.classList.add("typing"));
+  // the schedule: irregular, like a machine with a real mechanism
+  const sched = []; let t = 0;
+  for (const [a, b] of plan) {
+    let c = a;
+    while (c < b) { c = Math.min(b, c + (rnd() < .32 ? 2 : 3)); t += rnd() < .07 ? 44 : 18 + rnd() * 10; sched.push([t, c, Math.max(a, c - 6)]); }
+    let h = Math.max(a, c - 6); while (h < c) { h = Math.min(c, h + 3); t += 26; sched.push([t, c, h]); }
+    t += 70;
+  }
+  runs.sched = sched; typeEnd = t / 1000; typed = true; root.classList.add("ty");
+}
+function typeAt(e) {   // e: seconds since typing began
+  if (!typed) return;
+  const S = runs.sched; let c = 0, h = 0;
+  if (e >= typeEnd) { c = h = 1e9; } else { const ms = e * 1000; for (const st of S) { if (st[0] > ms) break; c = st[1]; h = st[2]; } }
+  for (const r of runs) {
+    const d = cl((h - r.a) / (r.text.length || 1)) * r.text.length | 0, hh = Math.max(d, Math.min(r.text.length, c - r.a)), key = d + "," + hh;
+    if (key === r.key) continue; r.key = key;
+    r.done.data = r.text.slice(0, d); r.h.textContent = r.text.slice(d, hh); r.r.textContent = r.text.slice(hh);
+    if (r.link) r.link.classList.toggle("typing", hh < r.text.length);
+  }
+}
+
+let W, H, s, bx, by, M, fs, wordDY = 0, still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let seen = false; try { seen = sessionStorage.getItem("antimony-strike") === "1"; sessionStorage.setItem("antimony-strike", "1"); } catch (e) {}
+
+function layout() {
+  W = innerWidth; H = innerHeight;
+  s = Math.round(Math.min(H * .4, W * .54, 440));
+  bx = Math.round(W / 2 - s / 2); by = Math.round(H * .47 - s / 2);
+  M = [bx + .5 * s, by + .515 * s];
+  Object.assign(mk.style, { width: s + "px", height: s + "px" });
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  gc.width = Math.round(s * dpr); gc.height = Math.round(s * dpr); lastGem = "";
+  lnG.setAttribute("stroke-width", (100 / s).toFixed(3));
+  // the word: fitted to the frame, centred on the mark
+  wordEl.style.fontSize = "100px";
+  const chs = wordEl.children, w100 = chs[chs.length - 1].getBoundingClientRect().right - chs[0].getBoundingClientRect().left;
+  fs = Math.min(100 * (W * .92) / w100, H * .36);
+  wordEl.style.fontSize = fs.toFixed(1) + "px";
+  const wt = M[1] - wordEl.offsetHeight / 2 + fs * .02; wordEl.style.top = wt.toFixed(1) + "px";
+  // where the word comes to rest: across the foot of the frame, above the imprint
+  const ft = foot.getBoundingClientRect().top + scrollY;
+  wordDY = Math.min(ft - Math.max(18, H * .035), H - 16) - wordEl.offsetHeight - wt;
+  // the strike: a line the full height of the screen, through the seam
+  const len = (H + 60) / C16;
+  Object.assign(strikeEl.style, { height: len + "px", left: (M[0] + (M[1] + 20) * TAN - 1).toFixed(1) + "px", top: "-20px" });
+  pxc.width = Math.ceil(W / 3); pxc.height = Math.ceil(H / 3);
+}
+
+// the print, resolving inside the crystal from coarse blocks
+// seen through the crystal, the print takes the sky's light: its tones mapped from ink through Prussian to sky
+const STOPS = [[0, 11, 12, 12], [.3, 19, 37, 74], [.55, 47, 95, 166], [.88, 148, 230, 255], [1, 242, 252, 255]], LUT = new Uint8ClampedArray(256 * 3);
+for (let i = 0; i < 256; i++) { const L = i / 255; let j = 0; while (j < STOPS.length - 2 && L > STOPS[j + 1][0]) j++; const a = STOPS[j], b = STOPS[j + 1], k = (L - a[0]) / (b[0] - a[0]); for (let c = 0; c < 3; c++) LUT[i * 3 + c] = a[c + 1] + (b[c + 1] - a[c + 1]) * k; }
+let src = null, imgOk = false; const img = new Image(); img.src = "assets/prints/18972.webp";
+img.decode().then(() => {
+  const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight; const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(img, 0, 0);
+  try { const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
+    for (let i = 0; i < p.length; i += 4) { const l = (p[i] * 54 + p[i + 1] * 183 + p[i + 2] * 19) >> 8; p[i] = LUT[l * 3]; p[i + 1] = LUT[l * 3 + 1]; p[i + 2] = LUT[l * 3 + 2]; }
+    x.putImageData(d, 0, 0); } catch (e) {}
+  src = c; imgOk = true; lastGem = "";
+}, () => {});
+const GEM = new Path2D("M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"), FACET = new Path2D("M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z");
+const IR = [24, 18.7, 51.61, 75.82];   // the print's place in the 100 unit square: the moon sits under the crystal's point
+const off = document.createElement("canvas"), oc = off.getContext("2d");
+const STEPS = [7, 5, 3.6, 2.6, 1.8, 1.2, .8, .5, 0];   // block size in units, one step every ~50ms, like frames of film
+let lastGem = "";
+function gem(t) {
+  const ign = seg(t, T.ign, T.ign + .12), p = seg(t, T.pr0, T.pr1);
+  const step = p >= 1 ? STEPS.length - 1 : Math.floor(p * (STEPS.length - 1));
+  const key = t < T.ign ? "0" : ign < 1 ? "i" + ign.toFixed(2) : imgOk ? "p" + step : "s";
+  if (key === lastGem) return; lastGem = key;
+  const k = gc.width / 100; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, gc.width, gc.height);
+  if (t < T.ign) return;
+  g.setTransform(k, 0, 0, k, 0, 0); g.save(); g.clip(GEM);
+  // ignition: overexposed to white, settling on sky
+  const w = 1 - outExpo(ign); g.fillStyle = `rgb(${mix(148, 255, w) | 0},${mix(230, 255, w) | 0},255)`; g.fillRect(0, 0, 100, 100);
+  if (imgOk && t >= T.pr0) {
+    const b = STEPS[step];
+    g.globalAlpha = mix(.35, 1, step / (STEPS.length - 1));
+    if (b === 0) { g.imageSmoothingEnabled = true; g.drawImage(src, ...IR); }
+    else {
+      const bp = b * k, n = Math.ceil(gc.width / bp); off.width = n; off.height = n; oc.imageSmoothingEnabled = true;
+      oc.drawImage(src, IR[0] * n / 100, IR[1] * n / 100, IR[2] * n / 100, IR[3] * n / 100);
+      g.imageSmoothingEnabled = false; g.drawImage(off, 0, 0, n, n, 0, 0, n * b, n * b);
+    }
+    g.globalAlpha = 1;
+  }
+  g.fillStyle = "rgba(255,255,255,.28)"; g.fill(FACET); g.restore();
+}
+
+// a few aliased pixels of light breaking from the crack
+const bits = [];
+function burst() {
+  const span = s * 1.02;
+  for (let i = 0; i < 30; i++) {
+    const inside = i < 24, along = inside ? (rnd() - .5) * span : (rnd() < .5 ? -1 : 1) * (s * .55 + rnd() * s * .9);
+    const side = rnd() < .5 ? -1 : 1, v = (inside ? 40 : 14) + rnd() * (inside ? 220 : 60);
+    bits.push({ x: M[0] - S16 * along, y: M[1] + C16 * along, vx: side * C16 * v + (rnd() - .5) * 20, vy: side * S16 * v + (rnd() - .5) * 20, life: .2 + rnd() * .5, age: 0, z: rnd() < .18 ? 2 : 1, c: rnd() < .88 ? "#94E6FF" : "#EEEAE0" });
+  }
+}
+function pixels(dt) {
+  px.clearRect(0, 0, pxc.width, pxc.height);
+  for (let i = bits.length - 1; i >= 0; i--) {
+    const b = bits[i]; b.age += dt; if (b.age > b.life) { bits.splice(i, 1); continue; }
+    const drag = Math.pow(.02, dt); b.vx *= drag; b.vy *= drag; b.x += b.vx * dt; b.y += b.vy * dt;
+    const q = b.age / b.life; px.globalAlpha = q < .55 ? 1 : q < .8 ? .55 : .25;   // stepped, never smooth
+    px.fillStyle = b.c; px.fillRect(Math.round(b.x / 3), Math.round(b.y / 3), b.z, b.z);
+  }
+  px.globalAlpha = 1;
+}
+
+function furniture(t) {   // the frame around the film, which stays as the page's frame
+  tag.style.opacity = steps(seg(t, T.tag0, T.tag0 + .16), 4).toFixed(2);
+  tate.style.opacity = steps(seg(t, T.tag0 + .12, T.tag0 + .28), 4).toFixed(2);
+  foot.style.opacity = steps(seg(t, T.frame0, T.frame0 + .2), 4).toFixed(2);
+  const tEnd = T.type0 + typeEnd;
+  made.forEach((m, i) => m.style.opacity = t > tEnd - .12 + i * .07 ? 1 : 0);
+}
+
+let struck = false;
+function frame(t, dt) {
+  // the outline: two hairlines leave the point where the seam will exit, and meet where it will enter
+  const L = draw(seg(t, T.line0, T.line1));
+  lns.forEach(p => p.style.strokeDashoffset = (1 - L).toFixed(4));
+  lnG.style.opacity = t < T.impact ? 1 : mix(1, .22, outExpo(seg(t, T.impact, T.impact + .7)));
+  // the stone fills, and holds, before the strike
+  stone.setAttribute("opacity", inQ(seg(t, T.fill0, T.fill1)).toFixed(3));
+  // the strike
+  const sk = seg(t, T.strike, T.impact);
+  if (t < T.strike) strikeEl.style.opacity = 0;
+  else {
+    const fade = t < T.impact + .05 ? 1 : 1 - outExpo(seg(t, T.impact + .05, T.impact + .45));
+    strikeEl.style.opacity = fade.toFixed(3);
+    const thin = t < T.impact + .03 ? 1 : .5;
+    strikeEl.style.transform = `rotate(16deg) scaleY(${inQ(sk).toFixed(4)}) scaleX(${thin})`;
+  }
+  if (t >= T.impact && !struck) {
+    struck = true; $(".mk .whole").style.display = "none"; sf.forEach(r => r.setAttribute("mask", "url(#cm)")); if (!still) burst();
+  }
+  flashEl.style.opacity = t < T.impact ? 0 : t < T.impact + .034 ? .06 : (.06 * Math.exp(-(t - T.impact - .034) * 30)).toFixed(4);
+  glow.style.opacity = t < T.impact ? 0 : t < T.impact + .05 ? 1 : 0;   // a hard cut, never a slow fade
+  // the halves are knocked apart, and settle
+  const e = t < T.impact ? 0 : t - T.impact, kn = e ? 2.6 * Math.exp(-e * 11) * Math.cos(e * 19) : 0, u = kn * 100 / s;
+  hl.setAttribute("transform", `translate(${(-C16 * u).toFixed(3)} ${(-S16 * u).toFixed(3)})`);
+  hr.setAttribute("transform", `translate(${(C16 * u).toFixed(3)} ${(S16 * u).toFixed(3)})`);
+  gem(t);
+  // the word: slices thrown out of register, cut into place, the last few locked by the strike
+  for (const q of slices) {
+    let x;
+    if (t < q.a) x = null;
+    else if (t < q.c1) x = q.x0;
+    else if (t < q.c2) x = q.x1;
+    else if (q.late && t < T.impact) x = q.x2;
+    else x = q.late ? 0 : q.x2 * (1 - outExpo(seg(t, q.c2, q.c2 + .3)));
+    q.el.style.visibility = x === null ? "hidden" : "visible";
+    if (x !== null) q.el.style.transform = `translateX(${(x * fs).toFixed(1)}px)`;
+  }
+  const wo = t < T.impact ? .15 * seg(t, .08, .3) : mix(.09, .26, Math.exp(-(t - T.impact) * 6));
+  const wk = fly(seg(t, T.fly0 - .04, T.fly1 + .04));
+  wordEl.style.opacity = (t > T.fly0 ? mix(wo, .055, soft(seg(t, T.fly0, T.fly1))) : wo).toFixed(3);
+  wordEl.style.transform = wk ? `translateY(${(wordDY * wk).toFixed(2)}px)` : "";
+  // the mark becomes the seal at the head of the page
+  if (t > T.fly0) {
+    const r = seal.getBoundingClientRect(), k = fly(seg(t, T.fly0, T.fly1));
+    mk.style.transform = `translate(${mix(bx, r.left, k).toFixed(2)}px, ${mix(by, r.top, k).toFixed(2)}px) scale(${mix(1, r.width / s, k).toFixed(4)})`;
+    if (k >= 1 && !root.classList.contains("done")) { root.classList.add("done"); mk.style.visibility = "hidden"; }
+  } else mk.style.transform = `translate(${bx}px, ${by}px)`;
+  furniture(t);
+  typeAt(t - T.type0);
+  pixels(dt);
+}
+
+function finish() {
+  root.classList.add("done");
+  mk.style.visibility = "hidden"; strikeEl.style.opacity = 0; flashEl.style.opacity = 0; px.clearRect(0, 0, pxc.width, pxc.height);
+  for (const q of slices) { q.el.style.visibility = "visible"; q.el.style.transform = ""; }
+  wordEl.style.opacity = .055; wordEl.style.transform = `translateY(${wordDY.toFixed(1)}px)`;
+}
+function settle() { root.classList.add("ty"); furniture(99); typeAt(99); finish(); }
+
+function run() {
+  layout();
+  const params = new URLSearchParams(location.search), freeze = parseFloat(params.get("t"));
+  if (still || (seen && isNaN(freeze) && !params.has("again"))) {
+    settle();
+    if (seen && !still) {   // a second visit: the page simply comes up
+      film.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, easing: "ease-out" });
+      $(".page").animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500, easing: "ease-out" });
+    }
+    return;
+  }
+  setupType();
+  const END = Math.max(2.4, T.type0 + typeEnd + .3);
+  if (!isNaN(freeze)) { let tt = 0; while (tt < freeze) { frame(tt, 1 / 60); tt += 1 / 60; } frame(freeze, 0); if (freeze >= END) settle(); return; }
+  let t0 = null, last = 0;
+  const tick = now => {
+    if (t0 === null) { t0 = now; last = now; }
+    const t = (now - t0) / 1000, dt = Math.min(.05, (now - last) / 1000); last = now;
+    frame(t, dt);
+    if (t < END) requestAnimationFrame(tick); else settle();
+  };
+  requestAnimationFrame(tick);
+}
+
+addEventListener("resize", () => { layout(); if (root.classList.contains("done")) finish(); });
+// the black loader: wait for the face (and give the print a head start), never longer than 900ms
+Promise.race([Promise.all([document.fonts.load('200 100px "Timeless Serif"'), document.fonts.ready]), new Promise(r => setTimeout(r, 900))]).then(run);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Antimony, Library</title>
+<meta name="description" content="Antimony builds software for the people who make the work. London.">
+<meta name="theme-color" content="#0B0C0C">
+<style>
+@font-face { font-family: "Timeless"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Timeless"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: swap; }
+:root {
+  --ink: #0B0C0C; --stone: #141311; --paper: #EEEAE0; --sky: #94E6FF; --prussian: #1F3F7A;
+  --m: 148px; --col: 440px; --edge: 26px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--ink); color: var(--paper); }
+body {
+  font: 400 17px/1.56 "Timeless", "Iowan Old Style", Georgia, serif;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  overflow-x: hidden; position: relative; min-height: 100svh;
+}
+::selection { background: var(--sky); color: var(--ink); }
+a { color: inherit; }
+
+#wall { position: absolute; left: 0; top: 0; display: block; pointer-events: none; z-index: 0; }
+.grain { position: fixed; inset: 0; pointer-events: none; z-index: 5; opacity: .055; background-size: 160px 160px; }
+
+/* the cinematic frame */
+.frame { position: absolute; inset: 0 0 auto 0; height: 100svh; pointer-events: none; z-index: 3; }
+.tiny {
+  position: absolute; font-size: 11px; line-height: 1; letter-spacing: .16em; color: rgba(238,234,224,.5);
+  font-variant-numeric: tabular-nums lining-nums; white-space: nowrap;
+}
+.credit { right: var(--edge); bottom: var(--edge); letter-spacing: .06em; font-style: italic; color: rgba(238,234,224,.42); pointer-events: auto; }
+.jp {
+  position: absolute; right: calc(var(--edge) - 1px); top: calc(var(--edge) + 20px);
+  writing-mode: vertical-rl; font: 400 11px/1 "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  letter-spacing: .5em; color: rgba(238,234,224,.5);
+}
+.fade { opacity: 0; transition: opacity .7s ease; }
+.on .fade, .fade.on { opacity: 1; }
+
+main {
+  position: relative; z-index: 2; min-height: 100svh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 108px 24px 104px;
+}
+.plate { display: flex; flex-direction: column; align-items: center; }
+.markbox { position: relative; width: var(--m); height: var(--m); }
+#mark { width: 100%; height: 100%; display: block; visibility: hidden; }
+.construct { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; opacity: 0; transition: opacity .25s ease; pointer-events: none; }
+.markbox:hover .construct, .markbox.show .construct { opacity: 1; }
+.construct * { vector-effect: non-scaling-stroke; }
+.wordmark { position: relative; width: 132px; height: 34px; margin-top: 30px; }
+.wordmark svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--paper); --lit: var(--sky); opacity: 0; }
+.wordmark.on svg { animation: slice .62s cubic-bezier(.2,.7,.1,1) both; }
+@keyframes slice { 0% { opacity: 0; transform: translateX(var(--dx)); } 30% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+
+.copy { width: min(var(--col), 100%); margin-top: 58px; }
+.copy p { margin: 0; color: rgba(238,234,224,.88); }
+.copy p + p { margin-top: 1em; }
+.copy em { font-style: italic; color: var(--paper); }
+.copy a { text-decoration: none; background: linear-gradient(rgba(148,230,255,.55), rgba(148,230,255,.55)) 0 100% / 0 1px no-repeat; transition: background-size .5s cubic-bezier(.2,.7,.1,1), color .15s; padding-bottom: 1px; }
+.copy.typed a { background-size: 100% 1px; }
+.copy a:hover { color: var(--sky); }
+.ghost { color: transparent; }
+.hl { background: var(--sky); color: var(--ink); }
+.cur { display: inline-block; width: .5em; height: 1.05em; vertical-align: -.17em; background: var(--sky); margin-left: 1px; }
+
+.mentions { width: min(var(--col), 100%); margin-top: 34px; display: flex; flex-wrap: wrap; gap: 10px 26px; list-style: none; padding: 0; }
+.mentions li { opacity: 0; transform: translateY(4px); transition: opacity .5s ease, transform .5s cubic-bezier(.2,.7,.1,1); }
+.mentions.on li { opacity: 1; transform: none; }
+.mentions a { display: flex; align-items: center; gap: 9px; text-decoration: none; font-size: 13px; letter-spacing: .06em; color: rgba(238,234,224,.56); transition: color .2s; }
+.mentions img { width: 24px; height: 24px; display: block; border-radius: 22%; filter: grayscale(1) brightness(.78) contrast(1.05); opacity: .9; transition: filter .25s ease, opacity .25s ease; }
+.mentions a:hover, .mentions a:focus-visible { color: var(--paper); }
+.mentions a:hover img, .mentions a:focus-visible img { filter: none; opacity: 1; }
+a:focus-visible { outline: 1px solid var(--sky); outline-offset: 4px; }
+
+.skip main, .skip .frame { transition: none; }
+
+@media (max-width: 640px) {
+  :root { --m: 112px; --edge: 16px; }
+  body { font-size: 16px; line-height: 1.55; }
+  main { padding: 72px 22px 120px; }
+  .wordmark { width: 112px; height: 29px; margin-top: 24px; }
+  .copy { margin-top: 44px; }
+  .mentions { gap: 10px 22px; margin-top: 30px; }
+  .credit { left: 22px; right: auto; bottom: 22px; max-width: calc(100% - 44px); white-space: normal; line-height: 1.4; }
+    .frame { height: auto; bottom: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fade, .mentions li, .construct { transition: none; }
+  .wordmark.on svg { animation: none; opacity: 1; }
+}
+</style>
+</head>
+<body>
+<canvas id="wall" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="frame" aria-hidden="true">
+  <div class="jp fade">アンチモン</div>
+</div>
+<div class="tiny credit fade" id="credit" style="position:absolute;z-index:3">In the crystal: Hiroshige, Autumn Moon over Ishiyama Temple, 1857. Art Institute of Chicago.</div>
+
+<main>
+  <div class="plate">
+    <div class="markbox" id="markbox">
+      <canvas id="mark" role="img" aria-label="Antimony: a stone tile split at sixteen degrees, a sky crystal grown in the break"></canvas>
+      <svg class="construct" viewBox="0 0 100 100" aria-hidden="true">
+        <line x1="50" y1="-14" x2="50" y2="118" stroke="#EEEAE0" stroke-opacity=".45" stroke-width="1"/>
+        <line x1="65.45" y1="-2.4" x2="34.55" y2="105.4" stroke="#94E6FF" stroke-opacity=".9" stroke-width="1" id="axis"/>
+        <path d="M50 1.5 A50 50 0 0 1 63.78 3.44" fill="none" stroke="#94E6FF" stroke-width="1"/>
+        <text x="70" y="0" fill="#94E6FF" font-family="Timeless, serif" font-size="7" letter-spacing=".6">16°</text>
+      </svg>
+    </div>
+    <div class="wordmark" id="wordmark" role="img" aria-label="antimony"><svg viewBox="-20 -830 4186 1070" aria-hidden="true"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg></div>
+  </div>
+
+  <div class="copy" id="copy">
+    <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator’s side of every sponsorship deal.</p>
+    <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
+  </div>
+
+  <ul class="mentions" id="mentions">
+    <li><a href="https://eoinforker.github.io/orbe-site/"><img src="assets/work/orbe.svg" alt="">Orbe</a></li>
+    <li><a href="https://immiscible.ai"><img src="assets/work/immiscible.svg" alt="">immiscible</a></li>
+    <li><a href="https://idyll.day"><img src="assets/work/idyll.svg" alt="">Idyll</a></li>
+  </ul>
+</main>
+
+<script>
+(() => {
+"use strict";
+const SKY = "#94E6FF", INK = "#0B0C0C";
+const TAN = Math.tan(16 * Math.PI / 180);
+const GEO = {
+  big: {
+    cav: "M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z",
+    seam: "M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z"
+  },
+  small: {
+    cav: "M61.24 12.3L79.95 41.9L74.45 61.1L38.76 90.7L20.05 61.1L25.55 41.9Z",
+    seam: "M66.46 -12L69.96 -12L63.6 21.5L46.4 81.5L34.4 112L30.9 112L36.4 81.5L53.6 21.5Z"
+  }
+};
+const GEM = new Path2D("M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z");
+const FACET = new Path2D("M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z");
+const TILE = new Path2D(); TILE.roundRect(0, 0, 100, 100, 22);
+const P2 = { big: { cav: new Path2D(GEO.big.cav), seam: new Path2D(GEO.big.seam) }, small: { cav: new Path2D(GEO.small.cav), seam: new Path2D(GEO.small.seam) } };
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let seen = false; try { seen = sessionStorage.getItem("sb-library") === "1"; sessionStorage.setItem("sb-library", "1"); } catch (e) {}
+const SLOW = +(new URLSearchParams(location.search).get("slow") || 1);
+const skip = reduce || (seen && SLOW === 1) || /[?&]still\b/.test(location.search);
+const later = (f, ms) => setTimeout(f, ms * SLOW);
+
+const wall = document.getElementById("wall"), wctx = wall.getContext("2d");
+const markC = document.getElementById("mark"), markbox = document.getElementById("markbox");
+const DPR = Math.min(2, window.devicePixelRatio || 1);
+
+/* seeded random, so every visit builds the same wall */
+function rng(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+/* grain, baked once */
+(() => {
+  const c = document.createElement("canvas"); c.width = c.height = 160; const x = c.getContext("2d");
+  const d = x.createImageData(160, 160), r = rng(7);
+  for (let i = 0; i < d.data.length; i += 4) { const v = r(); d.data[i] = d.data[i + 1] = d.data[i + 2] = 255; d.data[i + 3] = v > .5 ? (v - .5) * 255 : 0; }
+  x.putImageData(d, 0, 0);
+  document.querySelector(".grain").style.backgroundImage = `url(${c.toDataURL()})`;
+})();
+
+/* one stone tile, drawn with texture into a sprite */
+function makeTile(px, seed, set) {
+  const c = document.createElement("canvas"); c.width = c.height = px;
+  const x = c.getContext("2d"), r = rng(seed), k = px / 100;
+  x.scale(k, k);
+  x.save(); x.clip(TILE);
+  // flat stone, the palette's own, varied only a breath from block to block
+  const l = r() * 3 - 1.5;
+  x.fillStyle = `rgb(${20 + l},${19 + l},${18 + l})`; x.fillRect(0, 0, 100, 100);
+  // strata on the seam's angle, barely there
+  x.lineWidth = Math.max(.35, 0.6 / k);
+  const n = 4 + Math.floor(r() * 5);
+  for (let i = 0; i < n; i++) {
+    const off = -30 + r() * 160, a = .008 + r() * .018;
+    x.strokeStyle = r() > .5 ? `rgba(255,255,255,${a})` : `rgba(0,0,0,${a * 3})`;
+    x.beginPath(); x.moveTo(off + 112 * TAN, -6); x.lineTo(off - 6 * TAN, 112); x.stroke();
+  }
+  x.restore();
+  // grain inside the stone
+  const nc = document.createElement("canvas"); nc.width = nc.height = px; const nx = nc.getContext("2d");
+  const d = nx.createImageData(px, px);
+  for (let i = 0; i < d.data.length; i += 4) {
+    const v = r(), w = v > .5;
+    d.data[i] = d.data[i + 1] = d.data[i + 2] = w ? 255 : 0;
+    d.data[i + 3] = w ? (v - .5) * 20 : (.5 - v) * 40;
+  }
+  nx.putImageData(d, 0, 0);
+  x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = "source-atop"; x.drawImage(nc, 0, 0); x.restore();
+  // the break: seam and cavity cut through to the ground
+  x.globalCompositeOperation = "destination-out";
+  x.fill(P2[set].seam); x.fill(P2[set].cav);
+  x.globalCompositeOperation = "source-over";
+  // the unlit crystal: dark glass, all but invisible
+  x.fillStyle = "#131617"; x.fill(GEM);
+  x.fillStyle = "rgba(255,255,255,.018)"; x.fill(FACET);
+  return c;
+}
+
+function drawGem(x, ox, oy, sz, a, print) {
+  if (a <= 0.003) return;
+  x.save(); x.translate(ox, oy); x.scale(sz / 100, sz / 100);
+  x.globalAlpha = Math.min(1, a);
+  x.fillStyle = SKY; x.fill(GEM);
+  if (print && print.a > 0 && printImg.complete && printImg.naturalWidth) {
+    x.save(); x.clip(GEM); x.globalAlpha = Math.min(1, a) * print.a;
+    x.drawImage(printImg, 29.42, 21.5, 41.16, 60); x.restore();
+  }
+  x.globalAlpha = Math.min(1, a) * .28; x.fillStyle = "#fff"; x.fill(FACET);
+  x.restore();
+}
+
+const printImg = new Image(); printImg.src = "assets/crystal-print.webp";
+
+/* ---------- layout ---------- */
+let box, W, H, DH, P, T, set, cols, rows, ox, oy, smallS = [], bigS = [], tiles = [], target, markR, cleared = [];
+const VAR = 12;
+
+function layout() {
+  W = document.documentElement.clientWidth; H = window.innerHeight;
+  DH = Math.max(H, document.documentElement.scrollHeight);
+  const phone = W < 640;
+  P = phone ? 28 : 36; T = P - 1; set = T <= 30 ? "small" : "big";
+  cols = Math.ceil(W / P) + 1; rows = Math.ceil(DH / P) + 1;
+  const mr = markbox.getBoundingClientRect();
+  markR = { x: mr.left, y: mr.top + scrollY, s: mr.width };
+  // align the grid so one tile sits squarely on the mark's centre
+  const mcx = markR.x + markR.s / 2, mcy = markR.y + markR.s / 2;
+  ox = ((mcx - P / 2) % P + P) % P - P; oy = ((mcy - P / 2) % P + P) % P - P;
+  const sp = Math.round(T * DPR), bp = Math.round(markR.s * DPR);
+  if (!smallS.length || smallS[0].width !== sp) smallS = Array.from({ length: VAR }, (_, i) => makeTile(sp, 101 + i, set));
+  if (!bigS.length || bigS[0].width !== bp) bigS = Array.from({ length: VAR }, (_, i) => makeTile(bp, 101 + i, "big"));
+  const r = rng(51); tiles = [];
+  let best = 1e9;
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    const t = { i, j, x: ox + i * P + (P - T) / 2, y: oy + j * P + (P - T) / 2, v: Math.floor(r() * VAR), l: 0, glow: 0 };
+    t.cx = t.x + T / 2; t.cy = t.y + T / 2;
+    const d = Math.hypot(t.cx - mcx, t.cy - mcy); if (d < best) { best = d; target = t; }
+    tiles.push(t);
+  }
+  target.v = 0;
+  // the clearing: tiles under the words are taken out of the wall
+  cleared = [];
+  const pad = P * .55;
+  const rects = [document.querySelector(".plate"), document.getElementById("copy"), document.getElementById("mentions")].map(e => { const b = e.getBoundingClientRect(); return { l: b.left - pad, t: b.top + scrollY - pad, r: b.right + pad, b: b.bottom + scrollY + pad }; });
+  box = { l: Math.min(...rects.map(q => q.l)), t: Math.min(...rects.map(q => q.t)), r: Math.max(...rects.map(q => q.r)), b: Math.max(...rects.map(q => q.b)) };
+  const cr = document.getElementById("credit").getBoundingClientRect();
+  const extra = [{ l: cr.left - 8, t: cr.top + scrollY - 8, r: cr.right + 8, b: cr.bottom + scrollY + 8 }];
+  for (const t of tiles) {
+    const hit = q => t.x + T > q.l && t.x < q.r && t.y + T > q.t && t.y < q.b;
+    t.out = false;
+  }
+  for (const t of tiles) t.ra = restAlpha(t);
+  wall.width = Math.round(W * DPR); wall.height = Math.round(DH * DPR);
+  wall.style.width = W + "px"; wall.style.height = DH + "px";
+  markC.width = markC.height = bp;
+}
+
+function renderMark() {
+  const x = markC.getContext("2d"); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, markC.width, markC.height);
+  x.drawImage(bigS[0], 0, 0);
+  drawGem(x, 0, 0, markC.width, 1, { a: 1 });
+}
+
+/* resting wall, faint, with depth falling away from the clearing */
+let rest = null;
+function restAlpha(t) {
+  const dx = Math.max(box.l - t.cx, 0, t.cx - box.r), dy = Math.max(box.t - t.cy, 0, t.cy - box.b);
+  const d = Math.hypot(dx, dy);
+  return .07 + .5 * sstep(0, 260, d);
+}
+function bakeRest() {
+  rest = document.createElement("canvas"); rest.width = wall.width; rest.height = wall.height;
+  const x = rest.getContext("2d"); x.setTransform(DPR, 0, 0, DPR, 0, 0);
+  for (const t of tiles) { if (t.out) continue; x.globalAlpha = t.ra; x.drawImage(smallS[t.v], t.x, t.y, T, T); }
+}
+function blitTile(t) {
+  const p = 1; const sx = Math.max(0, Math.floor((t.x - p) * DPR)), sy = Math.max(0, Math.floor((t.y - p) * DPR)), s = Math.ceil((T + 2 * p) * DPR);
+  wctx.setTransform(1, 0, 0, 1, 0, 0); wctx.clearRect(sx, sy, s, s); wctx.drawImage(rest, sx, sy, s, s, sx, sy, s, s);
+}
+
+/* ---------- opening ---------- */
+const ease = u => u < .5 ? 16 * u ** 5 : 1 - (-2 * u + 2) ** 5 / 2;
+const easeOut = u => 1 - (1 - u) ** 3;
+const sstep = (a, b, v) => { const u = Math.min(1, Math.max(0, (v - a) / (b - a))); return u * u * (3 - 2 * u); };
+let path = [];
+const TL = { reveal: [80, 520], sig: [360, 1240], zoom: [1240, 2060], restIn: [1980, 2760] };
+
+function buildPath() {
+  // one line at 16 degrees through the chosen tile, edge to edge; the light runs in from both ends and meets there
+  path = [];
+  const last = Math.min(rows - 1, Math.floor((H - oy) / P));
+  for (let j = 0; j <= last; j++) {
+    const cy = oy + j * P + P / 2; if (cy < -P / 2) continue;
+    const cx = target.cx + (target.cy - cy) * TAN;
+    const i = Math.round((cx - ox - P / 2) / P); if (i < 0 || i >= cols) continue;
+    path.push(tiles[j * cols + i]);
+  }
+  const far = Math.max(...path.map(t => Math.abs(t.j - target.j))) || 1, [a, b] = TL.sig;
+  path.forEach(t => t.l = a + (b - a) * (1 - Math.abs(t.j - target.j) / far) ** 1.08);
+}
+
+let shade = null;
+function glowOf(t, now) {
+  if (!t.l) return 0; const dt = now - t.l; if (dt <= 0) return 0;
+  if (t === target) return Math.min(1, dt / 50);
+  return dt < 36 ? dt / 36 : .2 + .8 * Math.exp(-(dt - 36) / 300);
+}
+
+function drawOpening(now) {
+  const x = wctx; x.setTransform(DPR, 0, 0, DPR, 0, 0); x.clearRect(0, 0, W, H + 2);
+  const [z0, z1] = TL.zoom; const zu = ease(Math.min(1, Math.max(0, (now - z0) / (z1 - z0))));
+  const s = Math.exp(Math.log(markR.s / T) * zu);
+  const px = target.x + (markR.x - target.x) * zu, py = target.y + (markR.y - scrollY - target.y) * zu;
+  const fadeN = 1 - sstep(.5, .96, zu);
+  const [r0, r1] = TL.reveal; const ru = easeOut(Math.min(1, Math.max(0, (now - r0) / (r1 - r0))));
+  const half = H / 2 * ru, top = H / 2 - half, bot = H / 2 + half;
+  const sz = T * s, useBig = sz > T * 1.6;
+  if (ru > 0) {
+    x.save(); x.beginPath(); x.rect(0, top, W, bot - top); x.clip();
+    const lights = [];
+    for (const t of tiles) {
+      const isT = t === target;
+      const X = px + (t.x - target.x) * s, Y = py + (t.y - target.y) * s;
+      if (X > W + sz * 3 || Y > H + sz * 3 || X + sz * 4 < 0 || Y + sz * 4 < 0) continue;
+      const g = glowOf(t, now);
+      if (g > .003) lights.push({ X, Y, g, isT });
+      if (X > W || Y > H || X + sz < 0 || Y + sz < 0) continue;
+      const a = isT ? 1 : fadeN; if (a <= .004) continue;
+      x.globalAlpha = a;
+      x.drawImage((useBig ? bigS : smallS)[t.v], X, Y, sz, sz);
+    }
+    x.globalAlpha = 1;
+    // the hall is dark: light only where the signal has been, and a little ambient on the chosen tile
+    const dark = .84 * fadeN;
+    if (dark > .01) {
+      const sx = shade.getContext("2d");
+      sx.setTransform(DPR, 0, 0, DPR, 0, 0); sx.globalCompositeOperation = "source-over";
+      sx.clearRect(0, 0, W, H); sx.fillStyle = `rgba(11,12,12,${dark})`; sx.fillRect(0, 0, W, H);
+      sx.globalCompositeOperation = "destination-out";
+      const cut = (cx, cy, r, a) => { const gr = sx.createRadialGradient(cx, cy, 0, cx, cy, r); gr.addColorStop(0, `rgba(0,0,0,${a})`); gr.addColorStop(.45, `rgba(0,0,0,${a * .45})`); gr.addColorStop(1, "rgba(0,0,0,0)"); sx.fillStyle = gr; sx.fillRect(cx - r, cy - r, 2 * r, 2 * r); };
+      const amb = .66 * sstep(r0, r1 + 200, now);
+      cut(px + sz / 2, py + sz / 2, Math.max(W, H) * .7 * Math.sqrt(s), amb);
+      for (const L of lights) cut(L.X + sz / 2, L.Y + sz / 2, sz * (L.isT ? 5 : 3.6), Math.min(.9, .78 * L.g));
+      x.drawImage(shade, 0, 0, W, H);
+    }
+    // sky light spills onto the stone around each lit crystal
+    x.globalCompositeOperation = "lighter";
+    for (const L of lights) {
+      const a = .13 * L.g * (L.isT ? 1 - zu : fadeN), r = sz * 1.5, cx = L.X + sz / 2, cy = L.Y + sz * .515;
+      if (a < .004) continue;
+      const gr = x.createRadialGradient(cx, cy, 0, cx, cy, r); gr.addColorStop(0, `rgba(148,230,255,${a})`); gr.addColorStop(1, "rgba(148,230,255,0)");
+      x.fillStyle = gr; x.fillRect(cx - r, cy - r, 2 * r, 2 * r);
+    }
+    x.globalCompositeOperation = "source-over";
+    for (const L of lights) drawGem(x, L.X, L.Y, sz, L.g * (L.isT ? 1 : fadeN), L.isT ? { a: sstep(z0 + 300, z1 + 60, now) } : null);
+    x.restore();
+    if (ru < 1) { x.globalAlpha = .5 * (1 - ru); x.fillStyle = "#EEEAE0"; x.fillRect(0, top - .5, W, 1); x.fillRect(0, bot - .5, W, 1); }
+    x.globalAlpha = 1;
+  } else { x.globalAlpha = .6; x.fillStyle = "#EEEAE0"; const w = Math.min(1, now / 80) * 40; x.fillRect(W / 2 - w, H / 2 - .5, w * 2, 1); x.globalAlpha = 1; }
+}
+
+function drawRestIn(now) {
+  const [a, b] = TL.restIn; const x = wctx;
+  x.setTransform(DPR, 0, 0, DPR, 0, 0); x.clearRect(0, 0, W, DH);
+  const mcx = markR.x + markR.s / 2, mcy = markR.y + markR.s / 2;
+  const span = b - a - 260;
+  const maxD = Math.hypot(W, H);
+  for (const t of tiles) {
+    if (t.out) continue;
+    const d = Math.hypot(t.cx - mcx, t.cy - mcy) / maxD;
+    const u = Math.min(1, Math.max(0, (now - a - d * span) / 260));
+    if (u <= 0) continue;
+    x.globalAlpha = t.ra * u;
+    x.drawImage(smallS[t.v], t.x, t.y, T, T);
+  }
+  x.globalAlpha = 1;
+}
+
+
+/* ---------- typing ---------- */
+function prepType(root) {
+  const paras = [];
+  root.querySelectorAll("p").forEach(p => {
+    const nodes = []; const walker = document.createTreeWalker(p, NodeFilter.SHOW_TEXT); let n;
+    const list = []; while ((n = walker.nextNode())) list.push(n);
+    let off = 0;
+    for (const tn of list) {
+      const text = tn.data, typed = document.createTextNode(""), hl = document.createElement("span"), ghost = document.createElement("span");
+      hl.className = "hl"; ghost.className = "ghost"; ghost.textContent = text;
+      tn.replaceWith(typed, hl, ghost);
+      nodes.push({ text, typed, hl, ghost, s: off, e: off + text.length }); off += text.length;
+    }
+    paras.push({ p, nodes, len: off });
+  });
+  return paras;
+}
+function paint(para, pos, hlLen) {
+  const hs = pos - hlLen;
+  for (const nd of para.nodes) {
+    const len = nd.text.length, te = Math.max(0, Math.min(len, pos - nd.s)), hsl = Math.max(0, Math.min(te, hs - nd.s));
+    nd.typed.data = nd.text.slice(0, hsl); nd.hl.textContent = nd.text.slice(hsl, te); nd.ghost.textContent = nd.text.slice(te);
+  }
+}
+function typeOn(root, done) {
+  const paras = prepType(root), r = rng(16);
+  paras.forEach(pa => paint(pa, 0, 0));
+  let pi = 0, pos = 0, tail = 0;
+  const HL = 7;
+  const tick = () => {
+    const pa = paras[pi];
+    if (pos < pa.len) {
+      pos = Math.min(pa.len, pos + (r() < .68 ? 3 : 2));
+      paint(pa, pos, Math.min(HL, pos));
+      later(tick, 18 + r() * (r() < .85 ? 16 : 26));
+    } else if (tail < 3) {
+      tail++; paint(pa, pos, Math.max(0, Math.round(HL * (1 - tail / 3))));
+      later(tick, 34);
+    } else {
+      pi++; pos = 0; tail = 0;
+      if (pi < paras.length) later(tick, 90);
+      else {
+        const last = paras[paras.length - 1].p, c = document.createElement("span"); c.className = "cur"; last.appendChild(c);
+        let k = 0; const blink = () => { k++; c.style.visibility = k % 2 ? "hidden" : "visible"; if (k < 6) later(blink, 260); else c.remove(); };
+        later(blink, 260);
+        root.classList.add("typed");
+        done && done();
+      }
+    }
+  };
+  tick();
+}
+
+/* ---------- the wordmark, assembled from slices ---------- */
+function sliceWordmark() {
+  const wm = document.getElementById("wordmark"), svg = wm.querySelector("svg");
+  const N = 7, r = rng(3);
+  for (let k = 0; k < N; k++) {
+    const c = k ? svg.cloneNode(true) : svg;
+    const t = (k / N * 100).toFixed(2), b = (100 - (k + 1) / N * 100).toFixed(2);
+    c.style.clipPath = `inset(${t}% -2% ${b}% -2%)`;
+    c.style.setProperty("--dx", ((r() - .5) * 26).toFixed(1) + "px");
+    c.style.animationDelay = (r() * 140).toFixed(0) + "ms";
+    if (k) wm.appendChild(c);
+  }
+  requestAnimationFrame(() => wm.classList.add("on"));
+}
+
+/* ---------- pointer: the nearest crystal lights ---------- */
+const lit = new Map(); let hover = null, raf = 0, interactive = false;
+function nearest(px, py) {
+  const i = Math.round((px - ox - P / 2) / P), j = Math.round((py - oy - P / 2) / P);
+  if (i < 0 || j < 0 || i >= cols || j >= rows) return null;
+  const t = tiles[j * cols + i]; return t && t.ra > .12 ? t : null;
+}
+function frame() {
+  raf = 0; const now = performance.now(); let busy = false;
+  wctx.setTransform(1, 0, 0, 1, 0, 0);
+  for (const [t, st] of lit) {
+    let a;
+    if (t === hover) a = 1; else { a = Math.max(0, 1 - (now - st) / 260); }
+    blitTile(t);
+    wctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (a > 0) { drawGem(wctx, t.x, t.y, T, a * .92); busy = true; } else lit.delete(t);
+    wctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+  if (busy) raf = requestAnimationFrame(frame);
+}
+function onMove(e) {
+  if (!interactive) return;
+  const t = nearest(e.clientX, e.clientY + scrollY);
+  if (t === hover) return;
+  if (hover) lit.set(hover, performance.now());
+  hover = t;
+  if (t) { lit.set(t, 0); }
+  frame();
+}
+addEventListener("pointermove", onMove, { passive: true });
+addEventListener("pointerdown", onMove, { passive: true });
+document.documentElement.addEventListener("pointerleave", () => { if (!interactive) return; if (hover) lit.set(hover, performance.now()); hover = null; frame(); });
+markbox.addEventListener("click", () => markbox.classList.toggle("show"));
+
+
+/* ---------- run ---------- */
+function settle() {
+  renderMark(); markC.style.visibility = "visible";
+  bakeRest(); wctx.setTransform(1, 0, 0, 1, 0, 0); wctx.clearRect(0, 0, wall.width, wall.height); wctx.drawImage(rest, 0, 0);
+  interactive = true;
+}
+
+function start() {
+  layout();
+  const fades = document.querySelectorAll(".fade");
+  if (skip) {
+    document.body.classList.add("skip");
+    fades.forEach(f => f.classList.add("on"));
+    document.getElementById("wordmark").querySelector("svg").style.opacity = 1;
+    document.getElementById("mentions").classList.add("on");
+    document.getElementById("copy").classList.add("typed");
+    settle();
+    if (!reduce) { wall.style.opacity = 0; wall.style.transition = "opacity .5s ease"; requestAnimationFrame(() => requestAnimationFrame(() => wall.style.opacity = 1)); }
+    return;
+  }
+  scrollTo(0, 0);
+  buildPath();
+  shade = document.createElement("canvas"); shade.width = Math.round(W * DPR); shade.height = Math.round(H * DPR);
+  const copy = document.getElementById("copy");
+  const paras = copy.querySelectorAll("p"); paras.forEach(p => p.style.visibility = "hidden");
+  const t0 = performance.now(); let typed = false, wm = false, swapped = false;
+  later(() => document.querySelectorAll(".frame .fade").forEach(f => f.classList.add("on")), 420);
+  const loop = () => {
+    const now = (performance.now() - t0) / SLOW;
+    if (now < TL.zoom[1]) drawOpening(now);
+    else {
+      if (!swapped) { swapped = true; renderMark(); markC.style.visibility = "visible"; }
+      drawRestIn(now);
+    }
+    if (!wm && now > TL.zoom[1] - 60) { wm = true; sliceWordmark(); }
+    if (!typed && now > TL.zoom[1] - 220) {
+      typed = true; paras.forEach(p => p.style.visibility = "");
+      typeOn(copy, () => {
+        document.getElementById("mentions").classList.add("on");
+        document.querySelectorAll(".mentions li").forEach((li, k) => li.style.transitionDelay = k * 90 + "ms");
+        document.getElementById("credit").classList.add("on");
+      });
+    }
+    if (now < TL.restIn[1] + 40) requestAnimationFrame(loop); else settle();
+  };
+  requestAnimationFrame(loop);
+}
+
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (!interactive) return; layout(); settle(); }, 120); });
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => requestAnimationFrame(start));
+})();
+</script>
+</body>
+</html>

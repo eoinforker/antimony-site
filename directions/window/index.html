@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Antimony, Window</title>
+<meta name="description" content="Antimony builds software for the people who make the work.">
+<link rel="preload" href="assets/satta.webp" as="image">
+<link rel="preload" href="assets/fonts/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Timeless Serif";src:url(assets/fonts/TimelessSerifVF.woff2) format("woff2");font-weight:200 700;font-display:swap}
+@font-face{font-family:"Timeless Serif";src:url(assets/fonts/TimelessSerifItalicVF.woff2) format("woff2");font-weight:200 700;font-style:italic;font-display:swap}
+:root{
+  --ink:#0B0C0C;--stone:#141311;--paper:#EEEAE0;--sky:#94E6FF;--prussian:#1F3F7A;
+  --muted:rgba(11,12,12,.48);--faint:rgba(11,12,12,.34);
+  /* paper, baked once by the browser: a fine tooth, long washi fibres and a slow mottle */
+  --tooth:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .14 0 0 0 0 .11 1.25 0 0 0 -.5'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E");
+  --fibre:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.011 .14' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 .98 2.6 0 0 0 -1.5'/%3E%3C/filter%3E%3Crect width='640' height='640' filter='url(%23f)' opacity='.28'/%3E%3C/svg%3E");
+  --mottle:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0032' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .37 0 0 0 0 .27 .9 0 0 0 -.38'/%3E%3C/filter%3E%3Crect width='900' height='900' filter='url(%23m)' opacity='.16'/%3E%3C/svg%3E");
+}
+*{box-sizing:border-box}
+html{background:var(--paper);-webkit-text-size-adjust:100%}
+body{margin:0;color:var(--ink);font-family:"Timeless Serif",Georgia,serif;font-size:17px;line-height:1.55;font-weight:400;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  background-color:var(--paper);background-image:var(--fibre),var(--tooth),var(--mottle)}
+html.opening,html.opening body{overflow:hidden}
+
+main{position:relative;min-height:100vh;min-height:100svh;display:flex;flex-direction:column;
+  padding:clamp(72px,21vh,200px) 24px 28px clamp(24px,9.5vw,148px)}
+.col{max-width:440px}
+.mark{display:block;width:112px;height:auto;aspect-ratio:1;margin:0 0 clamp(44px,7.5vh,72px);overflow:visible}
+p{margin:0 0 1.05em;text-wrap:pretty}
+em{font-style:italic}
+a{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em;text-decoration-color:rgba(11,12,12,.3);transition:text-decoration-color .2s,color .2s}
+a:hover{color:var(--prussian);text-decoration-color:currentColor}
+.made{display:flex;align-items:center;gap:12px;margin:2.1em 0 0;padding:0;list-style:none}
+.made a{display:block;width:26px;height:26px;border-radius:6px;overflow:hidden;filter:grayscale(1) contrast(.9);opacity:.72;transition:filter .3s,opacity .3s}
+.made a:hover,.made a:focus-visible{filter:none;opacity:1}
+.made img{display:block;width:100%;height:100%}
+.made .place{margin-left:10px;font-size:15px;color:var(--muted)}
+a:focus-visible,.credit:focus-visible{outline:1px solid var(--prussian);outline-offset:3px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* the frame: a tagline above, the name in Japanese at the edge */
+.chrome{color:var(--faint);transition:color .5s}
+.tag{position:absolute;top:26px;left:0;right:0;margin:0;text-align:center;font-size:10px;line-height:1;letter-spacing:.42em;text-indent:.42em;text-transform:uppercase}
+.el{position:absolute;right:22px;bottom:28px;margin:0;font-size:10px;line-height:1}
+.el .jp{writing-mode:vertical-rl;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;letter-spacing:.38em;font-size:10px}
+
+/* the credit opens a small window onto the whole print, and shows where the crystal is looking */
+.credit{position:relative;align-self:flex-start;margin-top:auto;padding-top:56px;font-size:11px;line-height:1.4;letter-spacing:.01em;color:var(--muted);max-width:340px;transition:color .5s;cursor:default}
+.credit i{font-style:italic}
+.win{position:absolute;left:0;bottom:calc(100% - 46px);width:176px;padding:4px;background:var(--paper);border:1px solid rgba(11,12,12,.16);
+  clip-path:inset(100% 0 0 0);transition:clip-path .34s cubic-bezier(.7,0,.2,1);pointer-events:none}
+.win svg{display:block;width:100%;height:auto}
+.credit:hover .win,.credit:focus .win,.credit.open .win{clip-path:inset(0 0 0 0)}
+
+/* typing: words set by a precise machine, a sky selection running just ahead */
+.hl{background:var(--sky);color:var(--ink);-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.rest{visibility:hidden}
+.cur{display:inline-block;width:.42em;height:1.02em;margin-left:2px;vertical-align:-.14em;background:var(--sky);visibility:hidden}
+.cur.on{visibility:visible}
+
+/* opening */
+#stage{position:fixed;inset:0;width:100%;height:100%;z-index:5;pointer-events:none;display:none}
+html.opening #stage{display:block}
+html.veiled .reveal{opacity:0;transform:translateY(8px)}
+.reveal{transition:opacity .62s cubic-bezier(.2,.6,.2,1),transform .62s cubic-bezier(.2,.6,.2,1)}
+html.opening .mark{visibility:hidden}
+html.opening .credit,html.opening .chrome{color:rgba(238,234,224,.84);z-index:6;transition:color .3s}
+html.opening .credit{position:relative}
+html.opening.drained .credit{color:var(--muted)}
+html.opening.drained .chrome{color:var(--faint)}
+
+@media (max-width:560px){
+  body{font-size:16px}
+  main{padding:84px 22px 22px}
+  .mark{width:96px;margin-bottom:44px}
+  .tag{top:22px;font-size:9px;letter-spacing:.36em;text-indent:.36em}
+  .el{right:14px;bottom:22px}
+  .credit{max-width:300px}
+}
+</style>
+</head>
+<body>
+<script>
+(function(){
+  var rm = matchMedia('(prefers-reduced-motion: reduce)').matches, seen = false;
+  try{ seen = sessionStorage.getItem('antimony.window') === '1'; }catch(e){}
+  if(/[?&]t=\d/.test(location.search)) seen = false;
+  if(!rm && !seen) document.documentElement.classList.add('opening','veiled');
+})();
+</script>
+
+<svg id="stage" aria-hidden="true" focusable="false">
+  <defs>
+    <clipPath id="sGemClip" clipPathUnits="userSpaceOnUse"><path id="sGemPath" d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"/></clipPath>
+    <mask id="sStone" maskUnits="userSpaceOnUse" x="-20" y="-20" width="140" height="140">
+      <rect width="100" height="100" rx="22" fill="#fff"/>
+      <path fill="#000" d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z"/>
+      <path fill="#000" d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z"/>
+    </mask>
+    <clipPath id="sInkClip"><path id="sInk" d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" transform="scale(0)"/></clipPath>
+    <mask id="sDrain" maskUnits="userSpaceOnUse" x="-10000" y="-10000" width="20000" height="20000">
+      <g id="sBandG"><rect id="sBand" x="-1" y="-6000" width="2" height="12000" fill="#fff"/></g>
+    </mask>
+  </defs>
+  <g mask="url(#sDrain)"><g class="sPrint"><image href="assets/satta.webp" width="1222" height="860" preserveAspectRatio="none"/></g></g>
+  <g id="sMark">
+    <g clip-path="url(#sInkClip)"><rect width="100" height="100" rx="22" fill="#141311" mask="url(#sStone)"/></g>
+    <!-- the ink's edge, carried on past the tile as a hairline so the hexagon is never read as a cut corner -->
+    <path id="sRing" d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" fill="none" stroke="#0B0C0C" stroke-width="1" vector-effect="non-scaling-stroke" opacity="0"/>
+  </g>
+  <g clip-path="url(#sGemClip)"><g class="sPrint"><image href="assets/satta.webp" width="1222" height="860" preserveAspectRatio="none"/></g></g>
+  <g id="sFacetG"><path id="sFacet" d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" opacity="0"/></g>
+</svg>
+
+<main>
+  <p class="tag chrome" aria-hidden="true">On their side of the table</p>
+  <p class="el chrome" aria-hidden="true"><span class="jp">アンチモン</span></p>
+
+  <div class="col">
+    <h1 class="vh">Antimony</h1>
+    <svg class="mark" id="mark" viewBox="0 0 100 100" role="img" aria-label="The Antimony mark: a stone split by a seam, with a crystal in the break">
+      <defs>
+        <clipPath id="gemClip"><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"/></clipPath>
+        <mask id="stoneMask" maskUnits="userSpaceOnUse" x="-20" y="-20" width="140" height="140">
+          <rect width="100" height="100" rx="22" fill="#fff"/>
+          <path fill="#000" d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z"/>
+          <path fill="#000" d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z"/>
+        </mask>
+        <pattern id="stoneTooth" patternUnits="userSpaceOnUse" width="50" height="50"><image width="50" height="50" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .93 0 0 0 0 .91 0 0 0 0 .86 1.6 0 0 0 -.78'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E"/></pattern>
+      </defs>
+      <rect width="100" height="100" rx="22" fill="#141311" mask="url(#stoneMask)"/>
+      <rect width="100" height="100" rx="22" fill="url(#stoneTooth)" mask="url(#stoneMask)" opacity=".16"/>
+      <path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z" fill="#94E6FF"/>
+      <g clip-path="url(#gemClip)"><image id="gemPrint" href="assets/satta.webp" width="1222" height="860" preserveAspectRatio="none"/></g>
+      <path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" opacity=".28"/>
+    </svg>
+
+    <p class="ty"><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator&rsquo;s side of every sponsorship deal.</p>
+    <p class="ty">We sit on their side of the table, and we mean to stay there for a long time.</p>
+
+    <ul class="made reveal" aria-label="Made here">
+      <li><a href="https://eoinforker.github.io/orbe-site/" title="Orbe"><img src="assets/work/orbe.svg" alt="Orbe" width="26" height="26"></a></li>
+      <li><a href="https://immiscible.ai" title="immiscible"><img src="assets/work/immiscible.svg" alt="immiscible" width="26" height="26"></a></li>
+      <li><a href="https://idyll.day" title="Idyll"><img src="assets/work/idyll.svg" alt="Idyll" width="26" height="26"></a></li>
+      <li class="place">London</li>
+    </ul>
+  </div>
+  <p class="credit" id="credit" tabindex="0">Utagawa Hiroshige, <i>Satta Peak in Suruga Province</i>, 1852. Art Institute of Chicago.<span class="win" aria-hidden="true"><svg viewBox="0 0 1222 860"><image href="assets/satta.webp" width="1222" height="860"/><path id="winGem" d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z" fill="none" stroke="#fff" stroke-width="1.2" vector-effect="non-scaling-stroke"/></svg></span></p>
+</main>
+
+<script>
+(function(){
+  var html = document.documentElement;
+  var IMG_W = 1222, IMG_H = 860;
+  var CX = 50, CY = 51.5;               /* crystal centre in mark units */
+  var GEM_H = 60;                        /* crystal height in mark units */
+  var A1 = {x: 330, y: 285};             /* the point of the print the crystal settles on: Fuji */
+  var SIGMA = GEM_H / 380;               /* mark units per print pixel, once settled */
+
+  var mark = document.getElementById('mark');
+  var gemPrint = document.getElementById('gemPrint');
+  var winGem = document.getElementById('winGem');
+  var credit = document.getElementById('credit');
+
+  /* ---------- the settled mark: a little of the print, drifting like glass ---------- */
+  var ptr = {x: 0, y: 0}, cur = {x: 0, y: 0}, live = true, t0 = performance.now(), winOpen = false;
+  function setGem(dx, dy){
+    var ax = A1.x + dx, ay = A1.y + dy;
+    gemPrint.setAttribute('transform', 'translate(' + CX + ' ' + CY + ') scale(' + SIGMA + ') translate(' + (-ax).toFixed(2) + ' ' + (-ay).toFixed(2) + ')');
+    if(winOpen) winGem.setAttribute('transform', 'translate(' + ax.toFixed(2) + ' ' + ay.toFixed(2) + ') scale(' + (1 / SIGMA).toFixed(4) + ') translate(' + (-CX) + ' ' + (-CY) + ')');
+  }
+  function drift(t){ return {x: Math.sin(t / 6100) * 9, y: Math.cos(t / 7900) * 6}; }
+  addEventListener('pointermove', function(e){
+    ptr.x = (e.clientX / innerWidth - .5) * 2;
+    ptr.y = (e.clientY / innerHeight - .5) * 2;
+  }, {passive: true});
+  function glass(now){
+    if(!live) return;
+    cur.x += (ptr.x - cur.x) * .22; cur.y += (ptr.y - cur.y) * .22;
+    var d = drift(now - t0);
+    setGem(d.x - cur.x * 30, d.y - cur.y * 20);
+    requestAnimationFrame(glass);
+  }
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function openWin(v){ winOpen = v; credit.classList.toggle('open', v); if(v && reduced) setGem(0, 0); }
+  credit.addEventListener('pointerenter', function(){ openWin(true); });
+  credit.addEventListener('pointerleave', function(){ openWin(false); });
+  credit.addEventListener('focus', function(){ openWin(true); });
+  credit.addEventListener('blur', function(){ openWin(false); });
+  credit.addEventListener('click', function(e){ if(e.pointerType !== 'mouse') openWin(!winOpen); });
+  setGem(0, 0); winGem.setAttribute('transform', 'translate(' + A1.x + ' ' + A1.y + ') scale(' + (1 / SIGMA).toFixed(4) + ') translate(' + (-CX) + ' ' + (-CY) + ')');
+
+  function startGlass(){
+    if(reduced){ setGem(0, 0); return; }
+    live = true;
+    if('IntersectionObserver' in window){
+      new IntersectionObserver(function(es){
+        var v = es[0].isIntersecting;
+        if(v && !live){ live = true; requestAnimationFrame(glass); } else if(!v) live = false;
+      }).observe(mark);
+    }
+    requestAnimationFrame(glass);
+  }
+
+  if(!html.classList.contains('opening')){ startGlass(); return; }
+
+  /* ---------- the copy, prepared for setting ---------- */
+  var paras = document.querySelectorAll('.ty');
+  var P = [];
+  for(var pi = 0; pi < paras.length; pi++){
+    var walker = document.createTreeWalker(paras[pi], NodeFilter.SHOW_TEXT), nodes = [], n, len = 0;
+    while((n = walker.nextNode())) nodes.push(n);
+    var segs = [];
+    nodes.forEach(function(node){
+      var txt = node.nodeValue, done = document.createTextNode(''), hl = document.createElement('span'), rest = document.createElement('span');
+      hl.className = 'hl'; rest.className = 'rest'; rest.textContent = txt;
+      var f = document.createDocumentFragment(); f.appendChild(done); f.appendChild(hl); f.appendChild(rest);
+      node.parentNode.replaceChild(f, node);
+      segs.push({s: len, e: len + txt.length, txt: txt, done: done, hl: hl, rest: rest, k: ''});
+      len += txt.length;
+    });
+    P.push({segs: segs, len: len});
+  }
+  var caret = document.createElement('span'); caret.className = 'cur'; caret.setAttribute('aria-hidden', 'true');
+  paras[paras.length - 1].appendChild(caret);
+
+  /* a fixed, slightly irregular rhythm: two or three characters a step, 18 to 44 ms apart */
+  var seed = 51;
+  function rnd(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0; var x = Math.imul(seed ^ seed >>> 15, 1 | seed); x = x + Math.imul(x ^ x >>> 7, 61 | x) ^ x; return ((x ^ x >>> 14) >>> 0) / 4294967296; }
+  var TYPE0 = 2300, HL = 7, sched = [], tc = TYPE0;
+  for(var q = 0; q < P.length; q++){
+    var pos = 0;
+    while(pos < P[q].len){
+      pos = Math.min(P[q].len, pos + (rnd() < .9 ? 3 : 2));
+      sched.push({t: tc, p: q, pos: pos, hl: Math.max(0, pos - HL)});
+      var r = rnd(); tc += 18 + 20 * r * r * r;
+    }
+    for(var h = Math.max(0, pos - HL) + 3; h < pos; h += 3){ sched.push({t: tc, p: q, pos: pos, hl: h}); tc += 30; }
+    sched.push({t: tc, p: q, pos: pos, hl: pos}); tc += 70;
+  }
+  var TYPE1 = tc, BLINK = 230, CARET1 = TYPE1 + BLINK * 5;
+
+  function renderPara(q, pos, hl){
+    var segs = P[q].segs;
+    for(var i = 0; i < segs.length; i++){
+      var g = segs[i], a = Math.min(Math.max(hl, g.s), g.e), b = Math.min(Math.max(pos, g.s), g.e);
+      var k = a + ':' + b; if(g.k === k) continue; g.k = k;
+      g.done.nodeValue = g.txt.slice(0, a - g.s);
+      g.hl.textContent = g.txt.slice(a - g.s, b - g.s);
+      g.rest.textContent = g.txt.slice(b - g.s);
+    }
+  }
+  var lastStep = -2, made = document.querySelector('.made'), madeShown = false;
+  function typeAt(t){
+    /* binary search the schedule for the last step at or before t */
+    var lo = 0, hi = sched.length - 1, idx = -1;
+    while(lo <= hi){ var mid = (lo + hi) >> 1; if(sched[mid].t <= t){ idx = mid; lo = mid + 1; } else hi = mid - 1; }
+    if(idx !== lastStep){
+      lastStep = idx;
+      for(var q = 0; q < P.length; q++){
+        if(idx < 0 || sched[idx].p < q) renderPara(q, 0, 0);
+        else if(sched[idx].p > q) renderPara(q, P[q].len, P[q].len);
+        else renderPara(q, sched[idx].pos, sched[idx].hl);
+      }
+    }
+    var on = t >= TYPE1 && t < CARET1 && Math.floor((t - TYPE1) / BLINK) % 2 === 0;
+    if(caret.classList.contains('on') !== on) caret.classList.toggle('on', on);
+    if(!madeShown && t >= TYPE1 - 380){ madeShown = true; html.classList.remove('veiled'); }
+    return t >= CARET1;
+  }
+
+  /* ---------- the opening ---------- */
+  var stage = document.getElementById('stage');
+  var prints = stage.querySelectorAll('.sPrint');
+  var sMark = document.getElementById('sMark');
+  var sInk = document.getElementById('sInk');
+  var sRing = document.getElementById('sRing');
+  var sGemPath = document.getElementById('sGemPath');
+  var sFacetG = document.getElementById('sFacetG');
+  var sFacet = document.getElementById('sFacet');
+  var bandG = document.getElementById('sBandG');
+  var band = document.getElementById('sBand');
+
+  var W, H, S0, A0, kMon, kStart, Hmax, target;
+  function measure(){
+    W = innerWidth; H = innerHeight;
+    stage.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    S0 = Math.max(W / IMG_W, H / IMG_H) * 1.06;
+    /* on a narrow screen, frame Fuji rather than the middle of the print */
+    var visW = W / S0;
+    A0 = {x: Math.min(Math.max(IMG_W / 2 - (IMG_W - visW) * .18, visW / 2), IMG_W - visW / 2), y: IMG_H * .5};
+    if(W < H) A0.x = Math.max(visW / 2, Math.min(352, IMG_W - visW / 2));
+    kMon = Math.min(W * .62, H * .56, 560) / 100;
+    kStart = kMon * 1.3;
+    Hmax = Math.hypot(W, H);
+    var r = mark.getBoundingClientRect();
+    target = {k: r.width / 100, x: r.left + CX * r.width / 100, y: r.top + CY * r.width / 100};
+  }
+  measure();
+  addEventListener('resize', measure);
+
+  function clamp(v){ return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function seg(t, a, b){ return clamp((t - a) / (b - a)); }
+  function io3(x){ return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+  function io4(x){ return x < .5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2; }
+  function o3(x){ return 1 - Math.pow(1 - x, 3); }
+  function lerp(a, b, t){ return a + (b - a) * t; }
+  function glerp(a, b, t){ return Math.exp(lerp(Math.log(a), Math.log(b), t)); }
+
+  /* timeline, in ms */
+  var T = {fade1: 200, drain0: 600, drain1: 1080, gem0: 560, gem1: 1300, ink0: 930, inkA: 1080, ink1: 1400,
+           pan0: 1320, pan1: 2200, move0: 1760, move1: 2460};
+  var FREEZE = /[?&]t=(\d+)/.exec(location.search); FREEZE = FREEZE ? +FREEZE[1] : -1;
+  var start = 0, stageDone = false, allDone = false;
+
+  function printT(qx, qy, s, ax, ay){
+    return 'translate(' + qx.toFixed(2) + ' ' + qy.toFixed(2) + ') scale(' + s.toFixed(5) + ') translate(' + (-ax).toFixed(2) + ' ' + (-ay).toFixed(2) + ')';
+  }
+  function hexAbout(s){ return 'translate(' + CX + ' ' + CY + ') scale(' + s.toFixed(4) + ') translate(' + (-CX) + ' ' + (-CY) + ')'; }
+
+  function stageAt(t, now){
+    stage.style.opacity = Math.min(1, t / T.fade1).toFixed(3);
+    var cx = W / 2, cy = H / 2;
+
+    /* the crystal contracts along its own hexagon */
+    var eg = io4(seg(t, T.gem0, T.gem1));
+    var k = glerp(kStart, kMon, eg);
+
+    /* then the whole mark moves to its place on the page */
+    var em = io3(seg(t, T.move0, T.move1));
+    var qx = lerp(cx, target.x, em), qy = lerp(cy, target.y, em);
+    k = glerp(k, target.k, em);
+
+    var mT = 'translate(' + (qx - CX * k).toFixed(2) + ' ' + (qy - CY * k).toFixed(2) + ') scale(' + k.toFixed(5) + ')';
+    sMark.setAttribute('transform', mT);
+    sGemPath.setAttribute('transform', mT);
+    sFacetG.setAttribute('transform', mT);
+
+    /* the print: full bleed and drifting, then framed by the crystal */
+    var d = drift(now - t0);
+    cur.x += (ptr.x - cur.x) * .22; cur.y += (ptr.y - cur.y) * .22;
+    var pd = {x: d.x - cur.x * 30, y: d.y - cur.y * 20};
+    var Sfin = SIGMA * k;
+    var Sw = S0 * (1 + .03 * Math.min(t, 1800) / 1800);
+    var ep = io3(seg(t, T.pan0, T.pan1));
+    var S = glerp(glerp(Sw, SIGMA * kMon, ep), Sfin, em);
+    var ax = lerp(A0.x, A1.x, ep) + pd.x, ay = lerp(A0.y, A1.y, ep) + pd.y;
+    var pt = printT(qx, qy, S, ax, ay);
+    for(var i = 0; i < prints.length; i++) prints[i].setAttribute('transform', pt);
+
+    /* the world is wiped to paper from both sides, along the sixteen degree seam,
+       until only what lies inside the crystal is left */
+    var ed = io3(seg(t, T.drain0, T.drain1));
+    var hw = Math.max(lerp(Hmax * .75, 0, ed), 0.0001);
+    bandG.setAttribute('transform', 'translate(' + qx.toFixed(2) + ' ' + qy.toFixed(2) + ') skewX(-16)');
+    band.setAttribute('x', (-hw).toFixed(2));
+    band.setAttribute('width', (2 * hw).toFixed(2));
+
+    /* the stone is inked outward from the cavity, in the crystal's own shape. The hexagon is
+       quick through the few frames where the tile would trim it, and its edge runs on past
+       the tile as a hairline, so it always reads as a hexagon */
+    var ea = seg(t, T.ink0, T.inkA), si = ea <= 0 ? 0 : t < T.inkA ? lerp(1, 1.37, ea * ea) : 2.92 + 3.6 * o3(seg(t, T.inkA, T.ink1));
+    sInk.setAttribute('transform', hexAbout(Math.min(si, 3.6)));
+    var ro = si <= 0 ? 0 : .5 * seg(si, 1.25, 1.45) * (1 - seg(si, 3.4, 6.3));
+    sRing.setAttribute('opacity', ro.toFixed(3));
+    if(ro > 0) sRing.setAttribute('transform', hexAbout(si));
+    sFacet.setAttribute('opacity', (seg(t, T.ink0, T.ink0 + 280) * .28).toFixed(3));
+    if(t > T.drain0 + 220 && !html.classList.contains('drained')) html.classList.add('drained');
+  }
+
+  function tick(now){
+    if(allDone) return;
+    var t = FREEZE >= 0 ? FREEZE : now - start;
+    if(!stageDone){
+      stageAt(t, now);
+      if(FREEZE < 0 && t >= T.move1) finishStage();
+    }
+    var typed = typeAt(t);
+    if(FREEZE >= 0) return;
+    if(typed && stageDone){ finishAll(); return; }
+    requestAnimationFrame(tick);
+  }
+
+  function finishStage(){
+    if(stageDone) return;
+    stageDone = true;
+    html.classList.remove('opening', 'drained');
+    stage.style.display = 'none';
+    removeEventListener('resize', measure);
+    startGlass();
+  }
+  function finishAll(){
+    if(allDone) return;
+    finishStage();
+    allDone = true;
+    typeAt(1e9);
+    html.classList.remove('veiled');
+    try{ sessionStorage.setItem('antimony.window', '1'); }catch(e){}
+    ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function(ev){ removeEventListener(ev, skip); });
+  }
+  function skip(){ if(!allDone && FREEZE < 0){ made.style.transitionDelay = '0ms'; finishAll(); } }
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function(ev){ addEventListener(ev, skip, {passive: true}); });
+
+  /* begin only once the print is ready; if it is slow, go straight to the page */
+  var img = new Image();
+  img.src = 'assets/satta.webp';
+  var bail = setTimeout(finishAll, 1800);
+  stage.style.opacity = 0;
+  (img.decode ? img.decode() : Promise.resolve()).then(function(){
+    if(allDone) return;
+    clearTimeout(bail);
+    live = false; /* the stage drives the print until the hand-off */
+    requestAnimationFrame(function(now){ start = now; tick(now); });
+  }, function(){ finishAll(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Antimony, Blind Emboss</title>
+<meta name="description" content="Antimony builds software for the people who make the work. London.">
+<meta name="theme-color" content="#EEEAE0">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="assets/fonts/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin>
+<script>
+  (function () {
+    var d = document.documentElement, seen = false;
+    try { seen = sessionStorage.getItem('antimony-emboss') === '1'; } catch (e) {}
+    if (/[#&]t=/.test(location.hash)) seen = false;
+    var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    d.className = 'js' + (seen ? ' seen' : '') + (still ? ' still' : '') + (!seen && !still ? ' first' : ' lit');
+  })();
+</script>
+<style>
+  @font-face { font-family: 'Timeless Serif'; src: url('assets/fonts/TimelessSerifVF.woff2') format('woff2'); font-weight: 200 700; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'Timeless Serif'; src: url('assets/fonts/TimelessSerifItalicVF.woff2') format('woff2'); font-weight: 200 700; font-style: italic; font-display: swap; }
+
+  :root {
+    --paper: #EEEAE0;
+    --ink: #0B0C0C;
+    --sky: #94E6FF;
+    --prussian: #1F3F7A;
+    --mark: clamp(148px, 14.5vw, 212px);
+    --serif: 'Timeless Serif', 'Iowan Old Style', Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--paper); color: var(--ink); -webkit-text-size-adjust: 100%; transition: background-color .9s; }
+  html.first:not(.lit) { background: var(--ink); }
+  body { margin: 0; position: relative; background: transparent; overflow-x: hidden; }
+
+  #sheet { position: absolute; inset: 0 auto auto 0; width: 100%; height: 100%; display: block; z-index: 0; pointer-events: none; }
+  .js #sheet { visibility: hidden; }
+  .js #sheet.on { visibility: visible; }
+
+  main {
+    position: relative; z-index: 1;
+    min-height: 100vh; min-height: 100svh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: clamp(96px, 13vh, 128px) 20px clamp(64px, 9vh, 104px);
+  }
+
+  /* the sheet's furniture: set small, tracked, printed rather than displayed */
+  .tag {
+    position: absolute; z-index: 2; top: 30px; left: 32px; right: 32px; margin: 0;
+    font: 400 10.5px/1.7 var(--serif); letter-spacing: .42em; text-transform: uppercase;
+    color: rgba(11, 12, 12, .62);
+    transition: color 1.1s cubic-bezier(.3, 0, .2, 1);
+  }
+  html.first:not(.lit) .tag { color: rgba(238, 234, 224, .86); }
+  .tag .l.off { visibility: hidden; }
+  .tag .l.hl { background: var(--sky); color: var(--ink); }
+  .tag .br { display: none; }
+
+  .vert {
+    position: absolute; z-index: 2; right: 30px; top: 50vh; top: 50svh; transform: translateY(-50%);
+    writing-mode: vertical-rl; margin: 0;
+    font: 400 10px/1 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', 'Noto Serif CJK JP', serif;
+    letter-spacing: .5em; color: rgba(11, 12, 12, .5);
+  }
+
+  .brand { margin: 0; display: flex; flex-direction: column; align-items: center; font-weight: inherit; font-size: inherit; }
+  .mark { display: block; width: var(--mark); height: var(--mark); }
+  .wm { display: block; width: calc(var(--mark) * 0.94); aspect-ratio: 4186 / 1070; margin-top: calc(var(--mark) * 0.17); }
+  .brand svg { width: 100%; height: 100%; display: block; }
+  .js .brand svg { display: none; }
+
+  .col {
+    width: min(404px, 100%);
+    margin-top: clamp(52px, 8vh, 84px);
+    font-family: var(--serif);
+    font-size: 16px; line-height: 1.56; font-weight: 400;
+    font-variant-numeric: oldstyle-nums;
+    text-wrap: pretty;
+  }
+  .col p { margin: 0 0 1em; }
+  .col i { font-style: italic; }
+  .col a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgba(11, 12, 12, .28); transition: text-decoration-color .2s; }
+  .col a:hover, .col a:focus-visible { text-decoration-color: var(--prussian); }
+  .col a:focus-visible { outline: 1px solid var(--prussian); outline-offset: 3px; }
+  .col .made { margin-top: 1.9em; color: rgba(11, 12, 12, .56); font-size: 14px; }
+  .col .made a { text-decoration-color: rgba(11, 12, 12, .18); }
+
+  /* the type is set a few sorts at a time; the newest sorts carry the sky */
+  .col .c { visibility: hidden; transition: background-color .32s; }
+  .col .c.on { visibility: visible; }
+  .col .c.hl { background: var(--sky); transition: none; }
+  .col .cur { display: inline-block; width: .5em; height: 1.08em; margin-left: 1px; vertical-align: -.2em; background: var(--sky); animation: cur .34s steps(1) 6 forwards; }
+  @keyframes cur { 0% { opacity: 1; } 50%, 100% { opacity: 0; } }
+  .col .cur.done { visibility: hidden; }
+
+  /* the opening: the room is dark until the lamp passes */
+  .first .col, .first .vert { opacity: 0; transition: opacity .9s cubic-bezier(.3, 0, .2, 1); }
+  .first.lit .col { opacity: 1; transition-duration: 0s; }
+  .first.lit .vert { opacity: 1; transition-delay: .5s; }
+  .first .made { opacity: 0; transition: opacity .8s; }
+  .first .made.on { opacity: 1; }
+
+  .flat #sheet { display: none; }
+  .flat .brand svg { display: block; }
+
+  @media (min-width: 721px) { .col { position: relative; left: calc((404px - var(--mark)) / 2); } }
+  @media (max-width: 720px) {
+    .vert { top: 96px; transform: none; right: 18px; }
+  }
+  @media (max-width: 520px) {
+    main { justify-content: flex-start; padding-top: 22vh; padding-top: 22svh; }
+    .col { font-size: 15.5px; }
+    .tag { top: 24px; left: 20px; right: 48px; font-size: 9.5px; letter-spacing: .36em; }
+    .tag .br { display: block; }
+  }
+  @media (max-height: 700px) and (min-width: 521px) { main { justify-content: flex-start; } }
+</style>
+</head>
+<body>
+<canvas id="sheet" aria-hidden="true"></canvas>
+<p class="tag" id="tag">Software for the people <span class="br"></span>who make the work.</p>
+<p class="vert" lang="ja" aria-hidden="true">アンチモン</p>
+<main>
+  <h1 class="brand">
+    <span class="mark" id="mark" role="img" aria-label="Antimony">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><defs><mask id="cut"><rect width="100" height="100" fill="#fff"/><path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z"/><path d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z"/></mask></defs><rect width="100" height="100" rx="22" fill="#E2DDD1" mask="url(#cut)"/><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z" fill="#94E6FF"/><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" fill-opacity=".28"/></svg>
+    </span>
+    <span class="wm" id="wm" aria-hidden="true">
+      <svg viewBox="-20 -830 4186 1070" style="color:#D9D3C6;--lit:#1F3F7A"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg>
+    </span>
+  </h1>
+  <div class="col" id="col">
+    <p><i>Antimony</i> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator's side of every sponsorship deal.</p>
+    <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
+    <p class="made" id="made"><a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, <a href="https://immiscible.ai">immiscible</a>, <a href="https://idyll.day">Idyll</a>. London.</p>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var MARK = {
+    seam: 'M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z',
+    cav: 'M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z',
+    gem: [[58.6, 21.5], [70.58, 46.7], [67.82, 56.3], [41.4, 81.5], [29.42, 56.3], [32.18, 46.7]],
+    facet: 'M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z'
+  };
+  var WM = {"letters": ["M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z", "M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z", "M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z", "M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z", "M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z", "M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z", "M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z", "M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z", "M1257 -500 H1507 V-456 H1257 Z"], "tittle": "M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z", "lit": "M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z"};
+  var WMVB = [-20, -830, 4186, 1070];
+
+  var FREEZE = /[#&]t=([\d.]+)/.test(location.hash) ? parseFloat(RegExp.$1) : -1;
+  var root = document.documentElement;
+  var canvas = document.getElementById('sheet');
+  var mainEl = document.querySelector('main');
+  var markEl = document.getElementById('mark');
+  var wmEl = document.getElementById('wm');
+  var colEl = document.getElementById('col');
+  var madeEl = document.getElementById('made');
+  var tagEl = document.getElementById('tag');
+  var still = root.classList.contains('still');
+  var seen = root.classList.contains('seen');
+  var first = root.classList.contains('first');
+  try { sessionStorage.setItem('antimony-emboss', '1'); } catch (e) {}
+
+  function rng(seed) { return function () { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }; }
+
+  /* ---------- the setting of the type ---------- */
+  var setter = null;
+  function prepType(t0) {
+    var r = rng(51), paras = [colEl.children[0], colEl.children[1]], saved = paras.map(function (p) { return p.innerHTML; });
+    var chars = [], ends = [];
+    paras.forEach(function (p) {
+      var walk = document.createTreeWalker(p, NodeFilter.SHOW_TEXT), nodes = [], n;
+      while ((n = walk.nextNode())) nodes.push(n);
+      nodes.forEach(function (node) {
+        var frag = document.createDocumentFragment(), s = node.nodeValue;
+        for (var i = 0; i < s.length; i++) {
+          var sp = document.createElement('span'); sp.className = 'c'; sp.textContent = s[i];
+          frag.appendChild(sp); chars.push(sp);
+        }
+        node.parentNode.replaceChild(frag, node);
+      });
+      ends.push(chars.length);
+    });
+    // two or three sorts per step, 18 to 40ms apart, a breath between paragraphs
+    var steps = [], t = t0, k = 0, pi = 0;
+    while (k < chars.length) {
+      k = Math.min(chars.length, k + (r() < .55 ? 3 : 2));
+      if (k > ends[pi]) k = ends[pi];
+      steps.push([t, k]);
+      t += .018 + r() * .022;
+      if (k === ends[pi]) { pi++; t += .14; }
+    }
+    setter = { chars: chars, ends: ends, steps: steps, n: 0, end: t, saved: saved, paras: paras, done: false, cur: null };
+  }
+  function setTo(t) {
+    var S = setter; if (!S || S.done) return;
+    var n = 0;
+    for (var i = 0; i < S.steps.length && S.steps[i][0] <= t; i++) n = S.steps[i][1];
+    if (n !== S.n) {
+      var pEnd = S.ends[0] >= n ? S.ends[0] : S.ends[1];
+      var pStart = S.ends[0] >= n ? 0 : S.ends[0];
+      for (var j = 0; j < S.chars.length; j++) {
+        var c = S.chars[j], on = j < n, hl = on && n < pEnd && j >= Math.max(pStart, n - 7);
+        if (on !== c.classList.contains('on')) c.classList.toggle('on', on);
+        if (hl !== c.classList.contains('hl')) c.classList.toggle('hl', hl);
+      }
+      S.n = n;
+      if (n === S.chars.length && !S.cur) {
+        S.cur = document.createElement('span'); S.cur.className = 'cur'; S.cur.setAttribute('aria-hidden', 'true');
+        S.paras[1].appendChild(S.cur);
+      }
+    }
+    if (t > S.end + .1) madeEl.classList.add('on');
+    if (t > S.end + 2.2 && FREEZE < 0) {
+      S.done = true;
+      S.paras.forEach(function (p, i) { p.innerHTML = S.saved[i]; });
+    }
+  }
+  function finishType() { if (setter) setTo(1e9); madeEl.classList.add('on'); }
+
+  /* ---------- the first line, set in the dark ---------- */
+  var tagLetters = [];
+  function prepTag(t0) {
+    var r = rng(16), s = tagEl.textContent.replace(/\s+/g, ' '), tt = t0, k = 0;
+    tagEl.setAttribute('aria-label', s);
+    var walk = document.createTreeWalker(tagEl, NodeFilter.SHOW_TEXT), nodes = [], n;
+    while ((n = walk.nextNode())) nodes.push(n);
+    nodes.forEach(function (node) {
+      var frag = document.createDocumentFragment(), v = node.nodeValue;
+      for (var i = 0; i < v.length; i++) {
+        var sp = document.createElement('span'); sp.className = 'l off'; sp.setAttribute('aria-hidden', 'true'); sp.textContent = v[i];
+        frag.appendChild(sp); tagLetters.push([sp, 0]);
+      }
+      node.parentNode.replaceChild(frag, node);
+    });
+    while (k < tagLetters.length) {
+      var step = r() < .55 ? 3 : 2;
+      for (var q = 0; q < step && k < tagLetters.length; q++) tagLetters[k++][1] = tt;
+      tt += .018 + r() * .022;
+    }
+    return tt;
+  }
+  function tagTo(t) {
+    var n = 0, i;
+    for (i = 0; i < tagLetters.length; i++) if (t >= tagLetters[i][1]) n = i + 1;
+    for (i = 0; i < tagLetters.length; i++) {
+      var L = tagLetters[i][0], off = i >= n, hl = !off && n < tagLetters.length && i >= n - 6;
+      if (off !== L.classList.contains('off')) L.classList.toggle('off', off);
+      if (hl !== L.classList.contains('hl')) L.classList.toggle('hl', hl);
+    }
+  }
+
+  function lightUp() { root.classList.add('lit'); }
+  function plain() { lightUp(); finishType(); tagTo(1e9); }
+  function flat() { root.classList.add('flat'); plain(); }
+
+  var gl = canvas.getContext('webgl', { antialias: false, alpha: false, depth: false, stencil: false, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
+  if (!gl) { flat(); return; }
+
+  /* ---------- shaders ---------- */
+
+  var VS = 'attribute vec2 p; void main(){ gl_Position = vec4(p, 0., 1.); }';
+
+  // Pass 1: a tileable sheet of heavy cotton, as height. 1024 texels span 512 css px.
+  var FS_PAPER = [
+    'precision highp float;',
+    'uniform float uRes;',
+    'float h21(vec2 p){ p = fract(p * vec2(0.1031, 0.1030)); p += dot(p, p.yx + 33.33); return fract((p.x + p.y) * p.x); }',
+    'vec2 h22(vec2 p){ vec3 q = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973)); q += dot(q, q.yzx + 33.33); return fract((q.xx + q.yz) * q.zy); }',
+    'float vnoise(vec2 p, float per){',
+    '  vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);',
+    '  float a = h21(mod(i, per)), b = h21(mod(i + vec2(1., 0.), per)), c = h21(mod(i + vec2(0., 1.), per)), d = h21(mod(i + 1., per));',
+    '  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);',
+    '}',
+    'float segd(vec2 p, vec2 a, vec2 b){ vec2 pa = p - a, ba = b - a; float t = clamp(dot(pa, ba) / dot(ba, ba), 0., 1.); return length(pa - ba * t); }',
+    'float fibres(vec2 q, float cell, float per, float lmin, float lmax, float wmin, float wmax, float seed){',
+    '  vec2 c = floor(q / cell); float acc = 0.;',
+    '  for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {',
+    '    vec2 cc = c + vec2(float(i), float(j));',
+    '    vec2 key = mod(cc, per) + seed;',
+    '    for (int k = 0; k < 3; k++) {',
+    '      vec2 r1 = h22(key * 1.37 + float(k) * 17.1);',
+    '      vec2 r2 = h22(key * 2.11 + float(k) * 5.3 + 9.);',
+    '      vec2 ctr = (cc + r1) * cell;',
+    '      float ang = r2.x * 6.2831853;',
+    '      float len = mix(lmin, lmax, r2.y);',
+    '      vec2 dir = vec2(cos(ang), sin(ang)) * len * .5;',
+    '      vec2 bend = vec2(-dir.y, dir.x) * (h21(key + float(k) * 3.7) - .5) * .6;',
+    '      float d = min(segd(q, ctr - dir, ctr + bend), segd(q, ctr + bend, ctr + dir));',
+    '      float w = mix(wmin, wmax, h21(key * 3.3 + float(k)));',
+    '      float pr = clamp(1. - d / w, 0., 1.);',
+    '      acc += sqrt(pr) * mix(.4, 1., h21(key * 7.9 + float(k)));',
+    '    }',
+    '  }',
+    '  return acc;',
+    '}',
+    'void main(){',
+    '  vec2 q = gl_FragCoord.xy / uRes * 512.;',
+    '  float felt = 0., amp = .5, per = 4.;',
+    '  vec2 s = q / 128.;',
+    '  for (int o = 0; o < 7; o++) { felt += amp * vnoise(s, per); s *= 2.; per *= 2.; amp *= .56; }',
+    '  float cloud = vnoise(q / 64., 8.) * .6 + vnoise(q / 32., 16.) * .4;',
+    '  float fine = fibres(q, 14., 512. / 14., 4., 12., .2, .42, 0.);',
+    '  float coarse = fibres(q, 32., 16., 12., 30., .3, .65, 41.);',
+    '  float tooth = vnoise(q * 1.1, 563.2) * .6 + vnoise(q * 2.3, 1177.6) * .4;',
+    '  float h = felt * .55 + fine * .05 + coarse * .045 + tooth * .1;',
+    '  h = clamp(h * .55, 0., 1.);',
+    '  float v = floor(h * 65535. + .5);',
+    '  float hi = floor(v / 256.);',
+    '  gl_FragColor = vec4(hi / 255., (v - hi * 256.) / 255., cloud, clamp(fine * .5 + coarse * .3, 0., 1.));',
+    '}'
+  ].join('\n');
+
+  // Pass 2: paper slope, formation and fibre, so the live pass reads one texel for the sheet.
+  var FS_PNORM = [
+    'precision highp float;',
+    'uniform sampler2D uH; uniform float uRes;',
+    'float H(vec2 c){ vec4 t = texture2D(uH, fract(c / uRes)); return (t.r * 65280. + t.g * 255.) / 65535.; }',
+    'float h21(vec2 p){ p = fract(p * vec2(0.1031, 0.1030)); p += dot(p, p.yx + 33.33); return fract((p.x + p.y) * p.x); }',
+    'void main(){',
+    '  vec2 c = gl_FragCoord.xy;',
+    '  float sc = uRes / 512.;',
+    '  float gx = (H(c + vec2(1., 0.)) - H(c - vec2(1., 0.))) * .5 * sc;',
+    '  float gy = (H(c + vec2(0., 1.)) - H(c - vec2(0., 1.))) * .5 * sc;',
+    '  vec4 t = texture2D(uH, c / uRes);',
+    '  float speck = h21(floor(c / 2.) + 3.1);',
+    '  float tone = (t.b - .5) * .9 + (speck > .9993 ? -1. : 0.);',
+    '  gl_FragColor = vec4(clamp(gx * 2.5 + .5, 0., 1.), clamp(-gy * 2.5 + .5, 0., 1.), clamp(tone * .5 + .5, 0., 1.), t.a);',
+    '}'
+  ].join('\n');
+
+  // Live pass: light the baked sheet. Nothing here is generated per frame but the light.
+  var FS_MAIN = [
+    'precision highp float;',
+    'uniform vec2 uSize; uniform float uDpr;',
+    'uniform sampler2D uPN, uR, uI;',
+    'uniform vec4 uRect; uniform vec2 uTex;',
+    'uniform vec2 uLdir; uniform float uElev;',
+    'uniform float uPhys, uFall, uGain;',
+    'uniform vec3 uPool;',
+    'uniform float uInk, uTit;',
+    'const vec3 PAPER = vec3(.9333, .9176, .8784);',
+    'const vec3 DARK = vec3(.043, .047, .047);',
+    'const vec3 SKY = vec3(.5804, .9020, 1.);',
+    'const vec3 PRU = vec3(.1216, .2471, .4784);',
+    'float R(vec2 uv){ vec4 t = texture2D(uR, uv); return (t.r * 65280. + t.g * 255.) / 65535. * 7. - 6.; }',
+    'void main(){',
+    '  vec2 p = vec2(gl_FragCoord.x, uSize.y * uDpr - gl_FragCoord.y) / uDpr;',
+    '  vec4 pn = texture2D(uPN, p / 512.);',
+    '  vec2 g = (pn.rg - .5) / 2.5 * vec2(1., -1.) * 1.5;',
+    '  float tone = (pn.b - .5) * .036;',
+    '  float elev = uElev;',
+    '  vec3 L = vec3(uLdir * cos(elev), sin(elev));',
+    '  float h = 0., shadow = 0., press = 0.;',
+    '  vec4 ink = vec4(0.);',
+    '  vec2 uv = (p - uRect.xy) / uRect.zw;',
+    '  if (uv.x > 0. && uv.y > 0. && uv.x < 1. && uv.y < 1.) {',
+    '    vec2 e = uTex;',
+    '    float hl = R(uv - vec2(e.x, 0.)), hr = R(uv + vec2(e.x, 0.)), hu = R(uv - vec2(0., e.y)), hd = R(uv + vec2(0., e.y));',
+    '    h = R(uv);',
+    '    float cs = uRect.z * e.x;',
+    '    press = clamp(-h / 1.6, 0., 1.);',
+    '    g *= 1. - .6 * press;',
+    '    g += vec2(hr - hl, hd - hu) / (2. * cs);',
+    '    if (h < -.04) {',
+    '      vec2 st = uLdir * cs * 1.25 / uRect.zw;',
+    '      float rise = tan(elev) * cs * 1.25;',
+    '      float occ = 0.;',
+    '      for (int i = 1; i <= 12; i++) {',
+    '        float fi = float(i);',
+    '        occ = max(occ, R(uv + st * fi) - (h + rise * fi));',
+    '      }',
+    '      shadow = smoothstep(0., .9, occ);',
+    '    }',
+    '    ink = texture2D(uI, uv);',
+    '  }',
+    '  vec3 N = normalize(vec3(-g, 1.));',
+    '  float lam = dot(N, L) - L.z;',
+    '  float shade = 1. + lam * (lam > 0. ? .46 : .7);',
+    '  float pd = length(p - uPool.xy);',
+    '  shade += uPool.z * (exp(-pd * pd / 220000.) - .4);',
+    '  shade *= 1. - .36 * shadow;',
+    '  shade *= 1. - .035 * press;',
+    // the opening: an honest lamp low on the horizon, so only what faces it is lit
+    '  if (uPhys > 0.) {',
+    '    float amb = min(1., uGain * sin(max(uElev, .012))) * .3;',
+    '    float E = amb + max(dot(N, L), 0.) * uGain * .7 * (1. - shadow);',
+    '    float q = dot(p - uSize * .5, uLdir) / length(uSize);',
+    '    E *= mix(1., clamp(exp(q * 1.7), .08, 1.3), uFall);',
+    '    E = min(E, 1.32);',
+    '    shade = mix(shade, E, uPhys);',
+    '  }',
+    '  vec3 base = PAPER * (1. + tone);',
+    '  vec3 col = DARK + (base - DARK) * shade;',
+    // sky ink soaks outwards from the spine of the crystal, carried by the fibres, darker where it pools at the rim
+    '  if (ink.g > .02) {',
+    '    float fib = pn.a;',
+    '    float edge = smoothstep(.36, .66, ink.g + (fib - .45) * .5 + (pn.b - .5) * .2);',
+    '    float fr = mix(1.12, -.4, uInk);',
+    '    float a = smoothstep(fr, fr + .16, ink.b + (fib - .5) * .5) * edge;',
+    '    float rim = 1. - smoothstep(.0, .16, ink.b);',
+    '    vec3 ic = mix(SKY, vec3(1.), .26 * ink.r);',
+    '    ic = mix(ic, SKY * vec3(.8, .9, .97), rim * .45);',
+    '    float dens = .84 + .16 * (pn.b * .6 + fib * .4);',
+    '    col = mix(col, ic * shade * (1. + tone * 1.4), a * dens);',
+    '    vec3 Hh = normalize(L + vec3(0., 0., 1.));',
+    '    float spec = pow(max(dot(N, Hh), 0.), 48.);',
+    '    col += a * spec * (.7 + .6 * fib) * vec3(.95, 1., 1.) * .42;',
+    '  }',
+    '  if (ink.a > .02) {',
+    '    vec3 pc = mix(PRU, mix(PRU, vec3(1.), .28), ink.r);',
+    '    col = mix(col, pc * (.86 + .14 * shade), ink.a * uTit * (.9 + .1 * pn.a));',
+    '  }',
+    '  gl_FragColor = vec4(col, 1.);',
+    '}'
+  ].join('\n');
+
+  function sh(type, src) {
+    var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { throw new Error(gl.getShaderInfoLog(s)); }
+    return s;
+  }
+  function prog(fs) {
+    var p = gl.createProgram();
+    gl.attachShader(p, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+    gl.bindAttribLocation(p, 0, 'p'); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) { throw new Error(gl.getProgramInfoLog(p)); }
+    var u = {}, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+    for (var i = 0; i < n; i++) { var a = gl.getActiveUniform(p, i); u[a.name] = gl.getUniformLocation(p, a.name); }
+    return { p: p, u: u };
+  }
+  function tex(w, h, data, repeat) {
+    var t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, data || null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    var wrap = repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
+    return t;
+  }
+
+  var P1, P2, PM, paperN, reliefT, inkT;
+  try {
+    P1 = prog(FS_PAPER); P2 = prog(FS_PNORM); PM = prog(FS_MAIN);
+  } catch (err) { flat(); return; }
+
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.disable(gl.DITHER);
+
+  // bake the paper once, on the GPU
+  (function bakePaper() {
+    var N = 1024;
+    var fb = gl.createFramebuffer();
+    var hT = tex(N, N, null, true);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, hT, 0);
+    gl.viewport(0, 0, N, N);
+    gl.useProgram(P1.p); gl.uniform1f(P1.u.uRes, N);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    paperN = tex(N, N, null, true);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, paperN, 0);
+    gl.useProgram(P2.p); gl.uniform1f(P2.u.uRes, N);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, hT); gl.uniform1i(P2.u.uH, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.deleteFramebuffer(fb); gl.deleteTexture(hT);
+  })();
+
+  /* ---------- the press: bake the relief once per layout ---------- */
+
+  var rect = [0, 0, 1, 1], texel = [1, 1], dpr = 1, cssW = 0, cssH = 0, centre = [0, 0], msize = 200;
+
+  function boxBlur(src, w, h, r, passes) {
+    if (r < 1) return src;
+    var a = src, b = new Float32Array(w * h), x, y, acc, inv = 1 / (2 * r + 1);
+    for (var p = 0; p < passes; p++) {
+      for (y = 0; y < h; y++) {
+        var row = y * w; acc = 0;
+        for (x = -r; x <= r; x++) acc += a[row + Math.min(w - 1, Math.max(0, x))];
+        for (x = 0; x < w; x++) {
+          b[row + x] = acc * inv;
+          acc += a[row + Math.min(w - 1, x + r + 1)] - a[row + Math.max(0, x - r)];
+        }
+      }
+      var c = new Float32Array(w * h);
+      for (x = 0; x < w; x++) {
+        acc = 0;
+        for (y = -r; y <= r; y++) acc += b[Math.min(h - 1, Math.max(0, y)) * w + x];
+        for (y = 0; y < h; y++) {
+          c[y * w + x] = acc * inv;
+          acc += b[Math.min(h - 1, y + r + 1) * w + x] - b[Math.max(0, y - r) * w + x];
+        }
+      }
+      a = c;
+    }
+    return a;
+  }
+
+  function bakeRelief() {
+    var sx = window.scrollX || 0, sy = window.scrollY || 0;
+    var mr = markEl.getBoundingClientRect(), wr = wmEl.getBoundingClientRect();
+    var pad = 14, padTop = 14;
+    var x0 = Math.min(mr.left, wr.left) + sx - pad, y0 = mr.top + sy - padTop;
+    var x1 = Math.max(mr.right, wr.right) + sx + pad, y1 = wr.bottom + sy + pad;
+    var s = Math.min(2, Math.max(1.5, dpr));
+    var W = Math.ceil((x1 - x0) * s), H = Math.ceil((y1 - y0) * s);
+    rect = [x0, y0, W / s, H / s]; texel = [1 / W, 1 / H];
+    centre = [mr.left + sx + mr.width / 2, mr.top + sy + mr.height / 2];
+    msize = mr.width;
+
+    var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    var c = cv.getContext('2d', { willReadFrequently: true });
+    var msz = mr.width, mk = s * msz / 100;
+    var mox = (mr.left + sx - x0) * s, moy = (mr.top + sy - y0) * s;
+    var wk = s * wr.width / WMVB[2];
+    var wox = (wr.left + sx - x0) * s - WMVB[0] * wk, woy = (wr.top + sy - y0) * s - WMVB[1] * wk;
+    var seam = new Path2D(MARK.seam), cav = new Path2D(MARK.cav), facet = new Path2D(MARK.facet);
+    var gemP = new Path2D('M' + MARK.gem.map(function (v) { return v.join(' '); }).join('L') + 'Z');
+    var tile = new Path2D(); if (tile.roundRect) tile.roundRect(0, 0, 100, 100, 22); else tile.rect(0, 0, 100, 100);
+
+    function mask(draw) {
+      c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, H);
+      c.save(); c.fillStyle = '#fff'; c.strokeStyle = '#fff'; draw(); c.restore();
+      var d = c.getImageData(0, 0, W, H).data, a = new Float32Array(W * H);
+      for (var i = 0; i < a.length; i++) a[i] = d[i * 4 + 3] / 255;
+      return a;
+    }
+    function inMark() { c.setTransform(mk, 0, 0, mk, mox, moy); }
+    function inWord() { c.setTransform(wk, 0, 0, wk, wox, woy); }
+
+    var mTile = mask(function () { inMark(); c.fill(tile); });
+    var mDeep = mask(function () { inMark(); c.clip(tile); c.fill(seam); c.fill(cav); });
+    var mGem = mask(function () { inMark(); c.fill(gemP); });
+    var mFacet = mask(function () { inMark(); c.fill(facet); });
+    var mWord = mask(function () {
+      inWord(); c.lineWidth = 10; c.lineJoin = 'round';
+      WM.letters.forEach(function (d) { var p = new Path2D(d); c.fill(p); c.stroke(p); });
+      c.fill(new Path2D(WM.tittle));
+    });
+    var mTit = mask(function () { inWord(); c.fill(new Path2D(WM.tittle)); });
+    var mTitLit = mask(function () { inWord(); c.fill(new Path2D(WM.lit)); });
+
+    function soft(m, r1, r2, k) {
+      var a = boxBlur(m, W, H, Math.max(1, Math.round(r1 * s)), 2);
+      var b = boxBlur(m, W, H, Math.max(1, Math.round(r2 * s)), 2);
+      var o = new Float32Array(W * H);
+      for (var i = 0; i < o.length; i++) o[i] = a[i] * k + b[i] * (1 - k);
+      return o;
+    }
+    var sTile = soft(mTile, .45, 2.4, .82);
+    var sDeep = soft(mDeep, .4, 1.6, .86);
+    var sGem = boxBlur(mGem, W, H, Math.max(1, Math.round(.35 * s)), 2);
+    var bGem = boxBlur(mGem, W, H, Math.max(1, Math.round(.9 * s)), 2);
+    var sWord = soft(mWord, .3, 1.1, .88);
+
+    // the crystal: a six-faced roof grown from the floor of the cavity
+    var g = MARK.gem, edges = [], gi;
+    for (gi = 0; gi < 6; gi++) {
+      var A = g[gi], B = g[(gi + 1) % 6], ex = B[0] - A[0], ey = B[1] - A[1], el = Math.hypot(ex, ey);
+      edges.push([A[0], A[1], ey / el, -ex / el]);
+    }
+    var cx = 50, cy = 51.5;
+    edges.forEach(function (E) { if ((cx - E[0]) * E[2] + (cy - E[1]) * E[3] < 0) { E[2] = -E[2]; E[3] = -E[3]; } });
+    var dist = new Float32Array(W * H), dmax = 0, unit = msz / 100;
+    for (var y = 0; y < H; y++) {
+      for (var x = 0; x < W; x++) {
+        var u = ((x + .5) - mox) / mk, v = ((y + .5) - moy) / mk, dm = 1e9;
+        for (gi = 0; gi < 6; gi++) { var E = edges[gi]; var dd = (u - E[0]) * E[2] + (v - E[1]) * E[3]; if (dd < dm) dm = dd; }
+        if (dm > 0) { dist[y * W + x] = dm; if (dm > dmax) dmax = dm; }
+      }
+    }
+
+    var D1 = 2.1, D2 = 4.1, DW = .9, STEP = .7, SLOPE = .17, CAP = 2.9;
+    var rel = new Uint8Array(W * H * 4), ink = new Uint8Array(W * H * 4);
+    for (var i = 0; i < W * H; i++) {
+      var dc = dist[i] * unit;
+      var hh = -D1 * sTile[i] - (D2 - D1) * sDeep[i] + STEP * sGem[i] + Math.min(dc * SLOPE, CAP) - DW * sWord[i];
+      var vv = Math.round(Math.min(1, Math.max(0, (hh + 6) / 7)) * 65535);
+      var o = i * 4;
+      rel[o] = vv >> 8; rel[o + 1] = vv & 255; rel[o + 3] = 255;
+      ink[o] = Math.round(Math.max(mFacet[i], mTitLit[i]) * 255);
+      ink[o + 1] = Math.round(bGem[i] * 255);
+      ink[o + 2] = Math.round(Math.min(1, dist[i] / (dmax * .82)) * 255);
+      ink[o + 3] = Math.round(mTit[i] * 255);
+    }
+    if (reliefT) { gl.deleteTexture(reliefT); gl.deleteTexture(inkT); }
+    reliefT = tex(W, H, rel, false);
+    inkT = tex(W, H, ink, false);
+  }
+
+  /* ---------- size ---------- */
+
+  function size() {
+    var w = document.documentElement.clientWidth, h = Math.max(mainEl.offsetHeight, window.innerHeight);
+    var d = Math.min(window.devicePixelRatio || 1, 2);
+    var budget = 3.6e6; // device pixels; keeps the live pass well inside a frame
+    if (w * h * d * d > budget) d = Math.max(1, Math.sqrt(budget / (w * h)));
+    if (w === cssW && h === cssH && d === dpr) return false;
+    cssW = w; cssH = h; dpr = d;
+    canvas.style.height = h + 'px';
+    canvas.width = Math.round(w * d); canvas.height = Math.round(h * d);
+    return true;
+  }
+
+  /* ---------- light ---------- */
+
+  var REST_AZ = Math.atan2(-.72, -1), REST_EL = .46;
+  var light = { x: Math.cos(REST_AZ), y: Math.sin(REST_AZ), e: REST_EL };
+  var target = { x: light.x, y: light.y, e: light.e };
+  var pool = { x: 0, y: 0, a: 0, ta: 0 };
+  var opening = { t0: 0, run: false, phys: 0, fall: 0, gain: 1, ink: 1, tit: 1, q: null };
+
+  function ease(t) { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); }
+  function easeOut(t) { t = Math.min(1, Math.max(0, t)); return 1 - Math.pow(1 - t, 3); }
+  function inOut(t) { t = Math.min(1, Math.max(0, t)); return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+  function draw() {
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.useProgram(PM.p);
+    var u = PM.u;
+    gl.uniform2f(u.uSize, cssW, cssH); gl.uniform1f(u.uDpr, canvas.width / cssW);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, paperN); gl.uniform1i(u.uPN, 0);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, reliefT); gl.uniform1i(u.uR, 1);
+    gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, inkT); gl.uniform1i(u.uI, 2);
+    gl.uniform4f(u.uRect, rect[0], rect[1], rect[2], rect[3]);
+    gl.uniform2f(u.uTex, texel[0], texel[1]);
+    var l = Math.hypot(light.x, light.y) || 1;
+    gl.uniform2f(u.uLdir, light.x / l, light.y / l);
+    gl.uniform1f(u.uElev, light.e);
+    gl.uniform1f(u.uPhys, opening.phys);
+    gl.uniform1f(u.uFall, opening.fall);
+    gl.uniform1f(u.uGain, opening.gain);
+    gl.uniform3f(u.uPool, pool.x, pool.y, pool.a);
+    gl.uniform1f(u.uInk, opening.ink);
+    gl.uniform1f(u.uTit, opening.tit);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if (!canvas.classList.contains('on')) canvas.classList.add('on');
+  }
+
+  var raf = 0, last = 0, drift = false, tilted = false, touchHold = 0;
+  function kick() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+
+  function frame(now) {
+    raf = 0;
+    var dt = Math.min(.05, (now - last) / 1000); last = now;
+    var busy = false;
+
+    if (opening.run) {
+      var t = FREEZE >= 0 ? FREEZE : (now - opening.t0) / 1000, q = opening.q;
+      // the lamp comes up from below the horizon on the left and swings round to rest
+      var a = Math.min(1, Math.max(0, (t - q.s0) / (q.s1 - q.s0)));
+      var az = q.az0 + (REST_AZ + 2 * Math.PI - q.az0) * inOut(a);
+      light.x = target.x = Math.cos(az); light.y = target.y = Math.sin(az);
+      // it grazes first, the eye adapts, then the lamp climbs to rest
+      var e = t < q.r0 ? q.e0 + (q.e1 - q.e0) * ease((t - q.s0) / (q.r0 - q.s0)) : q.e1 + (REST_EL - q.e1) * inOut((t - q.r0) / (q.s1 - q.r0));
+      light.e = target.e = e;
+      var b = q.b0 + (1 - q.b0) * ease((t - q.g0) / (q.g1 - q.g0));
+      opening.gain = b / Math.sin(Math.max(e, .012));
+      opening.fall = 1 - ease((t - q.g0) / (q.g1 - q.g0 + .3));
+      opening.phys = 1 - ease((t - q.s1 + .35) / .55);
+      opening.ink = easeOut((t - q.i0) / (q.i1 - q.i0));
+      opening.tit = easeOut((t - q.t0) / (q.t1 - q.t0));
+      if (q.tag) tagTo(t);
+      if (t > q.lit) lightUp();
+      setTo(t);
+      if (FREEZE < 0 && t >= q.end) { opening.run = false; opening.phys = 0; opening.fall = 0; opening.ink = 1; opening.tit = 1; plain(); }
+      busy = true;
+    }
+
+    if (drift && !tilted && now > touchHold && !(opening.run && opening.phys > 0)) {
+      var ts = now / 1000;
+      var az = REST_AZ + Math.sin(ts * .23) * .7 + Math.sin(ts * .11 + 1.7) * .35;
+      target.x = Math.cos(az); target.y = Math.sin(az); target.e = REST_EL + Math.sin(ts * .17) * .12;
+      busy = true;
+    }
+
+    // the lamp follows at once; a short ease keeps it from jittering
+    var k = 1 - Math.exp(-dt * 30);
+    var dx = target.x - light.x, dy = target.y - light.y, de = target.e - light.e, da = pool.ta - pool.a;
+    light.x += dx * k; light.y += dy * k; light.e += de * k; pool.a += da * (1 - Math.exp(-dt * 6));
+    if (Math.abs(dx) + Math.abs(dy) + Math.abs(de) > 1e-4 || Math.abs(da) > 1e-4) busy = true;
+
+    draw();
+    if (busy) raf = requestAnimationFrame(frame);
+  }
+
+  function aim(px, py) {
+    var vx = px - centre[0], vy = py - centre[1], d = Math.hypot(vx, vy);
+    var reach = Math.max(280, Math.min(cssW, window.innerHeight) * .55);
+    var f = Math.min(1, d / reach);
+    if (d < 1) { vx = target.x; vy = target.y; d = 1; }
+    var w = Math.min(1, d / 30);
+    target.x = target.x * (1 - w) + (vx / d) * w;
+    target.y = target.y * (1 - w) + (vy / d) * w;
+    // over the crystal the lamp is nearly overhead and the facets catch it; further out it rakes
+    target.e = 1.32 - .96 * Math.sqrt(f);
+    pool.x = px; pool.y = py; pool.ta = .022;
+    kick();
+  }
+
+  function start() {
+    size();
+    bakeRelief();
+    if (still) { plain(); draw(); return; }
+    opening.q = seen
+      ? { az0: 2.9, e0: .12, e1: .16, s0: 0, r0: .05, s1: .8, b0: 1, g0: 0, g1: .01, i0: .2, i1: .8, t0: .5, t1: .85, lit: 0, end: 1.3 }
+      : { tag: true, az0: 2.55, e0: -.03, e1: .11, s0: .4, r0: 1.55, s1: 2.25, b0: .028, g0: .95, g1: 1.6, i0: 1.7, i1: 2.55, t0: 2.3, t1: 2.7, lit: 1.15, end: 0 };
+    if (!seen) {
+      prepTag(.2);
+      prepType(1.55);
+      opening.q.end = Math.max(2.9, setter.end + 2.3);
+    } else { plain(); }
+    opening.t0 = performance.now(); opening.run = true;
+    opening.phys = 1; opening.fall = 1; opening.gain = .03 / .012; opening.ink = 0; opening.tit = 0;
+    light.e = target.e = opening.q.e0; light.x = target.x = Math.cos(opening.q.az0); light.y = target.y = Math.sin(opening.q.az0);
+    draw();
+    kick();
+
+    var fine = window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches;
+    window.addEventListener('pointermove', function (e) {
+      if (e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+      aim(e.clientX + window.scrollX, e.clientY + window.scrollY);
+    }, { passive: true });
+    document.addEventListener('pointerleave', function () {
+      target.x = Math.cos(REST_AZ); target.y = Math.sin(REST_AZ); target.e = REST_EL; pool.ta = 0; kick();
+    });
+    // a finger on the sheet carries the lamp with it
+    function touch(e) {
+      var t = e.touches[0]; if (!t) return;
+      touchHold = performance.now() + 1e9;
+      aim(t.clientX + window.scrollX, t.clientY + window.scrollY);
+    }
+    window.addEventListener('touchstart', touch, { passive: true });
+    window.addEventListener('touchmove', touch, { passive: true });
+    window.addEventListener('touchend', function () { touchHold = performance.now() + 900; pool.ta = 0; kick(); }, { passive: true });
+    if (!fine) {
+      drift = true;
+      window.addEventListener('deviceorientation', function (e) {
+        if (e.gamma == null || e.beta == null || performance.now() < touchHold) return;
+        tilted = true;
+        var gx = Math.max(-1, Math.min(1, e.gamma / 28)), gy = Math.max(-1, Math.min(1, (e.beta - 40) / 28));
+        var m = Math.hypot(gx, gy);
+        if (m < .08) { gx = Math.cos(REST_AZ) * .08; gy = Math.sin(REST_AZ) * .08; m = .08; }
+        target.x = -gx / m; target.y = -gy / m; target.e = .9 - .5 * Math.min(1, m);
+        kick();
+      }, { passive: true });
+    }
+  }
+
+  var rz = 0;
+  window.addEventListener('resize', function () {
+    clearTimeout(rz);
+    rz = setTimeout(function () { size(); bakeRelief(); draw(); }, 140);
+  });
+  canvas.addEventListener('webglcontextlost', function (e) { e.preventDefault(); flat(); });
+
+  // start when the face has loaded, so nothing shifts under the press
+  var go = function () { try { start(); } catch (err) { flat(); } };
+  if (document.fonts && document.fonts.load) {
+    Promise.race([Promise.all([document.fonts.load('16px "Timeless Serif"'), document.fonts.load('italic 16px "Timeless Serif"')]), new Promise(function (r) { setTimeout(r, 450); })]).then(go, go);
+  } else { go(); }
+})();
+</script>
+</body>
+</html>
