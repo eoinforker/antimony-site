@@ -1,121 +1,223 @@
 <!doctype html>
-<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#F4F3EE">
-<meta name="description" content="Antimony builds software for the people who make the work. Our first product is Orbe.">
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EEEAE0"><meta name="description" content="Antimony makes software for the people who make the work. Our first product is Orbe.">
 <meta property="og:title" content="Antimony"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <title>Antimony</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-/* One screen. The bands lift and the mark builds itself as its own recursion, a Five made of Fives, on black.
-   Each small Five folds into one cell, the Five flies down to the foot and hands over to the vector, the ground turns to paper,
-   and two paragraphs are all that is left. */
+/* Paper, a mono for structure and a serif for the voice (Pebblebed); the opening from Section 9; the crystal as a window (Nurture). */
 @font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
-@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: block; }
-:root { --ink: #060808; --paper: #F4F3EE; --text: #26292A; --sky: #94E6FF; --cobalt: #2448FF;
-  --serif: "Timeless Serif", "Iowan Old Style", Georgia, serif; color-scheme: light; }
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: swap; }
+@font-face { font-family: "Commit Mono"; src: url("assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
+:root { --paper: #EEEAE0; --ink: #141311; --dim: #6C6A64; --sky: #94E6FF; --prussian: #1F3F7A; --rule: rgba(20,19,17,.12); --gut: max(16px, env(safe-area-inset-left, 0px)); --gutr: max(16px, env(safe-area-inset-right, 0px)); color-scheme: light; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
-body { background: var(--ink); color: var(--text); font: 400 19px/1.5 var(--serif); -webkit-font-smoothing: antialiased; overflow: hidden; transition: background-color .7s cubic-bezier(.4,0,.2,1); }
-body.paper { background: var(--paper); }
-a { color: inherit; }
-:focus-visible { outline: 1px solid var(--text); outline-offset: 3px; }
+html, body { background: var(--paper); color: var(--ink); }
+body { font: 400 13.5px/1.62 "Commit Mono", ui-monospace, Menlo, monospace; -webkit-font-smoothing: antialiased; }
+a { color: var(--prussian); text-decoration: none; } a:hover { text-decoration: underline; text-underline-offset: 3px; }
+:focus-visible { outline: 1px solid var(--prussian); outline-offset: 3px; }
 ::selection { background: var(--sky); color: var(--ink); }
-#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
-.load { position: fixed; inset: 0; z-index: 10; display: grid; grid-template-columns: repeat(6, 1fr); pointer-events: none; }
-.load i { background: linear-gradient(180deg, var(--ink), var(--cobalt) 40%, var(--sky) 62%, var(--paper) 80%, var(--ink)); background-size: 100% 300%; animation: band 1.4s cubic-bezier(.6,0,.2,1) forwards; }
-.load i:nth-child(2) { animation-delay: .05s } .load i:nth-child(3) { animation-delay: .1s } .load i:nth-child(4) { animation-delay: .15s } .load i:nth-child(5) { animation-delay: .2s } .load i:nth-child(6) { animation-delay: .25s }
+.wrap { padding-left: var(--gut); padding-right: var(--gutr); }
+/* the opening */
+#intro { position: fixed; inset: 0; z-index: 20; background: var(--ink); transition: background-color .8s cubic-bezier(.4,0,.2,1), opacity .6s ease; }
+#intro.paper { background: transparent; } #intro.gone { opacity: 0; pointer-events: none; }
+#intro canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.bands { position: fixed; inset: 0; z-index: 21; display: grid; grid-template-columns: repeat(6, 1fr); pointer-events: none; }
+.bands i { background: linear-gradient(180deg, var(--ink), #2448FF 40%, var(--sky) 62%, var(--paper) 80%, var(--ink)); background-size: 100% 300%; animation: band 1.4s cubic-bezier(.6,0,.2,1) forwards; }
+.bands i:nth-child(2) { animation-delay: .05s } .bands i:nth-child(3) { animation-delay: .1s } .bands i:nth-child(4) { animation-delay: .15s } .bands i:nth-child(5) { animation-delay: .2s } .bands i:nth-child(6) { animation-delay: .25s }
 @keyframes band { 0% { background-position: 0 0 } 70% { background-position: 0 100%; transform: none } 100% { background-position: 0 100%; transform: translateY(-101%) } }
-main { position: relative; z-index: 2; max-width: 640px; margin: 0 auto; padding: 16vh max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px)); }
-main p { opacity: 0; transform: translateY(6px); transition: opacity 1.1s ease, transform 1.4s cubic-bezier(.2,.7,.2,1); text-wrap: pretty; }
-main p + p { margin-top: 1.4em; }
-body.said main p { opacity: 1; transform: none; }
-body.said main p:nth-child(2) { transition-delay: .35s; }
-main em { font-style: italic; }
-main a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; text-decoration-color: rgba(38,41,42,.35); transition: text-decoration-color .2s; }
-main a:hover { text-decoration-color: var(--text); }
-.mark { position: fixed; z-index: 3; left: 50%; bottom: calc(40px + env(safe-area-inset-bottom, 0px)); width: 72px; height: 60px; transform: translateX(-50%); border-radius: 4px; cursor: pointer; background: none; border: 0; display: grid; place-items: center; }
-.vec { grid-area: 1 / 1; width: 46px; height: auto; display: block; opacity: 0; }
-/* on hover the mark opens into its recursion */
-.vec .r { opacity: 0; transition: opacity .35s ease; } .vec .f { transition: opacity .35s ease; }
-.mark:hover .vec .r, .mark:focus-visible .vec .r { opacity: 1; } .mark:hover .vec .f, .mark:focus-visible .vec .f { opacity: 0; }
-@media (max-width: 600px) { body { font-size: 17.5px; } main { padding-top: 13vh; } }
-@media (prefers-reduced-motion: reduce) { .load { display: none; } body, main p { transition: none; } }
-</style>
-</head><body>
-<div class="load" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-<canvas id="c" aria-hidden="true"></canvas>
+main, header, footer { transition: opacity .9s ease .1s; }
+body.opening main, body.opening footer, body.opening header .copy { opacity: 0; }
+/* the page */
+header { display: flex; justify-content: space-between; align-items: start; gap: 20px; padding-block: calc(22px + env(safe-area-inset-top, 0px)) 0; }
+.brand { display: grid; gap: 4px; } .brand h1 { font: 400 clamp(22px, 2.2vw, 28px)/1.1 "Timeless Serif", Georgia, serif; letter-spacing: -.01em; }
+.brand span { color: var(--dim); }
+.right { display: grid; justify-items: end; gap: 16px; }
+#logo { width: 30px; height: 30px; display: block; cursor: pointer; }
+nav { display: grid; gap: 2px; text-transform: uppercase; letter-spacing: .04em; font-size: 12px; justify-items: end; } nav a { color: var(--ink); } nav span { color: var(--dim); }
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 18em)); gap: 32px; padding-block: 72px 40px; padding-left: clamp(0px, 4vw, 60px); }
+.cols p { max-width: 34ch; }
+.ask { font: 400 clamp(20px, 1.9vw, 24px)/1.4 "Timeless Serif", Georgia, serif; padding-left: clamp(0px, 4vw, 60px); padding-bottom: 72px; max-width: 40em; }
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: center; background: #F3ECDD; border-radius: 14px; padding: clamp(24px, 5vw, 72px); margin-inline: var(--gut) var(--gutr); }
+.win { position: relative; aspect-ratio: 1; width: min(100%, 520px); max-width: 100%; justify-self: center; cursor: pointer; }
+.win > * { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.win .gl, .win .pencil { -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cpath%20d%3D%22M58.6%2021.5L70.58%2046.7L67.82%2056.3L41.4%2081.5L29.42%2056.3L32.18%2046.7Z%22/%3E%3C/svg%3E") center / 100% 100% no-repeat; mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cpath%20d%3D%22M58.6%2021.5L70.58%2046.7L67.82%2056.3L41.4%2081.5L29.42%2056.3L32.18%2046.7Z%22/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+.win .pencil { image-rendering: pixelated; pointer-events: none; }
+.stage h2 { font: 400 clamp(30px, 4vw, 56px)/1.02 "Timeless Serif", Georgia, serif; letter-spacing: -.018em; color: var(--ink); text-wrap: balance; }
+.stage h2 em { font-style: normal; color: var(--prussian); }
+.stage p { margin-top: 18px; color: #4A4741; max-width: 36ch; }
+.cap { color: var(--dim); padding: 10px var(--gutr) 0 calc(var(--gut) + 4px); }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; padding-block: 80px 24px; padding-left: clamp(0px, 4vw, 60px); max-width: 1100px; }
+.two h3 { font: 400 26px/1.1 "Timeless Serif", Georgia, serif; margin-bottom: 14px; }
+.facts { display: grid; grid-template-columns: 9em minmax(0, 1fr); }
+.facts span { padding: 9px 0; border-top: 1px solid var(--rule); } .facts span:nth-child(odd) { color: var(--dim); text-transform: uppercase; font-size: 11.5px; letter-spacing: .05em; padding-top: 11px; }
+.orbe { display: flex; gap: 18px; align-items: start; } .orbe img { width: 64px; height: 64px; display: block; flex: none; }
+footer { padding-block: 80px 24px; }
+.big { display: block; width: 100%; height: auto; }
+.noise { color: #ABA9A1; font-size: 11px; line-height: 1.15; letter-spacing: .1em; overflow: hidden; height: 3.5em; word-break: break-all; margin-top: 28px; }
+.fine { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 14px; color: var(--dim); font-size: 12px; }
+.fine button { font: inherit; color: var(--prussian); background: none; border: 0; cursor: pointer; text-transform: uppercase; letter-spacing: .05em; }
+.fine button[aria-pressed="true"] { color: var(--ink); text-decoration: underline; }
+#md { white-space: pre-wrap; font: 400 14px/1.65 "Commit Mono", monospace; max-width: 72ch; padding-block: 48px; }
+body.md main { display: none; } body:not(.md) #md { display: none; }
+@media (max-width: 820px) { .cols { grid-template-columns: 1fr; gap: 18px; padding-block: 44px 28px; } .stage, .two { grid-template-columns: 1fr; gap: 32px; } .facts { grid-template-columns: 7.5em minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { #intro, .bands { display: none; } body.opening main, body.opening footer, body.opening header .copy { opacity: 1; } }
+</style></head>
+<body class="opening">
+<div class="bands" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div id="intro" aria-hidden="true"><canvas id="px"></canvas></div>
+<div class="wrap"><header>
+  <div class="brand copy"><h1>Antimony.</h1><span>Software for the people who make the work.</span></div>
+  <div class="right"><button id="replay" aria-label="Antimony. Play the opening again" style="all:unset;cursor:pointer"><svg id="logo" viewBox="0 0 100 100" style="width:30px;height:30px;display:block" aria-hidden="true"><defs><clipPath id="bc18"><rect width="100" height="100" rx="22"/></clipPath><mask id="bm18"><rect width="100" height="100" fill="#fff"/><path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z" fill="#000"/><path d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" fill="#000"/></mask></defs><g clip-path="url(#bc18)"><rect width="100" height="100" fill="#F3F0E8"/><rect width="100" height="100" fill="#141311" mask="url(#bm18)"/><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z" fill="#94E6FF"/><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" fill-opacity=".28"/></g></svg></button>
+  <nav aria-label="Main" class="copy"><a href="https://eoinforker.github.io/orbe-site/">Orbe</a><a href="#about">About</a><span>Letters, soon</span></nav></div>
+</header></div>
 <main>
-  <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator's side of every sponsorship deal.</p>
-  <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
+  <div class="wrap"><div class="cols"><p>Creators do the work. Then they do the work around the work: the briefs, the contracts, the invoices, the chasing. We build software that takes the second part away.</p><p>Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator's side of every sponsorship deal. It holds the money until the work is delivered.</p><p>Antimony is a metal. It was used to refine gold: melted with it, it took up everything that was not gold. Alchemists called it the wolf of metals. We liked that.</p></div>
+  <p class="ask">What is left, once the work around the work is gone, is yours.</p></div>
+  <section class="stage" aria-label="The mark">
+    <div class="win" id="win" title="Tap to colour the light in"><canvas class="gl" aria-hidden="true"></canvas><canvas class="pencil" width="220" height="220" aria-hidden="true"></canvas><svg class="" viewBox="0 0 100 100" style="" aria-hidden="true"><defs><clipPath id="sc"><rect width="100" height="100" rx="22"/></clipPath><mask id="sm"><rect width="100" height="100" fill="#fff"/><path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z" fill="#000"/><path d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" fill="#000"/></mask></defs><g clip-path="url(#sc)"><rect width="100" height="100" fill="#141311" mask="url(#sm)"/></g></svg></div>
+    <div><h2>A stone, split open. A crystal grown in <em>the break</em>.</h2><p>Look through it and the world is still there: the light, the road, the work. Antimony grows in the cracks of rock, under pressure; what is left is the part of value.</p></div>
+  </section>
+  <p class="cap">Through the crystal: Hokusai and Hiroshige, from the Art Institute of Chicago, in the public domain. Tap it to colour the light in.</p>
+  <div class="wrap"><div class="two" id="about">
+    <div><h3>Facts</h3><div class="facts">
+      <span>Element</span><span>51, Sb, from the Latin stibium</span>
+      <span>Found as</span><span>Stibnite, long grey prisms that grow in the cracks of rock</span>
+      <span>Used for</span><span>Refining gold</span>
+      <span>Rarely</span><span>Found alone</span>
+      <span>We make</span><span><a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, and what comes after it</span></div></div>
+    <div><h3>Our first product</h3><div class="orbe"><img src="assets/orbe-mark.png" alt="The Orbe mark"><p>Orbe is the creator's side of every sponsorship deal: the brief, the contract and the payment in one place, and the money held until the work is delivered. <a href="https://eoinforker.github.io/orbe-site/">Visit Orbe</a></p></div></div>
+  </div></div>
 </main>
-<button class="mark" id="mark" aria-label="Antimony. Play the opening again"><svg class="vec" id="vec" viewBox="0 0 126.795 100" aria-hidden="true"><g class="f"><path d="M62.13 0L91.46 0L83.6 29.33L54.27 29.33ZM17.33 35.33L46.66 35.33L38.8 64.67L9.47 64.67ZM87.99 35.33L117.33 35.33L109.47 64.67L80.13 64.67ZM7.86 70.67L37.19 70.67L29.33 100L0 100ZM78.53 70.67L107.86 70.67L100 100L70.67 100Z" fill="#0B0D0C"/><path d="M52.66 35.33L81.99 35.33L74.13 64.67L44.8 64.67Z" fill="#2448FF"/></g><g class="r"><path d="M72.49 0L81.1 0L78.79 8.6L70.19 8.6ZM59.35 10.36L67.96 10.36L65.65 18.97L57.05 18.97ZM69.72 10.36L78.32 10.36L76.01 18.97L67.41 18.97ZM80.08 10.36L88.68 10.36L86.38 18.97L77.77 18.97ZM56.57 20.73L65.18 20.73L62.87 29.33L54.27 29.33ZM77.3 20.73L85.91 20.73L83.6 29.33L75 29.33ZM27.69 35.33L36.3 35.33L33.99 43.94L25.39 43.94ZM14.55 45.7L23.15 45.7L20.85 54.3L12.24 54.3ZM24.91 45.7L33.52 45.7L31.21 54.3L22.61 54.3ZM35.28 45.7L43.88 45.7L41.58 54.3L32.97 54.3ZM11.77 56.06L20.38 56.06L18.07 64.67L9.47 64.67ZM32.5 56.06L41.11 56.06L38.8 64.67L30.2 64.67ZM98.36 35.33L106.96 35.33L104.66 43.94L96.05 43.94ZM85.22 45.7L93.82 45.7L91.52 54.3L82.91 54.3ZM95.58 45.7L104.19 45.7L101.88 54.3L93.28 54.3ZM105.95 45.7L114.55 45.7L112.24 54.3L103.64 54.3ZM82.44 56.06L91.04 56.06L88.74 64.67L80.13 64.67ZM103.17 56.06L111.77 56.06L109.47 64.67L100.86 64.67ZM18.22 70.67L26.83 70.67L24.52 79.27L15.92 79.27ZM5.08 81.03L13.69 81.03L11.38 89.64L2.78 89.64ZM15.45 81.03L24.05 81.03L21.75 89.64L13.14 89.64ZM25.81 81.03L34.42 81.03L32.11 89.64L23.51 89.64ZM2.31 91.4L10.91 91.4L8.6 100L0 100ZM23.03 91.4L31.64 91.4L29.33 100L20.73 100ZM88.89 70.67L97.5 70.67L95.19 79.27L86.59 79.27ZM75.75 81.03L84.35 81.03L82.05 89.64L73.44 89.64ZM86.11 81.03L94.72 81.03L92.41 89.64L83.81 89.64ZM96.48 81.03L105.08 81.03L102.78 89.64L94.17 89.64ZM72.97 91.4L81.58 91.4L79.27 100L70.67 100ZM93.7 91.4L102.31 91.4L100 100L91.4 100Z" fill="#0B0D0C"/><path d="M63.03 35.33L71.63 35.33L69.32 43.94L60.72 43.94ZM49.88 45.7L58.49 45.7L56.18 54.3L47.58 54.3ZM60.25 45.7L68.85 45.7L66.55 54.3L57.94 54.3ZM70.61 45.7L79.22 45.7L76.91 54.3L68.31 54.3ZM47.11 56.06L55.71 56.06L53.41 64.67L44.8 64.67ZM67.84 56.06L76.44 56.06L74.13 64.67L65.53 64.67Z" fill="#2448FF"/></g></svg></button>
+<div class="wrap" id="md" aria-label="This page as Markdown"># Antimony
+
+Software for the people who make the work.
+
+Creators do the work. Then they do the work around the work: the briefs, the contracts, the invoices, the chasing. We build software that takes the second part away.
+
+Our first product is Orbe (https://eoinforker.github.io/orbe-site/), the creator's side of every sponsorship deal. It holds the money until the work is delivered.
+
+Antimony is a metal. It was used to refine gold: melted with it, it took up everything that was not gold. Alchemists called it the wolf of metals. We liked that.
+
+## The mark
+
+A stone split open, and a crystal grown in the break.
+
+## Facts
+
+- Element: 51, Sb, from the Latin stibium
+- Found as: stibnite, long grey prisms that grow in the cracks of rock
+- Used for: refining gold
+- Rarely: found alone
+- We make: Orbe, and what comes after it
+</div>
+<div class="wrap"><footer>
+  <svg class="big" viewBox="-10 195 4385.0 955" style="" role="img" aria-label="Antimony"><path d="M111.0 835 352.0 235H388.0L630.0 835Q641.0 862 653.5 876.0Q666.0 890 682.5 896.5Q699.0 903 726.0 906V930H457.0V906Q495.0 903 509.5 894.5Q524.0 886 524.0 872.0Q524.0 858 515.0 834L462.0 696H207.0L155.0 834Q146.0 858 149.5 872.5Q153.0 887 171.5 895.0Q190.0 903 229.0 906V930H15.0V906Q40.0 904 56.0 898.0Q72.0 892 86.0 877.5Q100.0 863 111.0 835ZM448.0 658 336.0 371 222.0 658ZM822.984375 546 912.984375 523Q940.984375 479 981.984375 449.5Q1022.984375 420 1078.984375 420Q1140.984375 420 1179.984375 458.0Q1218.984375 496 1218.984375 566V850H1128.984375V597Q1128.984375 544 1104.484375 516.5Q1079.984375 489 1035.984375 489Q999.984375 489 968.984375 506.5Q937.984375 524 912.984375 555V850H822.984375ZM822.984375 837H912.984375Q912.984375 860 919.484375 874.5Q925.984375 889 940.984375 896.5Q955.984375 904 984.984375 907V930H751.984375V907Q779.984375 904 794.984375 896.5Q809.984375 889 816.484375 874.5Q822.984375 860 822.984375 837ZM1128.984375 837H1218.984375Q1218.984375 860 1225.484375 874.5Q1231.984375 889 1246.984375 896.5Q1261.984375 904 1289.984375 907V930H1057.984375V907Q1085.984375 904 1100.984375 896.5Q1115.984375 889 1122.484375 874.5Q1128.984375 860 1128.984375 837ZM761.984375 488V469L899.984375 420H912.984375V581H822.984375Q822.984375 543 819.984375 526.0Q816.984375 509 804.484375 500.0Q791.984375 491 761.984375 488ZM1377.984375 807V475H1303.984375V457V453Q1361.984375 439 1392.984375 401.0Q1423.984375 363 1440.984375 299H1466.984375V430H1611.984375V475H1466.984375V792Q1466.984375 835 1485.984375 856.5Q1504.984375 878 1538.984375 878Q1559.984375 878 1575.484375 869.0Q1590.984375 860 1603.984375 847L1618.984375 852Q1606.984375 886 1576.984375 912.5Q1546.984375 939 1495.984375 939Q1440.984375 939 1409.484375 906.0Q1377.984375 873 1377.984375 807ZM1727.984375 572H1817.984375V850H1727.984375ZM1727.984375 837H1817.984375Q1817.984375 860 1824.484375 874.5Q1830.984375 889 1845.984375 896.5Q1860.984375 904 1888.984375 907V930H1656.984375V907Q1684.984375 904 1699.984375 896.5Q1714.984375 889 1721.484375 874.5Q1727.984375 860 1727.984375 837ZM1666.984375 485V466L1803.984375 417H1817.984375V578H1727.984375Q1727.984375 540 1724.984375 523.0Q1721.984375 506 1709.484375 497.5Q1696.984375 489 1666.984375 485ZM2001.984375 568 2091.984375 517Q2125.984375 472 2165.984375 446.0Q2205.984375 420 2256.984375 420Q2303.984375 420 2338.484375 445.5Q2372.984375 471 2381.984375 512Q2416.984375 468 2455.984375 444.0Q2494.984375 420 2544.984375 420Q2606.984375 420 2642.984375 456.0Q2678.984375 492 2678.984375 562V834H2588.984375V579Q2588.984375 534 2565.484375 510.5Q2541.984375 487 2499.984375 487Q2468.984375 487 2439.484375 500.0Q2409.984375 513 2385.984375 540V834H2295.984375V586Q2295.984375 537 2273.984375 512.0Q2251.984375 487 2211.984375 487Q2180.984375 487 2149.484375 503.5Q2117.984375 520 2091.984375 551V834H2001.984375ZM2001.984375 834H2091.984375Q2091.984375 869 2106.984375 885.5Q2121.984375 902 2159.984375 907V930H1930.984375V907Q1969.984375 902 1985.984375 885.0Q2001.984375 868 2001.984375 834ZM2295.984375 834H2385.984375Q2385.984375 869 2400.984375 885.5Q2415.984375 902 2453.984375 907V930H2226.984375V907Q2264.984375 902 2280.484375 885.5Q2295.984375 869 2295.984375 834ZM1940.984375 488V469L2078.984375 420H2091.984375V581H2001.984375Q2001.984375 543 1998.984375 526.0Q1995.984375 509 1983.484375 500.0Q1970.984375 491 1940.984375 488ZM2588.984375 834H2678.984375Q2678.984375 868 2695.484375 885.0Q2711.984375 902 2749.984375 907V930H2520.984375V907Q2558.984375 902 2573.984375 885.5Q2588.984375 869 2588.984375 834ZM2779.984375 679Q2779.984375 600 2814.484375 542.0Q2848.984375 484 2904.484375 453.5Q2959.984375 423 3022.984375 423Q3086.984375 423 3142.984375 453.5Q3198.984375 484 3233.484375 542.0Q3267.984375 600 3267.984375 679Q3267.984375 757 3233.484375 816.0Q3198.984375 875 3142.984375 906.0Q3086.984375 937 3022.984375 937Q2960.984375 937 2904.484375 906.0Q2847.984375 875 2813.984375 816.0Q2779.984375 757 2779.984375 679ZM3160.984375 679Q3160.984375 580 3126.984375 518.0Q3092.984375 456 3022.984375 456Q2953.984375 456 2919.984375 517.5Q2885.984375 579 2885.984375 679Q2885.984375 779 2920.484375 841.5Q2954.984375 904 3023.984375 904Q3091.984375 904 3126.484375 841.0Q3160.984375 778 3160.984375 679ZM3390.984375 546 3480.984375 523Q3508.984375 479 3549.984375 449.5Q3590.984375 420 3646.984375 420Q3708.984375 420 3747.984375 458.0Q3786.984375 496 3786.984375 566V850H3696.984375V597Q3696.984375 544 3672.484375 516.5Q3647.984375 489 3603.984375 489Q3567.984375 489 3536.984375 506.5Q3505.984375 524 3480.984375 555V850H3390.984375ZM3390.984375 837H3480.984375Q3480.984375 860 3487.484375 874.5Q3493.984375 889 3508.984375 896.5Q3523.984375 904 3552.984375 907V930H3319.984375V907Q3347.984375 904 3362.984375 896.5Q3377.984375 889 3384.484375 874.5Q3390.984375 860 3390.984375 837ZM3696.984375 837H3786.984375Q3786.984375 860 3793.484375 874.5Q3799.984375 889 3814.984375 896.5Q3829.984375 904 3857.984375 907V930H3625.984375V907Q3653.984375 904 3668.984375 896.5Q3683.984375 889 3690.484375 874.5Q3696.984375 860 3696.984375 837ZM3329.984375 488V469L3467.984375 420H3480.984375V581H3390.984375Q3390.984375 543 3387.984375 526.0Q3384.984375 509 3372.484375 500.0Q3359.984375 491 3329.984375 488ZM3855.984375 453V430H4087.984375V453Q4043.984375 455 4030.484375 466.0Q4016.984375 477 4026.984375 503L4139.984375 812L4254.984375 513Q4261.984375 493 4259.984375 481.5Q4257.984375 470 4243.484375 462.5Q4228.984375 455 4197.984375 453V430H4358.984375V453Q4334.984375 455 4324.484375 460.0Q4313.984375 465 4307.984375 475.0Q4301.984375 485 4291.984375 510L4093.984375 1023Q4069.984375 1088 4037.484375 1117.0Q4004.984375 1146 3963.984375 1148Q3920.984375 1149 3893.984375 1130.0Q3866.984375 1111 3864.984375 1077Q3863.984375 1053 3877.484375 1037.5Q3890.984375 1022 3913.984375 1021Q3929.984375 1021 3938.984375 1028.5Q3947.984375 1036 3956.984375 1052Q3966.984375 1069 3975.984375 1077.0Q3984.984375 1085 4002.984375 1085Q4016.984375 1084 4035.984375 1062.0Q4054.984375 1040 4067.984375 1004L4091.984375 937L3921.984375 506Q3912.984375 484 3907.984375 475.0Q3902.984375 466 3891.484375 460.5Q3879.984375 455 3855.984375 453Z" fill="#141311"/><path d="M1765.48 175.5L1847.98 258L1765.48 340.5L1682.98 258Z" fill="#141311"/></svg>
+  <div class="noise" aria-hidden="true">▪▴▴:▪▪▴ ⁘▴·▴▴▫ ▫⁘ ⁘···▴ ··:▫  ▫·▪··:···· ·:▴··⁘⁘▪▫··▴: ▫···▴··⁘▴··▴▴·▴ ▴··▫⁘▴·  ⁘▴ ▪· ·▪▴·▫· ▴ ·▪▴▫  ·:▴⁘:· ··:⁘·▴▴▴   ···⁘· :⁘⁘⁘▫▫⁘ ▫▴·⁘▴ ▫· ··:⁘▪⁘ ·⁘▴▫·▴ ·▫· ·· ·▴▴:▫ ··▴ ·▪⁘:· · ▴ : ·::▴▴⁘⁘▪····⁘·▴·· ▴· ▪:· ▴▪·▫▪·▪···▴▪:⁘▪▴▪·:▴···▴··▪·▫  ·:▴ ·:·:··▫··▴⁘ ·▴⁘▫ ··:·· ·▫·▴·⁘▫▪▫·· ⁘·· ·▪··⁘▴::···⁘  ▴··:⁘ ·▪▫  ···▪·⁘:·▫▪: ▫▪▪⁘·⁘▫ · ▪·▪ :▫·▴· · ··▪ :·▪ ⁘⁘▪▫▪··▴··    ·▴▪    ⁘⁘·▫▴·:▪ ⁘:▫▪▪·  ▴:⁘ ····· · ▫ · :▪·⁘· ▫▫:▪▫▴· ▪▪·· ▫ ▫⁘·▫:▪▴▫▴· ▪▴·· ▪▴▫⁘▪▫▪▫::· ▴· ·▫ ▴▪⁘▴·:▴▫·▴· ▫ ▪⁘·▪:▪▴▫· ·: ▫·▫⁘ ··▴▴▪⁘⁘▪· ⁘·▪ ··▫▪ ·▴▫·· ·▪  :▪ ·· :⁘⁘·▪ ▪▪▫▴ ⁘▪  ·▴  ····⁘· ··  · ▫·⁘ ⁘·▴·⁘⁘: ··▫·▫·⁘▴   ▪:·▪··· ·▫▫:⁘⁘ ·▪·▫  ⁘ ·⁘·· ·  ⁘··⁘··▪  ⁘▪ ·   ⁘▪: :·▫ ⁘▫·▫ ··▪·▫:▴·▫ · :·:▫·⁘▪:▪▫:▪·▪  ▴ ··▪ ⁘ ·▫ ·▴· ⁘▴ ▴⁘··⁘ ·⁘▪▪··  ····▫·▪·▪ ⁘···▪:·▴ ··▴··:▴▪⁘▴▴·:▪⁘·▴ ⁘ ··   ·▴⁘·▴▫·▴·   :▫▫·⁘▴▪ ·▫·   ▪ ▴▴▪:⁘ ⁘⁘· ▴▪ ···▪▪···:▴▪ ·:▴  ⁘▫▫:▴··▫···▪ · ·▪·:·▪▫  :▪▪··· ·⁘·▫·  ·:·▫··    :▴ ▴▫⁘⁘▫·:·▫:· ·⁘▴▪ ·⁘▪·▴⁘▪· : ·▴▫▫▪⁘·▫⁘···▫·  ▪ ▫·:·::·⁘  ⁘:·:▪▫·▴▴·· ···⁘  ·⁘ ···· :·· · ··⁘·▴  :·⁘▴·· ··⁘   ▪▪· :▫·▫▫ ▪⁘···: ▴▫⁘▴· · ·: ▫: ▫▫:⁘··⁘:⁘·⁘⁘▪  ▴ ⁘▫▪::·▪·⁘   · ·▫▪▴·⁘:  ·:▫ ··▴⁘· ·▴⁘:▪···:·⁘  ⁘··⁘  ·▴·▫·▪▪▴▪▴▫· ▴·  ·  ▴▪▪⁘:··▴⁘▫▴··▪ ⁘▫</div>
+  <div class="fine"><span>© 2026 Antimony</span><span><button type="button" id="b-render" aria-pressed="true">Render</button> / <button type="button" id="b-md" aria-pressed="false">Markdown</button></span></div>
+</footer></div>
 <script>
-(() => {
-"use strict";
+(() => { "use strict";
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const c = document.getElementById("c"), x = c.getContext("2d"), vec = document.getElementById("vec");
-// The Five: antimony's five outer electrons around a nucleus, on a 3 by 3 grid of 100 units, leaning forward 15 degrees.
-// Index 2 is the nucleus. Recursion: every cell of the Five is itself a Five.
-const G = 6, S = (100 - 2 * G) / 3, K = Math.tan(15 * Math.PI / 180), VW = 100 + 100 * K;
-const FIVE = [[1, 0], [0, 1], [1, 1], [2, 1], [0, 2], [2, 2]];
-const CELLS = [];
-FIVE.forEach(([pc, pr], pi) => FIVE.forEach(([cc, cr], ci) => {
-  const px = pc * (S + G), py = pr * (S + G), u = S / 100;
-  CELLS.push({ pi, ci, nuc: pi === 2, x: px + cc * (S + G) * u, y: py + cr * (S + G) * u, z: S * u, px, py, pz: S,
-    d: Math.hypot(px + S / 2 - 50, py + S / 2 - 50) / 70 * 0.55 + ci * 0.07 + Math.random() * 0.12, n: Math.random() * 20 });
-}));
-const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
-const mix = (a, b, t) => { const A = rgb(a), B = rgb(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(",")})`; };
-const clamp = v => Math.max(0, Math.min(1, v));
-const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-const BUILD = 1.2, FOLD = 3.9, FOLDT = 0.9, FLY = 5.2, FLYT = 1.4;   // seconds
-let W, H, big, small, T0, mx = -1e9, my = -1e9;
+const Q = {"seam": "M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z", "cav": "M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z", "gem": "M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z", "facet": "M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z"}, SKY = "#94E6FF", INK = "#141311", PAPER = "#F3F0E8", PRINTS = ["assets/prints/19006.webp", "assets/prints/24800.webp", "assets/prints/3652.webp", "assets/prints/18972.webp", "assets/prints/87008.webp"];
+/* ---------- the opening: the mark builds in pixels on ink, then flies home to the logo ---------- */
+const intro = document.getElementById("intro"), c = document.getElementById("px"), x = c.getContext("2d"), logo = document.getElementById("logo");
+function sample(n) {
+  const S = 400, o = document.createElement("canvas"); o.width = o.height = S; const g = o.getContext("2d"), k = S / 100;
+  g.scale(k, k); const rr = new Path2D(); rr.roundRect ? rr.roundRect(0, 0, 100, 100, 22) : rr.rect(0, 0, 100, 100);
+  g.fillStyle = "#fff"; g.fill(rr); g.globalCompositeOperation = "destination-out"; g.fill(new Path2D(Q.seam)); g.fill(new Path2D(Q.cav));
+  g.globalCompositeOperation = "source-over"; g.fillStyle = "#f00"; g.fill(new Path2D(Q.gem)); g.fillStyle = "rgba(0,0,255,1)"; g.fill(new Path2D(Q.facet));
+  const d = g.getImageData(0, 0, S, S).data, out = [];
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const px = Math.floor((i + .5) / n * S), py = Math.floor((j + .5) / n * S), q = (py * S + px) * 4;
+    if (d[q + 3] < 128) continue; const kind = d[q] > 200 && d[q + 1] > 200 ? 0 : d[q] > 200 ? 1 : 2;   // 0 stone, 1 crystal, 2 lit facet
+    out.push({ i, j, u: (i + .5) / n, v: (j + .5) / n, kind });
+  }
+  return out;
+}
+const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)), mix = (a, b, t) => { const A = rgb(a), B = rgb(b); return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(",")})`; };
+const COL = [[PAPER, INK], [SKY, SKY], ["#C3F1FF", "#B5EEFF"]];
+let W, H, cells = [], T0, big, home, running = false;
+const BUILD = 1.25, HOLD = 2.4, FLY = 1.5, cl = v => Math.max(0, Math.min(1, v)), ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 function layout() {
   const d = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; c.width = W * d; c.height = H * d; x.setTransform(d, 0, 0, d, 0, 0);
-  const u = Math.min(W * 0.72 / VW, H * 0.5 / 100);
-  big = { u, ox: W / 2 - VW * u / 2, oy: H * 0.45 - 50 * u };
-  const r = vec.getBoundingClientRect();
-  small = { u: r.width / VW, ox: r.left, oy: r.top };
-}
-function quad(o, cx, cy, cz, grow) {
-  // a cell on the leaning lattice; grow scales it about its own centre as it arrives
-  const h = cz * (1 - grow) / 2, a = cx + h, b = cy + h, z = cz * grow;
-  const P = (p, q) => [o.ox + (p + K * (100 - q)) * o.u, o.oy + q * o.u];
-  const pts = [P(a, b), P(a + z, b), P(a + z, b + z), P(a, b + z)];
-  x.beginPath(); x.moveTo(...pts[0]); for (let i = 1; i < 4; i++) x.lineTo(...pts[i]); x.closePath(); x.fill();
-  return pts;
+  const s = Math.min(W * .62, H * .56), n = W < 600 ? 40 : 56; big = { s, n, ox: W / 2 - s / 2, oy: H * .46 - s / 2 };
+  const r = logo.getBoundingClientRect(); home = { s: r.width, ox: r.left, oy: r.top };
+  cells = sample(n).map(p => ({ ...p, d: Math.random() * .8 + p.v * .6, w: Math.random() * .35 }));
 }
 function frame() {
-  const t = still ? 99 : (performance.now() - T0) / 1000;
-  const fold = ease(clamp((t - FOLD) / FOLDT)), fly = ease(clamp((t - FLY) / FLYT)), paper = clamp((t - FLY - FLYT * 0.45) / (FLYT * 0.4));
-  const o = { u: big.u + (small.u - big.u) * fly, ox: big.ox + (small.ox - big.ox) * fly, oy: big.oy + (small.oy - big.oy) * fly - Math.sin(fly * Math.PI) * 24 };
-  x.clearRect(0, 0, W, H);
-  for (const k of CELLS) {
-    const a = clamp((t - BUILD - k.d) / 0.3); if (a <= 0) continue;
-    const grow = a < 1 ? 1 - Math.pow(1 - a, 3) : 1;
-    // fold: each small cell slides out to fill its parent, so six small cells become one
-    const cx = k.x + (k.px - k.x) * fold, cy = k.y + (k.py - k.y) * fold, cz = k.z + (k.pz - k.z) * fold;
-    let col = k.nuc ? mix("#94E6FF", "#2448FF", paper) : mix("#F2F1EC", "#0B0D0C", paper);
-    if (a < 1) col = k.nuc ? "#F2F1EC" : "#94E6FF";   // a cell arrives in the other colour, then settles
-    else if (fold === 0) {
-      const sx = big.ox + (k.x + k.z / 2 + K * (100 - k.y - k.z / 2)) * big.u, sy = big.oy + (k.y + k.z / 2) * big.u;
-      const near = Math.hypot(sx - mx, sy - my) < big.u * 18, flick = t > BUILD + 1.4 && Math.sin(t * 3 + k.n * 7) > .997;
-      if (near || flick) col = k.nuc ? "#F2F1EC" : "#94E6FF";
-    }
-    x.fillStyle = col; quad(o, cx, cy, cz, grow);
+  const t = (performance.now() - T0) / 1000, f = cl((t - BUILD - HOLD) / FLY);
+  x.clearRect(0, 0, W, H); const cs = big.s / big.n;
+  for (const p of cells) {
+    const a = cl((t - BUILD - p.d) / .25); if (a <= 0) continue;
+    const e = ease(cl((f - p.w * .5) / (1 - p.w * .5 + 1e-6)));
+    const bx = big.ox + p.u * big.s, by = big.oy + p.v * big.s, hx = home.ox + p.u * home.s, hy = home.oy + p.v * home.s;
+    const X = bx + (hx - bx) * e, Y = by + (hy - by) * e - Math.sin(e * Math.PI) * 26 * (1 - p.w), sz = (cs - 1) + ((home.s / big.n) - (cs - 1)) * e;
+    x.globalAlpha = 1 - cl((f - .88) / .12);
+    x.fillStyle = a < 1 ? SKY : mix(COL[p.kind][0], COL[p.kind][1], cl((f - .55) / .35));
+    x.fillRect(X - sz * a / 2, Y - sz * a / 2, sz * a, sz * a);
   }
-  const done = t > FLY + FLYT;
-  c.style.opacity = done ? 0 : 1; vec.style.opacity = done ? 1 : 0;
-  document.body.classList.toggle("paper", paper > 0);
-  document.body.classList.toggle("said", t > FLY + FLYT + 0.3);
-  if (t < FLY + FLYT + 0.5 || still) requestAnimationFrame(frame); else running = false;
+  x.globalAlpha = 1;
+  logo.style.opacity = cl((f - .82) / .18);
+  if (f > .45) intro.classList.add("paper");
+  if (t > BUILD + HOLD + FLY * .7) document.body.classList.remove("opening");
+  if (t < BUILD + HOLD + FLY + .2) requestAnimationFrame(frame); else { intro.classList.add("gone"); running = false; }
 }
-let running = false;
-function play() { T0 = performance.now(); layout(); document.body.classList.remove("paper", "said"); if (!running) { running = true; requestAnimationFrame(frame); } }
-addEventListener("pointermove", e => { mx = e.clientX; my = e.clientY; });
-addEventListener("pointerleave", () => mx = my = -1e9);
-addEventListener("resize", layout);
-document.getElementById("mark").addEventListener("click", play);
-(document.fonts ? document.fonts.load('400 19px "Timeless Serif"') : Promise.resolve()).catch(() => {}).finally(play);
+function play() { if (running) return; running = true; intro.classList.remove("gone", "paper"); document.body.classList.add("opening"); logo.style.opacity = 0; scrollTo(0, 0); layout(); T0 = performance.now(); requestAnimationFrame(frame); }
+document.getElementById("replay").addEventListener("click", play);
+addEventListener("resize", () => running && layout());
+if (still) { intro.classList.add("gone"); document.body.classList.remove("opening"); }
+else (document.fonts ? document.fonts.load('400 20px "Timeless Serif"') : Promise.resolve()).catch(() => {}).finally(play);
+/* ---------- the window: prints bloom into each other like ink into washi ---------- */
+const box = document.getElementById("win"), gc = box.querySelector(".gl"), gl = gc.getContext("webgl", { antialias: false });
+if (gl) {
+  const vs = "attribute vec2 p; varying vec2 uv; void main() { uv = vec2(p.x * .5 + .5, .5 - p.y * .5); gl_Position = vec4(p, 0., 1.); }";
+  const fs = `precision highp float; varying vec2 uv; uniform sampler2D A, B; uniform float t, seed; uniform vec2 o, ca, cb;
+  float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  float n(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+  float fbm(vec2 p) { float v = 0., a = .5; for (int i = 0; i < 5; i++) { v += a * n(p); p = p * 2.07 + 3.1; a *= .5; } return v; }
+  vec2 fit(vec2 u, vec2 c) { return (u - .5) * c + .5; }
+  void main() { vec2 q = (uv - .5) * vec2(.62, .64) + vec2(.5, .515); float r = length(uv - o), g = t * 1.15;
+    float e = r + (fbm(uv * 3.5 + seed) - .5) * .42 * (.25 + t) + (fbm(uv * 22. + seed * 1.7) - .5) * .045;
+    float m = 1. - smoothstep(g - .005, g + .005, e), rim = exp(-pow((e - g) / .007, 2.)) * (1. - smoothstep(.8, 1., t)) * step(.001, t);
+    vec3 a = texture2D(A, fit(q, ca)).rgb, b = texture2D(B, fit(q, cb)).rgb;
+    gl_FragColor = vec4(mix(mix(a, b, m), vec3(.12, .25, .48), rim * .7), 1.); }`;
+  const sh = (ty, s) => { const q = gl.createShader(ty); gl.shaderSource(q, s); gl.compileShader(q); return q; };
+  const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const L = gl.getAttribLocation(pr, "p"); gl.enableVertexAttribArray(L); gl.vertexAttribPointer(L, 2, gl.FLOAT, false, 0, 0);
+  const U = k => gl.getUniformLocation(pr, k), tex = [], asp = []; let cur = 0, nxt = 1, t = 0, busy = false, ready = false, seed = 0, o = [.5, .5];
+  const load = i => new Promise(res => { const im = new Image(); im.onload = () => { const tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, im);
+    [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER].forEach(q => gl.texParameteri(gl.TEXTURE_2D, q, gl.LINEAR)); [gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(q => gl.texParameteri(gl.TEXTURE_2D, q, gl.CLAMP_TO_EDGE)); tex[i] = tx; asp[i] = im.width / im.height; res(); }; im.src = PRINTS[i]; });
+  const cover = ia => { const a = .62 / .64; return ia > a ? [a / ia, 1] : [1, ia / a]; };
+  const size = () => { const r = box.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); gc.width = r.width * d; gc.height = r.height * d; gl.viewport(0, 0, gc.width, gc.height); };
+  const draw = () => { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex[cur]); gl.uniform1i(U("A"), 0); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, tex[nxt]); gl.uniform1i(U("B"), 1);
+    gl.uniform1f(U("t"), t); gl.uniform1f(U("seed"), seed); gl.uniform2f(U("o"), o[0], o[1]); gl.uniform2fv(U("ca"), cover(asp[cur])); gl.uniform2fv(U("cb"), cover(asp[nxt])); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); };
+  const go = () => { if (busy || !ready) return; busy = true; seed = Math.random() * 40; o = [.38 + Math.random() * .24, .38 + Math.random() * .24]; const s0 = performance.now(), dur = still ? 1 : 2800;
+    (function step(now) { const k = Math.min(1, (now - s0) / dur); t = 1 - Math.pow(1 - k, 1.7); draw(); if (k < 1) requestAnimationFrame(step); else { cur = nxt; nxt = (nxt + 1) % PRINTS.length; t = 0; draw(); busy = false; } })(s0); };
+  new ResizeObserver(() => { size(); if (ready) draw(); }).observe(box);
+  Promise.all(PRINTS.map((_, i) => load(i))).then(() => { ready = true; size(); draw(); if (!still) setInterval(go, 7000); });
+}
+/* ---------- the pencil: the light coloured in by hand, once, a little outside the lines ---------- */
+const pc = box.querySelector(".pencil"), px = pc.getContext("2d"), N = pc.width;
+const GEM = (Q.gem.match(/-?\d+\.?\d*/g) || []).map(Number).reduce((a, v, i) => (i % 2 ? a[a.length - 1].push(v * N / 100) : a.push([v * N / 100]), a), []);
+const top_ = Math.min(...GEM.map(p => p[1])), bot = Math.max(...GEM.map(p => p[1]));
+const span = y => { const xs = []; for (let i = 0; i < GEM.length; i++) { const [a, b] = GEM[i], [c2, d] = GEM[(i + 1) % GEM.length]; if ((b <= y) !== (d <= y)) xs.push(a + (c2 - a) * (y - b) / (d - b)); } xs.sort((p, q) => p - q); return xs.length > 1 ? [xs[0], xs[xs.length - 1]] : null; };
+const seg = (x0, y0, x1, y1) => { x0 = Math.round(x0); y0 = Math.round(y0); x1 = Math.round(x1); y1 = Math.round(y1); let dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, e = dx + dy; px.fillStyle = SKY;
+  for (;;) { px.fillRect(x0, y0, 1, 1); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy) { e += dy; x0 += sx; } if (e2 <= dx) { e += dx; y0 += sy; } } };
+let job = 0;
+function colourIn(delay) {
+  const me = ++job; px.clearRect(0, 0, N, N); pc.style.transition = "none"; pc.style.opacity = 1; const S = []; let y = top_ + 1, l = true;
+  while (y < bot - 1) { const y2 = y + .7 + Math.random() * .9, s = span(y), s2 = span(Math.min(y2, bot - 1)); if (s && s2) S.push(l ? [s[0] - 1 + Math.random() * 1.4, y, s2[1] + 1 - Math.random() * 1.4, y2] : [s[1] + 1 - Math.random() * 1.4, y, s2[0] - 1 + Math.random() * 1.4, y2]); l = !l; y = y2; }
+  let i = 0; const tick = () => { if (me !== job) return; for (let n = 0; n < 3 && i < S.length; n++, i++) seg(...S[i]); if (i < S.length) setTimeout(tick, 28);
+    else setTimeout(() => { if (me === job) { pc.style.transition = "opacity 1.4s ease"; pc.style.opacity = 0; } }, 1500); };
+  setTimeout(tick, delay);
+}
+box.addEventListener("click", () => colourIn(0));
+if (!still) colourIn((BUILD + HOLD + FLY + .8) * 1000);
+/* ---------- render or markdown ---------- */
+const rb = document.getElementById("b-render"), mb = document.getElementById("b-md");
+const set = md => { document.body.classList.toggle("md", md); rb.setAttribute("aria-pressed", !md); mb.setAttribute("aria-pressed", md); };
+rb.addEventListener("click", () => set(false)); mb.addEventListener("click", () => set(true));
 })();
 </script>
 </body></html>
