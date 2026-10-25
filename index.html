@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#121211"><meta name="description" content="Antimony builds software for the people who make the work. Our first product is Orbe.">
+<meta name="theme-color" content="#0B0B0A"><meta name="description" content="Antimony builds software for the people who make the work. Our first product is Orbe.">
 <meta property="og:title" content="Antimony"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <title>Antimony</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -8,88 +8,75 @@
 @font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
 @font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: swap; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; background: #121211; overflow: hidden; }
+html, body { height: 100%; background: #000; overflow: hidden; }
 body { color: #EEEAE0; font: 400 15px/1.6 "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; }
 a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .22em; text-decoration-color: rgba(238,234,224,.3); transition: text-decoration-color .3s ease; }
 a:hover { text-decoration-color: currentColor; }
 :focus-visible { outline: 1px solid #94E6FF; outline-offset: 4px; }
 ::selection { background: #94E6FF; color: #0B0C0C; }
-#wall { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
-.wm { position: fixed; left: max(40px, env(safe-area-inset-left, 0px)); top: max(36px, env(safe-area-inset-top, 0px)); height: 18px; width: auto; color: #EEEAE0; --lit: #94E6FF; opacity: .92; }
+#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+.still { position: fixed; inset: 0; background: #121211 url(assets/home-still.webp) 62% 47% / cover no-repeat; display: none; }
+.nogl .still { display: block; } .nogl #c { display: none; }
+.wm { position: fixed; left: max(40px, env(safe-area-inset-left, 0px)); top: max(36px, env(safe-area-inset-top, 0px)); height: 18px; width: auto; color: #EEEAE0; --lit: #94E6FF; }
 .col { position: fixed; left: max(40px, env(safe-area-inset-left, 0px)); bottom: max(36px, env(safe-area-inset-bottom, 0px)); max-width: 27em; color: rgba(238,234,224,.62); text-wrap: pretty; }
 .col em { color: #EEEAE0; }
 .cr { position: fixed; right: max(40px, env(safe-area-inset-right, 0px)); bottom: max(36px, env(safe-area-inset-bottom, 0px)); font-size: 12.5px; color: rgba(238,234,224,.34); text-align: right; max-width: 22em; }
-.col, .cr, .wm { opacity: 0; transition: opacity 1.6s ease; } .on .col, .on .cr { opacity: 1; } .on .wm { opacity: .92; }
-@media (max-width: 700px) { .wm { left: 24px; top: max(28px, env(safe-area-inset-top, 0px)); } .col { left: 24px; right: 24px; bottom: max(28px, env(safe-area-inset-bottom, 0px)); font-size: 15.5px; } .cr { display: none; } }
+.wm, .col, .cr { opacity: 0; transform: translateY(4px); transition: opacity 1.8s ease, transform 1.8s cubic-bezier(.2,.7,.2,1); }
+.on .wm, .on .col, .on .cr { opacity: 1; transform: none; } .on .col { transition-delay: .25s; } .on .cr { transition-delay: .5s; }
+@media (max-width: 700px) { .wm { left: 24px; top: max(28px, env(safe-area-inset-top, 0px)); } .col { left: 24px; right: 24px; bottom: max(28px, env(safe-area-inset-bottom, 0px)); font-size: 15.5px; } .cr { display: none; } .still { background-position: 56% 36%; } }
 </style></head>
 <body>
-<svg id="wall" aria-label="A wall of dark stone with a crack through it at sixteen degrees, opening into a crystal; through the crystal, a print of the moon"></svg>
+<canvas id="c" aria-label="A wall of dark stone. A crack runs through it at sixteen degrees and opens into a crystal; through the crystal, a print of the moon"></canvas>
+<div class="still" aria-hidden="true"></div>
 <svg class="wm" viewBox="-20 -830 4186 1070" role="img" aria-label="Antimony"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg>
 <p class="col"><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator&#39;s side of every sponsorship deal. We sit on their side of the table, and we mean to stay there for a long time.</p>
 <p class="cr">Through the crystal: Utagawa Hiroshige, <i>Autumn Moon over Ishiyama Temple</i>, 1857. Art Institute of Chicago.</p>
 <script>
 (() => { "use strict";
-const G = {"ang": 16, "gw": 38.4, "gh": 60, "pd": 25.2, "mar": 6.5}, NS = "http://www.w3.org/2000/svg", svg = document.getElementById("wall");
-const still = matchMedia("(prefers-reduced-motion: reduce)").matches, fine = matchMedia("(pointer: fine)").matches;
-const k = Math.tan(G.ang * Math.PI / 180), d = [Math.sin(G.ang * Math.PI / 180), -Math.cos(G.ang * Math.PI / 180)];
-const el = (n, a, p = svg) => { const e = document.createElementNS(NS, n); for (const q in a) e.setAttribute(q, a[q]); p.appendChild(e); return e; };
-const P = pts => "M" + pts.map(p => p[0].toFixed(1) + " " + p[1].toFixed(1)).join("L") + "Z";
-// the crystal and its cavity, as in the mark: a hexagon sheared to the seam's angle
-const hex = (cx, cy, w, h, pd) => [[cx, cy - h / 2], [cx + w / 2, cy - h / 2 + pd], [cx + w / 2, cy + h / 2 - pd], [cx, cy + h / 2], [cx - w / 2, cy + h / 2 - pd], [cx - w / 2, cy - h / 2 + pd]];
-const shear = (pts, cy) => pts.map(([x, y]) => [x + (cy - y) * k, y]);
-let W, H, t0 = performance.now(), crack, light, print, img, rim, ox = 0, oy = 0, tx = 0, ty = 0, done = still;
-function build() {
-  W = innerWidth; H = innerHeight; svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = "";
-  const narrow = W < 700, gh = narrow ? Math.min(H * .34, W * .62) : Math.min(H * .38, W * .3), s = gh / G.gh;
-  const cx = narrow ? W * .56 : W * .62, cy = narrow ? H * .36 : H * .47;
-  const gem = shear(hex(cx, cy, G.gw * s, G.gh * s, G.pd * s), cy), cav = shear(hex(cx, cy, (G.gw + G.mar * 2) * s, (G.gh + G.mar * 2.3) * s, (G.pd + G.mar * .55) * s), cy);
-  const defs = el("defs", {});
-  // stone: a slow fall of light from the upper left, and a fine grain
-  const lg = el("radialGradient", { id: "fall", cx: "18%", cy: "8%", r: "115%" }, defs);
-  el("stop", { offset: "0", "stop-color": "#1D1C1A" }, lg); el("stop", { offset: ".55", "stop-color": "#131312" }, lg); el("stop", { offset: "1", "stop-color": "#0C0C0B" }, lg);
-  const f = el("filter", { id: "grain", x: "0", y: "0", width: "100%", height: "100%" }, defs);
-  el("feTurbulence", { type: "fractalNoise", baseFrequency: ".85", numOctaves: "3", seed: "9" }, f);
-  el("feColorMatrix", { values: "0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .06 0" }, f);
-  const gc = el("clipPath", { id: "gem" }, defs); el("path", { d: P(gem) }, gc);
-  el("rect", { width: W, height: H, fill: "url(#fall)" }); el("rect", { width: W, height: H, filter: "url(#grain)" });
-  // the crack: hairline at the edges of the screen, widening to the cavity, like the seam in the mark
-  const L = Math.hypot(W, H), top = gem[0], bot = gem[3], w0 = s * 2.4, w1 = .55;
-  crack = { top, bot, w0, w1, L };
-  light = el("path", { fill: "#070808" });
-  el("path", { d: P(cav), fill: "#070808" });
-  // where the light from the upper left catches the far edge of each cut
-  rim = el("path", { fill: "none", stroke: "rgba(238,234,224,.10)", "stroke-width": "1", d: "M" + [cav[1], cav[2], cav[3]].map(p => p.join(" ")).join("L") });
-  const g = el("g", { "clip-path": "url(#gem)" });
-  print = el("g", {}, g);
-  const bw = (Math.max(...gem.map(p => p[0])) - Math.min(...gem.map(p => p[0]))) * 1.35, bh = gh * 1.25;
-  img = el("image", { href: "assets/prints/18972.webp", x: cx - bw / 2, y: cy - bh * .55, width: bw, height: bh, preserveAspectRatio: "xMidYMin slice", opacity: still ? 1 : 0 }, print);
-  el("path", { d: P([gem[0], gem[1], gem[2], gem[3]]), fill: "#fff", "fill-opacity": ".06" }, g);
-  el("path", { d: P(gem), fill: "none", stroke: "rgba(255,255,255,.14)", "stroke-width": ".8" }, g);
-  draw(done ? 1 : 0);
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches, fine = matchMedia("(pointer: fine)").matches, root = document.documentElement;
+const c = document.getElementById("c"), gl = c.getContext("webgl", { antialias: false, alpha: false, preserveDrawingBuffer: false });
+const fail = () => { root.classList.add("nogl"); document.body.classList.add("on"); };
+if (!gl) return fail();
+const FS = "\nprecision highp float;\nuniform vec2 R; uniform float D, T, uLight, uReach, uFlash, uGlow, uCav, uSheen, uPrint, uNarrow;\nuniform vec3 L; uniform vec2 C, PAR; uniform float S, PA; uniform sampler2D P;\nconst float K = 0.28675;                       // tan 16\nconst vec2 DIR = vec2(0.27564, -0.96126), NRM = vec2(0.96126, 0.27564);\nfloat h1(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }\nfloat n2(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);\n  return mix(mix(h1(i), h1(i + vec2(1, 0)), f.x), mix(h1(i + vec2(0, 1)), h1(i + vec2(1, 1)), f.x), f.y); }\nfloat fbm(vec2 p) { float v = 0., a = .5; for (int i = 0; i < 4; i++) { v += a * n2(p); p = p * 2.03 + 17.1; a *= .5; } return v; }\n// the crystal and the cavity: a hexagon, sheared to the seam's angle, as in the mark\nvec2 unshear(vec2 p) { vec2 q = p - C; q.x += q.y * K; return q; }\nfloat hexd(vec2 q, float w, float h, float pd) { vec2 a = abs(q); vec2 n = normalize(vec2(pd, w * .5));\n  return max(a.x - w * .5, dot(a - vec2(0., h * .5), n)); }\nfloat gemD(vec2 p) { return hexd(unshear(p), 38.4 * S, 60. * S, 25.2 * S); }\nfloat cavD(vec2 p) { float m = 6.5 * S * uCav; return hexd(unshear(p), 38.4 * S + m * 2., 60. * S + m * 2.3, 25.2 * S + m * .55); }\n// the crack: along the crystal's axis, out of its two points; wide at the cavity, then a hairline, with a little tremor\nfloat crackD(vec2 p, out float t) {\n  vec2 q = p - C; float al = dot(q, DIR), pr = dot(q, NRM);\n  t = abs(al) - 30. * S / 0.96126;\n  float w = .5 + (2.4 * S - .5) * exp(-max(t, 0.) / (R.y * .06));\n  pr += ((n2(vec2(al * .03, 3.1)) * .65 + n2(vec2(al * .09, 7.3)) * .35) - .5) * 5. * smoothstep(0., 140., t) + (n2(vec2(al * .4, 9.)) - .5) * .7;\n  float d = abs(pr) - w;\n  return t > uReach ? 1e4 : d; }\nfloat cutD(vec2 p) { float t; return min(cavD(p), crackD(p, t)); }\nfloat height(vec2 p) {\n  float s = fbm(p * .0055) * 3.2 + n2(p * .04 + 5.) * 1.1 + n2(p * .11) * .5 + h1(floor(p * .9)) * .22;\n  float e = smoothstep(-1.6, 1.1, cutD(p));\n  return mix(-16., s, e); }\nvoid main() {\n  vec2 p = vec2(gl_FragCoord.x, R.y * D - gl_FragCoord.y) / D;\n  float h = height(p), hx = height(p + vec2(1, 0)), hy = height(p + vec2(0, 1));\n  vec3 n = normalize(vec3(-(hx - h), -(hy - h), 1.));\n  vec3 lv = L - vec3(p, h); float dl = length(lv); lv /= dl;\n  float att = 1. / (1. + dl * dl / (R.x * R.x * 1.7));\n  float dif = max(dot(n, lv), 0.), spec = pow(max(dot(reflect(-lv, n), vec3(0, 0, 1)), 0.), 24.) * .25;\n  vec3 alb = vec3(.060, .057, .052);\n  vec3 col = alb * (.06 * uLight + .8 * dif * att * uLight) + vec3(spec * att * uLight * .12);\n  float t; float cd = crackD(p, t), cv = cavD(p), gd = gemD(p);\n  vec3 sky = vec3(.58, .90, 1.);\n  // in the cut: the dark of the recess, a little of the crystal's light, and, when the crack is new, light leaking through it\n  float inCut = 1. - smoothstep(-.5, .8, min(cd, cv));\n  float near = exp(-max(gd, 0.) / (40. * S * .25 + 20.));\n  col = mix(col, col * .2 + sky * .012 * near * (uGlow * .6 + uPrint * .4), inCut);\n  col += sky * uFlash * (1. - smoothstep(-.6, .9, cd)) * (.25 + .75 * exp(-max(t, 0.) / (R.y * .5)));\n  // the crystal: first a filament of light along its ridge, filling it; then the print, a little refracted at each facet\n  if (gd < 1.) {\n    vec2 q = unshear(p); float a = 1. - smoothstep(-.8, .8, gd);\n    float fil = exp(-abs(dot(p - C, NRM)) / (1.2 + 60. * S * uGlow)) * uGlow;\n    float face = q.x > 0. ? 1. : 0.;\n    vec2 bw = vec2(38.4 * S * 1.35, 60. * S * 1.25);\n    vec2 uv = (p - C + vec2(bw.x * .5, bw.y * .55) + PAR) / bw; uv.x = (uv.x - .5) * PA + .5; uv.x += (face - .5) * .006;\n    vec3 pr = pow(texture2D(P, clamp(uv, .002, .998)).rgb, vec3(2.2));   // the print is stored in sRGB; light it in linear\n    vec3 g = mix(sky * min(.12 * uGlow + fil * .9, .62), pr * (.92 + face * .08), uPrint);\n    float sh = exp(-pow((dot(p - C, NRM) - mix(-40. * S, 40. * S, uSheen)) / (3. * S), 2.)) * sin(uSheen * 3.14159);\n    g += vec3(sh * .55);\n    g += vec3(.05) * (1. - smoothstep(0., 1.2, abs(gd))) * uPrint;\n    col = mix(col, g, a);\n  }\n  col = pow(max(col, 0.), vec3(1. / 2.2));\n  col += (h1(p + fract(T)) - .5) / 255.;      // a whisper of dither so the dark never bands\n  gl_FragColor = vec4(col, 1.);\n}\n", VS = "attribute vec2 a; void main() { gl_Position = vec4(a, 0., 1.); }";
+const sh = (t, s) => { const x = gl.createShader(t); gl.shaderSource(x, s); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x; };
+let pr; try { pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr); gl.useProgram(pr); } catch (e) { console.warn(e); return fail(); }
+gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+const al = gl.getAttribLocation(pr, "a"); gl.enableVertexAttribArray(al); gl.vertexAttribPointer(al, 2, gl.FLOAT, false, 0, 0);
+const U = {}; ["R", "D", "T", "uLight", "uReach", "uFlash", "uGlow", "uCav", "uSheen", "uPrint", "uNarrow", "L", "C", "PAR", "S", "PA", "P"].forEach(k => U[k] = gl.getUniformLocation(pr, k));
+// the print, as a texture
+const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, new Uint8Array([20, 30, 50]));
+[gl.TEXTURE_WRAP_S, gl.TEXTURE_WRAP_T].forEach(q => gl.texParameteri(gl.TEXTURE_2D, q, gl.CLAMP_TO_EDGE)); [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER].forEach(q => gl.texParameteri(gl.TEXTURE_2D, q, gl.LINEAR));
+let PA = 1, dirty = true; const im = new Image(); im.onload = () => { gl.bindTexture(gl.TEXTURE_2D, tex); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, im); PA = 1; dirty = true; };
+im.src = "assets/prints/18972.webp";
+let W, H, DPR, Cx, Cy, S, narrow;
+function size() { DPR = Math.min(fine ? 1 : 1.25, devicePixelRatio || 1); W = innerWidth; H = innerHeight; c.width = Math.round(W * DPR); c.height = Math.round(H * DPR); gl.viewport(0, 0, c.width, c.height);
+  narrow = W < 700; const gh = narrow ? Math.min(H * .34, W * .62) : Math.min(H * .38, W * .3); S = gh / 60; Cx = narrow ? W * .56 : W * .62; Cy = narrow ? H * .36 : H * .47; }
+size(); addEventListener("resize", () => { size(); dirty = true; });
+// the opening, in seconds
+const cl = v => Math.max(0, Math.min(1, v)), seg = (t, a, b) => cl((t - a) / (b - a)), eo = t => 1 - Math.pow(1 - t, 3), expo = t => t >= 1 ? 1 : 1 - Math.pow(2, -10 * t), io = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const FIX = /^#t=/.test(location.hash) ? parseFloat(location.hash.slice(3)) : null;   // a still of any moment, for the kit
+let mx = .3, my = .2, lx = -.25, ly = .1, lz = 260, t0 = performance.now(), shown = false, px = 0, py = 0, qx = 0, qy = 0;
+if (fine && !still) addEventListener("pointermove", e => { mx = e.clientX / W; my = e.clientY / H; qx = -(e.clientX / W - .5) * 12; qy = -(e.clientY / H - .5) * 9; });
+function frame(now) {
+  const t = still ? 99 : FIX !== null ? FIX : (now - t0) / 1000;
+  const glow = eo(seg(t, .5, 1.1)), reach = expo(seg(t, 1.0, 1.75)) * Math.hypot(W, H), flash = seg(t, 1.0, 1.08) * (1 - eo(seg(t, 1.2, 3.0)));
+  const light = io(seg(t, 1.5, 3.4)), cav = io(seg(t, 1.8, 2.8)), sheen = seg(t, 2.5, 3.3), print = io(seg(t, 2.4, 3.9));
+  // a raking light crosses the stone, then comes to rest above and to the left, and leans towards the pointer
+  const sweep = io(seg(t, 1.5, 3.6)), rx = .22 + (mx - .3) * .45, ry = .12 + (my - .2) * .35;
+  const tx = sweep < 1 ? -.3 + (rx + .3) * sweep : rx, ty = sweep < 1 ? .5 + (ry - .5) * sweep : ry, tz = 70 + 190 * sweep;
+  const k = sweep < 1 || FIX !== null ? 1 : .03; lx += (tx - lx) * k; ly += (ty - ly) * k; lz += (tz - lz) * k;
+  px += (qx - px) * .05; py += (qy - py) * .05;
+  gl.uniform2f(U.R, W, H); gl.uniform1f(U.D, DPR); gl.uniform1f(U.T, t); gl.uniform1f(U.uLight, light); gl.uniform1f(U.uReach, reach); gl.uniform1f(U.uFlash, flash);
+  gl.uniform1f(U.uGlow, glow); gl.uniform1f(U.uCav, cav); gl.uniform1f(U.uSheen, sheen); gl.uniform1f(U.uPrint, print); gl.uniform1f(U.uNarrow, narrow ? 1 : 0);
+  gl.uniform3f(U.L, lx * W, ly * H, lz); gl.uniform2f(U.C, Cx, Cy); gl.uniform2f(U.PAR, px, py); gl.uniform1f(U.S, S); gl.uniform1f(U.PA, PA); gl.uniform1i(U.P, 0);
+  const moving = t < 4.6 || Math.abs(tx - lx) + Math.abs(ty - ly) > 1e-4 || Math.abs(qx - px) + Math.abs(qy - py) > .01 || dirty;
+  if (moving) { dirty = false; gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+  if (!shown && t > 4.1) { shown = true; document.body.classList.add("on"); }
+  requestAnimationFrame(frame);
 }
-// the crack grows out of the crystal, up and down, the first time the page opens
-function draw(e) {
-  const { top, bot, w0, w1, L } = crack, n = [Math.cos(16 * Math.PI / 180), Math.sin(16 * Math.PI / 180)];
-  // half widths along the crack, from the cavity outwards: it narrows fast, then runs on as a hairline
-  const prof = [[0, w0], [.05, w0 * .62], [.16, w0 * .3], [.34, w0 * .14], [1, w1]], reach = e * L * .75;
-  const side = (p, dir, sgn) => prof.filter(([f]) => f * L * .75 <= reach + 1e-6).concat(reach < L * .75 ? [[reach / (L * .75), null]] : [])
-    .map(([f, w], i, A) => { if (w === null) { const [f0, w0_] = A[i - 1], nx = prof.find(q => q[0] > f0), t = nx ? (f - f0) / (nx[0] - f0) : 0; w = w0_ + ((nx ? nx[1] : w1) - w0_) * t; }
-      const q = [p[0] + dir[0] * f * L * .75, p[1] + dir[1] * f * L * .75]; return [q[0] + sgn * n[0] * w, q[1] + sgn * n[1] * w]; });
-  const up = [d[0], d[1]], dn = [-d[0], -d[1]];
-  const tl = side(top, up, -1), tr = side(top, up, 1), bl = side(bot, dn, -1), br = side(bot, dn, 1);
-  light.setAttribute("d", P([...tl.slice().reverse(), ...bl, ...br.slice().reverse(), ...tr]));
-}
-const ease = t => 1 - Math.pow(1 - t, 3);
-function tick(now) {
-  const t = (now - t0) / 1000;
-  if (!done) { const e = ease(Math.min(1, Math.max(0, (t - .3) / 1.8))); draw(e); img.setAttribute("opacity", ease(Math.min(1, Math.max(0, (t - 1.4) / 1.6)))); if (t > 3.2) done = true; }
-  ox += (tx - ox) * .05; oy += (ty - oy) * .05; print.setAttribute("transform", `translate(${ox.toFixed(2)} ${oy.toFixed(2)})`);
-  requestAnimationFrame(tick);
-}
-if (fine && !still) addEventListener("pointermove", e => { tx = -(e.clientX / innerWidth - .5) * 10; ty = -(e.clientY / innerHeight - .5) * 8; });
-addEventListener("resize", build);
-build(); requestAnimationFrame(tick);
-setTimeout(() => document.body.classList.add("on"), still ? 0 : 1500);
+c.addEventListener("webglcontextlost", e => { e.preventDefault(); fail(); });
+requestAnimationFrame(frame);
 })();
 </script>
 </body></html>
