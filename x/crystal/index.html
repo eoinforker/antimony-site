@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antimony Crystal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..700&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
+<style>
+/* A fixed WebGL stage (a glass crystal refracting a field of light) under a calm scrolling column of text. */
+:root { --ink: #040808; --paper: #F3F0E8; --muted: #8C9A97; --sky: #94E6FF; --rule: rgba(243,240,232,.14);
+  --sans: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif; --serif: "Newsreader", Georgia, serif; --mono: "Commit Mono", ui-monospace, Menlo, monospace; color-scheme: dark; }
+@font-face { font-family: "Commit Mono"; src: url("../fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 400 600; font-display: swap; }
+html { background: var(--ink); }
+body { background: var(--ink); color: var(--paper); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+#stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+.fallback { position: fixed; inset: 0; background: radial-gradient(40% 50% at 70% 50%, #10292C, var(--ink)); }
+.mono { font: 500 11.5px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+header { position: fixed; top: 0; left: 0; right: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center;
+  padding: calc(22px + env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-right, 0px)) 0 max(28px, env(safe-area-inset-left, 0px)); }
+header .brand { display: flex; align-items: center; gap: 12px; font: 500 12px var(--mono); letter-spacing: .34em; color: var(--paper); text-decoration: none; }
+header nav { display: flex; gap: 26px; }
+header nav a { color: var(--muted); text-decoration: none; font: 500 11.5px var(--mono); letter-spacing: .16em; text-transform: uppercase; }
+header nav a:hover, header nav a:focus-visible { color: var(--paper); }
+main { position: relative; z-index: 2; padding-left: max(28px, env(safe-area-inset-left, 0px)); padding-right: max(28px, env(safe-area-inset-right, 0px)); }
+section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; max-width: 1240px; margin: 0 auto; }
+.col { max-width: 560px; display: flex; flex-direction: column; gap: 22px; }
+h1 { font-weight: 600; font-size: clamp(42px, 6.4vw, 96px); letter-spacing: -.05em; line-height: .93; max-width: 12ch; text-wrap: balance; }
+h2 { font-weight: 600; font-size: clamp(34px, 4.6vw, 68px); letter-spacing: -.045em; line-height: .96; text-wrap: balance; }
+.serif { font-family: var(--serif); font-size: clamp(19px, 1.7vw, 24px); line-height: 1.45; color: #D9DDD9; max-width: 30em; }
+.serif em { color: var(--sky); }
+.n { font: 500 12px var(--mono); letter-spacing: .14em; color: var(--sky); }
+.btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 10px; background: var(--paper); color: var(--ink); text-decoration: none; font-weight: 600; font-size: 15px; padding: 13px 19px; border-radius: 7px; }
+.btn::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--sky); box-shadow: 0 0 0 1px var(--ink); }
+.btn:focus-visible { outline: 2px solid var(--sky); outline-offset: 3px; }
+.sample { border-top: 1px solid var(--rule); display: grid; gap: 0; }
+.sample div { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--rule); font-size: 15px; color: #C9D0CD; }
+.sample b { font-weight: 600; color: var(--paper); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sample .hi b { color: var(--sky); }
+.list { display: grid; gap: 0; border-top: 1px solid var(--rule); }
+.list div { display: grid; grid-template-columns: 54px 1fr; gap: 14px; padding: 18px 0; border-bottom: 1px solid var(--rule); }
+.list b { font-weight: 600; font-size: 21px; letter-spacing: -.02em; display: block; }
+.list p { color: var(--muted); font-size: 15.5px; line-height: 1.5; margin-top: 6px; }
+.end { align-items: center; text-align: center; }
+.end svg { width: min(100%, 900px); height: auto; }
+.end .row { display: flex; gap: 28px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }
+.cue { position: fixed; z-index: 5; left: 50%; transform: translateX(-50%); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transition: opacity .4s; }
+@media (max-width: 760px) {
+  header nav { display: none; }
+  .cue { display: none; }
+  section { justify-content: flex-end; padding-bottom: 14vh; }
+  .end { justify-content: center; padding-bottom: 0; }
+  .col { background: linear-gradient(rgba(4,8,8,0), rgba(4,8,8,.82) 14%); padding-top: 28px; }
+}
+</style>
+<div class="fallback" aria-hidden="true"></div>
+<canvas id="stage" aria-label="A glass crystal, the Antimony mark, turning slowly and refracting lines of light"></canvas>
+<header>
+  <a class="brand" href="#top"><svg width="15" height="15" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 5L78 29V71L50 95L22 71V29Z" fill="#F3F0E8"/><path d="M78 71L78 29L50 5L50 15Z" fill="#94E6FF"/><path d="M22 71L50 15L78 71L50 58Z" fill="#040808"/></svg>ANTIMONY</a>
+  <nav><a href="#orbe">Orbe</a><a href="#alone">Never alone</a><a href="#principles">Principles</a></nav>
+</header>
+<main>
+  <section id="top"><div class="col">
+    <span class="mono">Antimony · London · Makers of Orbe</span>
+    <h1>We make things for people who make things.</h1>
+  </div></section>
+
+  <section id="orbe"><div class="col">
+    <span class="n">[001] ORBE</span>
+    <h2>Brands are getting agents. Creators get Orbe.</h2>
+    <p class="serif">Orbe sits on the creator's side of every sponsorship deal. It negotiates inside the creator's own rules, waits for one tap on anything binding, and holds the brand's money until the work is delivered.</p>
+    <div class="sample" aria-label="A sample deal from the Orbe demo">
+      <div><span>Kettle &amp; Crumb's offer, one integration</span><b>£600</b></div>
+      <div><span>Ada's floor, from her rules</span><b>£900</b></div>
+      <div><span>What her results support</span><b>£640 to £1,130</b></div>
+      <div class="hi"><span>Orbe's counter, with its reasons</span><b>£900</b></div>
+    </div>
+    <span class="mono">Sample: a made-up creator and brand, from the Orbe demo</span>
+    <a class="btn" href="https://eoinforker.github.io/orbe-site/">Open Orbe</a>
+  </div></section>
+
+  <section id="alone"><div class="col">
+    <span class="n">[002] ELEMENT 51</span>
+    <h2>Never alone.</h2>
+    <p class="serif">Antimony is almost never found alone in nature. Alchemists ran gold through it to purify it: what went in came out <em>worth more</em>. Our mark is a crystal with the letter A inside, and the A's crossbar is its own reflection. Two halves holding each other up.</p>
+  </div></section>
+
+  <section id="principles"><div class="col">
+    <span class="n">[003] PRINCIPLES</span>
+    <h2>Three things we will not trade, at any size.</h2>
+    <div class="list">
+      <div><span class="n">01</span><div><b>Never alone.</b><p>We sit on the side of the person who made the work, never across the table.</p></div></div>
+      <div><span class="n">02</span><div><b>Paid when you are.</b><p>Orbe is free for creators; brands pay when the work is delivered.</p></div></div>
+      <div><span class="n">03</span><div><b>Built to last.</b><p>Forty years, not the next round.</p></div></div>
+    </div>
+  </div></section>
+
+  <section class="end">
+    <svg viewBox="-8 -4 924 110" role="img" aria-label="Antimony"><path d="M83.90 65.89 L100.94 100.00 L116.87 100.00 L96.58 59.38 L94.37 54.96 L66.91 0.00 L43.49 0.00 L-6.47 100.00 L9.46 100.00 L26.50 65.89 L55.20 52.00ZM37.04 44.79 L55.20 8.44 L73.36 44.79 L55.20 36.00ZM225.90 0.00 L210.90 0.00 L210.90 79.86 L151.71 0.00 L133.90 0.00 L133.90 100.00 L148.90 100.00 L148.90 20.14 L208.09 100.00 L225.90 100.00ZM248.40 0.00 L248.40 13.20 L288.05 13.20 L288.05 100.00 L303.05 100.00 L303.05 13.20 L342.70 13.20 L342.70 0.00 L303.05 0.00 L288.05 0.00ZM380.20 100.00 L380.20 0.00 L365.20 0.00 L365.20 100.00ZM509.48 0.00 L468.50 48.91 L427.52 0.00 L408.70 0.00 L408.70 100.00 L423.70 100.00 L423.70 17.63 L468.50 71.09 L513.30 17.63 L513.30 100.00 L528.30 100.00 L528.30 0.00ZM584.98 -0.90 L583.17 -0.58 L581.39 -0.18 L579.62 0.31 L577.88 0.88 L576.18 1.54 L574.50 2.28 L572.87 3.10 L571.27 4.01 L569.73 4.99 L568.23 6.04 L566.79 7.17 L565.40 8.36 L564.07 9.62 L562.81 10.95 L561.62 12.34 L560.49 13.78 L559.44 15.28 L558.46 16.82 L557.55 18.42 L556.73 20.05 L555.99 21.73 L555.33 23.43 L554.76 25.17 L554.27 26.94 L553.87 28.72 L553.55 30.53 L553.33 32.34 L553.19 34.17 L553.15 36.00 L553.15 64.00 L553.19 65.83 L553.33 67.66 L553.55 69.47 L553.87 71.28 L554.27 73.06 L554.76 74.83 L555.33 76.57 L555.99 78.27 L556.73 79.95 L557.55 81.58 L558.46 83.18 L559.44 84.72 L560.49 86.22 L561.62 87.66 L562.81 89.05 L564.07 90.38 L565.40 91.64 L566.79 92.83 L568.23 93.96 L569.73 95.01 L571.27 95.99 L572.87 96.90 L574.50 97.72 L576.18 98.46 L577.88 99.12 L579.62 99.69 L581.39 100.18 L583.17 100.58 L584.98 100.90 L586.79 101.12 L588.62 101.26 L590.45 101.30 L632.15 101.30 L633.98 101.26 L635.81 101.12 L637.62 100.90 L639.43 100.58 L641.21 100.18 L642.98 99.69 L644.72 99.12 L646.42 98.46 L648.10 97.72 L649.73 96.90 L651.33 95.99 L652.87 95.01 L654.37 93.96 L655.81 92.83 L657.20 91.64 L658.53 90.38 L659.79 89.05 L660.98 87.66 L662.11 86.22 L663.16 84.72 L664.14 83.18 L665.05 81.58 L665.87 79.95 L666.61 78.27 L667.27 76.57 L667.84 74.83 L668.33 73.06 L668.73 71.28 L669.05 69.47 L669.27 67.66 L669.41 65.83 L669.45 64.00 L669.45 36.00 L669.41 34.17 L669.27 32.34 L669.05 30.53 L668.73 28.72 L668.33 26.94 L667.84 25.17 L667.27 23.43 L666.61 21.73 L665.87 20.05 L665.05 18.42 L664.14 16.82 L663.16 15.28 L662.11 13.78 L660.98 12.34 L659.79 10.95 L658.53 9.62 L657.20 8.36 L655.81 7.17 L654.37 6.04 L652.87 4.99 L651.33 4.01 L649.73 3.10 L648.10 2.28 L646.42 1.54 L644.72 0.88 L642.98 0.31 L641.21 -0.18 L639.43 -0.58 L637.62 -0.90 L635.81 -1.12 L633.98 -1.26 L632.15 -1.30 L590.45 -1.30 L588.62 -1.26 L586.79 -1.12ZM632.72 12.42 L634.01 12.71 L635.29 13.06 L636.55 13.48 L637.78 13.96 L638.99 14.49 L640.18 15.09 L641.33 15.74 L642.45 16.45 L643.53 17.21 L644.58 18.03 L645.58 18.89 L646.54 19.81 L647.46 20.77 L648.32 21.77 L649.14 22.82 L649.90 23.90 L650.61 25.02 L651.26 26.17 L651.86 27.36 L652.39 28.57 L652.87 29.80 L653.29 31.06 L653.64 32.34 L653.93 33.63 L654.16 34.94 L654.32 36.25 L654.42 37.58 L654.45 38.90 L654.45 61.10 L654.42 62.42 L654.32 63.75 L654.16 65.06 L653.93 66.37 L653.64 67.66 L653.29 68.94 L652.87 70.20 L652.39 71.43 L651.86 72.64 L651.26 73.83 L650.61 74.98 L649.90 76.10 L649.14 77.18 L648.32 78.23 L647.46 79.23 L646.54 80.19 L645.58 81.11 L644.58 81.97 L643.53 82.79 L642.45 83.55 L641.33 84.26 L640.18 84.91 L638.99 85.51 L637.78 86.04 L636.55 86.52 L635.29 86.94 L634.01 87.29 L632.72 87.58 L631.41 87.81 L630.10 87.97 L628.77 88.07 L627.45 88.10 L595.15 88.10 L593.83 88.07 L592.50 87.97 L591.19 87.81 L589.88 87.58 L588.59 87.29 L587.31 86.94 L586.05 86.52 L584.82 86.04 L583.61 85.51 L582.42 84.91 L581.27 84.26 L580.15 83.55 L579.07 82.79 L578.02 81.97 L577.02 81.11 L576.06 80.19 L575.14 79.23 L574.28 78.23 L573.46 77.18 L572.70 76.10 L571.99 74.98 L571.34 73.83 L570.74 72.64 L570.21 71.43 L569.73 70.20 L569.31 68.94 L568.96 67.66 L568.67 66.37 L568.44 65.06 L568.28 63.75 L568.18 62.42 L568.15 61.10 L568.15 38.90 L568.18 37.58 L568.28 36.25 L568.44 34.94 L568.67 33.63 L568.96 32.34 L569.31 31.06 L569.73 29.80 L570.21 28.57 L570.74 27.36 L571.34 26.17 L571.99 25.02 L572.70 23.90 L573.46 22.82 L574.28 21.77 L575.14 20.77 L576.06 19.81 L577.02 18.89 L578.02 18.03 L579.07 17.21 L580.15 16.45 L581.27 15.74 L582.42 15.09 L583.61 14.49 L584.82 13.96 L586.05 13.48 L587.31 13.06 L588.59 12.71 L589.88 12.42 L591.19 12.19 L592.50 12.03 L593.83 11.93 L595.15 11.90 L627.45 11.90 L628.77 11.93 L630.10 12.03 L631.41 12.19ZM786.30 0.00 L771.30 0.00 L771.30 79.86 L712.11 0.00 L694.30 0.00 L694.30 100.00 L709.30 100.00 L709.30 20.14 L768.49 100.00 L786.30 100.00ZM864.90 54.19 L911.18 0.00 L892.44 0.00 L860.84 37.00 L853.96 37.00 L822.36 0.00 L803.62 0.00 L849.90 54.19 L849.90 100.00 L864.90 100.00Z" fill="#F3F0E8" fill-rule="evenodd"/></svg>
+    <div class="row"><a class="btn" href="https://eoinforker.github.io/orbe-site/">Open Orbe</a></div>
+    <span class="mono" style="margin-top:34px">© MMXXVI Antimony · London</span>
+  </section>
+</main>
+<span class="cue mono" id="cue">Scroll</span>
+
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/" } }</script>
+<script type="module">
+import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const canvas = document.getElementById("stage");
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" }); }
+catch (e) { canvas.remove(); throw e; }   // the CSS fallback stays
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+
+const scene = new THREE.Scene(); scene.background = new THREE.Color("#040808");
+const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100); camera.position.set(0, 0, 7.2);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.03).texture;
+
+// The field of light behind the crystal, which the glass genuinely refracts.
+function lineTexture() {
+  const c = document.createElement("canvas"); c.width = 2048; c.height = 2048; const g = c.getContext("2d");
+  g.fillStyle = "#040808"; g.fillRect(0, 0, 2048, 2048);
+  for (let y = 0; y < 2048; y += 10) {
+    const band = Math.exp(-Math.pow((y - 1024) / 520, 2));
+    g.fillStyle = `rgba(${Math.round(70 + 78 * band)},${Math.round(120 + 110 * band)},${Math.round(128 + 127 * band)},${0.10 + 0.55 * band})`;
+    g.fillRect(0, y, 2048, 1.6);
+  }
+  // Light falls off away from the crystal, so the text sits on near-black.
+  const r = g.createRadialGradient(1024, 1024, 60, 1024, 1024, 980);
+  r.addColorStop(0, "rgba(4,8,8,0)"); r.addColorStop(0.45, "rgba(4,8,8,0.25)"); r.addColorStop(1, "rgba(4,8,8,0.96)");
+  g.fillStyle = r; g.fillRect(0, 0, 2048, 2048);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+const field = new THREE.Mesh(new THREE.PlaneGeometry(16, 16), new THREE.MeshBasicMaterial({ map: lineTexture(), toneMapped: false }));
+field.position.z = -5; scene.add(field);
+
+// A quartz point: a hexagonal column with a pyramid at each end. Seen from the side it is our mark's outline.
+function crystalGeometry() {
+  const r = 0.622, h = 0.467, tip = 1.0, n = 6, pts = [];
+  const ring = y => Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2 + Math.PI / 6; return new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r); });
+  const top = ring(h), bot = ring(-h), T = new THREE.Vector3(0, tip, 0), B = new THREE.Vector3(0, -tip, 0);
+  const tri = (a, b, c) => pts.push(a, b, c);
+  for (let i = 0; i < n; i++) { const j = (i + 1) % n; tri(top[i], top[j], bot[j]); tri(top[i], bot[j], bot[i]); tri(T, top[j], top[i]); tri(B, bot[i], bot[j]); }
+  const g = new THREE.BufferGeometry().setFromPoints(pts); g.computeVertexNormals(); return g;
+}
+const glass = new THREE.MeshPhysicalMaterial({
+  color: "#E9FAFF", metalness: 0, roughness: 0.04, transmission: 1, thickness: 1.1, ior: 1.54, dispersion: 6,
+  attenuationColor: "#94E6FF", attenuationDistance: 3.2, specularIntensity: 1, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.4, flatShading: true,
+});
+const crystal = new THREE.Group(); scene.add(crystal);
+const body = new THREE.Mesh(crystalGeometry(), glass); body.scale.setScalar(1.55); crystal.add(body);
+
+// The A and its reflection, suspended inside the glass as light.
+const lightMat = new THREE.MeshBasicMaterial({ color: new THREE.Color("#94E6FF").multiplyScalar(2.2), toneMapped: false });
+function beam(a, b, w = 0.028) {
+  const A = new THREE.Vector3(...a), Bv = new THREE.Vector3(...b), len = A.distanceTo(Bv);
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, len, w), lightMat);
+  m.position.copy(A).add(Bv).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), Bv.clone().sub(A).normalize()); return m;
+}
+const A = new THREE.Group();
+[[[-0.56, -0.45, 0], [0, 0.74, 0]], [[0, 0.74, 0], [0.56, -0.45, 0]], [[-0.56, -0.45, 0], [0, -0.17, 0]], [[0, -0.17, 0], [0.56, -0.45, 0]], [[0, 0.80, 0], [0, 0.97, 0]]]
+  .forEach(([a, b]) => A.add(beam(a, b)));
+A.scale.setScalar(1.55 * 0.92); crystal.add(A);
+
+// A single soft key light from the right, as on the mark's lit facet.
+const key = new THREE.DirectionalLight("#CFF4FF", 2.2); key.position.set(4, 3, 3); scene.add(key);
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.55, 0.5, 0.8); composer.addPass(bloom);
+// Film: grain from an integer hash, a vignette, and a slight colour fringe toward the edges.
+const film = new ShaderPass({
+  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uRes: { value: new THREE.Vector2(1, 1) } },
+  vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+  fragmentShader: `precision highp float; precision highp int;
+    uniform sampler2D tDiffuse; uniform float uTime; uniform vec2 uRes; varying vec2 vUv;
+    uint bits(uvec3 v){ v = v * 1664525u + 1013904223u; v.x += v.y*v.z; v.y += v.z*v.x; v.z += v.x*v.y; v ^= v >> 16u; v.x += v.y*v.z; return v.x; }
+    float hash(vec3 p){ return float(bits(uvec3(ivec3(p))) & 0xffffffu) / 16777215.0; }
+    void main(){
+      vec2 q = vUv - 0.5; float d = dot(q, q);
+      vec2 o = q * 0.006 * d * 4.0;
+      vec3 c = vec3(texture2D(tDiffuse, vUv + o).r, texture2D(tDiffuse, vUv).g, texture2D(tDiffuse, vUv - o).b);
+      c *= 1.0 - smoothstep(0.18, 0.75, d * 1.6) * 0.55;
+      float n = hash(vec3(gl_FragCoord.xy, floor(uTime * 24.0))) - 0.5;
+      c += n * 0.045;
+      gl_FragColor = vec4(c, 1.0);
+    }`,
+});
+composer.addPass(film); composer.addPass(new OutputPass());
+
+let W = 0, H = 0;
+function size() {
+  W = innerWidth; H = innerHeight; renderer.setSize(W, H, false); composer.setSize(W, H);
+  camera.aspect = W / H; camera.updateProjectionMatrix(); film.uniforms.uRes.value.set(W, H);
+}
+addEventListener("resize", size); size();
+
+// Scroll and pointer drive the scene; everything eases toward its target.
+let scrollT = 0, sEase = 0, px = 0, py = 0, pxE = 0, pyE = 0;
+const sections = () => Math.max(1, document.documentElement.scrollHeight - innerHeight);
+addEventListener("scroll", () => { scrollT = scrollY / sections(); document.getElementById("cue").style.opacity = scrollY > 40 ? 0 : 1; }, { passive: true });
+addEventListener("pointermove", e => { px = e.clientX / W - 0.5; py = e.clientY / H - 0.5; });
+const clock = new THREE.Clock(); let spin = 0;
+function frame() {
+  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+  sEase += (scrollT - sEase) * 0.08; pxE += (px - pxE) * 0.05; pyE += (py - pyE) * 0.05;
+  if (!still) spin += dt * 0.22;
+  const narrow = W < 760;
+  // The crystal sits right of the text on wide screens and above it on phones; it centres for the last section.
+  const side = narrow ? 0 : 1.45 * (1 - Math.max(0, (sEase - 0.72) / 0.28));
+  crystal.position.set(side, narrow ? 1.25 : 0, 0);
+  crystal.rotation.y = spin + sEase * Math.PI * 2.5 + pxE * 0.6;
+  crystal.rotation.x = 0.08 + pyE * 0.25 + Math.sin(t * 0.4) * (still ? 0 : 0.03);
+  crystal.rotation.z = -0.06 + sEase * 0.12;
+  camera.position.z = (narrow ? 10.5 : 7.2) - Math.sin(sEase * Math.PI) * 1.4;
+  field.position.set(crystal.position.x * 1.6, crystal.position.y * 1.6 - sEase * 1.2, -5);
+  film.uniforms.uTime.value = t;
+  composer.render();
+  requestAnimationFrame(frame);
+}
+frame();
+document.querySelector(".fallback").remove();
+</script>
+
+</html>
