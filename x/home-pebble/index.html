@@ -1,0 +1,87 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Antimony</title><meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* After Pebblebed and Zeromatter: warm grey paper, a mono for structure and a serif for voice, one rendered picture, plain words. */
+@font-face { font-family: "Timeless Serif"; src: url(fonts/TimelessSerifVF.woff2) format("woff2"); font-weight: 200 700; font-display: swap; }
+@font-face { font-family: "Commit Mono"; src: url(fonts/CommitMono-Latin-VF.woff2) format("woff2"); font-weight: 200 700; font-display: swap; }
+:root { --paper: #EEECE6; --ink: #1B1C1A; --dim: #6C6B66; --cob: #2448FF; --rule: rgba(27,28,26,.12); color-scheme: light; }
+* { box-sizing: border-box; margin: 0; }
+html, body { background: var(--paper); color: var(--ink); }
+body { font: 400 13.5px/1.6 "Commit Mono", ui-monospace, Menlo, monospace; -webkit-font-smoothing: antialiased; }
+a { color: var(--cob); text-decoration: none; } a:hover { text-decoration: underline; text-underline-offset: 3px; }
+:focus-visible { outline: 1px solid var(--cob); outline-offset: 3px; }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { display: flex; justify-content: space-between; align-items: start; gap: 20px; padding-block: 22px 0; }
+.brand { display: grid; gap: 4px; }
+.brand h1 { font: 400 clamp(22px, 2.2vw, 28px)/1.1 "Timeless Serif", Georgia, serif; letter-spacing: -.01em; }
+.brand span { color: var(--dim); }
+.lock { display: flex; align-items: center; gap: 8px; } .lock .m { width: 16px; height: 16px; display: block; }
+nav { display: grid; gap: 2px; text-transform: uppercase; letter-spacing: .04em; font-size: 12px; justify-items: start; margin-top: 18px; }
+nav a { color: var(--ink); }
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 18em)); gap: 32px; padding-block: 64px 40px; padding-left: clamp(0px, 4vw, 60px); }
+.cols p { max-width: 34ch; }
+.ask { font: 400 clamp(19px, 1.8vw, 23px)/1.4 "Timeless Serif", Georgia, serif; padding-left: clamp(0px, 4vw, 60px); padding-bottom: 56px; max-width: 40em; }
+.hero { position: relative; margin-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); border-radius: 14px; overflow: hidden; aspect-ratio: 2400 / 1400; max-width: 100%; background: #14110E; }
+.hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero .t { position: absolute; left: 4%; bottom: 8%; right: 40%; color: #EDE6D6; transition: opacity .4s ease; }
+.hero .t b { display: block; font: 400 clamp(26px, 3.6vw, 52px)/1.05 "Timeless Serif", Georgia, serif; letter-spacing: -.015em; }
+.hero .t b em { font-style: normal; color: #9BE7FF; }
+.hero.hide .t { opacity: 0; }
+.hero button { position: absolute; right: 2.2%; bottom: 5%; font: inherit; font-size: 12px; color: #EDE6D6; background: rgba(20,17,14,.55); border: 1px solid rgba(237,230,214,.25); border-radius: 30px; padding: 6px 12px; cursor: pointer; }
+.cap { color: var(--dim); padding: 10px max(16px, env(safe-area-inset-left, 0px)) 0; padding-left: calc(max(16px, env(safe-area-inset-left, 0px)) + 4px); }
+.facts { display: grid; grid-template-columns: 9em minmax(0, 1fr); gap: 0; padding-block: 64px; padding-left: clamp(0px, 4vw, 60px); max-width: 860px; }
+.facts h2 { grid-column: 1 / -1; font: 400 26px/1.1 "Timeless Serif", Georgia, serif; margin-bottom: 14px; }
+.facts span { padding: 9px 0; border-top: 1px solid var(--rule); } .facts span:nth-child(even) { color: var(--dim); text-transform: uppercase; font-size: 11.5px; letter-spacing: .05em; padding-top: 11px; }
+footer { padding-block: 40px 28px; }
+.noise { color: #A8A69F; font-size: 11px; line-height: 1.15; letter-spacing: .1em; overflow: hidden; height: 3.5em; word-break: break-all; }
+.fine { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 14px; color: var(--dim); font-size: 12px; }
+.fine button { font: inherit; color: var(--cob); background: none; border: 0; padding: 0; cursor: pointer; text-transform: uppercase; letter-spacing: .05em; }
+.fine button[aria-pressed="true"] { color: var(--ink); text-decoration: underline; }
+#md { white-space: pre-wrap; font: 400 14px/1.65 "Commit Mono", monospace; max-width: 72ch; padding-block: 40px; }
+body.md main { display: none; } body:not(.md) #md { display: none; }
+@media (max-width: 820px) { .hero button { top: 4%; bottom: auto; } .cols { grid-template-columns: 1fr; gap: 18px; padding-block: 40px 28px; } .hero .t { right: 6%; } .facts { grid-template-columns: 7.5em minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .hero .t { transition: none; } }
+</style></head><body>
+<div class="wrap"><header>
+  <div class="brand"><h1>Antimony.</h1><span>Software for the people who make the work.</span></div>
+  <div style="display:grid;justify-items:end"><span class="lock"><svg viewBox="0 0 100 100" style="width:16px;height:16px;display:block" aria-hidden="true"><path d="M49.28 5.64L40.3 27.8L33 27.8Z" fill="#1B1C1A"/><path d="M50 6.12L57.3 27.8L42.7 27.8Z" fill="#2448FF"/><path d="M50.72 5.64L67 27.8L59.7 27.8Z" fill="#1B1C1A"/><path d="M33 30.2L40.3 30.2L40.3 87L33 87Z" fill="#1B1C1A"/><path d="M42.7 30.2L57.3 30.2L57.3 87L42.7 87Z" fill="#1B1C1A"/><path d="M59.7 30.2L67 30.2L67 87L59.7 87Z" fill="#1B1C1A"/><path d="M33 88.2L40.3 88.2L49.28 94.36Z" fill="#1B1C1A"/><path d="M42.7 88.2L57.3 88.2L50 93.88Z" fill="#1B1C1A"/><path d="M59.7 88.2L67 88.2L50.72 94.36Z" fill="#1B1C1A"/></svg><svg viewBox="-10 195 4385.0 955" style="height:15px;width:auto;display:block" role="img" aria-label="Antimony"><path d="M111.0 835 352.0 235H388.0L630.0 835Q641.0 862 653.5 876.0Q666.0 890 682.5 896.5Q699.0 903 726.0 906V930H457.0V906Q495.0 903 509.5 894.5Q524.0 886 524.0 872.0Q524.0 858 515.0 834L462.0 696H207.0L155.0 834Q146.0 858 149.5 872.5Q153.0 887 171.5 895.0Q190.0 903 229.0 906V930H15.0V906Q40.0 904 56.0 898.0Q72.0 892 86.0 877.5Q100.0 863 111.0 835ZM448.0 658 336.0 371 222.0 658ZM822.984375 546 912.984375 523Q940.984375 479 981.984375 449.5Q1022.984375 420 1078.984375 420Q1140.984375 420 1179.984375 458.0Q1218.984375 496 1218.984375 566V850H1128.984375V597Q1128.984375 544 1104.484375 516.5Q1079.984375 489 1035.984375 489Q999.984375 489 968.984375 506.5Q937.984375 524 912.984375 555V850H822.984375ZM822.984375 837H912.984375Q912.984375 860 919.484375 874.5Q925.984375 889 940.984375 896.5Q955.984375 904 984.984375 907V930H751.984375V907Q779.984375 904 794.984375 896.5Q809.984375 889 816.484375 874.5Q822.984375 860 822.984375 837ZM1128.984375 837H1218.984375Q1218.984375 860 1225.484375 874.5Q1231.984375 889 1246.984375 896.5Q1261.984375 904 1289.984375 907V930H1057.984375V907Q1085.984375 904 1100.984375 896.5Q1115.984375 889 1122.484375 874.5Q1128.984375 860 1128.984375 837ZM761.984375 488V469L899.984375 420H912.984375V581H822.984375Q822.984375 543 819.984375 526.0Q816.984375 509 804.484375 500.0Q791.984375 491 761.984375 488ZM1377.984375 807V475H1303.984375V457V453Q1361.984375 439 1392.984375 401.0Q1423.984375 363 1440.984375 299H1466.984375V430H1611.984375V475H1466.984375V792Q1466.984375 835 1485.984375 856.5Q1504.984375 878 1538.984375 878Q1559.984375 878 1575.484375 869.0Q1590.984375 860 1603.984375 847L1618.984375 852Q1606.984375 886 1576.984375 912.5Q1546.984375 939 1495.984375 939Q1440.984375 939 1409.484375 906.0Q1377.984375 873 1377.984375 807ZM1727.984375 572H1817.984375V850H1727.984375ZM1727.984375 837H1817.984375Q1817.984375 860 1824.484375 874.5Q1830.984375 889 1845.984375 896.5Q1860.984375 904 1888.984375 907V930H1656.984375V907Q1684.984375 904 1699.984375 896.5Q1714.984375 889 1721.484375 874.5Q1727.984375 860 1727.984375 837ZM1666.984375 485V466L1803.984375 417H1817.984375V578H1727.984375Q1727.984375 540 1724.984375 523.0Q1721.984375 506 1709.484375 497.5Q1696.984375 489 1666.984375 485ZM2001.984375 568 2091.984375 517Q2125.984375 472 2165.984375 446.0Q2205.984375 420 2256.984375 420Q2303.984375 420 2338.484375 445.5Q2372.984375 471 2381.984375 512Q2416.984375 468 2455.984375 444.0Q2494.984375 420 2544.984375 420Q2606.984375 420 2642.984375 456.0Q2678.984375 492 2678.984375 562V834H2588.984375V579Q2588.984375 534 2565.484375 510.5Q2541.984375 487 2499.984375 487Q2468.984375 487 2439.484375 500.0Q2409.984375 513 2385.984375 540V834H2295.984375V586Q2295.984375 537 2273.984375 512.0Q2251.984375 487 2211.984375 487Q2180.984375 487 2149.484375 503.5Q2117.984375 520 2091.984375 551V834H2001.984375ZM2001.984375 834H2091.984375Q2091.984375 869 2106.984375 885.5Q2121.984375 902 2159.984375 907V930H1930.984375V907Q1969.984375 902 1985.984375 885.0Q2001.984375 868 2001.984375 834ZM2295.984375 834H2385.984375Q2385.984375 869 2400.984375 885.5Q2415.984375 902 2453.984375 907V930H2226.984375V907Q2264.984375 902 2280.484375 885.5Q2295.984375 869 2295.984375 834ZM1940.984375 488V469L2078.984375 420H2091.984375V581H2001.984375Q2001.984375 543 1998.984375 526.0Q1995.984375 509 1983.484375 500.0Q1970.984375 491 1940.984375 488ZM2588.984375 834H2678.984375Q2678.984375 868 2695.484375 885.0Q2711.984375 902 2749.984375 907V930H2520.984375V907Q2558.984375 902 2573.984375 885.5Q2588.984375 869 2588.984375 834ZM2779.984375 679Q2779.984375 600 2814.484375 542.0Q2848.984375 484 2904.484375 453.5Q2959.984375 423 3022.984375 423Q3086.984375 423 3142.984375 453.5Q3198.984375 484 3233.484375 542.0Q3267.984375 600 3267.984375 679Q3267.984375 757 3233.484375 816.0Q3198.984375 875 3142.984375 906.0Q3086.984375 937 3022.984375 937Q2960.984375 937 2904.484375 906.0Q2847.984375 875 2813.984375 816.0Q2779.984375 757 2779.984375 679ZM3160.984375 679Q3160.984375 580 3126.984375 518.0Q3092.984375 456 3022.984375 456Q2953.984375 456 2919.984375 517.5Q2885.984375 579 2885.984375 679Q2885.984375 779 2920.484375 841.5Q2954.984375 904 3023.984375 904Q3091.984375 904 3126.484375 841.0Q3160.984375 778 3160.984375 679ZM3390.984375 546 3480.984375 523Q3508.984375 479 3549.984375 449.5Q3590.984375 420 3646.984375 420Q3708.984375 420 3747.984375 458.0Q3786.984375 496 3786.984375 566V850H3696.984375V597Q3696.984375 544 3672.484375 516.5Q3647.984375 489 3603.984375 489Q3567.984375 489 3536.984375 506.5Q3505.984375 524 3480.984375 555V850H3390.984375ZM3390.984375 837H3480.984375Q3480.984375 860 3487.484375 874.5Q3493.984375 889 3508.984375 896.5Q3523.984375 904 3552.984375 907V930H3319.984375V907Q3347.984375 904 3362.984375 896.5Q3377.984375 889 3384.484375 874.5Q3390.984375 860 3390.984375 837ZM3696.984375 837H3786.984375Q3786.984375 860 3793.484375 874.5Q3799.984375 889 3814.984375 896.5Q3829.984375 904 3857.984375 907V930H3625.984375V907Q3653.984375 904 3668.984375 896.5Q3683.984375 889 3690.484375 874.5Q3696.984375 860 3696.984375 837ZM3329.984375 488V469L3467.984375 420H3480.984375V581H3390.984375Q3390.984375 543 3387.984375 526.0Q3384.984375 509 3372.484375 500.0Q3359.984375 491 3329.984375 488ZM3855.984375 453V430H4087.984375V453Q4043.984375 455 4030.484375 466.0Q4016.984375 477 4026.984375 503L4139.984375 812L4254.984375 513Q4261.984375 493 4259.984375 481.5Q4257.984375 470 4243.484375 462.5Q4228.984375 455 4197.984375 453V430H4358.984375V453Q4334.984375 455 4324.484375 460.0Q4313.984375 465 4307.984375 475.0Q4301.984375 485 4291.984375 510L4093.984375 1023Q4069.984375 1088 4037.484375 1117.0Q4004.984375 1146 3963.984375 1148Q3920.984375 1149 3893.984375 1130.0Q3866.984375 1111 3864.984375 1077Q3863.984375 1053 3877.484375 1037.5Q3890.984375 1022 3913.984375 1021Q3929.984375 1021 3938.984375 1028.5Q3947.984375 1036 3956.984375 1052Q3966.984375 1069 3975.984375 1077.0Q3984.984375 1085 4002.984375 1085Q4016.984375 1084 4035.984375 1062.0Q4054.984375 1040 4067.984375 1004L4091.984375 937L3921.984375 506Q3912.984375 484 3907.984375 475.0Q3902.984375 466 3891.484375 460.5Q3879.984375 455 3855.984375 453Z" fill="#1B1C1A"/><path d="M1765.48 175.5L1847.98 258L1765.48 340.5L1682.98 258Z" fill="#1B1C1A"/></svg></span>
+  <nav aria-label="Main"><a href="https://eoinforker.github.io/orbe-site/">Orbe</a><a href="#facts">About</a><span style="color:var(--dim)">Letters, soon</span></nav></div>
+</header></div>
+<main>
+  <div class="wrap"><div class="cols">
+    <p>Creators do the work. Then they do the work around the work: the briefs, the contracts, the invoices, the chasing. We build software that takes the second part away.</p>
+    <p>Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator's side of every sponsorship deal. It holds the money until the work is delivered.</p>
+    <p>Antimony is a metal. It was used to refine gold: melted with it, it took up everything that was not gold. Alchemists called it the wolf of metals. We liked that.</p>
+  </div>
+  <p class="ask">What is left, once the work around the work is gone, is yours.</p></div>
+  <div class="hero" id="hero"><img src="img/hero.webp" alt="A spray of stibnite crystals, antimony's ore, rendered and lit warm from the left"><div class="t"><b>Take away everything that is not <em>the work</em>.</b></div><button type="button" id="hide" aria-pressed="false">Hide text</button></div>
+  <p class="cap">Yes, this is a rendered crystal. Stibnite, antimony's ore, really does grow like this.</p>
+  <div class="wrap"><div class="facts" id="facts"><h2>Facts</h2>
+    <span>Element</span><span>51, Sb, from the Latin stibium</span>
+    <span>Found as</span><span>Stibnite, long grey prisms with pointed tips</span>
+    <span>Used for</span><span>Refining gold, for about as long as people have refined gold</span>
+    <span>Rarely</span><span>Found alone</span>
+    <span>We make</span><span><a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, and what comes after it</span>
+  </div></div>
+</main>
+<div class="wrap" id="md" aria-label="This page as Markdown"># Antimony
+
+Software for the people who make the work.
+
+Creators do the work. Then they do the work around the work: the briefs, the contracts, the invoices, the chasing. We build software that takes the second part away, so what is left is theirs.
+
+Our first product is [Orbe](https://eoinforker.github.io/orbe-site/), the creator's side of every sponsorship deal. It holds the money until the work is delivered.
+
+Antimony is a metal. It was used to refine gold: melted with it, it took up everything that was not gold. Alchemists called it the wolf of metals. We liked that.
+</div>
+<div class="wrap"><footer><div class="noise" aria-hidden="true"> ▴▴▪  ▴ ⁘▴·▴▴▫▫⁘ ⁘·:·▴ ··▪▫ ▫· ··▪···::▪▴··⁘⁘ ▫:·▴▪▫··:▴··⁘▴··▴▴:▴ ▴··▫⁘▴:⁘▴  ·· ▴·▫· ▴· ▴▫  ·▪▴⁘▪: ··▪⁘:▴▴▴ ···⁘· ▪⁘⁘⁘▫▫⁘▫▴·⁘▴▫·:·▪⁘ ⁘ ·⁘▴▫·▴ ·▫· ·:·▴▴▪▫ :·▴· ⁘▪:·▴▪·▪▪▴▴⁘⁘ ····⁘:▴·: ▴: ▪:▴ ·▫ · ::·▴ ▪⁘ ▴ :▪▴:··▴·· ·▫  :▪▴ :▪·▪··▫::▴⁘ ·▴⁘▫··▪·· ·▫·▴·⁘▫ ▫·:⁘·· · ··⁘▴▪▪··:⁘ ▴:·▪⁘ · ▫ ··· :⁘▪·▫ ▪ ▫  ⁘:⁘▫ ·  ·  ▪▫:▴:· ·· ▪:  ⁘⁘ ▫ ··▴··    ·▴     ⁘⁘·▫▴·▪ ⁘▪▫  : ▴▪⁘ ···::· ▫ · ▪ :⁘· ▫▫▪ ▫▴:  ·:▫ ▫⁘:▫▪ ▴▫▴: ▴··  ▴▫⁘ ▫ ▫▪▪· ▴::▫▴ ⁘▴·▪▴▫·▴:▫  ⁘· ▪ ▴▫··▪ ▫·▫⁘ ··▴▴ ⁘⁘ ·⁘· ··▫  ·▴▫··· ▪ ··▪⁘⁘·   ▫▴⁘   :▴ ··:·⁘: ·:· ▫:⁘ ⁘:▴:⁘⁘▪ ·:▫:▫:⁘▴ ▪: ·:· ·▫▫▪⁘⁘ · :▫ ⁘ ·⁘··: ⁘:·⁘::  ⁘  : ⁘ ▪▪·▫ ⁘▫:▫ ·: ·▫▪▴·▫·▪·▪▫:⁘ ▪ ▫▪ ·  ▴ ··  ⁘·▫ :▴:⁘▴▴⁘··⁘·⁘  ····:·▫· ·  ⁘·:: ▪·▴:·▴··▪▴ ⁘▴▴·▪ ⁘:▴ ⁘ ·:  ·▴⁘·▴▫·▴·▪▫▫·⁘▴  ·▫·   ▴▴ ▪⁘ ⁘⁘:▴  ::·  ···▪▴  ·▪▴  ⁘▫▫▪▴··▫··· · · ·▪· ▫ ▪  :·:·⁘·▫· ·▪·▫·· ▪▴ ▴▫⁘⁘▫·▪·▫▪: ·⁘▴  ·⁘ ·▴⁘ ·▪ :▴▫▫ ⁘·▫⁘···▫·  ▫:▪:▪▪·⁘⁘▪·▪ ▫·▴▴·· :··⁘  :⁘ ···· ▪:·: ·:⁘·▴ ▪·⁘▴·:··⁘    ·▪▫·▫▫  ⁘·:·▪ ▴▫⁘▴· ·:▪ ▫▪ </div>
+  <div class="fine"><span>© 2026 Antimony</span><span><button type="button" id="b-render" aria-pressed="true">Render</button> / <button type="button" id="b-md" aria-pressed="false">Markdown</button></span></div></footer></div>
+<script>
+(() => { "use strict";
+  const hero = document.getElementById("hero"), hb = document.getElementById("hide");
+  hb.addEventListener("click", () => { const on = hero.classList.toggle("hide"); hb.textContent = on ? "Show text" : "Hide text"; hb.setAttribute("aria-pressed", on); });
+  const r = document.getElementById("b-render"), m = document.getElementById("b-md");
+  const set = md => { document.body.classList.toggle("md", md); r.setAttribute("aria-pressed", !md); m.setAttribute("aria-pressed", md); };
+  r.addEventListener("click", () => set(false)); m.addEventListener("click", () => set(true));
+})();
+</script></body></html>
