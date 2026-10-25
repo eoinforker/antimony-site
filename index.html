@@ -9,162 +9,187 @@
 <meta property="og:description" content="We make things for people who make things. Makers of Orbe.">
 <meta property="og:image" content="assets/og-image-1200x630.png">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<script>if (location.hash === "#night" || location.hash === "#day") document.documentElement.dataset.theme = location.hash.slice(1);</script>
 <style>
 @font-face { font-family: "Schibsted Grotesk"; src: url("assets/fonts/SchibstedGrotesk-Latin-VF.woff2") format("woff2"); font-weight: 400 900; font-display: swap; }
 @font-face { font-family: "Commit Mono"; src: url("assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 400 600; font-display: swap; }
+@font-face { font-family: "Newsreader"; src: url("assets/fonts/Newsreader-Latin-VF.woff2") format("woff2"); font-weight: 300 700; font-display: swap; }
+@font-face { font-family: "Newsreader"; src: url("assets/fonts/Newsreader-Italic-Latin-VF.woff2") format("woff2"); font-weight: 300 700; font-style: italic; font-display: swap; }
 :root {
-  --bg: #F3F0E8; --fg: #0B1412; --rule: #DCD8CD; --muted: #6E6B63; --accent: #2448FF; --bar: #0B1412; --barfg: #F3F0E8; --frame: #DCD8CD;
-  --sky: #94E6FF; --ink: #0B1412;
+  --ink: #0B1412; --paper: #F3F0E8; --card: #FBFAF6; --rule: #DCD8CD; --muted: #6E6B63; --sky: #94E6FF; --cobalt: #2448FF;
   --sans: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
   --mono: "Commit Mono", ui-monospace, Menlo, monospace;
+  --serif: "Newsreader", Georgia, serif;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="day"]) { --bg: #0B1412; --fg: #F3F0E8; --rule: #23322F; --muted: #8E9C98; --accent: #94E6FF; --bar: #F3F0E8; --barfg: #0B1412; --frame: rgba(148,230,255,.45); } }
-:root[data-theme="night"] { --bg: #0B1412; --fg: #F3F0E8; --rule: #23322F; --muted: #8E9C98; --accent: #94E6FF; --bar: #F3F0E8; --barfg: #0B1412; --frame: rgba(148,230,255,.45); }
 * { box-sizing: border-box; margin: 0; }
 html { scroll-behavior: smooth; }
-body { background: var(--bg); color: var(--fg); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+body { background: var(--paper); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
 a { color: inherit; text-decoration: none; }
-img { display: block; }
-.wrap { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 48px; }
-.label { font: 500 11.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-.n { font: 500 12px var(--mono); letter-spacing: .08em; color: var(--accent); }
-.bar { display: inline-block; background: var(--bar); color: var(--barfg); font: 500 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; padding: 5px 10px 4px; }
+img, svg { display: block; }
+.wrap { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 40px; }
+.mono { font: 500 11.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+.muted { color: var(--muted); }
+.n { font: 500 12px var(--mono); letter-spacing: .08em; color: var(--cobalt); }
 
-/* Day and night versions of each image */
-.night { display: none; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="day"]) .day { display: none; } :root:not([data-theme="day"]) .night { display: block; } }
-:root[data-theme="night"] .day { display: none; } :root[data-theme="night"] .night { display: block; }
+/* Nav */
+header .wrap { display: flex; justify-content: space-between; align-items: center; height: 76px; }
+header .logo img { height: 18px; }
+nav { display: flex; align-items: center; gap: 30px; font-size: 15px; }
+nav a:not(.cta):hover { color: var(--muted); }
+.cta { background: var(--ink); color: var(--paper); padding: 9px 16px; border-radius: 7px; font-weight: 600; font-size: 14.5px; display: inline-flex; align-items: center; gap: 9px; }
+.cta::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--sky); }
 
-/* Hero: full screen, the crystal revealed by light bending through it, drifting very slowly */
-.hero { position: relative; min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; overflow: hidden; }
-.art { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
-.art img { width: 100%; height: 100%; object-fit: cover; object-position: 72% 50%; animation: drift 48s ease-in-out infinite alternate; transform-origin: 72% 50%; }
-@keyframes drift { from { transform: scale(1) translate3d(0,0,0); } to { transform: scale(1.06) translate3d(-1.2%, -1.5%, 0); } }
-@media (prefers-reduced-motion: reduce) { .art img { animation: none; } }
-.frame { position: absolute; inset: 14px; border: 1px solid var(--frame); pointer-events: none; z-index: 2; }
-.frame i { position: absolute; width: 14px; height: 14px; border: 0 solid var(--fg); }
-.frame i:nth-child(1) { left: -8px; top: -8px; border-left-width: 1px; border-top-width: 1px; }
-.frame i:nth-child(2) { right: -8px; top: -8px; border-right-width: 1px; border-top-width: 1px; }
-.frame i:nth-child(3) { left: -8px; bottom: -8px; border-left-width: 1px; border-bottom-width: 1px; }
-.frame i:nth-child(4) { right: -8px; bottom: -8px; border-right-width: 1px; border-bottom-width: 1px; }
-header, .hero-body, .hero-foot { position: relative; z-index: 1; }
-header .wrap { display: flex; justify-content: space-between; align-items: center; height: 100px; }
-header .logo img { height: 20px; }
-nav { display: flex; gap: 34px; align-items: center; }
-nav a { font: 500 11.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; }
-nav a:hover { color: var(--accent); }
-.hero-body { flex: 1; display: flex; align-items: center; }
-h1 { font-weight: 600; font-size: clamp(46px, 8.2vw, 128px); letter-spacing: -.05em; line-height: .94; max-width: 11ch; margin-top: 28px; }
-.lede { font-size: clamp(17px, 1.5vw, 21px); line-height: 1.45; color: var(--muted); max-width: 30em; margin-top: 30px; }
-.hero-foot .wrap { display: flex; justify-content: space-between; align-items: center; height: 90px; }
+/* Hero */
+.intro { padding-top: 72px; padding-bottom: 44px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: end; }
+h1 { font-weight: 600; font-size: clamp(40px, 5vw, 68px); letter-spacing: -.045em; line-height: .98; max-width: 13ch; }
+.intro p { font-family: var(--serif); font-size: 21px; line-height: 1.45; max-width: 30em; color: #2B2A26; }
+.intro p em { font-style: italic; }
 
-/* Orbe: in Orbe's own sky */
-.orbe { background: var(--sky); color: var(--ink); padding: 140px 0; }
-.orbe .wrap { display: grid; grid-template-columns: 1fr 1.25fr; gap: 64px; align-items: center; }
-.orbe .tile { width: min(100%, 420px); aspect-ratio: 1; border-radius: 22%; overflow: hidden; box-shadow: 0 0 0 1px rgba(11,20,18,.12); }
-.orbe .tile img { width: 100%; height: 100%; }
-.orbe .n, .orbe .label { color: var(--ink); }
-.orbe h2 { font-weight: 700; font-size: clamp(40px, 5.6vw, 86px); letter-spacing: -.05em; line-height: .95; margin-top: 22px; }
-.orbe p { font-size: 19px; line-height: 1.5; max-width: 30em; margin-top: 28px; }
-.btn { display: inline-flex; align-items: center; gap: 12px; margin-top: 36px; background: var(--ink); color: #F3F0E8; font-weight: 600; font-size: 17px; padding: 16px 24px; border-radius: 8px; }
-.btn::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sky); }
-.btn:hover { background: #1C2A27; }
+/* The stage: the product, standing in the art */
+.stage { position: relative; border-radius: 14px; overflow: hidden; background: var(--ink); aspect-ratio: 16 / 8.4; min-height: 520px; }
+.stage .art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 78% 50%; animation: drift 50s ease-in-out infinite alternate; }
+@keyframes drift { to { transform: scale(1.05) translate3d(-1%, -1.5%, 0); } }
+@media (prefers-reduced-motion: reduce) { .stage .art { animation: none; } }
+.stage .tag { position: absolute; left: 22px; bottom: 18px; color: #8E9C98; z-index: 2; }
+.win { position: absolute; left: 6%; top: 50%; transform: translateY(-50%); width: min(560px, 88%); background: var(--card); border-radius: 12px; box-shadow: 0 30px 80px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06); overflow: hidden; z-index: 1; }
+.win .bar { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--rule); background: #F4F2EC; }
+.win .bar i { width: 10px; height: 10px; border-radius: 50%; background: #DCD8CD; }
+.win .bar img { width: 18px; height: 18px; border-radius: 4px; margin-left: 6px; }
+.win .bar b { font-size: 13.5px; font-weight: 600; }
+.win .bar .s { margin-left: auto; font: 500 10.5px var(--mono); letter-spacing: .1em; background: #E7F9FF; border: 1px solid #BDEFFF; padding: 3px 7px; border-radius: 4px; }
+.win .body { padding: 20px 22px 22px; }
+.who { display: flex; justify-content: space-between; align-items: baseline; }
+.who b { font-weight: 600; font-size: 17px; }
+.steps { margin-top: 16px; border-top: 1px solid var(--rule); }
+.step { display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--rule); font-size: 15px; }
+.step .k { font: 500 11px var(--mono); color: var(--muted); }
+.step .v { font-weight: 600; white-space: nowrap; }
+.step.hi { background: linear-gradient(90deg, #EAF8FF, transparent); margin: 0 -22px; padding-left: 22px; padding-right: 22px; }
+.step.hi .v { color: var(--cobalt); }
+.tap { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; gap: 12px; }
+.tap span { font-size: 14px; color: var(--muted); }
+.tap a { background: var(--ink); color: var(--paper); padding: 11px 18px; border-radius: 8px; font-weight: 600; font-size: 14.5px; }
 
-/* Principles and letters */
-.section { padding: 140px 0; border-bottom: 1px solid var(--rule); }
-.section h3 { font-weight: 600; font-size: clamp(30px, 3.4vw, 48px); letter-spacing: -.035em; line-height: 1.02; max-width: 16ch; margin-top: 22px; }
-.cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; margin-top: 80px; }
-.cols div { border-top: 1px solid var(--fg); padding-top: 22px; }
-.cols b { display: block; font-weight: 600; font-size: 24px; letter-spacing: -.02em; margin-top: 18px; }
-.cols p { color: var(--muted); font-size: 17px; line-height: 1.5; margin-top: 12px; }
-.list { list-style: none; padding: 0; margin-top: 64px; border-top: 1px solid var(--rule); }
-.list li { display: grid; grid-template-columns: 90px 1fr auto; gap: 20px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid var(--rule); }
-.list b { font-weight: 600; font-size: 22px; letter-spacing: -.02em; }
+/* Statement */
+.statement { padding-top: 150px; padding-bottom: 120px; }
+.statement p { font-family: var(--serif); font-size: clamp(28px, 3.3vw, 46px); line-height: 1.18; letter-spacing: -.012em; max-width: 24em; }
+.statement p span { color: var(--muted); }
 
-/* Footer: the wordmark, full width */
-footer { padding: 90px 0 36px; }
-footer .big { width: 100%; height: auto; }
-footer .row { display: flex; justify-content: space-between; align-items: center; margin-top: 44px; gap: 20px; flex-wrap: wrap; }
-footer .row nav { gap: 28px; }
+/* Cards, each with its own piece of the art */
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding-bottom: 150px; }
+.card { background: var(--card); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: border-color .2s; }
+a.card:hover { border-color: var(--ink); }
+.card .pic { aspect-ratio: 4 / 3; overflow: hidden; background: var(--ink); }
+.card .pic img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s ease; }
+a.card:hover .pic img { transform: scale(1.04); }
+.card .txt { padding: 20px 22px 24px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.card b { font-weight: 600; font-size: 22px; letter-spacing: -.02em; }
+.card p { color: var(--muted); font-size: 15.5px; line-height: 1.5; }
+.card .more { margin-top: auto; padding-top: 10px; }
 
-@media (max-width: 760px) {
-  .wrap { padding: 0 24px; }
-  .frame { inset: 8px; }
-  header .wrap { height: 80px; }
-  header .logo img { height: 15px; }
-  header nav { display: none; }
-  .art { opacity: .6; }
-  .art img { object-position: 78% 40%; }
-  .hero-foot .wrap { height: 80px; }
-  .orbe { padding: 90px 0; }
-  .orbe .wrap { grid-template-columns: 1fr; gap: 40px; }
-  .orbe .tile { width: 140px; }
-  .section { padding: 90px 0; }
-  .cols { grid-template-columns: 1fr; gap: 36px; margin-top: 50px; }
-  .list li { grid-template-columns: 64px 1fr; }
-  .list li .label { grid-column: 2; }
+/* Principles */
+.principles { background: var(--ink); color: var(--paper); padding: 130px 0; }
+.principles h2 { font-weight: 600; font-size: clamp(30px, 3.4vw, 48px); letter-spacing: -.035em; line-height: 1.02; max-width: 15ch; }
+.cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 44px; margin-top: 72px; }
+.cols div { border-top: 1px solid #2B3D39; padding-top: 22px; }
+.cols .n { color: var(--sky); }
+.cols b { display: block; font-weight: 600; font-size: 23px; letter-spacing: -.02em; margin-top: 16px; }
+.cols p { color: #9AA8A4; font-size: 16.5px; line-height: 1.5; margin-top: 10px; }
+
+/* Footer */
+footer { padding: 110px 0 34px; }
+footer .big { width: 100%; height: auto; color: var(--ink); }
+footer .row { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; gap: 20px; flex-wrap: wrap; }
+footer nav { font-size: 14px; }
+
+@media (max-width: 860px) {
+  .wrap { padding: 0 20px; }
+  header nav a:not(.cta) { display: none; }
+  .intro { grid-template-columns: 1fr; padding-top: 40px; padding-bottom: 30px; gap: 22px; }
+  .stage { aspect-ratio: auto; min-height: 640px; }
+  .stage .art { object-position: 70% 35%; }
+  .win { left: 50%; top: auto; bottom: 56px; transform: translateX(-50%); width: calc(100% - 28px); }
+  .step { grid-template-columns: 18px 1fr; } .step .v { grid-column: 2; }
+  .statement { padding-top: 90px; padding-bottom: 70px; }
+  .cards { grid-template-columns: 1fr; padding-bottom: 90px; }
+  .principles { padding: 90px 0; }
+  .cols { grid-template-columns: 1fr; gap: 34px; margin-top: 48px; }
   footer .row { flex-direction: column; align-items: flex-start; }
 }
 </style>
 </head>
 <body>
 
-<section class="hero">
-  <div class="art" aria-hidden="true"><img class="day" src="assets/art-day.svg" alt=""><img class="night" src="assets/art-night.svg" alt=""></div>
-  <div class="frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-  <header><div class="wrap">
-    <a class="logo" href="./" aria-label="Antimony">
-      <img class="day" src="assets/antimony-lockup-horizontal-ink.svg" alt="Antimony">
-      <img class="night" src="assets/antimony-lockup-horizontal-paper.svg" alt="Antimony">
-    </a>
-    <nav><a href="#orbe">Orbe</a><a href="#principles">Principles</a><a href="#letters">Letters</a></nav>
-  </div></header>
-  <div class="hero-body"><div class="wrap">
-    <span class="bar">Makers of Orbe</span>
+<header><div class="wrap">
+  <a class="logo" href="./" aria-label="Antimony"><img src="assets/antimony-lockup-horizontal-ink.svg" alt="Antimony"></a>
+  <nav>
+    <a href="#work">Orbe</a>
+    <a href="#letters">Letters</a>
+    <a href="#principles">Principles</a>
+    <a class="cta" href="https://eoinforker.github.io/orbe-site/">Open Orbe</a>
+  </nav>
+</div></header>
+
+<main>
+  <section class="wrap intro">
     <h1>We make things for people who make things.</h1>
-    <p class="lede">Antimony is a London company building tools that sit on the side of the people who make the work. Our first product is Orbe.</p>
-  </div></div>
-  <div class="hero-foot"><div class="wrap">
-    <span class="label">[ Scroll ]</span>
-    <span class="label">51.51° N, 0.13° W</span>
-  </div></div>
-</section>
+    <p><em>Antimony</em> is a London company. Our first product is Orbe, an agent that sits on the creator's side of every sponsorship deal.</p>
+  </section>
 
-<section class="orbe" id="orbe"><div class="wrap">
-  <div class="tile"><img src="assets/orbe-mark-on-sky.svg" alt="Orbe"></div>
-  <div>
-    <span class="n">[001]</span> <span class="label">&nbsp;Orbe</span>
-    <h2>Brands are getting agents. Creators get Orbe.</h2>
-    <p>The creator's side of every sponsorship deal. Orbe prices and negotiates each offer inside the creator's own rules, waits for one tap on anything binding, and holds the brand's money until the work is delivered. Free for creators; brands pay when the work is delivered.</p>
-    <a class="btn" href="https://eoinforker.github.io/orbe-site/">Open Orbe</a>
-  </div>
-</div></section>
+  <section class="wrap">
+    <div class="stage">
+      <img class="art" src="assets/art-night.svg" alt="">
+      <div class="win" role="img" aria-label="Orbe answering a sample offer">
+        <div class="bar"><i></i><i></i><i></i><img src="assets/orbe-mark-on-sky.svg" alt=""><b>Orbe</b><span class="s">SAMPLE</span></div>
+        <div class="body">
+          <div class="who"><b>Kettle &amp; Crumb</b><span class="mono muted">Offer to Ada Okafor</span></div>
+          <div class="steps">
+            <div class="step"><span class="k">01</span><span>Their offer, one integration</span><span class="v">£600</span></div>
+            <div class="step"><span class="k">02</span><span>Ada's floor, from her rules</span><span class="v">£900</span></div>
+            <div class="step"><span class="k">03</span><span>What her results support</span><span class="v">£640 to £1,130</span></div>
+            <div class="step hi"><span class="k">04</span><span>Orbe's counter, sent with its reasons</span><span class="v">£900</span></div>
+          </div>
+          <div class="tap"><span>Anything binding waits for Ada's tap.</span><a href="https://eoinforker.github.io/orbe-site/demo/">Approve</a></div>
+        </div>
+      </div>
+      <span class="tag mono">Sample: a made-up creator and brand, from the Orbe demo</span>
+    </div>
+  </section>
 
-<section class="section" id="principles"><div class="wrap">
-  <span class="bar">Principles</span>
-  <h3>Three things we will not trade, at any size.</h3>
-  <div class="cols">
-    <div><span class="n">[01]</span><b>Never alone.</b><p>Every product we make sits on the side of the person who made the work, never across the table from them.</p></div>
-    <div><span class="n">[02]</span><b>Paid when you are.</b><p>We earn when the people we serve earn. Orbe is free for creators; brands pay when the work is delivered.</p></div>
-    <div><span class="n">[03]</span><b>Built to last.</b><p>We build for the next forty years, not the next round: plain records, clear rules, nothing we would be embarrassed to explain.</p></div>
-  </div>
-</div></section>
+  <section class="wrap statement">
+    <p>Brands are getting agents. The people who make the work should have one too. <span>We build the tools that sit on their side of the table: they price the work, hold the money until it is earned, and keep a record of every deal.</span></p>
+  </section>
 
-<section class="section" id="letters"><div class="wrap">
-  <span class="bar">Letters</span>
-  <h3>Numbered letters, when they are ready.</h3>
-  <ul class="list">
-    <li><span class="n">[001]</span><b>Antimony 001: Never alone</b><span class="label">Soon</span></li>
-  </ul>
-</div></section>
+  <section class="wrap cards" id="work">
+    <a class="card" href="https://eoinforker.github.io/orbe-site/">
+      <div class="pic"><img src="assets/art-halftone-paper.svg" alt=""></div>
+      <div class="txt"><span class="n">[001] Product</span><b>Orbe</b><p>The creator's side of every sponsorship deal. Free for creators; brands pay when the work is delivered.</p><span class="more mono">Open Orbe</span></div>
+    </a>
+    <div class="card" id="letters">
+      <div class="pic"><img src="assets/art-engraved.svg" alt=""></div>
+      <div class="txt"><span class="n">[002] Letters</span><b>Antimony 001: Never alone</b><p>Numbered letters on deals, money and the business of making things. They arrive when they are ready.</p><span class="more mono muted">Soon</span></div>
+    </div>
+    <a class="card" href="#principles">
+      <div class="pic"><img src="assets/art-astrolabe.svg" alt=""></div>
+      <div class="txt"><span class="n">[003] Company</span><b>How we work</b><p>Three things we will not trade, at any size.</p><span class="more mono">Read</span></div>
+    </a>
+  </section>
+
+  <section class="principles" id="principles"><div class="wrap">
+    <span class="mono" style="color:#8E9C98">Principles</span>
+    <h2 style="margin-top:20px">Three things we will not trade, at any size.</h2>
+    <div class="cols">
+      <div><span class="n">[01]</span><b>Never alone.</b><p>Every product we make sits on the side of the person who made the work, never across the table from them.</p></div>
+      <div><span class="n">[02]</span><b>Paid when you are.</b><p>We earn when the people we serve earn. Orbe is free for creators; brands pay when the work is delivered.</p></div>
+      <div><span class="n">[03]</span><b>Built to last.</b><p>We build for the next forty years, not the next round: plain records, clear rules, nothing we would be embarrassed to explain.</p></div>
+    </div>
+  </div></section>
+</main>
 
 <footer><div class="wrap">
-  <img class="big day" src="assets/antimony-wordmark-ink.svg" alt="Antimony">
-  <img class="big night" src="assets/antimony-wordmark-paper.svg" alt="Antimony">
+  <img class="big" src="assets/antimony-wordmark-ink.svg" alt="Antimony">
   <div class="row">
-    <span class="label">© MMXXVI Antimony · London</span>
-    <nav><a href="#orbe">Orbe</a><a href="#principles">Principles</a><a href="#letters">Letters</a></nav>
+    <span class="mono muted">© MMXXVI Antimony · London</span>
+    <nav><a href="https://eoinforker.github.io/orbe-site/">Orbe</a><a href="#letters">Letters</a><a href="#principles">Principles</a></nav>
   </div>
 </div></footer>
 </body>
