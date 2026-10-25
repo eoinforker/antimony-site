@@ -1,0 +1,79 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Antimony</title><meta name="claude:viewport-fit-sides" content="cover"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta name="description" content="Antimony builds software for the people who make the work. Our first product is Orbe.">
+<style>
+/* Quaint and brief, after Anysphere: one narrow column of serif on paper, and one quiet, curious thing to look at. */
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: swap; }
+@font-face { font-family: "Commit Mono"; src: url("assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
+:root { --paper: #F4F2EC; --ink: #1A1917; --dim: #8A877F; --lit: #8FDFFA; --pru: #1F3F7A; color-scheme: light; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--paper); color: var(--ink); }
+body { font: 400 18px/1.55 "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; text-decoration-color: rgba(26,25,23,.35); } a:hover { text-decoration-color: var(--ink); }
+:focus-visible { outline: 1px solid var(--pru); outline-offset: 3px; }
+::selection { background: var(--lit); }
+.col { max-width: 34rem; margin-inline: auto; padding-block: calc(56px + env(safe-area-inset-top, 0px)) 56px; display: grid; gap: 1.3em; }
+.wm { width: 132px; height: auto; display: block; color: var(--ink); margin-bottom: 2.2em; }
+.win { position: relative; aspect-ratio: 1; width: 100%; max-width: 100%; margin: .6em 0 1em; cursor: crosshair; touch-action: pan-y; }
+.win canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hint { font: 400 11.5px "Commit Mono", monospace; color: var(--dim); letter-spacing: .02em; margin-top: -1.4em; }
+p { text-wrap: pretty; }
+.links { display: flex; gap: 1.4em; flex-wrap: wrap; font-size: 16px; margin-top: .6em; } .links span { color: var(--dim); }
+footer { font: 400 11.5px "Commit Mono", monospace; color: var(--dim); margin-top: 3.2em; display: flex; justify-content: space-between; gap: 12px; }
+@media (max-width: 520px) { body { font-size: 17px; } }
+</style></head><body>
+<main class="col">
+  <svg class="wm" viewBox="-20 -830 4186 1070" style="" role="img" aria-label="Antimony"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg>
+  <p>Antimony builds software for the people who make the work.</p>
+  <div class="win" id="win"><canvas id="c" aria-label="The Antimony mark, drawn faintly in our own words. Move over it to look closer."></canvas></div>
+  <p class="hint">Look closer.</p>
+  <p>Creators do the work, and then the work around the work: the briefs, the contracts, the chasing. We take the second part away, so what is left is theirs.</p>
+  <p>Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator's side of every sponsorship deal. There will be others.</p>
+  <p>The name is a metal that was used to refine gold. It is almost never found alone. We intend to be around for a long time.</p>
+  <div class="links"><a href="https://eoinforker.github.io/orbe-site/">Orbe</a><span>Letters, soon</span></div>
+  <footer><span>Antimony, London</span><span>© 2026</span></footer>
+</main>
+<script>
+(() => { "use strict";
+const Q = {"seam": "M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z", "cav": "M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z", "gem": "M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"}, WORDS = "antimony software for the people who make the work orbe the brief the contract paid on time never alone stibium fifty one refine the gold the break makers yours what is left ";
+const INK = [26, 25, 23], PAPER = [244, 242, 236], SKYC = [143, 223, 250], still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const box = document.getElementById("win"), c = document.getElementById("c"), x = c.getContext("2d");
+let W, cw, ch, cells = [], lx = .5, ly = .5, tx = .5, ty = .5, touched = false, T0 = performance.now();
+function layout() {
+  const d = Math.min(2, devicePixelRatio || 1); W = box.getBoundingClientRect().width; c.width = W * d; c.height = W * d; x.setTransform(d, 0, 0, d, 0, 0);
+  const fs = Math.max(7, W / 70); cw = fs * .6; ch = fs * 1.05; x.font = `400 ${fs}px "Commit Mono", monospace`; x.textBaseline = "top";
+  const S = 400, o = document.createElement("canvas"); o.width = o.height = S; const g = o.getContext("2d"), k = S / 100; g.scale(k, k);
+  const rr = new Path2D(); rr.roundRect ? rr.roundRect(0, 0, 100, 100, 22) : rr.rect(0, 0, 100, 100);
+  g.fillStyle = "#fff"; g.fill(rr); g.globalCompositeOperation = "destination-out"; g.fill(new Path2D(Q.seam)); g.fill(new Path2D(Q.cav));
+  g.globalCompositeOperation = "source-over"; g.fillStyle = "#f00"; g.fill(new Path2D(Q.gem));
+  const D = g.getImageData(0, 0, S, S).data, cols = Math.floor(W / cw), rows = Math.floor(W / ch); cells = []; let wi = 0;
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    const u = (i + .5) / cols, v = (j + .5) / rows, q = (Math.floor(v * S) * S + Math.floor(u * S)) * 4;
+    const kind = D[q + 3] > 128 ? (D[q + 1] > 200 ? 1 : 2) : 0, chr = WORDS[wi++ % WORDS.length];
+    if (chr !== " ") cells.push({ x: i * cw, y: j * ch, u, v, kind, chr });
+  }
+}
+const CRY = PAPER.map((v, i) => Math.round(v + (INK[i] - v) * .2));
+const mix = (a, b, t) => `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(",")})`;
+function frame(now) {
+  const t = (now - T0) / 1000;
+  if (!touched && !still) { tx = .5 + Math.sin(t * .23) * .28; ty = .5 + Math.sin(t * .17 + 1) * .26; }   // left alone, the light wanders slowly
+  lx += (tx - lx) * .08; ly += (ty - ly) * .08;
+  x.clearRect(0, 0, W, W);
+  for (const p of cells) {
+    const dl = Math.hypot(p.u - lx, p.v - ly), light = Math.max(0, 1 - dl / .26) ** 1.6;   // the lantern
+    let col;
+    if (p.kind === 0) col = mix(PAPER, INK, .045 + light * .1);
+    else if (p.kind === 1) col = mix(PAPER, INK, .5 + light * .48);
+    else col = mix(CRY, [64, 170, 220], .55 + light * .45);
+    x.fillStyle = col; x.fillText(p.chr, p.x, p.y);
+  }
+  requestAnimationFrame(frame);
+}
+box.addEventListener("pointermove", e => { const r = box.getBoundingClientRect(); tx = (e.clientX - r.left) / r.width; ty = (e.clientY - r.top) / r.height; touched = true; });
+box.addEventListener("pointerleave", () => { touched = false; });
+new ResizeObserver(layout).observe(box);
+(document.fonts ? document.fonts.load('400 12px "Commit Mono"') : Promise.resolve()).catch(() => {}).finally(() => { layout(); requestAnimationFrame(frame); });
+})();
+</script></body></html>
