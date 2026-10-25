@@ -66,6 +66,27 @@ html.opening .hit, html.nogl .hit { visibility: hidden; }
 .sign.lit .nm { opacity: .86; }
 .sign:hover .nm, .sign:focus-visible .nm { opacity: 1; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 
+/* sound: one small control, muted until asked */
+.snd { position: fixed; z-index: 4; top: max(12px, env(safe-area-inset-top)); right: calc(var(--gut) - 13px); width: 44px; height: 44px; display: grid; place-items: center; padding: 0; background: none; border: 0; border-radius: 50%; color: var(--paper); opacity: .56; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: opacity .5s cubic-bezier(.25,.6,.3,1); }
+.snd:hover, .snd:focus-visible { opacity: 1; }
+.snd:focus-visible { outline: 1px solid rgba(238, 234, 224, .55); outline-offset: -5px; }
+.snd svg { display: block; width: 19px; height: 13px; overflow: visible; }
+.snd line { stroke: currentColor; stroke-width: 1.15; stroke-linecap: round; transform-box: fill-box; transform-origin: 50% 50%; transform: scaleY(.04); transition: transform .8s cubic-bezier(.25,.6,.3,1); }
+.snd[aria-pressed="true"] line:nth-child(1) { transform: scaleY(.38); }
+.snd[aria-pressed="true"] line:nth-child(2) { transform: scaleY(.78); transition-delay: .05s; }
+.snd[aria-pressed="true"] line:nth-child(3) { transform: scaleY(.52); transition-delay: .1s; }
+.snd[aria-pressed="true"] line:nth-child(4) { transform: scaleY(1); transition-delay: .15s; }
+.snd[aria-pressed="true"] line:nth-child(5) { transform: scaleY(.6); transition-delay: .2s; }
+@media (prefers-reduced-motion: no-preference) {
+  .snd[aria-pressed="true"] line { animation: breathe 3.6s ease-in-out infinite alternate; }
+  .snd[aria-pressed="true"] line:nth-child(2) { animation-duration: 4.4s; }
+  .snd[aria-pressed="true"] line:nth-child(3) { animation-duration: 3.1s; }
+  .snd[aria-pressed="true"] line:nth-child(4) { animation-duration: 5.2s; }
+  .snd[aria-pressed="true"] line:nth-child(5) { animation-duration: 3.9s; }
+}
+@keyframes breathe { from { opacity: 1; } to { opacity: .45; } }
+html.opening .snd { opacity: 0; pointer-events: none; }
+
 @media (max-width: 600px) {
   .type { top: 22px; font-size: 11px; letter-spacing: 2.5px; }
   .wm { width: min(54vw, 210px); }
@@ -93,6 +114,7 @@ html.opening .hit, html.nogl .hit { visibility: hidden; }
 <div class="wm" id="wm-caps" aria-hidden="true"><svg viewBox="-10 -705 6338 715" focusable="false"><path class="cA" d="M444.5155 -286 336 -563 227.4845 -286 336 -374Z" stroke-width="14" stroke-linejoin="round"/><g fill="currentColor"><path d="M111 -95 351 -695H386L628 -95Q643 -57 663.5 -42.5Q684 -28 723 -23V0H460V-23Q497 -27 512.0 -35.5Q527 -44 527 -59Q527 -71 517 -96L463 -236L335.0 -324.0L207 -236L155 -96Q148 -75 148 -66Q148 -47 166.5 -37.0Q185 -27 228 -23V0H15V-23Q52 -27 73.5 -40.5Q95 -54 111 -95ZM444.515 -286.0 336 -563 227.484 -286.0 336.0 -374.0Z"/><path d="M989.58 -122V-573Q989.58 -612 979.08 -632.5Q968.58 -653 947.08 -661.0Q925.58 -669 888.58 -672V-695H1060.58L1463.58 -178V-575Q1463.58 -614 1453.08 -634.0Q1442.58 -654 1421.58 -661.5Q1400.58 -669 1362.58 -672V-695H1604.58V-672Q1566.58 -669 1545.58 -661.5Q1524.58 -654 1514.08 -633.5Q1503.58 -613 1503.58 -574L1504.58 0H1476.58L1029.58 -573V-123Q1029.58 -83 1040.08 -62.5Q1050.58 -42 1071.58 -34.0Q1092.58 -26 1130.58 -23V0H888.58V-23Q926.58 -26 947.58 -34.0Q968.58 -42 979.08 -62.5Q989.58 -83 989.58 -122Z"/><path d="M1984.16 -112V-657H1901.16Q1850.16 -657 1821.16 -647.5Q1792.16 -638 1773.66 -608.5Q1755.16 -579 1748.16 -519H1727.16L1737.16 -695H2325.16L2335.16 -519H2314.16Q2306.16 -580 2288.16 -609.5Q2270.16 -639 2241.16 -648.0Q2212.16 -657 2161.16 -657H2077.16V-112Q2078.16 -77 2088.66 -59.0Q2099.16 -41 2119.66 -33.5Q2140.16 -26 2177.16 -23V0H1888.16V-23Q1939.16 -27 1961.16 -45.0Q1983.16 -63 1984.16 -112Z"/><path d="M2580.740 -112V-583Q2579.740 -618 2569.240 -636.0Q2558.740 -654 2538.240 -661.5Q2517.740 -669 2480.740 -672V-695H2770.740V-672Q2719.740 -668 2697.240 -650.0Q2674.740 -632 2673.740 -583V-112Q2674.740 -62 2696.740 -44.5Q2718.740 -27 2773.740 -23V0H2483.740V-23Q2534.740 -27 2557.240 -44.5Q2579.740 -62 2580.740 -112Z"/><path d="M3042.32 -101 3057.32 -582Q3058.32 -632 3041.82 -650.0Q3025.32 -668 2979.32 -672V-695H3157.32L3403.32 -146L3617.32 -695H3789.32V-672Q3750.32 -668 3734.82 -646.5Q3719.32 -625 3721.32 -588L3741.32 -94Q3742.32 -66 3749.82 -52.0Q3757.32 -38 3773.32 -32.0Q3789.32 -26 3821.32 -23V0H3569.32V-23Q3603.32 -26 3619.82 -32.0Q3636.32 -38 3642.32 -51.5Q3648.32 -65 3647.32 -94L3626.32 -616L3390.32 0H3365.32L3099.32 -595L3084.32 -101Q3083.32 -68 3091.82 -52.5Q3100.32 -37 3118.82 -31.5Q3137.32 -26 3175.32 -23V0H2951.32V-23Q2985.32 -26 3003.82 -32.0Q3022.32 -38 3031.82 -54.0Q3041.32 -70 3042.32 -101Z"/><path d="M3997.9 -349Q3997.9 -452 4043.9 -533.0Q4089.9 -614 4167.9 -659.0Q4245.9 -704 4337.9 -704Q4429.9 -704 4508.9 -659.0Q4587.9 -614 4634.9 -533.0Q4681.9 -452 4681.9 -349Q4681.9 -246 4634.9 -164.5Q4587.9 -83 4508.9 -37.5Q4429.9 8 4337.9 8Q4245.9 8 4167.9 -37.5Q4089.9 -83 4043.9 -164.5Q3997.9 -246 3997.9 -349ZM4567.9 -349Q4567.9 -444 4538.4 -516.0Q4508.9 -588 4456.4 -627.5Q4403.9 -667 4336.9 -667Q4270.9 -667 4219.4 -627.5Q4167.9 -588 4139.4 -515.5Q4110.9 -443 4110.9 -349Q4110.9 -254 4139.4 -181.0Q4167.9 -108 4219.4 -68.0Q4270.9 -28 4336.9 -28Q4403.9 -28 4456.4 -68.0Q4508.9 -108 4538.4 -181.0Q4567.9 -254 4567.9 -349Z"/><path d="M4979.480 -122V-573Q4979.480 -612 4968.980 -632.5Q4958.480 -653 4936.980 -661.0Q4915.480 -669 4878.480 -672V-695H5050.480L5453.480 -178V-575Q5453.480 -614 5442.980 -634.0Q5432.480 -654 5411.480 -661.5Q5390.480 -669 5352.480 -672V-695H5594.480V-672Q5556.480 -669 5535.480 -661.5Q5514.480 -654 5503.980 -633.5Q5493.480 -613 5493.480 -574L5494.480 0H5466.480L5019.480 -573V-123Q5019.480 -83 5029.980 -62.5Q5040.480 -42 5061.480 -34.0Q5082.480 -26 5120.480 -23V0H4878.480V-23Q4916.480 -26 4937.480 -34.0Q4958.480 -42 4968.980 -62.5Q4979.480 -83 4979.480 -122Z"/><path d="M5973.06 -112V-281L5771.06 -625Q5761.06 -643 5754.56 -651.0Q5748.06 -659 5736.56 -664.5Q5725.06 -670 5703.06 -672V-695H5951.06V-674Q5917.06 -671 5900.06 -662.5Q5883.06 -654 5883.06 -637Q5883.06 -627 5892.06 -610L6047.06 -340L6199.06 -617Q6208.06 -635 6208.06 -645Q6208.06 -660 6192.06 -665.5Q6176.06 -671 6137.06 -674V-695H6326.06V-674Q6301.06 -671 6290.56 -668.0Q6280.06 -665 6271.06 -654.5Q6262.06 -644 6249.06 -620L6066.06 -288V-112Q6067.06 -62 6089.06 -44.5Q6111.06 -27 6166.06 -23V0H5876.06V-23Q5927.06 -27 5949.56 -44.5Q5972.06 -62 5973.06 -112Z"/></g></svg></div>
   </div>
 </main>
+<button class="snd" id="snd" type="button" aria-pressed="false" aria-label="Sound"><svg viewBox="0 0 19 13" aria-hidden="true" focusable="false"><line x1="1.5" y1="1" x2="1.5" y2="12"/><line x1="5.5" y1="1" x2="5.5" y2="12"/><line x1="9.5" y1="1" x2="9.5" y2="12"/><line x1="13.5" y1="1" x2="13.5" y2="12"/><line x1="17.5" y1="1" x2="17.5" y2="12"/></svg></button>
 <footer class="foot" id="foot"><p>Software for the people who make the work</p></footer>
 
 <script>
@@ -100,21 +122,22 @@ html.opening .hit, html.nogl .hit { visibility: hidden; }
 "use strict";
 var html = document.documentElement;
 var $ = function (id) { return document.getElementById(id); };
-var canvas = $("city"), typeEl = $("type"), titleEl = $("title"), foot = $("foot"), hit = $("hit");
+var canvas = $("city"), typeEl = $("type"), titleEl = $("title"), foot = $("foot"), hit = $("hit"), sndBtn = $("snd");
 var signEls = [$("s0"), $("s1"), $("s2")];
 var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 var coarse = matchMedia("(pointer: coarse)").matches;
 var FREEZE = /[?&]t=(\d+)/.exec(location.search); FREEZE = FREEZE ? +FREEZE[1] / 1000 : -1;
+var FORCE_FLASH = /[?&]flash\b/.test(location.search);
 var START_OPEN = /[?&]p\b/.test(location.search);
 var opening = html.classList.contains("opening");
-var KEY = "antimony.city";
+var KEY = "antimony.city", SKEY = "antimony.city.sound";
 function remember() { try { sessionStorage.setItem(KEY, "1"); } catch (e) {} }
 
 function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
 function seg(t, a, b) { return clamp01((t - a) / (b - a)); }
 function o3(x) { return 1 - Math.pow(1 - x, 3); }
 function io3(x) { return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
-function o4(x) { return 1 - Math.pow(1 - x, 4); }
+function hash1(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
 
 /* ---------- the capitals, wide tracked, spaced by eye ---------- */
 (function () {
@@ -129,16 +152,17 @@ var LABEL = "ANTIMONY //:", TEXT = " LONDON", ALL = LABEL + TEXT;
 var spans = ALL.split("").map(function (c, i) {
   var s = document.createElement("span"); s.textContent = c; if (i < LABEL.length) s.className = "k"; typeEl.appendChild(s); return s;
 });
+/* the opening: the line, black, then the street wakes looking down into a puddle, and the eye lifts to the tower */
 var STEP = .075, TL = { type0: .4 };
-TL.type1 = TL.type0 + ALL.length * STEP; TL.fade0 = TL.type1 + 1; TL.fade1 = TL.fade0 + .8; TL.r0 = TL.fade1 + .45;
-TL.mark1 = TL.r0 + .9; TL.lit0 = TL.r0 + .8; TL.lit1 = TL.r0 + 1.9; TL.exp0 = TL.r0 + 1.3; TL.exp1 = TL.r0 + 3.3; TL.cam0 = TL.r0 + .2; TL.cam1 = TL.r0 + 3.7;
-TL.wm0 = TL.r0 + 3.1; TL.wm1 = TL.wm0 + .9; TL.ft0 = TL.r0 + 3.5; TL.ft1 = TL.ft0 + .8; TL.end = TL.ft1;
+TL.type1 = TL.type0 + ALL.length * STEP; TL.fade0 = TL.type1 + .85; TL.fade1 = TL.fade0 + .8; TL.r0 = TL.fade1 + .4;
+TL.exp0 = TL.r0; TL.exp1 = TL.r0 + 1.7; TL.lit0 = TL.r0 + .2; TL.lit1 = TL.r0 + 1.5; TL.mk0 = TL.r0 + .45; TL.mk1 = TL.r0 + 1.7;
+TL.tilt0 = TL.r0 + 2.0; TL.tilt1 = TL.r0 + 4.5;
+TL.wm0 = TL.r0 + 3.9; TL.wm1 = TL.wm0 + .9; TL.ft0 = TL.r0 + 4.3; TL.ft1 = TL.ft0 + .8; TL.end = TL.ft1;
 
 /* ---------- the Break, in mark units ---------- */
 var GEM = [[58.6,21.5],[70.58,46.7],[67.82,56.3],[41.4,81.5],[29.42,56.3],[32.18,46.7]];
 var CAV = [[60.75,14.02],[78.19,42.8],[73.21,60.2],[39.25,88.97],[21.81,60.2],[26.79,42.8]];
 var SEAM = [[[67.46,-12],[68.96,-12],[62.35,21.5],[54.85,21.5]], [[54.85,21.5],[62.35,21.5],[45.15,81.5],[37.65,81.5]], [[37.65,81.5],[45.15,81.5],[33.4,112],[31.9,112]]];
-/* three chips, one from each quiet corner of the stone; each will become a sign */
 var CHIPS = [
   [[9.5,17],[19,11.5],[24.5,21],[13,27.5]],
   [[80,63],[90.5,68.5],[88,82],[77.5,77]],
@@ -157,292 +181,573 @@ var UG = new Float32Array(18), UC = new Float32Array(18), US = new Float32Array(
 edges(GEM, UG, 0); edges(CAV, UC, 0); SEAM.forEach(function (q, k) { edges(q, US, k * 12); }); CHIPS.forEach(function (q, k) { edges(q, UK, k * 12); });
 
 /* ================= shaders ================= */
+var NB = 10, NL = 12;
 var VS = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
-var COMMON = [
-"precision highp float;",
-"const vec3 SKY=vec3(.58,.902,1.);const vec3 COB=vec3(.141,.282,1.);const vec3 COOL=vec3(.80,.87,1.);const vec3 PRU=vec3(.122,.247,.478);",
-"float h21(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}",
-"float vnoise(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.-2.*f);return mix(mix(h21(i),h21(i+vec2(1.,0.)),u.x),mix(h21(i+vec2(0.,1.)),h21(i+vec2(1.,1.)),u.x),u.y);}",
-"float fbm(vec2 p){float s=0.,a=.5;for(int i=0;i<5;i++){s+=a*vnoise(p);p=mat2(1.6,1.2,-1.2,1.6)*p;a*=.5;}return s;}"
-].join("\n");
+var COMMON = `
+precision highp float;
+uniform vec2 uRes;uniform float uT;uniform vec4 uCam;uniform vec2 uHor;uniform float uPitch;
+uniform vec4 uGeo;uniform vec4 uGeo2;uniform vec4 uFl;
+const vec3 SKY=vec3(.58,.902,1.);const vec3 COB=vec3(.141,.282,1.);const vec3 COOL=vec3(.80,.87,1.);const vec3 PRU=vec3(.122,.247,.478);
+const vec3 FLC=vec3(.58,.71,1.);
+float h21(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}
+float vnoise(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.-2.*f);return mix(mix(h21(i),h21(i+vec2(1.,0.)),u.x),mix(h21(i+vec2(0.,1.)),h21(i+vec2(1.,1.)),u.x),u.y);}
+float fbm(vec2 p){float s=0.,a=.5;for(int i=0;i<5;i++){s+=a*vnoise(p);p=mat2(1.6,1.2,-1.2,1.6)*p;a*=.5;}return s;}
+vec2 toV(vec2 q){vec2 s=q-uHor;float F=uCam.w;float c=cos(uPitch),n=sin(uPitch);float dy=s.y*c+F*n;float dz=F*c-s.y*n;return F*vec2(s.x,dy)/max(dz,.05);}
+/* the setts of the quay: id, distance to the joint, a random value */
+vec4 sett(vec2 wp){vec2 g=vec2(wp.x/.52,wp.y/.27);float row=floor(g.y);g.x+=.5*mod(row,2.)+.23*h21(vec2(row,4.));vec2 id=floor(g);vec2 f=fract(g);return vec4(id,min(min(f.x,1.-f.x)*.52,min(f.y,1.-f.y)*.27),h21(id));}
+/* where the quay holds water: one long puddle where the tower falls, and a few small ones in the setts */
+float puddle(vec2 wp){vec2 d=(wp-uGeo2.yz)/vec2(uGeo2.w,2.);float r=length(d)+(vnoise(wp*1.1+4.)-.5)*.38+(vnoise(wp*3.3)-.5)*.1;
+ float hero=1.-smoothstep(.965,1.,r);
+ float sm=smoothstep(.75,.77,vnoise(wp*vec2(.8,1.1)+11.))*smoothstep(3.,6.,wp.y);
+ return max(hero,sm*.0);}
+`;
 
-/* The scene: a canal running away from us between dark blocks, an overpass across it, the city behind
-   in layers of haze, and at the end of it all the tower, its top lost in cloud, the Break the one thing lit on it.
-   Every layer is a plane at a depth, so the camera can move and the layers part. The same function, seen from
-   a camera mirrored under the water, gives the reflection. */
-var SCENE = COMMON + "\n" + [
-"uniform vec2 uRes;uniform float uT;uniform vec4 uCam;uniform vec2 uHor;uniform float uRefl;",
-"uniform float uExp;uniform float uLit;uniform float uMark;uniform float uHov;uniform vec4 uTw;",
-"uniform vec4 uSg[3];uniform vec3 uSgOn;uniform vec3 uSgHov;uniform vec4 uSh[3];uniform vec4 uShT[3];uniform vec3 uHole;uniform vec3 uHoleG;uniform float uTrain;",
-"uniform sampler2D uAtlas;uniform vec3 uGemE[6];uniform vec3 uCavE[6];uniform vec3 uSeamE[12];uniform vec3 uChipE[12];",
-"const float W=26.;const float AEND=262.;const float ZB=170.;",
-"float camX,ch,camZ,F,pxW;vec2 v;vec3 col,emS,emA,skyc;float dep;",
-"vec3 haze(float Y){float lo=exp(-max(Y,0.)/42.);vec3 hi=mix(vec3(.052,.072,.135),vec3(.026,.037,.072),smoothstep(0.,.45,abs(v.y)));return mix(hi,vec3(.098,.138,.252),lo);}",
-"float fogT(float z,float Y){return exp(-z*(.0009+.0036*exp(-max(Y,0.)/26.)));}",
-"void putF(float z,vec3 c,vec3 e,float Y,float T){if(z<dep){col=c*T+haze(Y)*(1.-T);emS=e*mix(T,1.,.5);dep=z;}}",
-"void put(float z,vec3 c,vec3 e,float Y){putF(z,c,e*uLit,Y,fogT(z,Y));}",
-"vec3 skyC(){",
-" float h=v.y;",
-" vec3 c=mix(vec3(.098,.138,.252),vec3(.056,.078,.145),smoothstep(0.,.14,h));c=mix(c,vec3(.02,.03,.062),smoothstep(.14,.56,h));",
-" c+=vec3(.04,.056,.105)*exp(-abs(v.x)/.3)*(1.-smoothstep(0.,.5,h));",
-" float zc=(430.-ch)*F/max(h,.003);",
-" vec2 cp=vec2((v.x*zc/F+camX)*.0036+uT*.0025,(zc+camZ)*.0015-uT*.0035);",
-" float n=fbm(cp);",
-" float fade=smoothstep(.004,.14,h);",
-" float lit=1.-smoothstep(0.,.55,h);",
-" vec3 cl=mix(vec3(.034,.048,.094),vec3(.15,.19,.315),clamp(n*n*1.8,0.,1.))*(.5+.5*lit)*(1.+.35*exp(-abs(v.x)/.3));",
-" c=mix(c,cl,smoothstep(.24,.72,n)*fade*.92);",
-" return c;}",
-/* a row of distant blocks at one depth */
-"void skyline(float z0,float sd,float bw,float hb,float hv){",
-" float z=z0-camZ;if(z>=dep)return;float X=v.x*z/F+camX;float Y=ch+v.y*z/F;if(Y<0.)return;",
-" float a=X/bw+sd*7.31;float id=floor(a);float fx=fract(a);",
-" float r=h21(vec2(id,sd));float H=(fx>.08&&fx<.95)?hb+hv*r*r*r:0.;",
-" float a2=X/(bw*.57)+sd*3.7;float r2=h21(vec2(floor(a2),sd+5.));H=max(H,hb*.6+hv*.42*r2*r2);",
-" if(Y>H)return;",
-" float px=z*pxW;vec3 c=vec3(.022,.03,.054)*(.85+.3*h21(vec2(id,sd+2.)));",
-" vec2 wc=vec2(X/2.4,Y/3.5);vec2 wi=floor(wc);vec2 wf=fract(wc);",
-" float hl=h21(wi+sd*17.);float lit=step(.972-.08*smoothstep(.45,.8,vnoise(wi*.13+sd*5.)),hl);",
-" float sh=step(.2,wf.x)*step(wf.x,.8)*step(.25,wf.y)*step(wf.y,.75);",
-" float det=1.-smoothstep(.5,1.3,px);",
-" c+=COOL*.26*lit*mix(.36,sh,det)*(.6+.4*h21(wi+1.));",
-" c+=vec3(.022,.03,.055)*(1.-smoothstep(0.,px*1.6,H-Y));",
-" put(z,c,vec3(0.),Y);}",
-"float sdTile(vec2 u){vec2 p=abs(u-50.)-28.;return length(max(p,0.))+min(max(p.x,p.y),0.)-22.;}",
-"float sdGem(vec2 u){float m=-1e5;for(int j=0;j<6;j++){m=max(m,dot(uGemE[j].xy,u)-uGemE[j].z);}return m;}",
-"float sdCav(vec2 u){float m=-1e5;for(int j=0;j<6;j++){m=max(m,dot(uCavE[j].xy,u)-uCavE[j].z);}return m;}",
-"float sdSeam(vec2 u){float d=1e5;for(int k=0;k<3;k++){float m=-1e5;for(int j=0;j<4;j++){vec3 e=uSeamE[k*4+j];m=max(m,dot(e.xy,u)-e.z);}d=min(d,m);}return d;}",
-"float sdChips(vec2 u){float d=1e5;for(int k=0;k<3;k++){float on=k==0?uHole.x:(k==1?uHole.y:uHole.z);if(on>.5){float m=-1e5;for(int j=0;j<4;j++){vec3 e=uChipE[k*4+j];m=max(m,dot(e.xy,u)-e.z);}d=min(d,m);}}return d;}",
-/* the tower, and the Break on it */
-"void tower(){",
-" float z=uTw.x-camZ;if(z>=dep)return;float X=v.x*z/F+camX;float Y=ch+v.y*z/F;if(Y<0.)return;",
-" float hw=uTw.y;float w=hw*(1.-.14*smoothstep(0.,640.,Y));if(Y<64.)w=hw*1.16;",
-" if(abs(X)>w)return;",
-" float px=z*pxW;",
-" vec3 c=vec3(.013,.018,.034);",
-" c*=.84+.32*vnoise(vec2(X*.35,Y*.011));",
-" float rib=abs(fract(X/6.3)-.5)*6.3;c+=vec3(.006,.009,.017)*(1.-smoothstep(.12,.12+px,rib));",
-" c+=vec3(.02,.03,.06)*(1.-smoothstep(0.,px*2.+.8,w-abs(X)))*(.5+.5*smoothstep(500.,0.,Y));",
-" vec3 e=vec3(0.);",
-" float dm=length(vec2(X,(Y-uTw.z)*.8));c+=(SKY*.022*exp(-dm/(uTw.w*.5))+PRU*.045*exp(-dm/(uTw.w*1.6)))*uMark;",
-" vec2 u=vec2(X/uTw.w*100.+50.,(uTw.z-Y)/uTw.w*100.+50.);",
-" if(u.x>-10.&&u.x<110.&&u.y>-10.&&u.y<110.){",
-"  float pu=px/uTw.w*100.;",
-"  float dT=sdTile(u);float dc=min(sdSeam(u),sdCav(u));float dg=sdGem(u);float dh=sdChips(u);",
-"  float inT=clamp(.5-dT/pu,0.,1.);",
-"  float stone=clamp(.5-max(dT,max(-dc,-dh))/pu,0.,1.);",
-"  float g=clamp((u.x*.55+u.y*.85)/140.,0.,1.);",
-"  vec3 st=mix(vec3(.068,.084,.132),vec3(.026,.033,.058),g);",
-"  float I=uMark*(1.+.14*uHov);",
-"  float near=.35+.65*exp(-max(sdCav(u),0.)/18.);",
-"  float ep=dc/pu;vec3 edg=(SKY*.62*exp(-ep*ep/.6)+COB*.2*exp(-max(dc,0.)/2.2))*near;float et=-dT/pu;edg+=vec3(.5,.62,.85)*.1*exp(-et*et/.8)*(1.-.6*g);",
-"  float hp=dh/pu;edg+=(SKY*.45*exp(-hp*hp/.55)+COB*.12*exp(-max(dh,0.)/1.6))*step(dh,1e4)*(1.+2.*max(uHoleG.x,max(uHoleG.y,uHoleG.z)));",
-"  float cut=inT*(1.-stone);",
-"  vec3 cutC=vec3(.005,.007,.014);",
-"  c=mix(c,cutC,cut);c=mix(c,st,stone);",
-"  e+=edg*stone*I;",
-"  e+=(COB*.10*exp(-max(dg,0.)/3.)+SKY*.12*exp(-max(dg,0.)/1.2))*cut*I*step(sdCav(u),0.);",
-"  float gem=clamp(.5-dg/pu,0.,1.);",
-"  float k2=clamp((u.y-21.5)/60.,0.,1.);",
-"  vec3 gc=mix(vec3(.9,.975,1.),SKY,smoothstep(0.,.36,k2));gc=mix(gc,vec3(.16,.32,.9),smoothstep(.5,1.,k2)*.62);",
-"  float side=(u.x-58.6)+(u.y-21.5)*.286745;gc=mix(gc,vec3(1.),.28*step(0.,side));",
-"  gc*=.92+.08*vnoise(u*.11+vec2(uT*.12,-uT*.09));",
-"  c=mix(c,vec3(0.),gem);e=mix(e,gc*I,gem);",
-" }",
-" putF(z,c,e,Y,exp(-z*(.00052+.002*exp(-max(Y,0.)/26.))));",
-" float cl=smoothstep(370.,640.,Y);col=mix(col,skyc,cl);emS*=1.-cl;}",
+var SCENE = COMMON + `
+uniform float uRefl;uniform float uExp;uniform float uLit;uniform float uMark;uniform float uHov;uniform vec4 uTw;
+uniform vec4 uSg[3];uniform vec3 uSgOn;uniform vec3 uSgHov;uniform vec4 uSh[3];uniform vec4 uShT[3];uniform vec3 uHole;uniform vec3 uHoleG;uniform float uTrain;
+uniform sampler2D uAtlas;uniform vec3 uGemE[6];uniform vec3 uCavE[6];uniform vec3 uSeamE[12];uniform vec3 uChipE[12];
+uniform vec4 uBx[10];uniform vec4 uBa[10];uniform vec4 uLp[12];uniform vec3 uLc[12];uniform vec4 uLamp;uniform vec4 uFl2;
+const float AEND=262.;const float ZB=170.;
+float camX,ch,camZ,F,pxW,FL,W,Wn,Yq,ZQ,ZN;vec2 v;vec3 cam;
+float dep,gT,gY,gKd,gKs,gA,gCl;vec3 gC,gE,gP,gN;
+vec3 colS,emS,emA,skyc;float alp;
+vec3 haze(float Y){float lo=exp(-max(Y,0.)/42.);vec3 hi=mix(vec3(.052,.072,.135),vec3(.026,.037,.072),smoothstep(0.,.45,abs(v.y)));vec3 h=mix(hi,vec3(.098,.138,.252),lo);
+ return h+FLC*uFl.x*(.05+.1*exp(-abs(v.x-uFl.y)/.9));}
+float fogT(float z,float Y){return exp(-z*(.0009+.0036*exp(-max(Y,0.)/26.)));}
+void put(float z,vec3 c,vec3 e,float Y,vec3 P,vec3 N,float kd,float ks,float a){if(z<dep){dep=z;gC=c;gE=e;gY=Y;gP=P;gN=N;gKd=kd;gKs=ks;gA=a;gT=fogT(z,Y);gCl=0.;}}
+void putS(float z,vec3 c,vec3 e,float Y){put(z,c,e*uLit,Y,vec3(0.),vec3(0.,0.,-1.),0.,0.,1.);}
+/* light from the signs, the lamp and the open door, falling on whatever is near them; wet things answer with a highlight */
+vec3 spill(vec3 P,vec3 N,vec3 Vd,float kd,float ks){vec3 acc=vec3(0.);
+ for(int i=0;i<12;i++){vec4 lp=uLp[i];vec3 L=lp.xyz-P;float d2=dot(L,L);if(d2*lp.w>300.)continue;vec3 l=L*inversesqrt(d2);
+  float nd=max(dot(N,l),0.);float at=1./(1.+d2*lp.w);vec3 hv=normalize(l+Vd);float sp=pow(max(dot(N,hv),0.),36.);
+  acc+=uLc[i]*at*(kd*nd+ks*sp*3.);}
+ return acc*uLit;}
+vec3 shadeO(vec3 base,vec3 P,vec3 N,float kd,float ks){return base+spill(P,N,normalize(cam-P),kd,ks)+kd*FLC*uFl.x*.1*(.3+.7*max(N.y,0.));}
+/* something thin in front of what is already there: coverage, not depth */
+void ov(float z,vec3 c,vec3 e,float cov,float Y){
+ if(z>=dep||cov<=.002)return;cov=min(cov,1.);float T=fogT(z,Y);vec3 cc=c*T+haze(Y)*(1.-T);
+ float na=alp+cov*(1.-alp);colS=(colS*alp*(1.-cov)+cc*cov)/max(na,1e-4);alp=na;emS=emS*(1.-cov)+e*cov*mix(T,1.,.5);emA*=1.-.45*cov;}
+float lnoise(float x,float s){float i=floor(x),f=fract(x);return mix(h21(vec2(i,s)),h21(vec2(i+1.,s)),f);}
+
+vec3 skyC(){
+ float h=v.y;
+ vec3 c=mix(vec3(.098,.138,.252),vec3(.056,.078,.145),smoothstep(0.,.14,h));c=mix(c,vec3(.02,.03,.062),smoothstep(.14,.56,h));
+ c+=vec3(.04,.056,.105)*exp(-abs(v.x)/.3)*(1.-smoothstep(0.,.5,h));
+ float zc=(430.-ch)*F/max(h,.003);
+ vec2 cp=vec2((v.x*zc/F+camX)*.0036+uT*.0025,(zc+camZ)*.0015-uT*.0035);
+ float n=fbm(cp);
+ float fade=smoothstep(.004,.14,h);
+ float lit=1.-smoothstep(0.,.55,h);
+ vec3 cl=mix(vec3(.034,.048,.094),vec3(.15,.19,.315),clamp(n*n*1.8,0.,1.))*(.5+.5*lit)*(1.+.35*exp(-abs(v.x)/.3));
+ float cov=smoothstep(.24,.72,n)*fade*.92;
+ c=mix(c,cl,cov);
+ /* lightning inside the cloud: the deck lights from within, brightest where it is thickest and nearest the strike */
+ if(uFl.x>0.){float sp=exp(-abs(v.x-uFl.y)/.55);float fl=uFl.x*(.22+.78*sp);
+  c+=FLC*fl*(.06+.5*smoothstep(.2,.85,n)*fade+.12*(1.-smoothstep(0.,.25,h)));}
+ /* and when it forks, it also crawls along the underside of the cloud */
+ if(uFl.z>0.&&h>.02){float Xc=v.x*zc/F+camX;float Zc=zc+camZ;float sd=uFl2.y;float bx=uFl.w;float zb=uFl2.x;
+  float dx=Xc-bx;float env=1.-smoothstep(200.,900.,abs(dx));
+  if(env>0.){float pw=zc*pxW*1.4;
+   float zl=zb+(lnoise(Xc*.004,sd)-.5)*420.+(lnoise(Xc*.02,sd+2.)-.5)*90.+(lnoise(Xc*.09,sd+5.)-.5)*20.;float d1=abs(Zc-zl)/pw;
+   float zl2=zl+(lnoise(Xc*.007,sd+9.)-.5)*500.*smoothstep(0.,600.,abs(dx));float d2=abs(Zc-zl2)/pw;
+   float I=(exp(-d1*d1/.9)*1.4+exp(-d1/7.)*.2+exp(-d2*d2/.6)*.7*step(0.,dx*(fract(sd*7.)-.5))+exp(-d2/6.)*.08)*env;
+   c+=vec3(.85,.92,1.)*I*uFl.z*fade*2.6;}}
+ return c;}
+
+/* a row of distant blocks at one depth; some carry a line of light up a corner or the middle */
+void skyline(float z0,float sd,float bw,float hb,float hv,float strip){
+ float z=z0-camZ;if(z>=dep)return;float X=v.x*z/F+camX;float Y=ch+v.y*z/F;if(Y<FL)return;
+ float a=X/bw+sd*7.31;float id=floor(a);float fx=fract(a);
+ float r=h21(vec2(id,sd));float H=(fx>.08&&fx<.95)?hb+hv*r*r*r:0.;
+ float a2=X/(bw*.57)+sd*3.7;float i2=floor(a2);float r2=h21(vec2(i2,sd+5.));float H2=hb*.6+hv*.42*r2*r2;
+ float xc=(id+.5-sd*7.31)*bw;float vx=abs((xc-camX)*F/z)-.5*bw*F/z;H=min(H,ch+mix(.13,9.,smoothstep(.06,.09,vx))*z/F);
+ float xc2=(i2+.5-sd*3.7)*bw*.57;float vx2=abs((xc2-camX)*F/z)-.28*bw*F/z;H2=min(H2,ch+mix(.13,9.,smoothstep(.06,.09,vx2))*z/F);
+ bool mn=Y<=H;if(!mn&&Y>H2)return;float HH=mn?H:H2;
+ float px=z*pxW;vec3 c=vec3(.022,.03,.054)*(.85+.3*h21(vec2(id,sd+2.)));
+ vec2 wc=vec2(X/2.4,Y/3.5);vec2 wi=floor(wc);vec2 wf=fract(wc);
+ float hl=h21(wi+sd*17.);float lit=step(.955-.12*smoothstep(.4,.8,vnoise(wi*.13+sd*5.)),hl);
+ float sh=step(.2,wf.x)*step(wf.x,.8)*step(.25,wf.y)*step(wf.y,.75);
+ float det=1.-smoothstep(.5,1.3,px);
+ vec3 e=COOL*.16*lit*mix(.36,sh,det)*(.6+.4*h21(wi+1.));if(hl>.992)e=COB*.3*mix(.36,sh,det);
+ if(mn){float rs=h21(vec2(id,sd+9.));
+  if(rs>1.-strip){float sx=rs>1.-strip*.45?.5:(rs>1.-strip*.75?.1:.92);float dx=abs(fx-sx)*bw;float cov=(1.-smoothstep(.12,.12+px*1.3,dx))*min(1.,(.24+px*.3)/max(px,.01));
+   vec3 sc=rs>1.-strip*.12?COB*1.5:(h21(vec2(id,sd+11.))>.45?SKY:COOL);
+   e+=sc*cov*1.1*(.75+.25*sin(uT*.5+id*2.3))*smoothstep(HH*.08,HH*.35,Y)*(1.-smoothstep(HH-2.,HH,Y)*.5);}
+  if(r>.72){float bx=(fx-.5)*bw;float dd=length(vec2(bx,Y-H+1.6))/max(px,.25);e+=COOL*.9*exp(-dd*dd*.5)*(.25+.75*step(.55,fract(uT*.42+r*7.)));}
+  /* some carry their floors as bands of light, some a lit crown */
+  float rb=h21(vec2(id,sd+13.));
+  if(rb>.62){float pitch=sd<.5?38.:(8.+6.*h21(vec2(id,sd+14.)));float fb=abs(fract(Y/pitch)-.5)*pitch;float on=step(.35,h21(vec2(id,floor(Y/pitch)+sd)));
+   e+=(rb>.9?COB*1.2:COOL*.7)*.32*(1.-smoothstep(.25,.25+px*1.2,fb))*min(1.,(.5+px*.2)/max(px,.01))*on*smoothstep(HH*.2,HH*.5,Y);}
+  if(rb<.2){float cr=HH-Y;e+=(rb<.07?SKY:COOL)*.5*(1.-smoothstep(0.,max(px*1.5,1.2),abs(cr-2.)))+COOL*.05*exp(-cr/(HH*.08));}}
+ c+=vec3(.022,.03,.055)*(1.-smoothstep(0.,px*1.6,HH-Y));
+ putS(z,c,e,Y);if(dep==z)gCl=smoothstep(360.,640.,Y)*(1.-.8*clamp(uFl.x*1.3,0.,1.));}
+
+/* a far elevated line crossing the whole city, lamps under it and now and then a train of light */
+void elevated(){
+ float z=760.-camZ;if(z>=dep)return;float X=v.x*z/F+camX;float Y=ch+v.y*z/F;if(Y<FL)return;float px=z*pxW;
+ float deck=step(70.,Y)*step(Y,73.2);float py=abs(fract(X/64.)-.5)*64.;float pyl=step(py,1.5)*step(Y,70.);
+ if(deck+pyl<.5)return;
+ vec3 c=vec3(.02,.027,.048);vec3 e=vec3(0.);
+ float lx=abs(fract(X/9.)-.5)*9.;e+=COOL*.6*exp(-(lx*lx+(Y-70.2)*(Y-70.2))/max(px*px*1.2,.05))*deck;
+ float tx=mod(X+uT*34.,1500.);float on=step(tx,130.);float wy=step(71.,Y)*step(Y,72.4);e+=COOL*.7*on*wy*deck*(.5+.5*step(.3,fract(tx/3.)));
+ putS(z,c,e,Y);}
+
+float sdTile(vec2 u){vec2 p=abs(u-50.)-28.;return length(max(p,0.))+min(max(p.x,p.y),0.)-22.;}
+float sdGem(vec2 u){float m=-1e5;for(int j=0;j<6;j++){m=max(m,dot(uGemE[j].xy,u)-uGemE[j].z);}return m;}
+float sdCav(vec2 u){float m=-1e5;for(int j=0;j<6;j++){m=max(m,dot(uCavE[j].xy,u)-uCavE[j].z);}return m;}
+float sdSeam(vec2 u){float d=1e5;for(int k=0;k<3;k++){float m=-1e5;for(int j=0;j<4;j++){vec3 e=uSeamE[k*4+j];m=max(m,dot(e.xy,u)-e.z);}d=min(d,m);}return d;}
+float sdChips(vec2 u){float d=1e5;for(int k=0;k<3;k++){float on=k==0?uHole.x:(k==1?uHole.y:uHole.z);if(on>.5){float m=-1e5;for(int j=0;j<4;j++){vec3 e=uChipE[k*4+j];m=max(m,dot(e.xy,u)-e.z);}d=min(d,m);}}return d;}
+
+/* the tower, and the Break on it; its crown stays in the cloud unless lightning shows it */
+void tower(){
+ float z=uTw.x-camZ;if(z>=dep)return;float X=v.x*z/F+camX;float Y=ch+v.y*z/F;if(Y<FL||Y>1330.)return;
+ float hw=uTw.y;float w=hw*(1.-.14*smoothstep(0.,640.,Y));if(Y<64.)w=hw*1.16;
+ if(Y>880.)w*=.8;if(Y>1060.)w*=.6;if(Y>1200.)w=3.;
+ if(abs(X)>w)return;
+ float px=z*pxW;
+ vec3 c=vec3(.013,.018,.034);
+ c*=.84+.32*vnoise(vec2(X*.35,Y*.011));
+ float rib=abs(fract(X/6.3)-.5)*6.3;c+=vec3(.006,.009,.017)*(1.-smoothstep(.12,.12+px,rib));
+ c+=vec3(.02,.03,.06)*(1.-smoothstep(0.,px*2.+.8,w-abs(X)))*(.5+.5*smoothstep(500.,0.,Y));
+ vec3 e=vec3(0.);
+ float dm=length(vec2(X,(Y-uTw.z)*.8));c+=(SKY*.022*exp(-dm/(uTw.w*.5))+PRU*.045*exp(-dm/(uTw.w*1.6)))*uMark;
+ vec2 u=vec2(X/uTw.w*100.+50.,(uTw.z-Y)/uTw.w*100.+50.);
+ if(u.x>-10.&&u.x<110.&&u.y>-10.&&u.y<110.){
+  float pu=px/uTw.w*100.;
+  float dT=sdTile(u);float dc=min(sdSeam(u),sdCav(u));float dg=sdGem(u);float dh=sdChips(u);
+  float inT=clamp(.5-dT/pu,0.,1.);
+  float stone=clamp(.5-max(dT,max(-dc,-dh))/pu,0.,1.);
+  float g=clamp((u.x*.55+u.y*.85)/140.,0.,1.);
+  vec3 st=mix(vec3(.068,.084,.132),vec3(.026,.033,.058),g);
+  float I=uMark*(1.+.14*uHov);
+  float near=.35+.65*exp(-max(sdCav(u),0.)/18.);
+  float ep=dc/pu;vec3 edg=(SKY*.62*exp(-ep*ep/.6)+COB*.2*exp(-max(dc,0.)/2.2))*near;float et=-dT/pu;edg+=vec3(.5,.62,.85)*.1*exp(-et*et/.8)*(1.-.6*g);
+  float hp=dh/pu;edg+=(SKY*.45*exp(-hp*hp/.55)+COB*.12*exp(-max(dh,0.)/1.6))*step(dh,1e4)*(1.+2.*max(uHoleG.x,max(uHoleG.y,uHoleG.z)));
+  float cut=inT*(1.-stone);
+  c=mix(c,vec3(.005,.007,.014),cut);c=mix(c,st,stone);
+  e+=edg*stone*I;
+  e+=(COB*.10*exp(-max(dg,0.)/3.)+SKY*.12*exp(-max(dg,0.)/1.2))*cut*I*step(sdCav(u),0.);
+  float gem=clamp(.5-dg/pu,0.,1.);
+  float k2=clamp((u.y-21.5)/60.,0.,1.);
+  vec3 gc=mix(vec3(.9,.975,1.),SKY,smoothstep(0.,.36,k2));gc=mix(gc,vec3(.16,.32,.9),smoothstep(.5,1.,k2)*.62);
+  float side=(u.x-58.6)+(u.y-21.5)*.286745;gc=mix(gc,vec3(1.),.28*step(0.,side));
+  gc*=.92+.08*vnoise(u*.11+vec2(uT*.12,-uT*.09));
+  c=mix(c,vec3(0.),gem);e=mix(e,gc*I,gem);
+ }
+ if(z<dep){dep=z;gC=c;gE=e;gY=Y;gKd=0.;gKs=0.;gA=1.;gT=exp(-z*(.00052+.002*exp(-max(Y,0.)/26.)));
+  gCl=smoothstep(370.,640.,Y)*(1.-.82*clamp(uFl.x*1.3,0.,1.));}}
+
 /* the overpass, its lamps, the wire over it, and now and then a train */
-"void bridge(){",
-" float z=ZB-camZ;if(z>=dep||z<1.)return;float X=v.x*z/F+camX;float Y=ch+v.y*z/F;if(Y<0.)return;",
-" float px=z*pxW;float un=13.5,tp=17.2;bool hit=false;vec3 c=vec3(.018,.024,.042);vec3 e=vec3(0.);",
-" if(Y>un&&Y<tp){hit=true;c+=vec3(.01,.014,.026)*(1.-smoothstep(0.,px*1.2,abs(Y-15.7)-.05));",
-"  c*=.8+.2*smoothstep(un,tp,Y);}",
-" float rl=abs(Y-(tp+1.05));float post=abs(fract(X/2.2)-.5)*2.2;",
-" if(Y>tp&&Y<tp+1.15&&(rl<max(.07,px*.5)||post<max(.05,px*.5))){hit=true;}",
-" float mast=abs(fract(X/31.+.3)-.5)*31.;",
-" if(Y>tp&&Y<tp+5.6&&mast<max(.12,px*.5)){hit=true;}",
-" if(abs(Y-(tp+5.4))<max(.04,px*.5)){c=mix(c,vec3(.01,.013,.024),min(1.,.08/max(px,.08)));hit=true;}",
-" if(uTrain>-1e3){float tx=uTrain-X;if(tx>0.&&tx<150.&&Y>tp+.25&&Y<tp+3.9){hit=true;",
-"  float car=fract(tx/21.);float gap=step(car,.025);",
-"  c=vec3(.02,.026,.045)*(1.-gap*.6);",
-"  float wy=step(tp+1.75,Y)*step(Y,tp+2.45);float wx=fract(tx/1.6);float wn=step(.05,wx)*step(wx,.95)*(1.-step(car,.06));",
-"  float det=1.-smoothstep(.5,1.4,px);float lw=.82+.18*h21(vec2(floor(tx/21.),3.));",
-"  float wd=h21(vec2(floor(tx/1.6),7.));e=COOL*.36*lw*wy*mix(.8,wn*(.55+.45*step(.18,wd)),det);",
-"  c+=COOL*.05*(1.-smoothstep(0.,.5,abs(Y-(tp+.4))));}}",
-" if(hit)put(z,c,e,Y);",
-" if(uTrain>-1e3){float tx=uTrain-X;float on=step(0.,tx)*step(tx,150.);float dy=Y-(tp+2.1);emA+=COOL*.05*on*exp(-abs(dy)/1.6)*fogT(z,Y)*step(z,dep+.01)*uLit;}",
-" if(z<dep+.01){float lx=(fract(X/11.)-.5)*11.;float d=length(vec2(lx,Y-(un-.25)));float r=max(.18,px*.7);",
-"  emA+=(COOL*.5*exp(-d*d/(r*r))*fogT(z,Y)+COOL*.03*exp(-d/2.2)*fogT(z,Y))*uLit;}}",
-/* the blocks either side of the water */
-"void facade(){",
-" float s=v.x<0.?-1.:1.;float den=abs(s*W-camX);",
-" float z=den*F/abs(v.x);if(z<=1.||z>=dep)return;",
-" float a=z+camZ;if(a>AEND)return;",
-" float Y=ch+v.y*z/F;if(Y<0.)return;",
-" float bl=a/17.;float bi=floor(bl);float bf=fract(bl);",
-" float r=h21(vec2(bi,s*3.+11.));float H=16.+76.*pow(r,1.4);if(r>.9)H=7.+4.*r;",
-" H*=mix(1.,.5,smoothstep(140.,AEND,a));",
-" if(Y>H)return;",
-" float px=z*pxW;float pa=px*z/den;",
-" vec3 c=vec3(.016,.021,.038)*(.85+.3*h21(vec2(bi,s+2.)));float mw=2.1+1.2*step(.5,h21(vec2(bi,s+5.)));",
-" float fy=fract(Y/3.4);float fl=floor(Y/3.4);float wa=fract(a/mw);float wi=floor(a/mw);",
-" float win=step(.18,wa)*step(wa,.82)*step(.32,fy)*step(fy,.86);float sill=step(.14,wa)*step(wa,.86)*(1.-smoothstep(0.,max(px*1.3,.04),abs(fy-.3)*3.4));",
-" float hl=h21(vec2(wi*1.3+s,fl+bi*7.));float lit=step(.978-.1*smoothstep(.45,.85,vnoise(vec2(a*.07,Y*.1)+bi*3.1+s)),hl);",
-" vec3 wc=mix(vec3(.011,.015,.028),COOL*.34*(.3+.7*h21(vec2(wi,fl))),lit);if(hl>.996)wc=COB*.42;if(lit>.5&&h21(vec2(wi,fl+5.))>.6)wc*=.55+.45*step(.5,fract(fy*9.));",
-" float det=1.-smoothstep(.45,1.4,pa);",
-" vec3 avg=c*.62+vec3(.011,.015,.028)*.38+COOL*.26*.65*.045*.38;",
-" vec3 wv=mix(c,wc,win);wv+=vec3(.016,.022,.04)*sill*(1.-lit*win);",
-" float blk=step(.55,h21(vec2(bi,s+21.)));float rail=blk*(1.-smoothstep(0.,max(px*1.2,.035),abs(fy-.97)*3.4));float shd=blk*(1.-smoothstep(0.,max(px*2.,.12),abs(fy-.9)*3.4));",
-" wv=wv*(1.-.45*shd)+vec3(.03,.042,.075)*rail;",
-" float pp=abs(fract(a/(5.3+3.*h21(vec2(bi,s+31.))))-.5)*5.;float pipe=step(.62,h21(vec2(bi,s+33.)))*(1.-smoothstep(.06,.06+max(pa,.05),pp));wv=mix(wv,vec3(.008,.011,.02),pipe*.8);",
-" c=mix(avg,wv,det);",
-" float dl=min(fy,1.-fy)*3.4;c+=vec3(.008,.011,.02)*(1.-smoothstep(0.,max(px*1.4,.05),dl-.02))*(1.-smoothstep(.6,2.,pa));",
-" c+=vec3(.03,.042,.075)*(1.-smoothstep(0.,max(px*2.,.1),H-Y));",
-" float db=min(bf,1.-bf)*17.;c*=1.-.55*(1.-smoothstep(.25,.25+max(pa,.15),db));",
-" float gl=step(.86,h21(vec2(bi,s+7.)));",
-" if(gl>.5){float mu=abs(fract(a/1.4)-.5)*1.4;vec3 g=vec3(.026,.036,.066)+vec3(.02,.03,.055)*smoothstep(0.,H,Y);g+=vec3(.02,.028,.05)*(1.-smoothstep(.04,.04+max(pa,.05),mu))*(1.-smoothstep(.8,2.,pa));c=mix(c,g,.85);}",
-" c*=.8+.4*mix(vnoise(vec2(a*.9,Y*.055)+bi*7.),.5,smoothstep(.6,2.,pa))*mix(1.,vnoise(vec2(a*.12,Y*.2)+s*3.),.5);",
-" c=mix(c,vec3(.01,.013,.024),1.-smoothstep(1.1,2.1,Y));",
-" float la=(fract(a/23.+s*.25)-.5)*23.;float ld=length(vec2(la,Y-4.3));",
-" c+=COOL*.06*exp(-ld/3.2)*step(9.,H);",
-" vec3 e=COOL*.75*exp(-ld*ld/max(.05,px*px*.8))*step(9.,H);",
-" float gf=step(.62,h21(vec2(bi,s+51.)))*step(9.,H);",
-" if(gf>.5){float op=fract(a/4.2);float o=step(.08,op)*step(op,.92)*step(1.3,Y)*step(Y,3.7);float fd=smoothstep(.5,1.4,pa);",
-"  float oi=floor(a/4.2);float on=step(.42,h21(vec2(oi,s+53.)));float gy=.45+.55*smoothstep(1.3,3.7,Y);",
-"  e+=COOL*(.05+.07*h21(vec2(oi,s+52.)))*gy*mix(o*on,step(1.3,Y)*step(Y,3.7)*.5,fd);",
-"  c+=COOL*.02*exp(-max(Y-3.7,0.)/1.4)*step(3.7,Y);}",
-" float hs=h21(vec2(bi,s+40.));",
-" if(hs>2.&&H>12.){float kf=floor(2.+h21(vec2(bi,s+41.))*max(1.,min(7.,H/3.4-3.)));",
-"  float y0=kf*3.4+1.15;float a0=bi*17.+2.+5.*h21(vec2(bi,s+42.));float ln=4.+8.*h21(vec2(bi,s+43.));",
-"  vec3 sc=hs>.95?COB*.7:COOL*.3;",
-"  float iy=step(y0,Y)*step(Y,y0+.2);float ia=step(a0,a)*step(a,a0+ln);",
-"  e+=sc*iy*ia;",
-"  float dy=max(0.,max(y0-Y,Y-y0-.2));float da=max(0.,max(a0-a,a-a0-ln));",
-"  c+=sc*.12*exp(-length(vec2(dy,da))/1.3);}",
-" put(z,c,e,Y);}",
-/* two boats tied up along the walls */
-"void boats(){",
-" for(int i=0;i<2;i++){float s=i==0?-1.:1.;if(v.x*s<=0.)continue;float bx=s*(W-4.2);float den=abs(bx-camX);",
-"  float z=den*F/abs(v.x);if(z<=1.||z>=dep)continue;float a=z+camZ;float a0=i==0?64.:118.;float t=(a-a0)/15.;if(t<0.||t>1.)continue;",
-"  float Y=ch+v.y*z/F;if(Y<0.)continue;float px=z*pxW;",
-"  float hull=1.45-.6*smoothstep(.8,1.,t)*smoothstep(.8,1.,t);float cab=(t>.18&&t<.52)?2.85:0.;float top=max(hull,cab);",
-"  if(Y>top)continue;",
-"  vec3 c=vec3(.011,.014,.025);c+=vec3(.035,.047,.08)*(1.-smoothstep(0.,max(px*1.5,.04),top-Y));",
-"  vec3 e=vec3(0.);if(cab>0.&&Y>1.95&&Y<2.45){float wf=fract((a-a0)/1.25);e=COOL*.2*step(.15,wf)*step(wf,.85)*float(i==0);}",
-"  put(z,c,e,Y);}}",
-/* cables strung across the canal, in pairs */
-"void cables(){",
-" for(int i=0;i<4;i++){",
-"  float zc=(i==0?46.:(i==1?92.:(i==2?131.:228.)))-camZ;float hc=i==0?27.:(i==1?34.:(i==2?22.:31.));",
-"  if(zc<1.||zc>=dep)continue;float X=v.x*zc/F+camX;if(abs(X)>W)continue;float Y=ch+v.y*zc/F;",
-"  float px=zc*pxW;float w=.05;float wd=max(w,.5*px);float T=fogT(zc,hc);",
-"  for(int j=0;j<2;j++){float yc=hc+float(j)*.9-(3.4+float(j)*.5)*(1.-X*X/(W*W));float d=abs(Y-yc);",
-"   float cov=(1.-smoothstep(wd-.5*px,wd+.5*px,d))*min(1.,w/wd);",
-"   col=mix(col,vec3(.008,.01,.018)*T+haze(hc)*(1.-T),cov*.9);emS*=1.-cov*.9;emA*=1.-cov*.5;}}}",
-/* three lightboxes: dark until the mark breaks */
-"void signs(){",
-" for(int k=0;k<3;k++){",
-"  vec4 S=uSg[k];float z=S.w-camZ;if(z<1.||z>=dep)continue;float X=v.x*z/F+camX;float Y=ch+v.y*z/F;if(Y<0.)continue;",
-"  float on=k==0?uSgOn.x:(k==1?uSgOn.y:uSgOn.z);float hv=k==0?uSgHov.x:(k==1?uSgHov.y:uSgHov.z);",
-"  vec2 l=vec2(X-S.x,Y-S.y)/S.z;float m=max(abs(l.x),abs(l.y));float px=z*pxW;",
-"  bool hit=false;vec3 c=vec3(.017,.022,.04);vec3 e=vec3(0.);",
-"  if(m<1.13){hit=true;",
-"   if(m<1.){vec2 tu=vec2(l.x*.5+.5,.5-l.y*.5);",
-"    vec4 a=texture2D(uAtlas,vec2((float(k)*256.+16.+tu.x*224.)/1024.,(16.+tu.y*224.)/256.));",
-"    float lum=dot(a.rgb,vec3(.2126,.7152,.0722));",
-"    vec3 duo=mix(vec3(.02,.035,.09),COB*.8,smoothstep(0.,.4,lum));duo=mix(duo,vec3(.84,.94,1.),smoothstep(.42,1.,lum));",
-"    vec3 lt=mix(duo,a.rgb*.95,hv);",
-"    c=mix(c,duo*.028+vec3(.016,.021,.038),a.a);",
-"    e=lt*a.a*on;c*=1.-on*a.a;}}",
-"  else if(k<2){if(abs(X-S.x)<S.z*2.3&&Y<S.y-S.z*1.32){hit=true;c=vec3(.02,.027,.048);",
-"    vec2 wc=vec2((X-S.x)/2.3,Y/3.5);vec2 wf=fract(wc);float lit=step(.975,h21(floor(wc)+float(k)*9.));",
-"    c+=COOL*.2*lit*step(.2,wf.x)*step(wf.x,.8)*step(.25,wf.y)*step(wf.y,.75);",
-"    c+=vec3(.02,.028,.05)*(1.-smoothstep(0.,px*1.6,S.y-S.z*1.32-Y));}",
-"   else if(Y<S.y-S.z*1.13&&abs(abs(l.x)-.8)<max(.04,px*.5/S.z)*1.){hit=true;}}",
-"  else{if(Y>S.y+S.z*1.13&&Y<13.5&&abs(abs(l.x)-.7)<max(.03,px*.5/S.z)){hit=true;}}",
-"  if(hit)put(z,c,e,Y);}}",
-/* light in the air: the halo of the mark, the signs' spill, the chips in flight */
-"void air(){",
-" float zT=uTw.x-camZ;vec2 mv=vec2(-camX*F/zT,(uTw.z-ch)*F/zT);",
-" float d=length(v-mv);float occ=smoothstep(.25*zT,zT,dep);",
-" float hl=uMark*(1.+.25*uHov)*(.16*exp(-d/.016)+.08*exp(-d/.06)+.045*exp(-d/.16)+.03*exp(-d/.45));",
-" emA+=mix(SKY,vec3(.32,.52,.95),smoothstep(.0,.15,d))*hl*occ;",
-" for(int k=0;k<3;k++){vec4 S=uSg[k];float on=k==0?uSgOn.x:(k==1?uSgOn.y:uSgOn.z);if(on<=0.)continue;",
-"  float z=S.w-camZ;if(z>dep+1.)continue;vec2 sp=vec2((S.x-camX)*F/z,(S.y-ch)*F/z);float sr=S.z*F/z;",
-"  vec2 dd=max(abs(v-sp)-sr,0.);float dl=length(dd);",
-"  emA+=mix(COB,COOL,.35)*on*(.10*exp(-dl/(sr*.6))+.03*exp(-dl/(sr*3.)));}",
-" for(int k=0;k<3;k++){vec4 P=uSh[k];if(P.w<=0.)continue;float z=P.z-camZ;if(z<1.||z>dep+1.)continue;",
-"  vec4 Q=uShT[k];float zq=max(Q.z-camZ,1.);",
-"  vec2 sp=vec2((P.x-camX)*F/z,(P.y-ch)*F/z);vec2 sq=vec2((Q.x-camX)*F/zq,(Q.y-ch)*F/zq);",
-"  vec2 pa=v-sq,ba=sp-sq;float hh=clamp(dot(pa,ba)/max(dot(ba,ba),1e-9),0.,1.);float ds=length(pa-ba*hh)*uRes.y;",
-"  float dp=length(v-sp)*uRes.y;float r=max(1.6,1.4*F/z*uRes.y);",
-"  emA+=SKY*P.w*(1.5*exp(-dp*dp/(r*r))+.22*exp(-dp/(r*5.))+.55*hh*hh*exp(-ds*ds/(r*r*.5)));}}",
-"void main(){",
-" vec2 q=(gl_FragCoord.xy-.5*uRes)/uRes.y;v=q-uHor;if(uRefl>.5)v.y=-v.y;",
-" camX=uCam.x;ch=uRefl>.5?-uCam.y:uCam.y;camZ=uCam.z;F=uCam.w;pxW=1./(F*uRes.y);",
-" dep=1e5;emS=vec3(0.);emA=vec3(0.);skyc=v.y>0.?skyC():haze(0.);col=skyc;",
-" facade();boats();bridge();signs();",
-" skyline(430.,4.,21.,6.,58.);skyline(640.,3.,27.,10.,92.);skyline(980.,2.,34.,14.,150.);",
-" tower();skyline(2300.,1.,46.,30.,240.);",
-" cables();air();",
-" float solid=(v.y>=0.||dep<1e4)?1.:0.;",
-" gl_FragColor=vec4(col*uExp+emS+emA,solid);}"
-].join("\n");
+void bridge(){
+ float z=ZB-camZ;if(z>=dep||z<1.)return;float X=v.x*z/F+camX;float Y=ch+v.y*z/F;if(Y<FL)return;
+ float px=z*pxW;float un=13.5,tp=17.2;bool hit=false;vec3 c=vec3(.018,.024,.042);vec3 e=vec3(0.);
+ if(Y>un&&Y<tp){hit=true;c+=vec3(.01,.014,.026)*(1.-smoothstep(0.,px*1.2,abs(Y-15.7)-.05));c*=.8+.2*smoothstep(un,tp,Y);}
+ float rl=abs(Y-(tp+1.05));float post=abs(fract(X/2.2)-.5)*2.2;
+ if(Y>tp&&Y<tp+1.15&&(rl<max(.07,px*.5)||post<max(.05,px*.5))){hit=true;}
+ float mast=abs(fract(X/31.+.3)-.5)*31.;
+ if(Y>tp&&Y<tp+5.6&&mast<max(.12,px*.5)){hit=true;}
+ if(abs(Y-(tp+5.4))<max(.04,px*.5)){c=mix(c,vec3(.01,.013,.024),min(1.,.08/max(px,.08)));hit=true;}
+ float pier=abs(fract(X/48.+.5)-.5)*48.;if(Y<un&&pier<1.4){hit=true;c=vec3(.015,.02,.036)*(.8+.4*smoothstep(0.,un,Y));}
+ if(uTrain>-1e3){float tx=uTrain-X;if(tx>0.&&tx<150.&&Y>tp+.25&&Y<tp+3.9){hit=true;
+  float car=fract(tx/21.);float gap=step(car,.025);
+  c=vec3(.02,.026,.045)*(1.-gap*.6);
+  float wy=step(tp+1.75,Y)*step(Y,tp+2.45);float wx=fract(tx/1.6);float wn=step(.05,wx)*step(wx,.95)*(1.-step(car,.06));
+  float det=1.-smoothstep(.5,1.4,px);float lw=.82+.18*h21(vec2(floor(tx/21.),3.));
+  float wd=h21(vec2(floor(tx/1.6),7.));e=COOL*.42*lw*wy*mix(.8,wn*(.55+.45*step(.18,wd)),det);
+  c+=COOL*.05*(1.-smoothstep(0.,.5,abs(Y-(tp+.4))));}}
+ if(hit)putS(z,c,e,Y);
+ if(uTrain>-1e3){float tx=uTrain-X;float on=step(0.,tx)*step(tx,150.);float dy=Y-(tp+2.1);emA+=COOL*.05*on*exp(-abs(dy)/1.6)*fogT(z,Y)*step(z,dep+.01)*uLit;}
+ if(z<dep+.01){float lx=(fract(X/11.)-.5)*11.;float d=length(vec2(lx,Y-(un-.25)));float r=max(.18,px*.7);
+  emA+=(COOL*.5*exp(-d*d/(r*r))*fogT(z,Y)+COOL*.03*exp(-d/2.2)*fogT(z,Y))*uLit;}}
 
-/* The frame: the water (the mirrored scene, broken by wind and rain), mist on it, and rain in the air. */
-var COMP = COMMON + "\n" + [
-"uniform sampler2D uS;uniform sampler2D uR;uniform vec2 uRes;uniform float uT;uniform vec4 uCam;uniform vec2 uHor;",
-"uniform float uExp;uniform float uMark;uniform vec2 uMV;uniform float uMotion;",
-"const float W=26.;",
-"vec2 rings(vec2 wp){vec2 acc=vec2(0.);",
-" for(int L=0;L<2;L++){vec2 p=wp*1.15+float(L)*vec2(3.7,1.3);vec2 id=floor(p);vec2 f=fract(p)-.5;",
-"  float h=h21(id+float(L)*31.);float ph=fract(uT*.85+h);vec2 o=vec2(h21(id+7.+floor(uT*.85+h)),h21(id+13.+floor(uT*.85+h)))-.5;",
-"  vec2 d=f-o*.5;float ln=length(d);float rr=ph*.48;float x=(ln-rr)*28.;",
-"  acc+=d/(ln+1e-3)*sin(x*2.)*exp(-x*x*.5)*(1.-ph)*step(.35,h);}",
-" return acc;}",
-"vec3 world(vec2 uv){",
-" vec4 s=texture2D(uS,uv);if(s.a>.995)return s.rgb;",
-" vec2 q=(uv*uRes-.5*uRes)/uRes.y;vec2 r=q-uHor;float ch=uCam.y;float F=uCam.w;",
-" float zw=ch*F/max(-r.y,1e-3);float Xw=r.x*zw/F+uCam.x;vec2 wp=vec2(Xw,zw+uCam.z);",
-" float k=1./(1.+zw*.03);",
-" vec2 g=vec2(vnoise(wp*vec2(.33,.85)+vec2(uT*.25,uT*.55))-.5,vnoise(wp*vec2(.5,1.3)+vec2(-uT*.35,uT*.2)+17.)-.5);",
-" g+=.5*vec2(vnoise(wp*vec2(1.2,2.6)+vec2(uT*.6,-uT*.4)+5.)-.5,vnoise(wp*vec2(1.5,3.2)+vec2(uT*.3,uT*.7)+9.)-.5);",
-" vec2 n=g+rings(wp)*.55*(1.-smoothstep(18.,60.,zw));",
-" vec2 off=vec2(n.x*.012,n.y*.026)*mix(.3,1.,k);",
-" vec2 ru=uv+vec2(off.x*uRes.y/uRes.x,off.y);",
-" float j=h21(gl_FragCoord.xy+fract(uT*7.)*91.);",
-" vec3 R=vec3(0.);float sp=.05*(.35+.65*k);",
-" for(int i=0;i<6;i++){float t=(float(i)+j)/6.-.5;R+=texture2D(uR,ru+vec2(0.,t*sp)).rgb;}",
-" R/=6.;",
-" float ct=-r.y/sqrt(r.y*r.y+F*F);float fr=.03+.97*pow(1.-ct,5.);",
-" vec3 c=mix(vec3(.004,.006,.012),R,.34+.62*fr);",
-" return mix(c,s.rgb,s.a);}",
-"float rainL(vec2 q,float sc,float sp,float sd,float ln,float th){",
-" vec2 p=mat2(.985,-.172,.172,.985)*q*sc;float cl=floor(p.x);float fx=fract(p.x);float r=h21(vec2(cl,sd));float r2=h21(vec2(cl,sd+3.));",
-" float y=p.y*.11+uT*sp*(.75+.5*r)+r*17.;float fy=fract(y);float id=floor(y);float on=step(.55,h21(vec2(cl,id+sd)));",
-" float x0=.2+.6*h21(vec2(cl,id+sd+1.));",
-" return on*(1.-smoothstep(0.,th,abs(fx-x0)))*smoothstep(0.,ln*.25,fy)*(1.-smoothstep(ln*.6,ln,fy));}",
-"void main(){",
-" vec2 uv=gl_FragCoord.xy/uRes;vec2 q=(gl_FragCoord.xy-.5*uRes)/uRes.y;",
-" vec3 c=world(uv);",
-/* light bleeds a little in wet air: a soft bloom from the bright things, and from their reflections */
-" vec3 bl=vec3(0.);vec2 as=vec2(uRes.y/uRes.x,1.);float jr=h21(gl_FragCoord.xy*.73+3.)*1.0472;float jd=.7+.6*h21(gl_FragCoord.yx*.91+7.);",
-" for(int i=0;i<6;i++){float an=float(i)*1.0472+jr;vec2 o=vec2(cos(an),sin(an))*as*jd;",
-"  for(int j=0;j<2;j++){float rd=j==0?.007:.019;vec2 tu=uv+o*rd*(j==0?1.:1.15);vec4 a=texture2D(uS,tu);vec3 b=a.a>.5?a.rgb:texture2D(uR,tu).rgb*.6;",
-"   bl+=max(b-.1,0.)*(j==0?1.:.7);}}",
-" c+=bl*.085;",
-/* rain in the air between us and the city, catching whatever light is behind it */
-" vec2 r0=q-uHor;float mb=exp(-abs(r0.y+.012)/.05);",
-" float ms=fbm(vec2(r0.x*1.6+uT*.012,r0.y*9.-uT*.004)+vec2(3.,uT*.006))*fbm(vec2(r0.x*.7-uT*.008,r0.y*4.)+11.);",
-" c+=vec3(.075,.105,.19)*smoothstep(.12,.5,ms)*mb*.9*uExp;",
-" float lum=dot(c,vec3(.3,.5,.2));vec2 md=q-uMV;float mg=exp(-length(md)/.22)*uMark;",
-" float rn=rainL(q,120.,1.7,1.,.5,.07)*.5+rainL(q,64.,2.4,2.,.42,.06)*.7+rainL(q,30.,3.4,3.,.3,.035);",
-" c+=(vec3(.6,.7,.9)*(.012*uExp+.7*lum)+SKY*.22*mg)*rn*.45;",
-/* the edges fall away into the dark, and a fine grain over everything */
-" c=pow(max(c,0.)*1.1,vec3(.92));c=mix(vec3(dot(c,vec3(.25,.6,.15))),c,.84);float vg=smoothstep(.3,1.15,length(q*vec2(.72,1.05)));c*=1.-.5*vg;",
-" float gr=h21(gl_FragCoord.xy+floor(uT*24.)*vec2(37.,17.))-.5;c+=gr*.026*(.3+c*2.)+ (h21(gl_FragCoord.yx+3.)-.5)/255.;",
-" gl_FragColor=vec4(max(c,0.),1.);}"
-].join("\n");
+/* the blocks along the canal beyond the mouth */
+void facade(){
+ float s=v.x<0.?-1.:1.;float den=abs(s*W-camX);
+ float z=den*F/abs(v.x);if(z<=1.||z>=dep)return;
+ float a=z+camZ;if(a>AEND||a<ZN-2.)return;
+ float Y=ch+v.y*z/F;if(Y<FL)return;
+ float bl=a/17.;float bi=floor(bl);float bf=fract(bl);
+ float r=h21(vec2(bi,s*3.+11.));float H=14.+66.*pow(r,1.4);if(r>.9)H=7.+4.*r;
+ H*=mix(1.,.3,smoothstep(50.,AEND*.8,a));
+ if(Y>H)return;
+ float px=z*pxW;float pa=px*z/den;
+ vec3 c=vec3(.016,.021,.038)*(.85+.3*h21(vec2(bi,s+2.)));float mw=2.1+1.2*step(.5,h21(vec2(bi,s+5.)));
+ float fy=fract(Y/3.4);float fl=floor(Y/3.4);float wa=fract(a/mw);float wi=floor(a/mw);
+ float win=step(.18,wa)*step(wa,.82)*step(.32,fy)*step(fy,.86);float sill=step(.14,wa)*step(wa,.86)*(1.-smoothstep(0.,max(px*1.3,.04),abs(fy-.3)*3.4));
+ float hl=h21(vec2(wi*1.3+s,fl+bi*7.));float lit=step(.976-.1*smoothstep(.45,.85,vnoise(vec2(a*.07,Y*.1)+bi*3.1+s)),hl);
+ vec3 wc=mix(vec3(.011,.015,.028),COOL*.34*(.3+.7*h21(vec2(wi,fl))),lit);if(hl>.996)wc=COB*.42;if(lit>.5&&h21(vec2(wi,fl+5.))>.6)wc*=.55+.45*step(.5,fract(fy*9.));
+ float det=1.-smoothstep(.45,1.4,pa);
+ vec3 avg=c*.62+vec3(.011,.015,.028)*.38+COOL*.26*.65*.045*.38;
+ vec3 wv=mix(c,wc,win);wv+=vec3(.016,.022,.04)*sill*(1.-lit*win);
+ float blk=step(.55,h21(vec2(bi,s+21.)));float rail=blk*(1.-smoothstep(0.,max(px*1.2,.035),abs(fy-.97)*3.4));float shd=blk*(1.-smoothstep(0.,max(px*2.,.12),abs(fy-.9)*3.4));
+ wv=wv*(1.-.45*shd)+vec3(.03,.042,.075)*rail;
+ float pp=abs(fract(a/(5.3+3.*h21(vec2(bi,s+31.))))-.5)*5.;float pipe=step(.62,h21(vec2(bi,s+33.)))*(1.-smoothstep(.06,.06+max(pa,.05),pp));wv=mix(wv,vec3(.008,.011,.02),pipe*.8);
+ c=mix(avg,wv,det);
+ float dl=min(fy,1.-fy)*3.4;c+=vec3(.008,.011,.02)*(1.-smoothstep(0.,max(px*1.4,.05),dl-.02))*(1.-smoothstep(.6,2.,pa));
+ c+=vec3(.03,.042,.075)*(1.-smoothstep(0.,max(px*2.,.1),H-Y));
+ float db=min(bf,1.-bf)*17.;c*=1.-.55*(1.-smoothstep(.25,.25+max(pa,.15),db));
+ float gl=step(.86,h21(vec2(bi,s+7.)));
+ if(gl>.5){float mu=abs(fract(a/1.4)-.5)*1.4;vec3 g=vec3(.026,.036,.066)+vec3(.02,.03,.055)*smoothstep(0.,H,Y);g+=vec3(.02,.028,.05)*(1.-smoothstep(.04,.04+max(pa,.05),mu))*(1.-smoothstep(.8,2.,pa));c=mix(c,g,.85);}
+ c*=.8+.4*mix(vnoise(vec2(a*.9,Y*.055)+bi*7.),.5,smoothstep(.6,2.,pa))*mix(1.,vnoise(vec2(a*.12,Y*.2)+s*3.),.5);
+ c=mix(c,vec3(.01,.013,.024),1.-smoothstep(1.1,2.1,Y));
+ float la=(fract(a/23.+s*.25)-.5)*23.;float ld=length(vec2(la,Y-4.3));
+ c+=COOL*.05*exp(-ld/3.2)*step(9.,H);
+ vec3 e=COOL*.75*exp(-ld*ld/max(.05,px*px*.8))*step(9.,H);
+ float gf=step(.62,h21(vec2(bi,s+51.)))*step(9.,H);
+ if(gf>.5){float op=fract(a/4.2);float o=step(.08,op)*step(op,.92)*step(1.3,Y)*step(Y,3.7);float fd=smoothstep(.5,1.4,pa);
+  float oi=floor(a/4.2);float on=step(.42,h21(vec2(oi,s+53.)));float gy=.45+.55*smoothstep(1.3,3.7,Y);
+  e+=COOL*(.05+.07*h21(vec2(oi,s+52.)))*gy*mix(o*on,step(1.3,Y)*step(Y,3.7)*.5,fd);
+  c+=COOL*.02*exp(-max(Y-3.7,0.)/1.4)*step(3.7,Y);}
+ if(lit>.5)e+=wc*win*det*.5;
+ put(z,c,e*uLit,Y,vec3(s*W,Y,a),vec3(-s,0.,0.),.22,.35,1.);}
+
+/* the two buildings at the mouth of the canal, either side of us */
+void nearWall(float s){
+ if(v.x*s<=0.)return;float den=Wn-s*camX;float z=den*F/abs(v.x);if(z<=.3||z>=dep)return;
+ float a=z+camZ;if(a>ZN)return;float Y=ch+v.y*z/F;float g=a<ZQ?Yq:0.;if(Y<max(g,FL))return;
+ float px=z*pxW;float pa=px*z/den;float sd=s<0.?1.:2.;
+ vec3 c=vec3(.021,.026,.041);
+ c*=.72+.42*vnoise(vec2(a*1.1,Y*.08)+sd*9.)*(.7+.3*vnoise(vec2(a*7.,Y*.5)));
+ float fh=3.4;float fl=floor((Y-.4)/fh);float fy=fract((Y-.4)/fh);
+ vec3 e=vec3(0.);float ks=.5;
+ float pj=abs(fract(a/(s<0.?3.9:3.3))-.5);c*=1.-.35*(1.-smoothstep(0.,max(pa*1.5,.01),pj*3.6-.02));
+ if(fl>=1.){float mw=s<0.?2.6:2.2;float wa=fract(a/mw);float wi=floor(a/mw);
+  float win=smoothstep(.2,.2+pa/mw,wa)*(1.-smoothstep(.8-pa/mw,.8,wa))*step(.3,fy)*step(fy,.84);
+  float hl=h21(vec2(wi*1.7+sd,fl*3.1));float lit=step(.74,hl);
+  vec3 wc=vec3(.007,.01,.019)+haze(Y)*.22*(1.-fy);
+  if(lit>.5){float bl=step(.45,fract(fy*15.));wc=COOL*(.07+.12*h21(vec2(wi,fl+5.)))*mix(1.,.45+.55*bl,step(.55,h21(vec2(wi,fl+9.))));if(hl>.965)wc=COB*.3;}
+  c=mix(c,wc,win);if(lit>.5)e+=wc*win*.9;
+  c+=vec3(.025,.032,.055)*(1.-smoothstep(0.,max(px*1.5,.02),abs(fy-.28)*fh-.05))*step(.16,wa)*step(wa,.84);
+  ks=mix(.5,1.2,win);}
+ c+=vec3(.012,.016,.028)*(1.-smoothstep(0.,max(px*1.2,.02),abs(fy-.03)*fh-.07));
+ if(s<0.&&a>17.4&&a<20.2&&Y>.7&&Y<3.){float sl=abs(fract(Y/.11)-.5);c=vec3(.022,.027,.04)+vec3(.012,.015,.024)*(1.-smoothstep(.2,.2+px/.11,sl));ks=1.1;}
+ if(s>0.){
+  if(a>20.15&&a<21.45&&Y>.85&&Y<3.){float fr=min(min(a-20.15,21.45-a)*.9,min(Y-.85,3.-Y));float in1=smoothstep(.07,.07+max(pa,px),fr);
+   e+=COOL*(.3+.25*smoothstep(3.,1.,Y))*in1*.6;c=mix(vec3(.01,.012,.02),vec3(0.),in1);}
+  if(a>19.9&&a<21.7&&Y<.85){float st=fract(Y/.28);c+=COOL*.05*smoothstep(.75,1.,st)*smoothstep(.85,0.,Y);ks=.9;}
+  for(int n=0;n<6;n++){float yn=3.9+3.4*float(n);if(a>18.&&a<23.6&&Y<yn-.24&&Y>yn-1.1)c*=.5+.5*smoothstep(yn-.24,yn-1.1,Y);}
+ }
+ c*=mix(.5,1.,smoothstep(g,g+1.4,Y));
+ put(z,c,e*uLit,Y,vec3(s*Wn,Y,a),vec3(-s,0.,0.),.3,ks,1.);}
+
+/* a falling drip: hangs, lets go, lengthens as it falls */
+float drip(float a,float Y,float lip,float a0,float a1,float pa,float px,float sd){
+ if(a<a0||a>a1||Y>lip)return 0.;
+ float sp=.21;float ci=floor(a/sp);float ca=(ci+.5)*sp+(h21(vec2(ci,sd))-.5)*.1;
+ float r=h21(vec2(ci,sd+1.));if(r<.25)return 0.;float rate=.5+.8*r;float ph=fract(uT*rate+r*7.);
+ float fall=max(ph-.25,0.)*1.1;float yd=lip-.04-4.9*fall*fall;float ln=.04+.3*fall;
+ float dx=abs(a-ca);float cx=min(1.,.014/max(pa,.004))*(1.-smoothstep(.007,.007+pa,dx));
+ float cy=smoothstep(yd-ln,yd-ln*.4,Y)*(1.-smoothstep(yd,yd+max(.02,px),Y));
+ float bead=(1.-smoothstep(.0,.03+px,length(vec2(dx*.8,Y-lip+.04))))*(1.-step(.25,ph))*smoothstep(0.,.25,ph);
+ return cx*cy+bead;}
+
+/* the left building: a duct along it, boxes under windows, a fire stair down to the water, an awning over the shutter */
+void nearLeftOv(){
+ if(v.x>=0.)return;float ax=-v.x;vec3 P,N;
+ {float d=.5;float den=Wn-d+camX;float z=den*F/ax;float a=z+camZ;
+  if(z>.3&&a<ZN-.3){float Y=ch+v.y*z/F;float px=z*pxW;float pa=px*z/den;
+   float t=(Y-3.85)/.26;float cov=(1.-smoothstep(1.-px/.26*1.5,1.,abs(t)))*step(ZQ-4.,a);
+   float br=abs(fract(a/2.4)-.5)*2.4;cov=max(cov,(1.-smoothstep(.04,.04+pa,br))*step(3.5,Y)*step(Y,3.85)*.9);
+   float acu=step(6.1,Y)*step(Y,6.9)*(step(18.,a)*step(a,18.85)+step(21.3,a)*step(a,22.15));
+   if(acu>.5){float fan=fract(a/.85+.2);P=vec3(-Wn+d,Y,a);vec3 cc=shadeO(vec3(.02,.024,.036)*(.8+.2*step(.5,fract(Y/.08))),P,vec3(1.,0.,0.),.35,.6);ov(z,cc,vec3(0.),1.,Y);}
+   else if(cov>0.){P=vec3(-Wn+d,Y,a);N=normalize(vec3(sqrt(max(1.-t*t,0.)),t,0.));ov(z,shadeO(vec3(.014,.018,.03),P,N,.35,1.2),vec3(0.),cov,Y);}}}
+ {float d=1.35;float den=Wn-d+camX;if(den>.2){float z=den*F/ax;float a=z+camZ;float Y=ch+v.y*z/F;
+  if(z>.3&&a>17.3&&a<20.3){float px=z*pxW;float pa=px*z/den;
+   float aw=step(3.02,Y)*step(Y,3.42);if(aw>.5){P=vec3(-Wn+d,Y,a);N=normalize(vec3(.5,.8,0.));ov(z,shadeO(vec3(.012,.016,.028)+vec3(.02,.025,.04)*smoothstep(3.02,3.42,Y),P,N,.4,1.4),vec3(0.),1.,Y);}
+   else{float dr=drip(a,Y,3.02,17.4,20.2,pa,px,3.);if(dr>0.){P=vec3(-Wn+d,Y,a);vec3 lc=spill(P,vec3(1.,0.,0.),normalize(cam-P),1.,0.);ov(z,vec3(0.),lc*1.6+vec3(.05,.06,.09),dr*.85,Y);}}}}}
+ {float d=1.55;float den=Wn-d+camX;if(den>.2){float z=den*F/ax;float a=z+camZ;float Y=ch+v.y*z/F;
+  float A0=17.6,A1=22.6;
+  if(z>.3&&a>A0-1.25&&a<A1+1.25&&Y>3.25&&Y<44.){float px=z*pxW;float pa=px*z/den;
+   float h=1.7;float L0=3.6;float n=floor((Y-L0)/h);float cov=0.;float top=0.;
+   float wv=max(px,1e-4),wa=max(pa,1e-4);
+   if(a<A0||a>A1){float lv=Y-(L0+n*h);
+    float slab=1.-smoothstep(.07,.07+wv,abs(lv-.06));cov=slab;top=slab;
+    cov=max(cov,(1.-smoothstep(.022,.022+wv,abs(lv-1.02)))*min(1.,.06/wv));
+    cov=max(cov,(1.-smoothstep(.012,.012+wa,abs(fract(a/.13)-.5)*.13))*step(.12,lv)*step(lv,1.02)*.7);
+    float ed=min(abs(a-(A0-1.2)),abs(a-(A1+1.2)));cov=max(cov,1.-smoothstep(.035,.035+wa,ed));}
+   else{float u=(a-A0)/(A1-A0);
+    for(int k=-1;k<=1;k++){float m=n+float(k);float yl=L0+m*h+h*(mod(m,2.)<.5?u:1.-u);float dy=Y-yl;
+     float sg=1.-smoothstep(.08,.08+wv,abs(dy+.08));cov=max(cov,sg);top=max(top,sg);
+     cov=max(cov,(1.-smoothstep(.022,.022+wv,abs(dy-.94)))*min(1.,.06/wv));
+     cov=max(cov,(1.-smoothstep(.012,.012+wa,abs(fract(a/.36)-.5)*.36))*step(0.,dy)*step(dy,.94)*.75);}}
+   if(cov>.002){P=vec3(-Wn+d,Y,a);N=normalize(vec3(1.,top*1.6,0.));ov(z,shadeO(vec3(.011,.013,.021),P,N,.35,1.3),vec3(0.),cov,Y);}}}}
+}
+
+/* the right building: a duct up it, balconies on every floor, a lit door with an awning that drips */
+void nearRightOv(){
+ if(v.x<=0.)return;float ax=v.x;vec3 P,N;
+ {float d=.45;float den=Wn-d-camX;float z=den*F/ax;float a=z+camZ;
+  if(z>.3&&a<ZN-.3){float Y=ch+v.y*z/F;float px=z*pxW;float pa=px*z/den;
+   float t=(a-17.25)/.3;float cov=(1.-smoothstep(1.-pa/.3*1.5,1.,abs(t)))*step(.4,Y);
+   float bk=abs(fract(Y/2.1)-.5)*2.1;cov=max(cov,(1.-smoothstep(.04,.04+px,bk))*step(abs(t),1.4));
+   if(cov>0.){P=vec3(Wn-d,Y,a);N=normalize(vec3(-sqrt(max(1.-t*t,0.)),0.,t));ov(z,shadeO(vec3(.014,.018,.03),P,N,.35,1.2),vec3(0.),cov,Y);}}}
+ {float d=1.2;float den=Wn-d-camX;if(den>.2){float z=den*F/ax;float a=z+camZ;float Y=ch+v.y*z/F;
+  bool m1=a>18.&&a<23.6;bool m0=a>13.&&a<16.6;
+  if(z>.3&&(m0||m1)&&Y>3.5){float px=z*pxW;float pa=px*z/den;float wv=max(px,1e-4),wa=max(pa,1e-4);
+   float n=floor((Y-3.66)/3.4);float yn=3.9+3.4*n;float lv=Y-yn;if(lv<-.24){n-=1.;yn-=3.4;lv+=3.4;}
+   float cov=0.;float top=0.;
+   float slab=step(-.24,lv)*step(lv,0.);cov=slab;top=slab;
+   cov=max(cov,(1.-smoothstep(.026,.026+wv,abs(lv-1.03)))*min(1.,.07/wv));
+   float rl=step(0.,lv)*step(lv,1.02);
+   cov=max(cov,(1.-smoothstep(.009,.009+wa,abs(fract(a/.12)-.5)*.12))*rl*.6);
+   cov=max(cov,rl*.13);
+   float e0=m1?min(a-18.,23.6-a):min(a-13.,16.6-a);cov=max(cov,(1.-smoothstep(.04,.04+wa,e0))*rl);
+   if(cov>.002){P=vec3(Wn-d,Y,a);N=normalize(vec3(-1.,top*1.6,0.));ov(z,shadeO(vec3(.012,.015,.025),P,N,.35,1.2),vec3(0.),cov,Y);}
+}}}
+ {float d=1.4;float den=Wn-d-camX;if(den>.2){float z=den*F/ax;float a=z+camZ;float Y=ch+v.y*z/F;
+  if(z>.3&&a>19.7&&a<21.9){float px=z*pxW;float pa=px*z/den;
+   float aw=step(3.08,Y)*step(Y,3.46);
+   if(aw>.5){P=vec3(Wn-d,Y,a);N=normalize(vec3(-.4,.85,0.));vec3 cc=shadeO(vec3(.012,.016,.028)+vec3(.02,.025,.04)*smoothstep(3.08,3.46,Y),P,N,.4,1.4);ov(z,cc,COOL*.08*smoothstep(3.2,3.08,Y)*uLit,1.,Y);}
+   else{float dr=drip(a,Y,3.08,19.75,21.85,pa,px,7.);if(dr>0.){P=vec3(Wn-d,Y,a);vec3 lc=spill(P,vec3(-1.,0.,0.),normalize(cam-P),1.,0.);ov(z,vec3(0.),lc*1.6+vec3(.05,.06,.09),dr*.85,Y);}}}}}
+}
+
+/* the quay we stand on: wet setts, the puddle, a kerb and a railing at the edge */
+void quay(){
+ if(uRefl>.5||v.y>=0.)return;
+ float z=(ch-Yq)*F/(-v.y);if(z>=dep)return;float a=z+camZ;if(a>ZQ-.5)return;
+ float X=v.x*z/F+camX;if(abs(X)>Wn)return;
+ vec2 wp=vec2(X,a);float px=z*pxW;
+ vec4 st=sett(wp);vec2 id=st.xy;float jt=st.z;float joint=1.-smoothstep(.01,.022+px*1.2,jt);
+ float r=st.w;vec3 c=vec3(.008,.01,.016)*(.5+.9*r*r);
+ c*=.75+.5*vnoise(wp*5.1+id);c=mix(c,c*1.6,smoothstep(.03,.12,jt)*.25);
+ float pud=puddle(wp);
+ float wet=.3+.5*joint;
+ float refl=mix(wet,.95,pud);
+ c=mix(c,c*.4,joint);c=mix(c,vec3(.01,.013,.022),pud);
+ vec2 nn=vec2(vnoise(wp*vec2(6.,11.)+r*7.),vnoise(wp*vec2(6.,11.)+r*3.+5.))-.5;float dome=smoothstep(0.,.08,jt);
+ put(z,c,vec3(0.),Yq,vec3(X,Yq,a),normalize(vec3((h21(id+2.)-.5)*.25+nn.x*.5,1.,(h21(id+5.)-.5)*.25+nn.y*.5)),.24*(1.-pud),(.15+.7*h21(id+7.))*dome*(1.-pud),1.-refl);}
+void kerb(){
+ float z=ZQ-.5-camZ;
+ if(z>.5&&z<dep){float X=v.x*z/F+camX;float Y=ch+v.y*z/F;
+  if(abs(X)<Wn&&Y>=Yq-.02&&Y<Yq+.2&&Y>FL){float px=z*pxW;vec3 c=vec3(.016,.02,.03)*(.8+.3*vnoise(vec2(X*3.,1.)));
+   float jt=abs(fract(X/1.4)-.5)*1.4;c*=1.-.5*(1.-smoothstep(.01,.01+px,jt));
+   put(z,c,vec3(0.),Y,vec3(X,Y,ZQ-.5),vec3(0.,.1,-1.),.18,.3,1.);}}
+ if(v.y<0.){float zt=(ch-Yq-.2)*F/(-v.y);float at=zt+camZ;if(at>ZQ-.5&&at<ZQ&&zt<dep){float X=v.x*zt/F+camX;if(abs(X)<Wn){
+   vec3 c=vec3(.02,.024,.036)*(.8+.3*vnoise(vec2(X*3.,at*4.)));put(zt,c,vec3(0.),Yq+.2,vec3(X,Yq+.2,at),vec3(0.,1.,0.),.25,.5,1.);}}}}
+void railing(){
+ float z=ZQ-.3-camZ;if(z<.5||z>=dep)return;float X=v.x*z/F+camX;if(abs(X)>Wn)return;float Y=ch+v.y*z/F;float y=Y-Yq-.2;if(y<0.||y>.95||Y<FL)return;
+ float px=z*pxW;float sp=3.4;
+ float pp=(fract(X/sp)-.5)*sp;float bw=.085+.025*smoothstep(.72,.5,y);
+ float boll=(1.-smoothstep(bw,bw+px,abs(pp)))*step(y,.78+.04*sqrt(max(1.-pp*pp/(bw*bw),0.)));
+ float u=pp/(sp*.5);float yc=.66-.2*(1.-u*u);float chn=(1.-smoothstep(.012,.012+px,abs(y-yc)))*step(bw,abs(pp));
+ float lk=abs(fract(X/.09)-.5);chn*=.7+.3*smoothstep(.1,.3,lk);
+ float cov=max(boll,chn);if(cov<.002)return;
+ vec3 N=vec3(0.,.2,-1.);
+ if(boll>.5){float t=clamp(pp/bw,-1.,1.);N=normalize(vec3(t,max(0.,(y-.7)*8.),-sqrt(max(1.-t*t,0.))));}
+ vec3 P=vec3(X,Y,ZQ-.3);vec3 c=shadeO(vec3(.01,.012,.02),P,normalize(N),.25,boll>.5?1.4:.45);
+ ov(z,c,vec3(0.),cov,Y);}
+/* the lamp on the quay: post, arm and a head that throws a cone into the rain */
+void lamp(){
+ float z=uLamp.z-camZ;if(z<.3||z>=dep)return;float X=v.x*z/F+camX;float Y=ch+v.y*z/F;if(Y<Yq||Y<FL)return;float px=z*pxW;
+ float lx=uLamp.x;float top=uLamp.y;float dir=-sign(lx);float hx=lx+dir*.9;
+ float post=(1.-smoothstep(.05+.02*smoothstep(Yq+.8,Yq,Y),.05+.02*smoothstep(Yq+.8,Yq,Y)+px,abs(X-lx)))*step(Y,top+.2);
+ float ax0=min(lx,hx),ax1=max(lx,hx);
+ float arm=(1.-smoothstep(.028,.028+px,abs(Y-top-.16)))*step(ax0,X)*step(X,ax1);
+ float head=(1.-smoothstep(.2,.2+px,abs(X-hx)))*(1.-smoothstep(.05,.05+px,abs(Y-top-.07)));
+ float cov=max(post,max(arm,head));if(cov<.002)return;
+ vec3 P=vec3(X,Y,uLamp.z);float t=clamp((X-lx)/.06,-1.,1.);vec3 N=normalize(vec3(t*.9,.1,-sqrt(max(1.-t*t,0.))));
+ vec3 c=shadeO(vec3(.011,.014,.022),P,N,.25,1.4);
+ vec3 e=vec3(0.);if(head>.5&&Y<top+.04)e=uLc[10]*1.6;
+ ov(z,c,e,cov,Y);}
+
+/* cables strung across the water and between the two near buildings */
+void cables(){
+ for(int i=0;i<6;i++){
+  float zc=(i==0?228.:(i==1?131.:(i==2?92.:(i==3?46.:(i==4?21.:17.5)))))-camZ;float hc=i==0?30.:(i==1?15.:(i==2?19.:(i==3?12.5:(i==4?7.9:7.1))));
+  float hw=i>3?Wn:W;
+  if(zc<1.||zc>=dep)continue;float X=v.x*zc/F+camX;if(abs(X)>hw)continue;float Y=ch+v.y*zc/F;
+  float px=zc*pxW;float w=i>3?.022:.05;float wd=max(w,.5*px);
+  for(int j=0;j<2;j++){float yc=hc+float(j)*(i>3?.35:.9)-(i>3?1.1+float(j)*.3:3.4+float(j)*.5)*(1.-X*X/(hw*hw));float d=abs(Y-yc);
+   float cov=(1.-smoothstep(wd-.5*px,wd+.5*px,d))*min(1.,w/wd);
+   if(cov>.002){vec3 P=vec3(X,Y,zc+camZ);ov(zc,shadeO(vec3(.007,.009,.016),P,vec3(0.,.6,-.8),.2,.8),vec3(0.),cov*.92,Y);}}}}
+
+/* the project signs: dark until the mark breaks */
+void signs(){
+ for(int k=0;k<3;k++){
+  vec4 S=uSg[k];float z=S.w-camZ;if(z<1.||z>=dep)continue;float X=v.x*z/F+camX;float Y=ch+v.y*z/F;if(Y<FL)continue;
+  float on=k==0?uSgOn.x:(k==1?uSgOn.y:uSgOn.z);float hv=k==0?uSgHov.x:(k==1?uSgHov.y:uSgHov.z);
+  vec2 l=vec2(X-S.x,Y-S.y)/S.z;float m=max(abs(l.x),abs(l.y));float px=z*pxW;
+  bool hit=false;vec3 c=vec3(.017,.022,.04);vec3 e=vec3(0.);
+  if(m<1.13){hit=true;
+   if(m<1.){vec2 tu=vec2(l.x*.5+.5,.5-l.y*.5);
+    vec4 a=texture2D(uAtlas,vec2((float(k)*256.+16.+tu.x*224.)/1024.,(16.+tu.y*224.)/256.));
+    float lum=dot(a.rgb,vec3(.2126,.7152,.0722));
+    vec3 duo=mix(vec3(.02,.035,.09),COB*.8,smoothstep(0.,.4,lum));duo=mix(duo,vec3(.84,.94,1.),smoothstep(.42,1.,lum));
+    vec3 lt=mix(duo,a.rgb*.95,hv);
+    c=mix(c,duo*.028+vec3(.016,.021,.038),a.a);
+    e=lt*a.a*on;c*=1.-on*a.a;}}
+  else if(k<2){if(abs(X-S.x)<S.z*2.3&&Y<S.y-S.z*1.32){hit=true;c=vec3(.02,.027,.048);
+    vec2 wc=vec2((X-S.x)/2.3,Y/3.5);vec2 wf=fract(wc);float lit=step(.975,h21(floor(wc)+float(k)*9.));
+    c+=COOL*.2*lit*step(.2,wf.x)*step(wf.x,.8)*step(.25,wf.y)*step(wf.y,.75);
+    c+=vec3(.02,.028,.05)*(1.-smoothstep(0.,px*1.6,S.y-S.z*1.32-Y));}
+   else if(Y<S.y-S.z*1.13&&abs(abs(l.x)-.8)<max(.04,px*.5/S.z)*1.){hit=true;}}
+  else{if(Y>S.y+S.z*1.13&&Y<13.5&&abs(abs(l.x)-.7)<max(.03,px*.5/S.z)){hit=true;}}
+  if(hit)putS(z,c,e,Y);}}
+
+/* lightboxes standing off the walls: light, and nothing to read but our own mark */
+float pattern(float p,vec2 uv,vec2 sz,float px,float ph){
+ if(p<.5){float g=.5+.5*smoothstep(0.,1.,uv.y);vec2 dd=min(uv,1.-uv)*sz;float fr=1.-smoothstep(.0,px*1.2+.01,abs(min(dd.x,dd.y)-.16));return g*.75+fr*.35;}
+ if(p<1.5){float n=max(3.,floor(sz.y/.62));float bi=floor(uv.y*n);float f=fract(uv.y*n);float w=px*n/sz.y;
+  float b=smoothstep(.3,.3+w,f)*(1.-smoothstep(.62-w,.62,f));float gx=1.-.35*abs(uv.x-.5)*2.;return b*gx*(.55+.45*sin(uT*1.1-bi*.7+ph))+.05;}
+ if(p<2.5){float m=min(sz.x,sz.y)*.62;vec2 u=((uv-vec2(.5,.72))*sz/m+.5)*100.;u.y=100.-u.y;float pu=px/m*100.;
+  float dc=min(sdSeam(u),sdCav(u));float dt=sdTile(u);float dg=sdGem(u);
+  float gem=clamp(.5-dg/pu,0.,1.);float ep=dc/pu;float stone=clamp(.5-max(dt,-dc)/pu,0.,1.);
+  float ln=(1.-smoothstep(.0,px/sz.x*1.5+.004,abs(uv.x-.5)-.004))*smoothstep(.06,.12,uv.y)*(1.-smoothstep(.36,.5,uv.y));
+  return gem*1.15+stone*(.06+.4*exp(-ep*ep/.8))+ln*.5+.02;}
+ if(p<3.5){vec2 d=(uv-.5)*sz;float r=length(d)/(min(sz.x,sz.y)*.5);return exp(-pow((r-.66)/(.05+px*.8/min(sz.x,sz.y)),2.))*1.1+.1*(1.-r)*step(r,1.)+.04;}
+ float st=max(1.-smoothstep(.1,.1+px/sz.x,uv.x),smoothstep(.9-px/sz.x,.9,uv.x));return st+.09+.06*sin(uT*.8+ph+uv.y*6.);}
+void boxes(){
+ for(int i=0;i<10;i++){vec4 B=uBx[i];vec4 A=uBa[i];float z=A.x-camZ;if(z<.5||z>=dep)continue;
+  float X=v.x*z/F+camX;float Y=ch+v.y*z/F;if(Y<FL)continue;
+  if(X<B.x||X>B.z||Y<B.y||Y>B.w)continue;
+  float px=z*pxW;vec2 sz=B.zw-B.xy;vec2 uv=(vec2(X,Y)-B.xy)/sz;
+  float fr=min(min(X-B.x,B.z-X),min(Y-B.y,B.w-Y));float inner=smoothstep(.045,.045+px,fr);
+  float I=pattern(A.y,uv,sz,px,A.z);
+  vec3 e=uLc[i]/A.w*I*inner*.62;
+  vec3 c=vec3(.014,.018,.03)*(1.-inner);
+  put(z,c,e*uLit,Y,vec3(X,Y,A.x),vec3(0.,0.,-1.),.3,.6,1.);}}
+
+/* boats tied up along the walls */
+void boats(){
+ for(int i=0;i<2;i++){float s=i==0?-1.:1.;if(v.x*s<=0.)continue;float bx=s*(W-4.2);float den=abs(bx-camX);
+  float z=den*F/abs(v.x);if(z<=1.||z>=dep)continue;float a=z+camZ;float a0=i==0?64.:118.;float t=(a-a0)/15.;if(t<0.||t>1.)continue;
+  float Y=ch+v.y*z/F;if(Y<FL)continue;float px=z*pxW;
+  float hull=1.45-.6*smoothstep(.8,1.,t)*smoothstep(.8,1.,t);float cab=(t>.18&&t<.52)?2.85:0.;float top=max(hull,cab);
+  if(Y>top)continue;
+  vec3 c=vec3(.011,.014,.025);c+=vec3(.035,.047,.08)*(1.-smoothstep(0.,max(px*1.5,.04),top-Y));
+  vec3 e=vec3(0.);if(cab>0.&&Y>1.95&&Y<2.45){float wf=fract((a-a0)/1.25);e=COOL*.2*step(.15,wf)*step(wf,.85)*float(i==0);}
+  putS(z,c,e,Y);}}
+
+/* light in the air: the mark's halo, the lamps and signs seen through the rain, searchlights on the cloud, aircraft, and lightning */
+void air(){
+ float zT=uTw.x-camZ;vec2 mv=vec2(-camX*F/zT,(uTw.z-ch)*F/zT);
+ float d=length(v-mv);float occ=smoothstep(.25*zT,zT,dep);
+ float hl=uMark*(1.+.25*uHov)*(.16*exp(-d/.016)+.08*exp(-d/.06)+.045*exp(-d/.16)+.03*exp(-d/.45));
+ emA+=mix(SKY,vec3(.32,.52,.95),smoothstep(.0,.15,d))*hl*occ;
+ for(int k=0;k<3;k++){vec4 S=uSg[k];float on=k==0?uSgOn.x:(k==1?uSgOn.y:uSgOn.z);if(on<=0.)continue;
+  float z=S.w-camZ;if(z>dep+1.)continue;vec2 sp=vec2((S.x-camX)*F/z,(S.y-ch)*F/z);float sr=S.z*F/z;
+  vec2 dd=max(abs(v-sp)-sr,0.);float dl=length(dd);
+  emA+=mix(COB,COOL,.35)*on*(.10*exp(-dl/(sr*.6))+.03*exp(-dl/(sr*3.)));}
+ for(int k=0;k<3;k++){vec4 P=uSh[k];if(P.w<=0.)continue;float z=P.z-camZ;if(z<1.||z>dep+1.)continue;
+  vec4 Q=uShT[k];float zq=max(Q.z-camZ,1.);
+  vec2 sp=vec2((P.x-camX)*F/z,(P.y-ch)*F/z);vec2 sq=vec2((Q.x-camX)*F/zq,(Q.y-ch)*F/zq);
+  vec2 pa=v-sq,ba=sp-sq;float hh=clamp(dot(pa,ba)/max(dot(ba,ba),1e-9),0.,1.);float ds=length(pa-ba*hh)*uRes.y;
+  float dp=length(v-sp)*uRes.y;float r=max(1.6,1.4*F/z*uRes.y);
+  emA+=SKY*P.w*(1.5*exp(-dp*dp/(r*r))+.22*exp(-dp/(r*5.))+.55*hh*hh*exp(-ds*ds/(r*r*.5)));}
+ /* every light scatters in the wet air between us and it; the lamp only below its head */
+ vec3 D=vec3(v.x/F,v.y/F,1.);float L2=dot(D,D);float sl=sqrt(L2);float zm=min(dep,500.);
+ for(int i=0;i<12;i++){vec4 lp=uLp[i];vec3 o=lp.xyz-cam;float z0=dot(o,D)/L2;float h=sqrt(max(dot(o,o)-L2*z0*z0,1e-3));
+  float I=(atan(sl*(zm-z0)/h)-atan(-sl*z0/h))/(h*sl);
+  if(i==10){vec3 pc=cam+D*clamp(z0,0.,zm)-lp.xyz;float cone=smoothstep(.5,.85,-pc.y/max(length(pc),1e-3));I*=.03+.97*cone;}
+  emA+=uLc[i]*I*(i==10?.022:.0042)*uLit;}
+ /* searchlights sweeping the cloud base */
+ for(int i=0;i<3;i++){float fi=float(i);
+  vec3 B=i==0?vec3(-170.,120.,1900.):(i==1?vec3(300.,90.,2600.):vec3(210.,70.,1150.));
+  float sw=sin(uT*(.045+.018*fi)+fi*2.1)*.42;vec3 T=B+vec3(tan(sw)*(420.-B.y),420.-B.y,-40.+70.*fi);
+  float zb=B.z-camZ;if(dep<zb*.98)continue;
+  vec2 sb=vec2(B.x-camX,B.y-ch)*F/zb;vec2 st=vec2(T.x-camX,T.y-ch)*F/(T.z-camZ);
+  vec2 pa=v-sb,ba=st-sb;float t=clamp(dot(pa,ba)/dot(ba,ba),0.,1.);float dd=length(pa-ba*t);float w=mix(.002,.02,t);
+  float I=exp(-dd*dd/(w*w))*(.2+.8*t)*smoothstep(0.,.1,t)*(1.-smoothstep(.93,1.,t));
+  float dc=length((v-st)*vec2(1.,3.2));
+  emA+=vec3(.55,.66,.92)*(I*.2+.06*exp(-dc/.05)*step(st.y,v.y+.02))*uLit;}
+ /* aircraft crossing slowly under the cloud */
+ for(int i=0;i<3;i++){float fi=float(i);float z=2100.+520.*fi-camZ;if(dep<z)continue;
+  float X=mod(uT*(5.+2.5*fi)+fi*430.,1500.)-750.;if(i==1)X=-X;float Y=330.+30.*fi-X*.04*fi;
+  vec2 sp=vec2(X-camX,Y-ch)*F/z;float dp=length(v-sp)*uRes.y;
+  float sb=step(fract(uT*.7+fi*.37),.05);
+  emA+=(COOL*(.45*exp(-dp*dp/2.)+.05*exp(-dp/5.))+vec3(1.)*sb*(1.1*exp(-dp*dp/3.)+.12*exp(-dp/9.)))*uLit;}
+ /* the fork, far off behind the city */
+ if(uFl.z>0.){float zb=uFl2.x-camZ;if(dep>zb){float X=v.x*zb/F+camX;float Y=ch+v.y*zb/F;
+  if(Y>-5.&&Y<440.){float sd=uFl2.y;
+   float xb=uFl.w+(lnoise(Y*.012,sd)-.5)*160.+(lnoise(Y*.05,sd+3.)-.5)*46.+(lnoise(Y*.21,sd+7.)-.5)*12.;
+   float pw=zb*pxW;float dpx=abs(X-xb)/pw;
+   float I=exp(-dpx*dpx/.8)*1.7+exp(-dpx/5.)*.25+exp(-dpx/36.)*.06;
+   if(Y<300.&&Y>110.){float xb2=xb+(300.-Y)*.5*(fract(sd*3.1)>.5?1.:-1.)+(lnoise(Y*.07,sd+11.)-.5)*28.;float d2=abs(X-xb2)/pw;I+=(exp(-d2*d2/.5)*.9+exp(-d2/4.)*.12)*smoothstep(110.,200.,Y);}
+   emA+=vec3(.82,.88,1.)*I*uFl.z;}}}
+}
+
+void main(){
+ vec2 q=(gl_FragCoord.xy-.5*uRes)/uRes.y;v=toV(q);
+ camX=uCam.x;camZ=uCam.z;F=uCam.w;W=uGeo.x;Wn=uGeo.y;Yq=uGeo.z;ZQ=uGeo.w;ZN=uGeo2.x;
+ ch=uCam.y;FL=0.;
+ if(uRefl>.5){float mh=0.;if(v.y<0.){float zq=(ch-Yq)*F/(-v.y);float xq=v.x*zq/F+camX;if(zq+camZ<ZQ-.5&&abs(xq)<Wn)mh=Yq;}FL=mh;ch=2.*mh-ch;v.y=-v.y;}
+ cam=vec3(camX,ch,camZ);pxW=1./(F*uRes.y);
+ dep=1e5;emA=vec3(0.);gA=1.;gCl=0.;
+ skyc=v.y>0.?skyC():haze(0.);
+ quay();kerb();nearWall(-1.);nearWall(1.);boxes();facade();boats();bridge();signs();
+ skyline(430.,4.,19.,18.,105.,.5);skyline(640.,3.,25.,26.,165.,.55);elevated();skyline(980.,2.,31.,36.,250.,.5);
+ tower();skyline(2300.,1.,44.,70.,520.,.45);skyline(3400.,0.,210.,180.,900.,.2);
+ if(dep<1e4){vec3 lit=gC;if(gKd+gKs>0.){vec3 Vd=normalize(cam-gP);lit+=spill(gP,gN,Vd,gKd,gKs)+gKd*FLC*uFl.x*.1*(.3+.7*max(gN.y,0.));}
+  colS=lit*gT+haze(gY)*(1.-gT);emS=gE*mix(gT,1.,.5);colS=mix(colS,skyc,gCl);emS*=1.-gCl;alp=gA;}
+ else{colS=skyc;emS=vec3(0.);alp=v.y>=0.?1.:0.;}
+ cables();nearLeftOv();nearRightOv();railing();lamp();
+ air();
+ gl_FragColor=vec4(colS*alp*uExp+emS+emA,alp);}
+`;
+
+/* The frame: the water and the puddle (the mirrored scene, broken by wind and rain), mist on the water, rain in the air. */
+var COMP = COMMON + `
+uniform sampler2D uS;uniform sampler2D uR;uniform float uExp;uniform float uMark;uniform vec2 uMV;
+vec2 rings(vec2 wp,float sc,float rate,float k){vec2 acc=vec2(0.);
+ for(int L=0;L<2;L++){vec2 p=wp*sc+float(L)*vec2(3.7,1.3);vec2 id=floor(p);vec2 f=fract(p)-.5;
+  float h=h21(id+float(L)*31.);float ph=fract(uT*rate+h);float cy=floor(uT*rate+h);vec2 o=vec2(h21(id+7.+cy),h21(id+13.+cy))-.5;
+  vec2 d=f-o*.5;float ln=length(d);float rr=ph*.46;float x=(ln-rr)*k;
+  acc+=d/(ln+1e-3)*sin(x*2.)*exp(-x*x*.5)*(1.-ph)*(1.-ph)*step(.45,h);}
+ return acc;}
+vec3 reflection(vec2 uv,vec2 r){
+ float F=uCam.w,H0=uCam.y,Yq=uGeo.z;
+ float zq=(H0-Yq)*F/(-r.y);float xq=r.x*zq/F+uCam.x;
+ bool isQ=zq+uCam.z<uGeo.w-.5&&abs(xq)<uGeo.y;
+ float j=h21(gl_FragCoord.xy+fract(uT*7.)*91.);
+ float ct=-r.y/sqrt(r.y*r.y+F*F);float fr=.03+.97*pow(1.-ct,5.);
+ if(isQ){vec2 wp=vec2(xq,zq+uCam.z);float pud=puddle(wp);
+  vec2 n=rings(wp,2.1,1.1,34.)*pud*.55+(vec2(vnoise(wp*vec2(9.,5.)+uT*.4),vnoise(wp*vec2(9.,5.)+9.-uT*.3))-.5)*mix(2.2,.05,pud);
+  vec4 st=sett(wp);float wt=h21(st.xy+7.);n+=(vec2(h21(st.xy+2.),h21(st.xy+5.))-.5)*1.4*(1.-pud);
+  float spr=mix(.05,.0035,pud);
+  vec2 ru=uv+vec2(n.x*.006*uRes.y/uRes.x,n.y*mix(.02,.008,pud));
+  vec3 R=vec3(0.);for(int i=0;i<4;i++){float t=(float(i)+j)/4.-.5;R+=texture2D(uR,ru+vec2(0.,t*spr)).rgb;}R/=4.;
+  float jw=1.-smoothstep(.01,.03,st.z);
+  float dome=smoothstep(0.,.09,st.z)*(.55+.45*vnoise(wp*vec2(7.,13.)+st.w*9.));
+  return R*mix((.03+.24*wt*wt*dome+.2*jw),.95,pud)*mix(.7,1.,fr);}
+ float zw=H0*F/max(-r.y,1e-3);float Xw=r.x*zw/F+uCam.x;vec2 wp=vec2(Xw,zw+uCam.z);
+ float k=1./(1.+zw*.03);
+ vec2 g=vec2(vnoise(wp*vec2(.33,.85)+vec2(uT*.25,uT*.55))-.5,vnoise(wp*vec2(.5,1.3)+vec2(-uT*.35,uT*.2)+17.)-.5);
+ g+=.5*vec2(vnoise(wp*vec2(1.2,2.6)+vec2(uT*.6,-uT*.4)+5.)-.5,vnoise(wp*vec2(1.5,3.2)+vec2(uT*.3,uT*.7)+9.)-.5);
+ vec2 n=g+rings(wp,1.15,.85,28.)*.55*(1.-smoothstep(18.,70.,zw));
+ vec2 off=vec2(n.x*.012,n.y*.026)*mix(.3,1.,k);
+ vec2 ru=uv+vec2(off.x*uRes.y/uRes.x,off.y);
+ vec3 R=vec3(0.);float sp=.05*(.35+.65*k);
+ for(int i=0;i<6;i++){float t=(float(i)+j)/6.-.5;R+=texture2D(uR,ru+vec2(0.,t*sp)).rgb;}
+ R/=6.;
+ return mix(vec3(.004,.006,.012),R,.34+.62*fr);}
+float rainL(vec2 q,float sc,float sp,float sd,float ln,float th){
+ vec2 p=mat2(.985,-.172,.172,.985)*q*sc;float cl=floor(p.x);float fx=fract(p.x);float r=h21(vec2(cl,sd));
+ float y=p.y*.11+uT*sp*(.75+.5*r)+r*17.;float fy=fract(y);float id=floor(y);float on=step(.55,h21(vec2(cl,id+sd)));
+ float x0=.2+.6*h21(vec2(cl,id+sd+1.));
+ return on*(1.-smoothstep(0.,th,abs(fx-x0)))*smoothstep(0.,ln*.25,fy)*(1.-smoothstep(ln*.6,ln,fy));}
+void main(){
+ vec2 uv=gl_FragCoord.xy/uRes;vec2 q=(gl_FragCoord.xy-.5*uRes)/uRes.y;
+ vec4 s=texture2D(uS,uv);vec3 c=s.rgb;vec2 r=toV(q);
+ if(s.a<.995&&r.y<0.)c+=reflection(uv,r)*(1.-s.a);
+ /* light bleeds a little in wet air */
+ vec3 bl=vec3(0.);vec2 as=vec2(uRes.y/uRes.x,1.);float jr=h21(gl_FragCoord.xy*.73+3.)*1.0472;float jd=.7+.6*h21(gl_FragCoord.yx*.91+7.);
+ for(int i=0;i<6;i++){float an=float(i)*1.0472+jr;vec2 o=vec2(cos(an),sin(an))*as*jd;
+  for(int j=0;j<2;j++){float rd=j==0?.007:.019;vec2 tu=uv+o*rd*(j==0?1.:1.15);vec4 a=texture2D(uS,tu);vec3 b=a.rgb+texture2D(uR,tu).rgb*(1.-a.a)*.6;
+   bl+=max(b-.1,0.)*(j==0?1.:.7);}}
+ c+=bl*.085;
+ /* mist lying on the water */
+ float mb=exp(-abs(r.y+.012)/.05);
+ if(mb>.015){float ms=fbm(vec2(r.x*1.6+uT*.012,r.y*9.-uT*.004)+vec2(3.,uT*.006))*fbm(vec2(r.x*.7-uT*.008,r.y*4.)+11.);
+ c+=(vec3(.075,.105,.19)+FLC*uFl.x*.2)*smoothstep(.12,.5,ms)*mb*.9*uExp;}
+ /* rain, catching whatever light is behind it; lightning shows every streak at once */
+ float lum=dot(c,vec3(.3,.5,.2));vec2 md=q-uMV;float mg=exp(-length(md)/.22)*uMark;
+ float rn=rainL(q,120.,1.7,1.,.5,.07)*.5+rainL(q,64.,2.4,2.,.42,.06)*.7+rainL(q,30.,3.4,3.,.3,.035)+rainL(q,13.,5.2,4.,.24,.022)*.55;
+ c+=(vec3(.6,.7,.9)*(.012*uExp+.7*lum)+SKY*.22*mg+FLC*uFl.x*.32)*rn*.45;
+ c+=FLC*uFl.x*.008;
+ c=pow(max(c,0.)*1.1,vec3(.92));c=mix(vec3(dot(c,vec3(.25,.6,.15))),c,.84);float vg=smoothstep(.3,1.15,length(q*vec2(.72,1.05)));c*=1.-.5*vg;
+ float gr=h21(gl_FragCoord.xy+floor(uT*24.)*vec2(37.,17.))-.5;c+=gr*.026*(.3+c*2.)+(h21(gl_FragCoord.yx+3.)-.5)/255.;
+ gl_FragColor=vec4(max(c,0.),1.);}
+`;
 
 /* ================= gl ================= */
 var gl = null;
@@ -455,9 +760,10 @@ function prog(fs, names, U) {
   if (!gl.getProgramParameter(p, gl.LINK_STATUS)) { console.error(gl.getProgramInfoLog(p)); return null; }
   names.forEach(function (n) { U[n] = gl.getUniformLocation(p, n); }); return p;
 }
+var UCOM = ["uRes","uT","uCam","uHor","uPitch","uGeo","uGeo2","uFl"];
 if (gl) {
-  P1 = prog(SCENE, ["uRes","uT","uCam","uHor","uRefl","uExp","uLit","uMark","uHov","uTw","uSg","uSgOn","uSgHov","uSh","uShT","uHole","uHoleG","uTrain","uAtlas","uGemE","uCavE","uSeamE","uChipE"], U1);
-  P2 = prog(COMP, ["uS","uR","uRes","uT","uCam","uHor","uExp","uMark","uMV","uMotion"], U2);
+  P1 = prog(SCENE, UCOM.concat(["uRefl","uExp","uLit","uMark","uHov","uTw","uSg","uSgOn","uSgHov","uSh","uShT","uHole","uHoleG","uTrain","uAtlas","uGemE","uCavE","uSeamE","uChipE","uBx","uBa","uLp","uLc","uLamp","uFl2"]), U1);
+  P2 = prog(COMP, UCOM.concat(["uS","uR","uExp","uMark","uMV"]), U2);
   if (!P1 || !P2) gl = null;
 }
 if (!gl) html.classList.add("nogl");
@@ -499,22 +805,54 @@ var atlasReady = Promise.all(["orbe", "immiscible", "idyll"].map(function (n) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 });
 
-/* ================= layout: the lens, the horizon, the tower and where the signs hang ================= */
-var L = {}, scale = 1, budget = coarse ? 380000 : 1000000;
-var TZ = 1400, ZB = 170;
+/* ================= layout: the lens, the street, the tower and where the signs hang ================= */
+var L = {}, scale = 1, budget = coarse ? 360000 : 1000000, adapt = 1;
+var TZ = 1400, ZB = 170, ZQ = 13, ZN = 24, YQ = 1.1, EYE = 1.65;
+var SKYC = [.58, .902, 1], COBC = [.141, .282, 1], WHTC = [.82, .88, 1], MIDC = [.34, .52, 1];
+var UBX = new Float32Array(NB * 4), UBA = new Float32Array(NB * 4), ULP = new Float32Array(NL * 4), ULC = new Float32Array(NL * 3), ULC0 = new Float32Array(NL * 3);
 function layout() {
   var w = innerWidth, h = innerHeight, asp = w / h;
   var k = clamp01((asp - .5) / 1.1);
-  L.F = 1.2 + .56 * k;
-  L.hy = -.15 + .045 * k;
-  L.camH = 7.4;
-  /* the tower: wide enough to be a monument, the Break a third of the way up from the cloud */
-  L.TW = 92; L.MS = 96 - 20 * k; L.MY = 6.2 + (.33 - .02 * k) * TZ / L.F;
+  L.k = k; L.F = 1.2 + .56 * k; L.hy = -.06; L.camH = YQ + EYE;
+  L.W = 12 + 10 * k; L.Wn = 3 + 4.5 * k;
+  L.mv = .24 + .05 * k;
+  L.TW = 92; L.MS = 96 - 20 * k; L.MY = L.camH + L.mv * TZ / L.F;
+  L.PZ = EYE * L.F / L.mv; L.PR = 1.2 + .7 * k;
+  L.lamp = [-(1.4 + 1.2 * k), YQ + 4.4, 8.6];
+  /* lightboxes: side, distance along the canal, how far they stand out, their height, pattern, colour, power, and how fast their light falls away */
+  var Wn = L.Wn, Wc = L.W;
+  var B = [
+    { s: -1, n: 1, a: 18.0, w: 1.15, y0: 4.3, y1: 9.7, p: 1, c: SKYC, pw: .32, f: .22 },
+    { s: -1, n: 1, a: 21.6, w: .85, y0: 3.7, y1: 6.5, p: 0, c: COBC, pw: .55, f: .25, flick: 1 },
+    { s: -1, n: 1, a: 23.4, w: 1.5, y0: 7.2, y1: 8.8, p: 3, c: WHTC, pw: .22, f: .3 },
+    { s: 1, n: 1, a: 17.6, w: 1.35, y0: 3.9, y1: 7.7, p: 2, c: SKYC, pw: .3, f: .25 },
+    { s: 1, n: 1, a: 22.6, w: .95, y0: 4.1, y1: 6.9, p: 4, c: COBC, pw: .5, f: .25 },
+    { s: -1, n: 0, a: 58, w: 2.6, y0: 7, y1: 17, p: 1, c: COBC, pw: 1.1, f: .05 },
+    { s: -1, n: 0, a: 104, w: 3.2, y0: 12, y1: 20, p: 0, c: SKYC, pw: .7, f: .04 },
+    { s: 1, n: 0, a: 52, w: 2.4, y0: 5.5, y1: 14, p: 4, c: WHTC, pw: .7, f: .05 },
+    { s: 1, n: 0, a: 90, w: 3.0, y0: 10, y1: 24, p: 1, c: SKYC, pw: .8, f: .04 },
+    { s: 1, n: 0, a: 142, w: 3.6, y0: 6, y1: 12, p: 3, c: COBC, pw: 1.1, f: .04 }
+  ];
+  L.box = B;
+  B.forEach(function (b, i) {
+    var wall = b.n ? Wn : Wc, bw = b.n ? b.w * (.5 + .5 * k) : b.w, x0, x1;
+    if (b.s < 0) { x0 = -wall + .25; x1 = x0 + bw; } else { x1 = wall - .25; x0 = x1 - bw; }
+    /* on a narrow screen the street mark would stand beside the tower's own: there it is plain light */
+    var pat = b.p === 2 && k < .5 ? 4 : b.p;
+    UBX.set([x0, b.y0, x1, b.y1], i * 4); UBA.set([b.a, pat, i * 1.7, b.pw], i * 4);
+    ULP.set([(x0 + x1) / 2, (b.y0 + b.y1) / 2, b.a - .7, b.f], i * 4);
+    ULC0.set([b.c[0] * b.pw, b.c[1] * b.pw, b.c[2] * b.pw], i * 3);
+  });
+  /* the lamp, and the light from the open door */
+  var hx = L.lamp[0] + .9;
+  ULP.set([hx, L.lamp[1] - .2, L.lamp[2], .13], 10 * 4); ULC0.set([1.45, 1.58, 1.85], 10 * 3);
+  ULP.set([Wn - .6, 2.1, 20.8, .3], 11 * 4); ULC0.set([.22, .25, .3], 11 * 3);
+  ULC.set(ULC0);
   /* the signs, placed by where they should sit in the frame, then put back into the world */
-  var sx = .118 + .036 * k;
+  var sx = .1 + .054 * k;
   var want = [
-    { x: -sx, y: .205, s: .019, z: 520 },
-    { x: sx + .006, y: .188 + .006 * k, s: .021, z: 560 },
+    { x: -sx, y: .262, s: .019, z: 520 },
+    { x: sx + .006, y: .248 + .006 * k, s: .021, z: 560 },
     { x: -.045 - .01 * k, y: 0, s: .021, z: ZB }
   ];
   L.sg = want.map(function (q, i) {
@@ -528,29 +866,29 @@ function layout() {
   if (gl && (canvas.width !== bw || canvas.height !== bh || !fbS)) {
     canvas.width = bw; canvas.height = bh;
     freeT(fbS); freeT(fbR);
-    fbS = target(bw, bh); fbR = target(Math.max(2, Math.round(bw / 2)), Math.max(2, Math.round(bh / 2)));
+    var rs = coarse ? .5 : .75;
+    fbS = target(bw, bh); fbR = target(Math.max(2, Math.round(bw * rs)), Math.max(2, Math.round(bh * rs)));
   }
 }
-var adapt = 1;
 
 /* ================= state ================= */
 var S = {
-  cam: [0, 6.2, 0, 1.5], hor: [0, -.1], exp: 1, lit: 1, mark: 1, hov: 0, hovT: 0,
+  cam: [0, 2.75, 0, 1.5], hor: [0, -.1], pitch: 0, exp: 1, lit: 1, mark: 1, hov: 0, hovT: 0,
   look: [0, 0], lookT: [0, 0],
   open: false, sgOn: [0, 0, 0], sgHov: [0, 0, 0], sgHovT: [0, 0, 0], sh: new Float32Array(12), tl: new Float32Array(12), hole: [0, 0, 0], holeG: [0, 0, 0],
-  flights: [], train: -1e4
+  flights: [], train: -1e4, fl: [0, 0, 0, 0], fl2: [3000, 0, 0, 0], flick: 1
 };
 var fpsCap = coarse || innerWidth < 700 ? 30 : 60;
 
-function camAt(t, restT) {
-  /* the camera rises off the water and drifts in, then barely breathes: a boat on a quiet canal */
-  var k = opening ? o4(seg(t, TL.cam0, TL.cam1)) : 1;
-  var r = restT;
-  var camH = L.camH * (.18 + .82 * k) + .1 * Math.sin(r * .31) * k;
-  var camZ = -88 * (1 - k) + 2.2 * Math.sin(r * .045);
-  var camX = .5 * Math.sin(r * .07 + 1) + S.look[0] * 1.3;
-  S.cam[0] = camX; S.cam[1] = camH; S.cam[2] = camZ; S.cam[3] = L.F;
-  S.hor[0] = -S.look[0] * .016; S.hor[1] = L.hy + S.look[1] * .012 + (1 - k) * .04;
+function camAt(t, r) {
+  /* standing on the quay: the eye begins in the puddle and lifts to the tower, then barely moves */
+  var k = opening ? io3(seg(t, TL.tilt0, TL.tilt1)) : 1;
+  S.cam[0] = .1 * Math.sin(r * .07 + 1) + S.look[0] * .42;
+  S.cam[1] = L.camH + .018 * Math.sin(r * .31);
+  S.cam[2] = .2 * Math.sin(r * .045);
+  S.cam[3] = L.F * (1 + .55 * (1 - k));
+  S.pitch = (-Math.atan(L.mv / L.F) + Math.atan(L.hy / S.cam[3]) - .012) * (1 - k) - S.look[1] * .016 * k + .004 * Math.sin(r * .19) * k;
+  S.hor[0] = -S.look[0] * .008; S.hor[1] = L.hy;
 }
 function trainAt(r) {
   /* a train crosses the overpass now and then: first a few seconds into the still, then every forty seconds */
@@ -558,8 +896,46 @@ function trainAt(r) {
   var x = -36 + 31 * p; return x > 200 ? -1e4 : x;
 }
 function toScreen(X, Y, z) {
-  var zz = z - S.cam[2], vx = (X - S.cam[0]) * S.cam[3] / zz, vy = (Y - S.cam[1]) * S.cam[3] / zz, h = innerHeight;
-  return [innerWidth / 2 + (vx + S.hor[0]) * h, h / 2 - (vy + S.hor[1]) * h, S.cam[3] / zz * h];
+  var dx = X - S.cam[0], dy = Y - S.cam[1], dz = z - S.cam[2], c = Math.cos(S.pitch), s = Math.sin(S.pitch);
+  var cy = dy * c - dz * s, cz = dy * s + dz * c, F = S.cam[3], h = innerHeight;
+  var qx = F * dx / cz + S.hor[0], qy = F * cy / cz + S.hor[1];
+  return [innerWidth / 2 + qx * h, h / 2 - qy * h, F / cz * h];
+}
+
+/* ================= the weather: lightning, and the failing tube ================= */
+var LG = { next: -1, strikes: [] };
+function strike(r) {
+  var fork = Math.random() < .45, dist = fork ? 1700 + Math.random() * 1500 : 2300 + Math.random() * 2400;
+  var X = (Math.random() * 2 - 1) * (.08 + .14 * Math.random()) * dist / L.F;
+  var pulses = [[0, .45, .05], [.07 + Math.random() * .05, 1, .085], [.28 + Math.random() * .2, .3 + .35 * Math.random(), .06]];
+  if (Math.random() < .55) pulses.push([.6 + Math.random() * .4, .45, .1]);
+  var power = Math.max(.55, Math.min(1.25, 2600 / dist));
+  LG.strikes.push({ t0: r, dist: dist, X: X, fork: fork, pulses: pulses, power: power, seed: Math.random() * 50 });
+  if (LG.strikes.length > 4) LG.strikes.shift();
+  SND.thunder(dist / 343, dist, Math.max(-.8, Math.min(.8, X / dist * 2.4)), power, fork);
+}
+function weather(r) {
+  if (reduced || FREEZE >= 0) return;
+  if (LG.next < 0) LG.next = r + (opening ? 3.4 : 7.5);
+  if (r >= LG.next) { strike(r); LG.next = r + 13 + Math.random() * 22; }
+  var f = 0, fx = 0, bolt = 0, bx = 0, bz = 3000, sd = 0;
+  LG.strikes.forEach(function (s) {
+    var t = r - s.t0; if (t < 0 || t > 2.5) return;
+    var e = 0; s.pulses.forEach(function (p) { var x = t - p[0]; if (x > 0) e += p[1] * Math.exp(-x / p[2]) * Math.min(1, x / .012); });
+    e *= s.power;
+    if (e > f) { f = e; fx = (s.X - S.cam[0]) * L.F / (s.dist - S.cam[2]); }
+    var m = s.pulses[1][0];
+    if (s.fork && t > m - .005 && t < m + .26) { bolt = Math.max(bolt, (t < m + .09 ? 1 : .35 + .65 * Math.exp(-(t - m - .09) / .05)) * s.power); bx = s.X; bz = s.dist; sd = s.seed; }
+  });
+  S.fl[0] = f; S.fl[1] = fx; S.fl[2] = bolt; S.fl[3] = bx; S.fl2[0] = bz; S.fl2[1] = sd;
+}
+function forcedFlash() { S.fl = [1.0, .16, 1.1, .16 * 2400 / L.F]; S.fl2[0] = 2400; S.fl2[1] = 7.3; }
+/* one tube on the left is failing: mostly on, sometimes it stutters */
+function flicker(r) {
+  var w = Math.floor(r / 6.5), local = r - w * 6.5, lv = 1;
+  if (hash1(w) > .45 && local < 1.1) { var st = Math.floor(local * 22); lv = hash1(st + w * 31) > .5 ? 1 : .08 + .2 * hash1(st * 3.1 + w); }
+  S.flick = lv;
+  for (var c = 0; c < 3; c++) ULC[1 * 3 + c] = ULC0[1 * 3 + c] * lv;
 }
 
 /* ================= the break: chips leave the stone, cross the city, and light three signs ================= */
@@ -567,22 +943,24 @@ var FLIGHT = 1.35;
 function chipWorld(k) { var c = CHIPC[k]; return [(c[0] - 50) / 100 * L.MS, L.MY - (c[1] - 50) / 100 * L.MS, TZ]; }
 function openMade(now) {
   if (S.open) return; S.open = true; hit.setAttribute("aria-expanded", "true");
-  S.flights = [0, 1, 2].map(function (k) { return { k: k, dir: 1, t0: now + (reduced ? -10 : .12 + k * .24) }; });
+  S.flights = [0, 1, 2].map(function (k) { return { k: k, dir: 1, t0: now + (reduced ? -10 : .12 + k * .24), lit: false }; });
   [0, 1, 2].forEach(function (k) { S.hole[k] = 1; S.holeG[k] = reduced ? 0 : 1; });
   if (reduced) { S.flights = []; S.sgOn = [1, 1, 1]; signLit(); }
+  SND.swell(reduced);
   wake();
 }
 function closeMade(now) {
   if (!S.open) return; S.open = false; hit.setAttribute("aria-expanded", "false");
   signEls.forEach(function (a) { a.classList.remove("on", "lit"); a.tabIndex = -1; });
+  SND.close();
   if (reduced) { S.sgOn = [0, 0, 0]; S.hole = [0, 0, 0]; S.flights = []; wake(); return; }
   S.flights = [0, 1, 2].map(function (k) { return { k: k, dir: -1, t0: now + .3 + k * .14 }; });
   wake();
 }
 function signLit() { signEls.forEach(function (a, k) { if (S.sgOn[k] > .5) { a.classList.add("on", "lit"); a.tabIndex = 0; } }); }
 /* a lamp coming on: it catches, drops, catches again, holds */
-function ignite(x) { if (x <= 0) return 0; if (x >= .34) return 1; var K = [[0, 0], [.04, .7], [.08, .12], [.13, .85], [.18, .35], [.26, .95], [.34, 1]]; for (var i = 1; i < K.length; i++) if (x <= K[i][0]) return K[i - 1][1]; return 1; }
-/* a chip's way across the city: even in the picture, lifted a little on the way, its depth carried along with it */
+var IGN = [[0, 0], [.04, .7], [.08, .12], [.13, .85], [.18, .35], [.26, .95], [.34, 1]];
+function ignite(x) { if (x <= 0) return 0; if (x >= .34) return 1; for (var i = 1; i < IGN.length; i++) if (x <= IGN[i][0]) return IGN[i - 1][1]; return 1; }
 function path(P, Q, e) {
   e = clamp01(e);
   var f = L.F, h = L.camH, ax = P[0] * f / P[2], ay = (P[1] - h) * f / P[2], bx = Q[0] * f / Q[2], by = (Q[1] - h) * f / Q[2];
@@ -607,6 +985,7 @@ function stepBreak(now, dt) {
       return;
     }
     if (f.dir > 0) {
+      if (!f.lit && dt > 0) { f.lit = true; SND.ignite(k, toScreen(L.sg[k][0], L.sg[k][1], L.sg[k][3])[0] / innerWidth * 2 - 1); }
       var on = ignite(now - f.t0 - FLIGHT);
       S.sgOn[k] = on; if (on < 1) busy = true;
       if (on > .5 && !signEls[k].classList.contains("on")) { signEls[k].classList.add("on", "lit"); signEls[k].tabIndex = 0; }
@@ -618,33 +997,41 @@ function stepBreak(now, dt) {
 
 /* ================= drawing ================= */
 var MV = [0, 0];
+function common(U, w, h, restT) {
+  gl.uniform2f(U.uRes, w, h); gl.uniform1f(U.uT, restT); gl.uniform4fv(U.uCam, S.cam); gl.uniform2fv(U.uHor, S.hor); gl.uniform1f(U.uPitch, S.pitch);
+  gl.uniform4f(U.uGeo, L.W, L.Wn, YQ, ZQ); gl.uniform4f(U.uGeo2, ZN, 0, L.PZ, L.PR); gl.uniform4fv(U.uFl, S.fl);
+}
 function draw(t, restT) {
   if (!gl) return;
   var bw = canvas.width, bh = canvas.height;
   gl.useProgram(P1);
-  gl.uniform1f(U1.uT, restT); gl.uniform4fv(U1.uCam, S.cam); gl.uniform2fv(U1.uHor, S.hor);
   gl.uniform1f(U1.uExp, S.exp); gl.uniform1f(U1.uLit, S.lit); gl.uniform1f(U1.uMark, S.mark * (1 + .05 * Math.sin(restT * .9))); gl.uniform1f(U1.uHov, S.hov);
   gl.uniform4f(U1.uTw, TZ, L.TW, L.MY, L.MS);
   gl.uniform4fv(U1.uSg, [].concat(L.sg[0], L.sg[1], L.sg[2]));
   gl.uniform3fv(U1.uSgOn, S.sgOn); gl.uniform3fv(U1.uSgHov, S.sgHov); gl.uniform4fv(U1.uSh, S.sh); gl.uniform4fv(U1.uShT, S.tl);
   gl.uniform3fv(U1.uHole, S.hole); gl.uniform3fv(U1.uHoleG, S.holeG); gl.uniform1f(U1.uTrain, S.train);
   gl.uniform3fv(U1.uGemE, UG); gl.uniform3fv(U1.uCavE, UC); gl.uniform3fv(U1.uSeamE, US); gl.uniform3fv(U1.uChipE, UK);
+  gl.uniform4fv(U1.uBx, UBX); gl.uniform4fv(U1.uBa, UBA); gl.uniform4fv(U1.uLp, ULP); gl.uniform3fv(U1.uLc, ULC);
+  gl.uniform4f(U1.uLamp, L.lamp[0], L.lamp[1], L.lamp[2], 0); gl.uniform4fv(U1.uFl2, S.fl2);
   gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, atlasTex); gl.uniform1i(U1.uAtlas, 2);
   /* the city as it is */
   gl.bindFramebuffer(gl.FRAMEBUFFER, fbS.f); gl.viewport(0, 0, fbS.w, fbS.h);
-  gl.uniform2f(U1.uRes, fbS.w, fbS.h); gl.uniform1f(U1.uRefl, 0); gl.drawArrays(gl.TRIANGLES, 0, 3);
-  /* the city as the water sees it, at half the size */
+  common(U1, fbS.w, fbS.h, restT); gl.uniform1f(U1.uRefl, 0); gl.drawArrays(gl.TRIANGLES, 0, 3);
+  /* the city as the water and the puddle see it: only below the horizon */
   gl.bindFramebuffer(gl.FRAMEBUFFER, fbR.f); gl.viewport(0, 0, fbR.w, fbR.h);
-  gl.uniform2f(U1.uRes, fbR.w, fbR.h); gl.uniform1f(U1.uRefl, 1); gl.drawArrays(gl.TRIANGLES, 0, 3);
+  var qh = S.hor[1] - S.cam[3] * Math.tan(S.pitch), rows = Math.min(fbR.h, Math.max(1, Math.ceil((qh + .5) * fbR.h) + 3));
+  gl.enable(gl.SCISSOR_TEST); gl.scissor(0, 0, fbR.w, rows);
+  common(U1, fbR.w, fbR.h, restT); gl.uniform1f(U1.uRefl, 1); gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.disable(gl.SCISSOR_TEST);
   /* the frame */
   gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, bw, bh);
   gl.useProgram(P2);
   gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fbS.t); gl.uniform1i(U2.uS, 0);
   gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, fbR.t); gl.uniform1i(U2.uR, 1);
-  gl.uniform2f(U2.uRes, bw, bh); gl.uniform1f(U2.uT, restT); gl.uniform4fv(U2.uCam, S.cam); gl.uniform2fv(U2.uHor, S.hor);
+  common(U2, bw, bh, restT);
   gl.uniform1f(U2.uExp, S.exp); gl.uniform1f(U2.uMark, S.mark);
-  var zT = TZ - S.cam[2]; MV[0] = -S.cam[0] * S.cam[3] / zT + S.hor[0]; MV[1] = (L.MY - S.cam[1]) * S.cam[3] / zT + S.hor[1];
-  gl.uniform2fv(U2.uMV, MV); gl.uniform1f(U2.uMotion, reduced ? 0 : 1);
+  var m = toScreen(0, L.MY, TZ); MV[0] = (m[0] - innerWidth / 2) / innerHeight; MV[1] = (innerHeight / 2 - m[1]) / innerHeight;
+  gl.uniform2fv(U2.uMV, MV);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
 /* the touchable parts follow the picture */
@@ -659,8 +1046,188 @@ function place() {
   });
 }
 
+/* ================= sound: all of it made here, nothing recorded ================= */
+var SND = (function () {
+  var want = false; try { want = sessionStorage.getItem(SKEY) === "1"; } catch (e) {}
+  var ctx = null, out = null, verb = null, N = {}, timer = 0, lastT = 0, built = false, live = false;
+  var api = { on: function () { return want; } };
+  function buf(sec, kind) {
+    var n = Math.floor(ctx.sampleRate * sec), b = ctx.createBuffer(2, n, ctx.sampleRate);
+    for (var ch = 0; ch < 2; ch++) {
+      var d = b.getChannelData(ch), b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, last = 0;
+      for (var i = 0; i < n; i++) {
+        var w = Math.random() * 2 - 1;
+        if (kind === "pink") { b0 = .99886 * b0 + w * .0555179; b1 = .99332 * b1 + w * .0750759; b2 = .969 * b2 + w * .153852; b3 = .8665 * b3 + w * .3104856; b4 = .55 * b4 + w * .5329522; b5 = -.7616 * b5 - w * .016898; d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * .5362) * .11; b6 = w * .115926; }
+        else if (kind === "brown") { last = (last + .02 * w) / 1.02; d[i] = last * 3.5; }
+        else d[i] = w;
+      }
+      /* the loop meets itself softly */
+      var f = Math.min(2000, n >> 3); for (var j = 0; j < f; j++) { var g = j / f; d[n - f + j] = d[n - f + j] * (1 - g) + d[j] * g; }
+    }
+    return b;
+  }
+  function impulse(sec) {
+    var n = Math.floor(ctx.sampleRate * sec), b = ctx.createBuffer(2, n, ctx.sampleRate);
+    for (var ch = 0; ch < 2; ch++) { var d = b.getChannelData(ch), lp = 0; for (var i = 0; i < n; i++) { var t = i / n, a = .35 + .6 * t; lp = lp * a + (Math.random() * 2 - 1) * (1 - a); d[i] = lp * Math.pow(1 - t, 2.4) * (i < 90 ? i / 90 : 1); } }
+    return b;
+  }
+  function loop(b, rate) { var s = ctx.createBufferSource(); s.buffer = b; s.loop = true; if (rate) s.playbackRate.value = rate; s.start(0, Math.random() * (b.duration - .5)); return s; }
+  function filt(type, f, Q) { var x = ctx.createBiquadFilter(); x.type = type; x.frequency.value = f; if (Q != null) x.Q.value = Q; return x; }
+  function gain(v) { var g = ctx.createGain(); g.gain.value = v; return g; }
+  function pan(p) { if (ctx.createStereoPanner) { var s = ctx.createStereoPanner(); s.pan.value = p; return s; } return gain(1); }
+  function chain() { for (var i = 0; i < arguments.length - 1; i++) arguments[i].connect(arguments[i + 1]); return arguments[arguments.length - 1]; }
+  function send(node, amt) { var g = gain(amt); node.connect(g); g.connect(verb); }
+  function build() {
+    var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+    ctx = new AC();
+    var comp = ctx.createDynamicsCompressor(); comp.threshold.value = -22; comp.knee.value = 16; comp.ratio.value = 2.6; comp.attack.value = .02; comp.release.value = .5;
+    out = gain(0); var top = filt("lowpass", 15000, .5); chain(out, top, comp, ctx.destination);
+    var cv = ctx.createConvolver(); cv.buffer = impulse(3.6); verb = gain(.6); chain(verb, cv, out);
+    N.white = buf(5, "white"); N.pink = buf(6, "pink"); N.brown = buf(7, "brown");
+    /* far wash: the whole city's rain at once */
+    chain(loop(N.pink, .9), filt("lowpass", 760, .4), filt("highpass", 70), gain(.42), out);
+    /* the mid hiss, breathing with the wind */
+    var hiss = gain(.05); chain(loop(N.white), filt("highpass", 2400, .5), filt("lowpass", 7600, .4), hiss, out); send(hiss, .25);
+    var gust = ctx.createOscillator(); gust.frequency.value = .06; var gd = gain(.022); chain(gust, gd, hiss.gain); gust.start();
+    /* near rain on the stone in front of us, a little brighter on one side */
+    var nr = gain(.05); chain(loop(N.pink, 1.4), filt("bandpass", 1500, .7), nr, pan(-.2), out);
+    /* the gutter running off the roof on the right, bubbling */
+    var gt = pan(.62); gt.connect(out); send(gt, .2);
+    chain(loop(N.pink), filt("bandpass", 640, 1.1), gain(.07), gt);
+    N.bub = [];
+    for (var i = 0; i < 3; i++) { var bp = filt("bandpass", 500 + i * 220, 14); chain(loop(N.pink, 1 + i * .07), bp, gain(.05), gt); N.bub.push(bp); }
+    /* the city under it all: a low body that never stops */
+    var drone = gain(.0); chain(drone, filt("lowpass", 240, .6), out);
+    [[43.65, "sine", .55], [65.41, "sine", .3], [87.31, "triangle", .14], [130.8, "sine", .05]].forEach(function (o, j) {
+      var osc = ctx.createOscillator(); osc.type = o[1]; osc.frequency.value = o[0]; osc.detune.value = (j - 1.5) * 4; var g = gain(o[2]); chain(osc, g, drone); osc.start();
+    });
+    drone.gain.setValueAtTime(0, ctx.currentTime); drone.gain.linearRampToValueAtTime(.075, ctx.currentTime + 6);
+    var dl = ctx.createOscillator(); dl.frequency.value = .035; var dg = gain(.02); chain(dl, dg, drone.gain); dl.start();
+    chain(loop(N.brown, .8), filt("lowpass", 150, .5), gain(.3), out);
+    /* the sign on the left hums, mains at fifty, and buzzes when its tube stutters */
+    N.hum = gain(0); var hp = pan(-.5); chain(N.hum, filt("lowpass", 520, 1.4), hp, out);
+    var h1 = ctx.createOscillator(); h1.type = "sawtooth"; h1.frequency.value = 50; chain(h1, gain(.5), N.hum); h1.start();
+    var h2 = ctx.createOscillator(); h2.frequency.value = 100; chain(h2, gain(.6), N.hum); h2.start();
+    N.buzz = gain(0); chain(loop(N.white), filt("bandpass", 3200, 2), N.buzz, hp);
+    /* the train: rumble, a motor that bends as it passes, wheels on joints */
+    N.trG = gain(0); N.trP = pan(0); N.trF = filt("lowpass", 420, .7); chain(N.trF, N.trG, N.trP, out); send(N.trP, .35);
+    chain(loop(N.brown), N.trF);
+    N.trO = []; [118, 177, 236].forEach(function (f, j) { var o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = f; var g = gain([.035, .02, .01][j]); chain(o, filt("bandpass", 520, 1.2), g, N.trF); o.start(); N.trO.push([o, f]); });
+    N.trClack = 0;
+    return true;
+  }
+  function envBurst(t, dur, peak, dest, f, Q, src) {
+    var s = ctx.createBufferSource(); s.buffer = src || N.white; var bp = filt("bandpass", f, Q); var g = gain(0);
+    chain(s, bp, g, dest); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + .0015); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    s.start(t, Math.random() * 3, dur + .05);
+  }
+  function drip(t) {
+    var p = pan(Math.random() * 1.8 - .9); p.connect(out); send(p, .3);
+    if (Math.random() < .62) envBurst(t, .04 + Math.random() * .09, .05 + Math.random() * .1, p, 2400 + Math.random() * 3600, 22 + Math.random() * 16);
+    else { var o = ctx.createOscillator(), g = gain(0), f0 = 850 + Math.random() * 700; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * .5, t + .05);
+      chain(o, g, p); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.035 + Math.random() * .03, t + .003); g.gain.exponentialRampToValueAtTime(.0001, t + .08); o.start(t); o.stop(t + .1); }
+  }
+  function awning(t) {
+    var p = pan(-.6); p.connect(out); send(p, .35);
+    var o = ctx.createOscillator(), g = gain(0); o.frequency.setValueAtTime(560, t); o.frequency.exponentialRampToValueAtTime(240, t + .07);
+    chain(o, g, p); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05, t + .004); g.gain.exponentialRampToValueAtTime(.0001, t + .12); o.start(t); o.stop(t + .14);
+    envBurst(t, .03, .03, p, 1800, 3);
+  }
+  var nextAw = 0;
+  function tick() {
+    if (!ctx || ctx.state !== "running") return;
+    var now = ctx.currentTime, dt = Math.min(.2, now - (lastT || now)); lastT = now;
+    var n = dt * 9; while (n > 0) { if (Math.random() < Math.min(1, n)) drip(now + .05 + Math.random() * .08); n -= 1; }
+    if (now > nextAw) { awning(now + .05); nextAw = now + .45 + Math.random() * .7; }
+    N.bub.forEach(function (bp, i) { bp.frequency.setTargetAtTime(320 + Math.random() * (700 + i * 300), now, .025 + Math.random() * .04); });
+  }
+  function start() {
+    if (!built) { built = build(); if (!built) return; }
+    if (ctx.state !== "running") ctx.resume();
+    live = true; out.gain.cancelScheduledValues(ctx.currentTime); out.gain.setTargetAtTime(.72, ctx.currentTime, .9);
+    if (!timer) timer = setInterval(tick, 45);
+  }
+  function stop() {
+    if (!ctx) return; live = false;
+    out.gain.cancelScheduledValues(ctx.currentTime); out.gain.setTargetAtTime(0, ctx.currentTime, .18);
+    clearInterval(timer); timer = 0;
+    setTimeout(function () { if (!live && ctx) ctx.suspend(); }, 900);
+  }
+  function show() { sndBtn.setAttribute("aria-pressed", want ? "true" : "false"); sndBtn.setAttribute("aria-label", want ? "Sound on" : "Sound off"); }
+  api.toggle = function () { want = !want; try { sessionStorage.setItem(SKEY, want ? "1" : "0"); } catch (e) {} show(); if (want) start(); else stop(); };
+  api.gesture = function () { if (want && !live) start(); };
+  api.visible = function (v) { if (!ctx || !want) return; if (v) { ctx.resume(); live = true; if (!timer) timer = setInterval(tick, 45); } else { ctx.suspend(); live = false; clearInterval(timer); timer = 0; } };
+  show();
+  function ok() { return ctx && live && ctx.state === "running"; }
+  /* thunder: the delay is the distance, the brightness of the crack is the nearness */
+  api.thunder = function (delay, dist, p, power, fork) {
+    if (!ok()) return;
+    var t = ctx.currentTime + delay, near = clamp01((4200 - dist) / 2600), dur = 4 + 3.5 * (1 - near) + Math.random() * 2;
+    var pn = pan(p * .7); pn.connect(out); send(pn, .9);
+    var s = ctx.createBufferSource(); s.buffer = N.brown; var lp = filt("lowpass", 280 + 900 * near, .6), g = gain(0);
+    chain(s, lp, g, pn); lp.frequency.setValueAtTime(280 + 1000 * near, t); lp.frequency.exponentialRampToValueAtTime(90, t + dur);
+    var peak = .55 * power * (.55 + .45 * near);
+    g.gain.setValueAtTime(0, t);
+    var x = t; g.gain.linearRampToValueAtTime(peak * (fork ? .9 : .55), x + .12 + .25 * (1 - near));
+    var lumps = 4 + Math.floor(Math.random() * 4);
+    for (var i = 0; i < lumps; i++) { x += .35 + Math.random() * .7; g.gain.linearRampToValueAtTime(peak * (.25 + .75 * Math.random()) * (1 - i / lumps * .6), x); }
+    g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    s.start(t, Math.random() * 2); s.stop(t + dur + .2);
+    if (fork && near > .3) { var c = ctx.createBufferSource(); c.buffer = N.pink; var cg = gain(0), hp = filt("highpass", 700, .5); chain(c, hp, cg, pn); cg.gain.setValueAtTime(0, t); cg.gain.linearRampToValueAtTime(.12 * near, t + .01); cg.gain.exponentialRampToValueAtTime(.0001, t + .45); c.start(t); c.stop(t + .5); }
+    var o = ctx.createOscillator(), og = gain(0); o.frequency.setValueAtTime(48, t); o.frequency.exponentialRampToValueAtTime(30, t + 2.5); chain(o, og, out);
+    og.gain.setValueAtTime(0, t); og.gain.linearRampToValueAtTime(.18 * power, t + .3); og.gain.exponentialRampToValueAtTime(.0001, t + 3); o.start(t); o.stop(t + 3.1);
+  };
+  /* the chips in flight: a soft chord opening, and air moving */
+  api.swell = function (instant) {
+    if (!ok()) return;
+    var t = ctx.currentTime + .05, pad = gain(0), lp = filt("lowpass", 300, .7);
+    chain(pad, lp, out); send(lp, .8);
+    lp.frequency.setValueAtTime(300, t); lp.frequency.exponentialRampToValueAtTime(2600, t + 1.7); lp.frequency.exponentialRampToValueAtTime(900, t + 5.5);
+    [220, 329.63, 493.88, 659.25].forEach(function (f, i) {
+      [-5, 5].forEach(function (dt) { var o = ctx.createOscillator(); o.type = i % 2 ? "triangle" : "sine"; o.frequency.value = f; o.detune.value = dt; var g = gain(.25 / (1 + i * .4)); chain(o, g, pad); o.start(t); o.stop(t + 7.5); });
+    });
+    pad.gain.setValueAtTime(0, t); pad.gain.linearRampToValueAtTime(.075, t + (instant ? .3 : 1.3)); pad.gain.setTargetAtTime(0, t + 2.2, 1.3);
+    if (!instant) { var s = ctx.createBufferSource(); s.buffer = N.pink; var bp = filt("bandpass", 380, 2.2), g = gain(0); chain(s, bp, g, out); send(g, .5);
+      bp.frequency.setValueAtTime(380, t); bp.frequency.exponentialRampToValueAtTime(2800, t + 1.4); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05, t + .6); g.gain.linearRampToValueAtTime(0, t + 1.6); s.start(t); s.stop(t + 1.7); }
+  };
+  /* a sign catching: the tube's buzz in the same stutter as its light, and one clear note */
+  api.ignite = function (k, p) {
+    if (!ok()) return;
+    var t = ctx.currentTime + .01, pn = pan(Math.max(-.8, Math.min(.8, p))); pn.connect(out); send(pn, .7);
+    var o = ctx.createOscillator(); o.type = "square"; o.frequency.value = 100; var bp = filt("bandpass", 1900, 3), g = gain(0); chain(o, bp, g, pn);
+    for (var i = 0; i < IGN.length; i++) g.gain.setValueAtTime(IGN[i][1] * .018, t + IGN[i][0]);
+    g.gain.setTargetAtTime(0, t + .4, .12); o.start(t); o.stop(t + 1.2);
+    var n = ctx.createOscillator(), ng = gain(0); n.frequency.value = [659.25, 830.61, 987.77][k]; chain(n, ng, pn);
+    ng.gain.setValueAtTime(0, t + .25); ng.gain.linearRampToValueAtTime(.03, t + .3); ng.gain.exponentialRampToValueAtTime(.0001, t + 3.2); n.start(t + .25); n.stop(t + 3.3);
+  };
+  api.close = function () {
+    if (!ok()) return;
+    var t = ctx.currentTime + .05;
+    [493.88, 329.63].forEach(function (f, i) { var o = ctx.createOscillator(), g = gain(0); o.frequency.setValueAtTime(f, t + i * .18); o.frequency.exponentialRampToValueAtTime(f * .94, t + 1.6); chain(o, g, out); send(g, .8);
+      g.gain.setValueAtTime(0, t + i * .18); g.gain.linearRampToValueAtTime(.02, t + i * .18 + .05); g.gain.exponentialRampToValueAtTime(.0001, t + 1.8); o.start(t + i * .18); o.stop(t + 2); });
+  };
+  /* every frame: where the train is, how the left tube is doing */
+  api.frame = function (train, cam, flick) {
+    if (!ok()) return;
+    var now = ctx.currentTime;
+    N.hum.gain.setTargetAtTime(.012 * flick, now, .02);
+    N.buzz.gain.setTargetAtTime(flick < .9 ? .012 : 0, now, .01);
+    if (train > -1e3) {
+      var xm = train - 75 - cam[0], dz = ZB - cam[2], dy = 15 - cam[1], d = Math.sqrt(xm * xm + dz * dz + dy * dy);
+      var vr = 31 * xm / d, dop = 343 / (343 + vr), lv = Math.min(1, Math.pow(dz / d, 2.2)) * Math.min(1, (train + 36) / 40) * Math.min(1, (236 - train) / 40);
+      N.trG.gain.setTargetAtTime(.5 * Math.max(0, lv), now, .1);
+      if (N.trP.pan) N.trP.pan.setTargetAtTime(Math.max(-.85, Math.min(.85, xm / d * 1.4)), now, .1);
+      N.trF.frequency.setTargetAtTime(300 + 260 * lv, now, .2);
+      N.trO.forEach(function (o) { o[0].frequency.setTargetAtTime(o[1] * dop, now, .05); });
+      if (now > N.trClack && lv > .15) { N.trClack = now + .68; var p = N.trP; envBurst(now + .02, .05, .1 * lv, p, 900, 2, N.brown); envBurst(now + .13, .05, .08 * lv, p, 800, 2, N.brown); }
+    } else N.trG.gain.setTargetAtTime(0, now, .3);
+  };
+  return api;
+})();
+sndBtn.addEventListener("click", function (e) { e.stopPropagation(); SND.toggle(); });
+
 /* ================= the loop ================= */
-var live = false, last = 0, t0 = performance.now(), restClock0 = 0, openingStart = 0, frames = [], ended = !opening;
+var live = false, last = 0, restClock0 = 0, openingStart = 0, frames = [], ended = !opening;
 function restTime(now) { return (now - restClock0) / 1000 + 14; }
 function frame(now) {
   if (!live) return;
@@ -675,8 +1242,9 @@ function frame(now) {
     S.hov += (S.hovT - S.hov) * (1 - Math.exp(-dt * 6));
     for (var k = 0; k < 3; k++) S.sgHov[k] += (S.sgHovT[k] - S.sgHov[k]) * (1 - Math.exp(-dt * 5));
     stepBreak(now / 1000, dt);
-    camAt(1e3, r); S.train = trainAt(r);
+    camAt(1e3, r); S.train = trainAt(r); weather(r); flicker(r);
     draw(1e3, r); place();
+    SND.frame(S.train, S.cam, S.flick);
   }
   /* if the machine is struggling, draw fewer pixels */
   frames.push(dt); if (frames.length > 50) { frames.shift(); var avg = frames.reduce(function (s, x) { return s + x; }, 0) / 50; if (avg > (fpsCap < 60 ? .045 : .026) && adapt > .5) { adapt *= .85; frames = []; layout(); } }
@@ -687,7 +1255,7 @@ function wake() {
   if (reduced || FREEZE >= 0) { stillFrame(); return; }
   if (!live && !document.hidden) { live = true; last = 0; requestAnimationFrame(frame); }
 }
-document.addEventListener("visibilitychange", function () { if (!document.hidden) wake(); });
+document.addEventListener("visibilitychange", function () { SND.visible(!document.hidden); if (!document.hidden) wake(); });
 
 /* reduced motion, or a frozen moment for a screenshot */
 function stillFrame() {
@@ -695,15 +1263,15 @@ function stillFrame() {
   var r = FREEZE >= 0 ? 14 + Math.max(0, FREEZE - TL.end) : 14;
   var nowS = 1e4, PT = /[?&]pt=(\d+)/.exec(location.search);
   if (PT && FREEZE >= 0) {
-    /* a frozen moment inside the break, for checking it frame by frame */
     nowS = +PT[1] / 1000; S.open = true;
-    S.flights = [0, 1, 2].map(function (k) { return { k: k, dir: 1, t0: .12 + k * .24 }; }); S.hole = [1, 1, 1];
+    S.flights = [0, 1, 2].map(function (k) { return { k: k, dir: 1, t0: .12 + k * .24, lit: true }; }); S.hole = [1, 1, 1];
     stepBreak(nowS, 0); S.holeG = [0, 1, 2].map(function () { return Math.max(0, 1 - nowS * 1.6); }); signLit();
   } else {
     if (S.open && !reduced) { S.flights = []; S.sgOn = [1, 1, 1]; S.hole = [1, 1, 1]; signLit(); }
     stepBreak(nowS, 0); S.holeG = [0, 0, 0];
   }
-  camAt(1e3, r); S.train = reduced ? 58 : trainAt(r);
+  camAt(1e3, r); S.train = reduced ? 58 : trainAt(r); flicker(reduced ? 0 : r);
+  if (FORCE_FLASH && !reduced) forcedFlash(); else S.fl = [0, 0, 0, 0];
   draw(1e3, r); place();
 }
 
@@ -715,11 +1283,12 @@ function openingAt(t) {
   typeEl.style.opacity = (1 - io3(seg(t, TL.fade0, TL.fade1))).toFixed(3);
   if (t < TL.r0) { if (gl) { canvas.style.opacity = "0"; } return; }
   canvas.style.opacity = "1";
-  S.mark = o3(seg(t, TL.r0, TL.mark1));
+  var r = t - TL.r0 + 14 - (TL.end - TL.r0);
+  S.mark = o3(seg(t, TL.mk0, TL.mk1));
   S.exp = io3(seg(t, TL.exp0, TL.exp1)); S.lit = o3(seg(t, TL.lit0, TL.lit1));
-  camAt(t, t - TL.r0 + 14 - (TL.end - TL.r0));
-  S.train = -1e4;
-  draw(t, t - TL.r0 + 14 - (TL.end - TL.r0));
+  camAt(t, r); flicker(r);
+  S.train = -1e4; S.fl = [0, 0, 0, 0];
+  draw(t, r);
   var wk = seg(t, TL.wm0, TL.wm1), fk = seg(t, TL.ft0, TL.ft1);
   titleEl.style.opacity = o3(wk).toFixed(3); titleEl.style.filter = wk < 1 ? "blur(" + (5 * (1 - o3(wk))).toFixed(2) + "px)" : "";
   titleEl.style.transform = "translateY(" + (6 * (1 - o3(wk))).toFixed(2) + "px)";
@@ -736,10 +1305,9 @@ function finish() {
   if (skipped) [canvas, titleEl, foot].forEach(function (el) { el.style.opacity = ""; el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 900, easing: "cubic-bezier(.25,.6,.3,1)" }); });
   canvas.style.opacity = "";
 }
-function skip() { if (!ended && FREEZE < 0) { finish(); wake(); } }
+function skip(e) { if (e && e.target && e.target.closest && e.target.closest(".snd")) return; if (!ended && FREEZE < 0) { finish(); wake(); } }
 
 /* ---------- input ---------- */
-var fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
 addEventListener("pointermove", function (e) {
   if (!ended || reduced) return;
   if (e.pointerType === "mouse") { S.lookT[0] = (e.clientX / innerWidth - .5) * 2; S.lookT[1] = (e.clientY / innerHeight - .5) * 2; }
@@ -756,10 +1324,12 @@ signEls.forEach(function (a, k) {
   a.addEventListener("focus", function () { S.sgHovT[k] = 1; });
   a.addEventListener("blur", function () { S.sgHovT[k] = 0; });
 });
+/* any first touch or key may start the sound, if it was left on */
+["pointerdown", "keydown", "touchstart"].forEach(function (ev) { addEventListener(ev, function (e) { if (!(e.target && e.target.closest && e.target.closest(".snd"))) SND.gesture(); }, { passive: true }); });
 /* a touch anywhere else in the city lets the signs go dark again */
 addEventListener("pointerdown", function (e) {
   if (!ended || !S.open) return;
-  if (e.target.closest && e.target.closest(".hit, .sign")) return;
+  if (e.target.closest && e.target.closest(".hit, .sign, .snd")) return;
   closeMade(performance.now() / 1000);
 }, { passive: true });
 addEventListener("keydown", function (e) { if (e.key === "Escape" && ended && S.open) { closeMade(performance.now() / 1000); hit.focus(); } });
