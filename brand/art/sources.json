@@ -1,0 +1,130 @@
+[
+ {
+  "id": "V0025147EL",
+  "family": "matter",
+  "title": "Chemistry: geometrical representations of crystalline substances. Engraving by J. Pass, 1802, after H. Lascelles.",
+  "work": "https://wellcomecollection.org/works/ata4tumv",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/V0025147EL"
+ },
+ {
+  "id": "V0025147ER",
+  "family": "matter",
+  "title": "Chemistry: geometric representations of crystalline substances. Coloured engraving by J. Pass, 1802, after C. Hauy.",
+  "work": "https://wellcomecollection.org/works/aqspdgbm",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/V0025147ER"
+ },
+ {
+  "id": "V0025149ER",
+  "family": "matter",
+  "title": "Chemistry: various crystalline substances. Coloured engraving.",
+  "work": "https://wellcomecollection.org/works/xgwhxufg",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/V0025149ER"
+ },
+ {
+  "id": "V0025484",
+  "family": "matter",
+  "title": "Chemistry: various alchemical symbols. Engraving by A. Bell.",
+  "work": "https://wellcomecollection.org/works/s5vs9bfr",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/V0025484"
+ },
+ {
+  "id": "L0029161",
+  "family": "matter",
+  "title": "Tripvs avrevs, hoc est, tres tractatvs chymici selectissimi, nempe I. Basilii Valentini ... Practica vna cum 12. clauibus & appendice, ex Germanico: II. Thom\u00e6 Nortoni ... Crede mihi seu ordinale, ante annos 140. ab authore scriptum, nunc ex anglicano manuscripto in latinum translatum, phrasi cuiusque authoris vt & sententia retenta; III. Cremeri cvivsdam ... Abbatus Westmonasteriensis ... Testamentum, hactenus nondum publicatum. Nunc in diuersarum nationum gratiam / editi, & figuris cupro affabre incisis ornati oper\u00e2 & studio Michaelis Maieri.",
+  "work": "https://wellcomecollection.org/works/u2h4eujj",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/L0029161"
+ },
+ {
+  "id": "V0025578",
+  "family": "method",
+  "title": "A chemical laboratory and a table of chemical relations. Engraving by Pr\u00e9vost after L.J. Goussier, 1763.",
+  "work": "https://wellcomecollection.org/works/z38tz47n",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/V0025578"
+ },
+ {
+  "id": "V0025485",
+  "family": "method",
+  "title": "Chemistry: a chemical laboratory with many workers (above), symbols of elements arranged in a proto-periodic table (?) (below). Engraving by R. B\u00e9nard.",
+  "work": "https://wellcomecollection.org/works/qs8kztwu",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/V0025485"
+ },
+ {
+  "id": "V0025560",
+  "family": "method",
+  "title": "An alchemist at a furnace with a large 'receiver', with diagrams of alchemical apparatus. Woodcut, 1658.",
+  "work": "https://wellcomecollection.org/works/tptafja9",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/V0025560"
+ },
+ {
+  "id": "V0025462",
+  "family": "method",
+  "title": "Chemistry: distilling apparatus. Engraving by W. Lowry, 1802.",
+  "work": "https://wellcomecollection.org/works/nq7tgb7v",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/V0025462"
+ },
+ {
+  "id": "V0025453",
+  "family": "method",
+  "title": "Chemistry: various types of furnace. Engraving by J. Taylor.",
+  "work": "https://wellcomecollection.org/works/egkqupwq",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/V0025453"
+ },
+ {
+  "id": "V0039777EL",
+  "family": "makers",
+  "title": "A man is sitting at a work bench beating on metal with a hammer. Wood engraving.",
+  "work": "https://wellcomecollection.org/works/mkhrfx79",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/V0039777EL"
+ },
+ {
+  "id": "V0039775EL",
+  "family": "makers",
+  "title": "A man is sitting at a work bench making jewellery. Wood engraving.",
+  "work": "https://wellcomecollection.org/works/kfrtxrtv",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/V0039775EL"
+ },
+ {
+  "id": "V0040548ETR",
+  "family": "makers",
+  "title": "Printers working at a printing press, and setting type. Woodcut by J. Amman.",
+  "work": "https://wellcomecollection.org/works/j5mg28du",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/V0040548ETR"
+ },
+ {
+  "id": "V0023786",
+  "family": "makers",
+  "title": "Men working at a printing press, proofing copy, inking, and setting type. Wood engraving. 18--, after Stradanus, ca.1580.",
+  "work": "https://wellcomecollection.org/works/w9rzuxd3",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/V0023786"
+ },
+ {
+  "id": "V0024057",
+  "family": "makers",
+  "title": "Glass: men at work inside a plate glass factory. Engraving, possibly by C. Grignion [?], 1747.",
+  "work": "https://wellcomecollection.org/works/pgf93rrh",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/V0024057"
+ },
+ {
+  "id": "V0023895EL",
+  "family": "makers",
+  "title": "Joinery: a joiner's yard, with men at work (top), various types of joint (below). Engraving by Defehrt after Lucotte.",
+  "work": "https://wellcomecollection.org/works/wsfvq32a",
+  "licence": "Public Domain Mark (Wellcome Collection)",
+  "iiif": "https://iiif.wellcomecollection.org/image/V0023895EL"
+ }
+]
