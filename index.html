@@ -1,222 +1,124 @@
 <!doctype html>
-<html lang="en-GB">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#060808">
+<meta name="description" content="Antimony builds software for the people who make the work. Makers of Orbe.">
+<meta property="og:title" content="Antimony"><meta property="og:image" content="assets/og-image-1200x630.png"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <title>Antimony</title>
-<meta name="description" content="Antimony is a London company that builds software for the people who make the work. Our first product is Orbe.">
-<meta property="og:title" content="Antimony">
-<meta property="og:description" content="A London company that builds software for the people who make the work. Makers of Orbe.">
-<meta property="og:image" content="assets/og-image-1200x630.png">
-<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<link rel="preload" href="assets/fonts/timeless-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap">
 <style>
-/* Antimony, the company. One quiet column of writing on a twelve-column grid, one photographed object,
-   and a navigation that is the only theatre on the page. Type: Timeless Sans, owned by the founder. */
-@font-face { font-family: "Timeless Sans"; src: url("assets/fonts/timeless-sans-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
-@font-face { font-family: "Timeless Sans"; src: url("assets/fonts/timeless-sans-500.woff2") format("woff2"); font-weight: 500; font-display: swap; }
-:root {
-  --paper: #F3F0E8; --paper-2: #EAE6DB; --ink: #0B1412; --ink-2: #4A4F4B; --rule: #D6D1C5;
-  --sky: #94E6FF; --cobalt: #2448FF;
-  --sans: "Timeless Sans", "Helvetica Neue", Arial, sans-serif;
-  --gutter: max(28px, env(safe-area-inset-left, 0px));
-  --ease: cubic-bezier(.22, .61, .21, 1);
-  color-scheme: light;
-}
+/* The Section 9 opening (gradation bands, the crystal built from pixels), landing in a ruled ledger after Initialized:
+   one grid of hairlines, solid label bars, hatched and dotted cells for texture, the wordmark top left,
+   and the wordmark again, the full width of the page, as the foot. */
+:root { --ink: #060808; --paper: #F2F1EC; --rule: rgba(242,241,236,.2); --text: #C7CECB; --dim: #7C8885; --sky: #94E6FF; --cobalt: #2448FF;
+  --sans: "Archivo", "Helvetica Neue", Arial, sans-serif; --g: max(18px, env(safe-area-inset-left, 0px)); --gr: max(18px, env(safe-area-inset-right, 0px)); color-scheme: dark; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { background: var(--paper); scroll-behavior: smooth; }
-body { background: var(--paper); color: var(--ink); font: 400 18px/1.5 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-a { color: inherit; }
-img, svg { display: block; max-width: 100%; }
-::selection { background: var(--sky); color: var(--ink); }
-:focus-visible { outline: 1.5px solid currentColor; outline-offset: 4px; }
-.grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; padding-inline: var(--gutter) max(28px, env(safe-area-inset-right, 0px)); max-width: 1480px; margin-inline: auto; }
-.label { font-size: 13.5px; font-weight: 500; letter-spacing: .01em; color: var(--ink-2); }
-
-/* ── the navigation: fixed, it takes the colour of whatever it sits over ── */
-.nav { position: fixed; z-index: 40; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center;
-  padding: calc(20px + env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-right, 0px)) 0 var(--gutter); color: var(--ink); transition: color .45s var(--ease); pointer-events: none; }
-.nav > * { pointer-events: auto; }
-body[data-tone="dark"] .nav { color: var(--paper); }
-body[data-tone="sky"] .nav { color: var(--ink); }
-body.open .nav { color: var(--paper); }
-.brand { display: flex; align-items: center; gap: 11px; text-decoration: none; }
-.brand .mk path:nth-child(1) { fill: currentColor; }
-.brand .wm { height: 11.5px; width: auto; fill: currentColor; }
-.menu { display: flex; align-items: center; gap: 22px; font-size: 15px; }
-.menu a { text-decoration: none; opacity: .72; transition: opacity .2s; }
-.menu a:hover { opacity: 1; }
-.toggle { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; font-size: 15px; padding: 8px 0; }
-.toggle .bars { width: 18px; height: 8px; position: relative; }
-.toggle .bars::before, .toggle .bars::after { content: ""; position: absolute; left: 0; right: 0; height: 1.5px; background: currentColor; transition: transform .45s var(--ease), top .45s var(--ease); }
-.toggle .bars::before { top: 0; } .toggle .bars::after { top: 6.5px; }
-body.open .toggle .bars::before { top: 3.25px; transform: rotate(45deg); }
-body.open .toggle .bars::after { top: 3.25px; transform: rotate(-45deg); }
-.toggle:focus-visible { outline-offset: 2px; }
-
-/* ── the index: a curtain of large entries, each with its preview ── */
-.index { position: fixed; z-index: 30; inset: 0; background: var(--ink); color: var(--paper); clip-path: inset(0 0 100% 0); visibility: hidden;
-  transition: clip-path .8s var(--ease), visibility 0s .8s; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; align-content: center;
-  padding: calc(96px + env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-right, 0px)) calc(40px + env(safe-area-inset-bottom, 0px)) var(--gutter); }
-body.open .index { clip-path: inset(0 0 0 0); visibility: visible; transition: clip-path .8s var(--ease); }
-.entries { grid-column: 1 / span 6; list-style: none; display: grid; align-self: center; align-content: start; }
-.entries li { overflow: hidden; border-top: 1px solid rgba(243,240,232,.14); }
-.entries li:last-child { border-bottom: 1px solid rgba(243,240,232,.14); }
-.entries a { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 20px; padding: 14px 0 16px; text-decoration: none;
-  transform: translateY(105%); transition: transform .9s var(--ease), color .25s; color: rgba(243,240,232,.42); }
-body.open .entries a { transform: none; }
-body.open .entries li:nth-child(2) a { transition-delay: .06s, 0s; } body.open .entries li:nth-child(3) a { transition-delay: .12s, 0s; } body.open .entries li:nth-child(4) a { transition-delay: .18s, 0s; }
-.entries a b { font-weight: 400; font-size: clamp(40px, 6.2vw, 96px); line-height: 1; letter-spacing: -.035em; }
-.entries a span { font-size: 15px; }
-.entries a:hover, .entries a:focus-visible, .entries a.on { color: var(--paper); }
-.previews { grid-column: 8 / span 5; position: relative; aspect-ratio: 4 / 5; max-width: 100%; }
-.previews figure { position: absolute; inset: 0; opacity: 0; transform: scale(1.03); transition: opacity .5s var(--ease), transform 1.2s var(--ease); display: flex; flex-direction: column; gap: 14px; }
-.previews figure.on { opacity: 1; transform: none; }
-.previews .frame { flex: 1; overflow: hidden; display: grid; place-items: center; }
-.previews img { width: 100%; height: 100%; object-fit: cover; }
-.previews figcaption { font-size: 14px; color: rgba(243,240,232,.6); }
-.pv-orbe .frame { background: var(--sky); }
-.pv-orbe .frame img { width: 34%; height: auto; border-radius: 22%; }
-.index .foot { grid-column: 1 / -1; display: flex; justify-content: space-between; margin-top: 48px; font-size: 13.5px; color: rgba(243,240,232,.5); }
-
-/* ── the page ── */
-.hero { padding-top: calc(150px + env(safe-area-inset-top, 0px)); padding-bottom: 120px; row-gap: 64px; }
-.hero h1 { grid-column: 1 / span 8; font-weight: 400; font-size: clamp(34px, 4.3vw, 66px); line-height: 1.07; letter-spacing: -.028em; text-wrap: balance; }
-.hero h1 a { text-decoration-thickness: 1.5px; text-underline-offset: .12em; text-decoration-color: rgba(11,20,18,.35); transition: text-decoration-color .2s; }
-.hero h1 a:hover { text-decoration-color: var(--ink); }
-.plate { grid-column: 6 / span 7; }
-.plate .img { aspect-ratio: 1; background: var(--paper-2); overflow: hidden; }
-.plate .img img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.04); transition: transform 2.4s var(--ease); }
-.plate:hover .img img { transform: scale(1); }
-.plate figcaption { display: grid; grid-template-columns: 90px 1fr; gap: 16px; margin-top: 16px; font-size: 14.5px; color: var(--ink-2); max-width: 46em; }
-
-.section { padding-block: 120px; border-top: 1px solid var(--rule); }
-.section h2 { grid-column: 1 / span 3; font-size: 15px; font-weight: 500; padding-top: 6px; }
-.section .body { grid-column: 5 / span 7; display: grid; gap: 22px; }
-.prose p { font-size: clamp(20px, 1.75vw, 26px); line-height: 1.42; letter-spacing: -.01em; max-width: 31em; }
-.prose p + p { color: var(--ink-2); }
-
-.products { background: var(--sky); border-top: 0; }
-.product { display: grid; grid-template-columns: auto 1fr auto; gap: 28px; align-items: center; text-decoration: none; padding-block: 8px; }
-.product img { width: 76px; height: 76px; border-radius: 22%; box-shadow: 0 0 0 1px rgba(11,20,18,.12); }
-.product b { display: block; font-weight: 400; font-size: clamp(36px, 4vw, 58px); line-height: 1; letter-spacing: -.035em; }
-.product p { margin-top: 10px; font-size: 18px; max-width: 30em; }
-.product .go { font-size: 15px; white-space: nowrap; display: inline-flex; gap: 8px; align-items: center; }
-.product .go i { font-style: normal; display: inline-block; transition: transform .35s var(--ease); }
-.product:hover .go i { transform: translate(3px, -3px); }
-.later { font-size: 15px; color: rgba(11,20,18,.6); border-top: 1px solid rgba(11,20,18,.16); padding-top: 18px; }
-
-.letters .entry { display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: baseline; padding-block: 18px; border-block: 1px solid var(--rule); }
-.letters .entry b { font-weight: 400; font-size: clamp(24px, 2.2vw, 32px); letter-spacing: -.02em; }
-
-footer { background: var(--ink); color: var(--paper); padding-top: 120px; padding-bottom: calc(36px + env(safe-area-inset-bottom, 0px)); row-gap: 80px; }
-footer .big { grid-column: 1 / -1; width: 100%; height: auto; fill: var(--paper); }
-footer .cols { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; font-size: 14.5px; color: rgba(243,240,232,.62); }
-footer .cols a { text-decoration: none; color: var(--paper); }
-
+html { background: var(--ink); } body { background: var(--ink); color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 1px solid var(--sky); outline-offset: 3px; }
+/* the opening */
+.load { position: fixed; inset: 0; z-index: 30; display: grid; grid-template-columns: repeat(6, 1fr); pointer-events: none; }
+.load i { background: linear-gradient(180deg, var(--ink), var(--cobalt) 40%, var(--sky) 62%, var(--paper) 80%, var(--ink)); background-size: 100% 300%; animation: band 1.4s cubic-bezier(.6,0,.2,1) forwards; }
+.load i:nth-child(2) { animation-delay: .05s } .load i:nth-child(3) { animation-delay: .1s } .load i:nth-child(4) { animation-delay: .15s } .load i:nth-child(5) { animation-delay: .2s } .load i:nth-child(6) { animation-delay: .25s }
+@keyframes band { 0% { background-position: 0 0 } 70% { background-position: 0 100%; transform: none } 100% { background-position: 0 100%; transform: translateY(-101%) } }
+/* the masthead: the wordmark alone */
+.mast { padding: calc(22px + env(safe-area-inset-top, 0px)) var(--gr) 18px var(--g); }
+.mast svg { height: 13px; width: auto; fill: var(--paper); display: block; }
+/* the ledger */
+.ledger { margin-inline: var(--g) var(--gr); display: grid; grid-template-columns: 4fr 5fr 3fr; grid-template-rows: auto 1fr auto; grid-template-areas: 'orbe art letters' 'h1 art h2' 'about art h2'; min-height: calc(100svh - 70px - env(safe-area-inset-top, 0px));
+  border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
+.cell { border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); position: relative; min-width: 0; }
+.cell::after { content: ""; position: absolute; inset: -1px; background: var(--ink); transform-origin: 50% 100%; animation: draw .7s cubic-bezier(.2,.7,.2,1) var(--d, 0s) forwards; pointer-events: none; z-index: 3; }
+@keyframes draw { to { transform: scaleY(0) } }
+.bar { display: block; background: var(--paper); color: var(--ink); font: 700 11px/1 var(--sans); font-stretch: 112%; letter-spacing: .12em; text-transform: uppercase; padding: 9px 14px; }
+.pad { padding: 18px 16px 22px; display: grid; gap: 14px; align-content: start; }
+.title { font-weight: 700; font-stretch: 70%; font-size: clamp(34px, 4vw, 66px); line-height: .9; text-transform: uppercase; color: var(--paper); letter-spacing: -.005em; text-wrap: balance; }
+.body { font: 400 16px/1.5 var(--sans); max-width: 34em; color: var(--text); }
+.more { font: 700 11px var(--sans); font-stretch: 112%; letter-spacing: .14em; text-transform: uppercase; color: var(--paper); display: inline-flex; gap: 8px; align-items: center; justify-self: start; border-bottom: 1px solid var(--paper); padding-bottom: 3px; }
+.more:hover { color: var(--sky); border-color: var(--sky); }
+.hatch { background-image: repeating-linear-gradient(135deg, rgba(242,241,236,.22) 0 1px, transparent 1px 7px); min-height: 90px; }
+.dots { background-image: radial-gradient(var(--rule) 1px, transparent 1.4px); background-size: 14px 14px; }
+.crystal { grid-area: art; overflow: hidden; }
+.a-orbe { grid-area: orbe } .a-h1 { grid-area: h1 } .a-about { grid-area: about } .a-letters { grid-area: letters } .a-h2 { grid-area: h2 }
+.crystal canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.entry { display: grid; gap: 6px; padding: 14px 16px; border-bottom: 1px solid var(--rule); }
+.entry:last-child { border-bottom: 0; }
+.chip { justify-self: start; font: 600 10.5px var(--sans); font-stretch: 112%; letter-spacing: .1em; text-transform: uppercase; border: 1px solid var(--rule); border-radius: 30px; padding: 4px 9px; color: var(--dim); }
+.entry b { font: 600 19px/1.15 var(--sans); color: var(--paper); }
+.entry span { font-size: 14.5px; color: var(--dim); }
+a.entry:hover b { color: var(--sky); }
+/* the foot */
+.foot { margin: 0 var(--gr) 0 var(--g); border-left: 1px solid var(--rule); border-right: 1px solid var(--rule); }
+.foot .hatch { min-height: 56px; border-bottom: 1px solid var(--rule); }
+.foot svg { display: block; width: 100%; height: auto; fill: var(--paper); padding: 4vw 2.2vw 2.6vw; }
+.fine { margin: 0 var(--gr) 0 var(--g); border: 1px solid var(--rule); border-top: 0; display: flex; justify-content: space-between; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); font: 500 11px var(--sans); font-stretch: 112%; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+.fine a:hover { color: var(--paper); }
 @media (max-width: 860px) {
-  .grid, .index { column-gap: 14px; }
-  .menu a { display: none; }
-  .hero { padding-top: calc(118px + env(safe-area-inset-top, 0px)); padding-bottom: 80px; row-gap: 40px; }
-  .hero h1, .plate, .section h2, .section .body { grid-column: 1 / -1; }
-  .plate figcaption { grid-template-columns: 1fr; gap: 4px; }
-  .section { padding-block: 80px; row-gap: 22px; }
-  .product { grid-template-columns: auto 1fr; } .product .go { grid-column: 2; }
-  .product img { width: 60px; height: 60px; }
-  .entries, .previews { grid-column: 1 / -1; }
-  .previews { display: none; }
-  .entries a { grid-template-columns: 1fr; gap: 4px; }
+  .ledger { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: 'art' 'orbe' 'letters' 'about'; min-height: 0; }
+  .crystal { height: 58svh; }
+  .hatch.side { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0s !important; transition-delay: 0s !important; } html { scroll-behavior: auto; } }
+@media (prefers-reduced-motion: reduce) { .load { display: none; } .cell::after { display: none; } }
 </style>
-</head>
-<body data-tone="light">
-
-<header class="nav">
-  <a class="brand" href="#top" aria-label="Antimony, home">
-    <svg class="mk" width="15" height="15" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 5L78 29V71L50 95L22 71V29Z"/><path d="M78 71L78 29L50 5L50 15Z" fill="#94E6FF"/><path d="M22 71L50 15L78 71L50 58Z" fill="rgba(128,128,128,.35)"/></svg>
-    <svg class="wm" viewBox="-8 -4 924 110" aria-hidden="true"><path d="M83.90 65.89 L100.94 100.00 L116.87 100.00 L96.58 59.38 L94.37 54.96 L66.91 0.00 L43.49 0.00 L-6.47 100.00 L9.46 100.00 L26.50 65.89 L55.20 52.00ZM37.04 44.79 L55.20 8.44 L73.36 44.79 L55.20 36.00ZM225.90 0.00 L210.90 0.00 L210.90 79.86 L151.71 0.00 L133.90 0.00 L133.90 100.00 L148.90 100.00 L148.90 20.14 L208.09 100.00 L225.90 100.00ZM248.40 0.00 L248.40 13.20 L288.05 13.20 L288.05 100.00 L303.05 100.00 L303.05 13.20 L342.70 13.20 L342.70 0.00 L303.05 0.00 L288.05 0.00ZM380.20 100.00 L380.20 0.00 L365.20 0.00 L365.20 100.00ZM509.48 0.00 L468.50 48.91 L427.52 0.00 L408.70 0.00 L408.70 100.00 L423.70 100.00 L423.70 17.63 L468.50 71.09 L513.30 17.63 L513.30 100.00 L528.30 100.00 L528.30 0.00ZM584.98 -0.90 L583.17 -0.58 L581.39 -0.18 L579.62 0.31 L577.88 0.88 L576.18 1.54 L574.50 2.28 L572.87 3.10 L571.27 4.01 L569.73 4.99 L568.23 6.04 L566.79 7.17 L565.40 8.36 L564.07 9.62 L562.81 10.95 L561.62 12.34 L560.49 13.78 L559.44 15.28 L558.46 16.82 L557.55 18.42 L556.73 20.05 L555.99 21.73 L555.33 23.43 L554.76 25.17 L554.27 26.94 L553.87 28.72 L553.55 30.53 L553.33 32.34 L553.19 34.17 L553.15 36.00 L553.15 64.00 L553.19 65.83 L553.33 67.66 L553.55 69.47 L553.87 71.28 L554.27 73.06 L554.76 74.83 L555.33 76.57 L555.99 78.27 L556.73 79.95 L557.55 81.58 L558.46 83.18 L559.44 84.72 L560.49 86.22 L561.62 87.66 L562.81 89.05 L564.07 90.38 L565.40 91.64 L566.79 92.83 L568.23 93.96 L569.73 95.01 L571.27 95.99 L572.87 96.90 L574.50 97.72 L576.18 98.46 L577.88 99.12 L579.62 99.69 L581.39 100.18 L583.17 100.58 L584.98 100.90 L586.79 101.12 L588.62 101.26 L590.45 101.30 L632.15 101.30 L633.98 101.26 L635.81 101.12 L637.62 100.90 L639.43 100.58 L641.21 100.18 L642.98 99.69 L644.72 99.12 L646.42 98.46 L648.10 97.72 L649.73 96.90 L651.33 95.99 L652.87 95.01 L654.37 93.96 L655.81 92.83 L657.20 91.64 L658.53 90.38 L659.79 89.05 L660.98 87.66 L662.11 86.22 L663.16 84.72 L664.14 83.18 L665.05 81.58 L665.87 79.95 L666.61 78.27 L667.27 76.57 L667.84 74.83 L668.33 73.06 L668.73 71.28 L669.05 69.47 L669.27 67.66 L669.41 65.83 L669.45 64.00 L669.45 36.00 L669.41 34.17 L669.27 32.34 L669.05 30.53 L668.73 28.72 L668.33 26.94 L667.84 25.17 L667.27 23.43 L666.61 21.73 L665.87 20.05 L665.05 18.42 L664.14 16.82 L663.16 15.28 L662.11 13.78 L660.98 12.34 L659.79 10.95 L658.53 9.62 L657.20 8.36 L655.81 7.17 L654.37 6.04 L652.87 4.99 L651.33 4.01 L649.73 3.10 L648.10 2.28 L646.42 1.54 L644.72 0.88 L642.98 0.31 L641.21 -0.18 L639.43 -0.58 L637.62 -0.90 L635.81 -1.12 L633.98 -1.26 L632.15 -1.30 L590.45 -1.30 L588.62 -1.26 L586.79 -1.12ZM632.72 12.42 L634.01 12.71 L635.29 13.06 L636.55 13.48 L637.78 13.96 L638.99 14.49 L640.18 15.09 L641.33 15.74 L642.45 16.45 L643.53 17.21 L644.58 18.03 L645.58 18.89 L646.54 19.81 L647.46 20.77 L648.32 21.77 L649.14 22.82 L649.90 23.90 L650.61 25.02 L651.26 26.17 L651.86 27.36 L652.39 28.57 L652.87 29.80 L653.29 31.06 L653.64 32.34 L653.93 33.63 L654.16 34.94 L654.32 36.25 L654.42 37.58 L654.45 38.90 L654.45 61.10 L654.42 62.42 L654.32 63.75 L654.16 65.06 L653.93 66.37 L653.64 67.66 L653.29 68.94 L652.87 70.20 L652.39 71.43 L651.86 72.64 L651.26 73.83 L650.61 74.98 L649.90 76.10 L649.14 77.18 L648.32 78.23 L647.46 79.23 L646.54 80.19 L645.58 81.11 L644.58 81.97 L643.53 82.79 L642.45 83.55 L641.33 84.26 L640.18 84.91 L638.99 85.51 L637.78 86.04 L636.55 86.52 L635.29 86.94 L634.01 87.29 L632.72 87.58 L631.41 87.81 L630.10 87.97 L628.77 88.07 L627.45 88.10 L595.15 88.10 L593.83 88.07 L592.50 87.97 L591.19 87.81 L589.88 87.58 L588.59 87.29 L587.31 86.94 L586.05 86.52 L584.82 86.04 L583.61 85.51 L582.42 84.91 L581.27 84.26 L580.15 83.55 L579.07 82.79 L578.02 81.97 L577.02 81.11 L576.06 80.19 L575.14 79.23 L574.28 78.23 L573.46 77.18 L572.70 76.10 L571.99 74.98 L571.34 73.83 L570.74 72.64 L570.21 71.43 L569.73 70.20 L569.31 68.94 L568.96 67.66 L568.67 66.37 L568.44 65.06 L568.28 63.75 L568.18 62.42 L568.15 61.10 L568.15 38.90 L568.18 37.58 L568.28 36.25 L568.44 34.94 L568.67 33.63 L568.96 32.34 L569.31 31.06 L569.73 29.80 L570.21 28.57 L570.74 27.36 L571.34 26.17 L571.99 25.02 L572.70 23.90 L573.46 22.82 L574.28 21.77 L575.14 20.77 L576.06 19.81 L577.02 18.89 L578.02 18.03 L579.07 17.21 L580.15 16.45 L581.27 15.74 L582.42 15.09 L583.61 14.49 L584.82 13.96 L586.05 13.48 L587.31 13.06 L588.59 12.71 L589.88 12.42 L591.19 12.19 L592.50 12.03 L593.83 11.93 L595.15 11.90 L627.45 11.90 L628.77 11.93 L630.10 12.03 L631.41 12.19ZM786.30 0.00 L771.30 0.00 L771.30 79.86 L712.11 0.00 L694.30 0.00 L694.30 100.00 L709.30 100.00 L709.30 20.14 L768.49 100.00 L786.30 100.00ZM864.90 54.19 L911.18 0.00 L892.44 0.00 L860.84 37.00 L853.96 37.00 L822.36 0.00 L803.62 0.00 L849.90 54.19 L849.90 100.00 L864.90 100.00Z" fill-rule="evenodd"/></svg>
-  </a>
-  <div class="menu">
-    <a href="#products">Products</a><a href="#company">Company</a><a href="#letters">Letters</a>
-    <button class="toggle" id="toggle" aria-expanded="false" aria-controls="index"><span id="tl">Index</span><span class="bars" aria-hidden="true"></span></button>
-  </div>
-</header>
-
-<nav class="index" id="index" aria-label="Index">
-  <ul class="entries">
-    <li><a href="https://eoinforker.github.io/orbe-site/" data-p="orbe" class="on"><b>Orbe</b><span>Product, in preview</span></a></li>
-    <li><a href="#company" data-p="company"><b>Company</b><span>Who we are</span></a></li>
-    <li><a href="#letters" data-p="letters"><b>Letters</b><span>Antimony 001, in preparation</span></a></li>
-  </ul>
-  <div class="previews" aria-hidden="true">
-    <figure class="pv-orbe on" data-p="orbe"><div class="frame"><img src="assets/orbe-mark-on-sky.svg" alt=""></div><figcaption>The creator's side of every sponsorship deal.</figcaption></figure>
-    <figure data-p="company"><div class="frame"><img src="assets/crystal-ink.webp" alt=""></div><figcaption>Antimony, element 51. Almost never found alone.</figcaption></figure>
-    <figure data-p="letters"><div class="frame" style="background:#071010"><img src="assets/art-engraved.svg" alt=""></div><figcaption>Occasional, numbered letters from the company.</figcaption></figure>
-  </div>
-  <div class="foot"><span>London, 51.51° N, 0.13° W</span><span>Esc to close</span></div>
-</nav>
-
-<main id="top">
-  <section class="grid hero" data-tone="light">
-    <h1>Antimony is a London company. We build software for the people who make the work, starting with <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>.</h1>
-    <figure class="plate">
-      <div class="img"><img src="assets/crystal-paper.webp" width="1600" height="1600" alt="A clear glass crystal with the letter A drawn inside it in blue, standing over ruled paper"></div>
-      <figcaption><span>Plate 1</span><span>The Antimony mark, made in glass. A crystal with the letter A inside; the A's crossbar is its own reflection, two halves holding each other up.</span></figcaption>
-    </figure>
-  </section>
-
-  <section class="grid section products" id="products" data-tone="sky">
-    <h2>Products</h2>
-    <div class="body">
-      <a class="product" href="https://eoinforker.github.io/orbe-site/">
-        <img src="assets/orbe-mark-on-sky.svg" alt="">
-        <div><b>Orbe</b><p>The creator's side of every sponsorship deal.</p></div>
-        <span class="go">Visit Orbe <i aria-hidden="true">↗</i></span>
-      </a>
-      <p class="later">Further products will appear here as they are ready.</p>
+<div class="load" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<header class="mast"><a href="./" aria-label="Antimony"><svg viewBox="-8 -4 924 110" role="img" aria-label="Antimony"><path d="M83.90 65.89 L100.94 100.00 L116.87 100.00 L96.58 59.38 L94.37 54.96 L66.91 0.00 L43.49 0.00 L-6.47 100.00 L9.46 100.00 L26.50 65.89 L55.20 52.00ZM37.04 44.79 L55.20 8.44 L73.36 44.79 L55.20 36.00ZM225.90 0.00 L210.90 0.00 L210.90 79.86 L151.71 0.00 L133.90 0.00 L133.90 100.00 L148.90 100.00 L148.90 20.14 L208.09 100.00 L225.90 100.00ZM248.40 0.00 L248.40 13.20 L288.05 13.20 L288.05 100.00 L303.05 100.00 L303.05 13.20 L342.70 13.20 L342.70 0.00 L303.05 0.00 L288.05 0.00ZM380.20 100.00 L380.20 0.00 L365.20 0.00 L365.20 100.00ZM509.48 0.00 L468.50 48.91 L427.52 0.00 L408.70 0.00 L408.70 100.00 L423.70 100.00 L423.70 17.63 L468.50 71.09 L513.30 17.63 L513.30 100.00 L528.30 100.00 L528.30 0.00ZM584.98 -0.90 L583.17 -0.58 L581.39 -0.18 L579.62 0.31 L577.88 0.88 L576.18 1.54 L574.50 2.28 L572.87 3.10 L571.27 4.01 L569.73 4.99 L568.23 6.04 L566.79 7.17 L565.40 8.36 L564.07 9.62 L562.81 10.95 L561.62 12.34 L560.49 13.78 L559.44 15.28 L558.46 16.82 L557.55 18.42 L556.73 20.05 L555.99 21.73 L555.33 23.43 L554.76 25.17 L554.27 26.94 L553.87 28.72 L553.55 30.53 L553.33 32.34 L553.19 34.17 L553.15 36.00 L553.15 64.00 L553.19 65.83 L553.33 67.66 L553.55 69.47 L553.87 71.28 L554.27 73.06 L554.76 74.83 L555.33 76.57 L555.99 78.27 L556.73 79.95 L557.55 81.58 L558.46 83.18 L559.44 84.72 L560.49 86.22 L561.62 87.66 L562.81 89.05 L564.07 90.38 L565.40 91.64 L566.79 92.83 L568.23 93.96 L569.73 95.01 L571.27 95.99 L572.87 96.90 L574.50 97.72 L576.18 98.46 L577.88 99.12 L579.62 99.69 L581.39 100.18 L583.17 100.58 L584.98 100.90 L586.79 101.12 L588.62 101.26 L590.45 101.30 L632.15 101.30 L633.98 101.26 L635.81 101.12 L637.62 100.90 L639.43 100.58 L641.21 100.18 L642.98 99.69 L644.72 99.12 L646.42 98.46 L648.10 97.72 L649.73 96.90 L651.33 95.99 L652.87 95.01 L654.37 93.96 L655.81 92.83 L657.20 91.64 L658.53 90.38 L659.79 89.05 L660.98 87.66 L662.11 86.22 L663.16 84.72 L664.14 83.18 L665.05 81.58 L665.87 79.95 L666.61 78.27 L667.27 76.57 L667.84 74.83 L668.33 73.06 L668.73 71.28 L669.05 69.47 L669.27 67.66 L669.41 65.83 L669.45 64.00 L669.45 36.00 L669.41 34.17 L669.27 32.34 L669.05 30.53 L668.73 28.72 L668.33 26.94 L667.84 25.17 L667.27 23.43 L666.61 21.73 L665.87 20.05 L665.05 18.42 L664.14 16.82 L663.16 15.28 L662.11 13.78 L660.98 12.34 L659.79 10.95 L658.53 9.62 L657.20 8.36 L655.81 7.17 L654.37 6.04 L652.87 4.99 L651.33 4.01 L649.73 3.10 L648.10 2.28 L646.42 1.54 L644.72 0.88 L642.98 0.31 L641.21 -0.18 L639.43 -0.58 L637.62 -0.90 L635.81 -1.12 L633.98 -1.26 L632.15 -1.30 L590.45 -1.30 L588.62 -1.26 L586.79 -1.12ZM632.72 12.42 L634.01 12.71 L635.29 13.06 L636.55 13.48 L637.78 13.96 L638.99 14.49 L640.18 15.09 L641.33 15.74 L642.45 16.45 L643.53 17.21 L644.58 18.03 L645.58 18.89 L646.54 19.81 L647.46 20.77 L648.32 21.77 L649.14 22.82 L649.90 23.90 L650.61 25.02 L651.26 26.17 L651.86 27.36 L652.39 28.57 L652.87 29.80 L653.29 31.06 L653.64 32.34 L653.93 33.63 L654.16 34.94 L654.32 36.25 L654.42 37.58 L654.45 38.90 L654.45 61.10 L654.42 62.42 L654.32 63.75 L654.16 65.06 L653.93 66.37 L653.64 67.66 L653.29 68.94 L652.87 70.20 L652.39 71.43 L651.86 72.64 L651.26 73.83 L650.61 74.98 L649.90 76.10 L649.14 77.18 L648.32 78.23 L647.46 79.23 L646.54 80.19 L645.58 81.11 L644.58 81.97 L643.53 82.79 L642.45 83.55 L641.33 84.26 L640.18 84.91 L638.99 85.51 L637.78 86.04 L636.55 86.52 L635.29 86.94 L634.01 87.29 L632.72 87.58 L631.41 87.81 L630.10 87.97 L628.77 88.07 L627.45 88.10 L595.15 88.10 L593.83 88.07 L592.50 87.97 L591.19 87.81 L589.88 87.58 L588.59 87.29 L587.31 86.94 L586.05 86.52 L584.82 86.04 L583.61 85.51 L582.42 84.91 L581.27 84.26 L580.15 83.55 L579.07 82.79 L578.02 81.97 L577.02 81.11 L576.06 80.19 L575.14 79.23 L574.28 78.23 L573.46 77.18 L572.70 76.10 L571.99 74.98 L571.34 73.83 L570.74 72.64 L570.21 71.43 L569.73 70.20 L569.31 68.94 L568.96 67.66 L568.67 66.37 L568.44 65.06 L568.28 63.75 L568.18 62.42 L568.15 61.10 L568.15 38.90 L568.18 37.58 L568.28 36.25 L568.44 34.94 L568.67 33.63 L568.96 32.34 L569.31 31.06 L569.73 29.80 L570.21 28.57 L570.74 27.36 L571.34 26.17 L571.99 25.02 L572.70 23.90 L573.46 22.82 L574.28 21.77 L575.14 20.77 L576.06 19.81 L577.02 18.89 L578.02 18.03 L579.07 17.21 L580.15 16.45 L581.27 15.74 L582.42 15.09 L583.61 14.49 L584.82 13.96 L586.05 13.48 L587.31 13.06 L588.59 12.71 L589.88 12.42 L591.19 12.19 L592.50 12.03 L593.83 11.93 L595.15 11.90 L627.45 11.90 L628.77 11.93 L630.10 12.03 L631.41 12.19ZM786.30 0.00 L771.30 0.00 L771.30 79.86 L712.11 0.00 L694.30 0.00 L694.30 100.00 L709.30 100.00 L709.30 20.14 L768.49 100.00 L786.30 100.00ZM864.90 54.19 L911.18 0.00 L892.44 0.00 L860.84 37.00 L853.96 37.00 L822.36 0.00 L803.62 0.00 L849.90 54.19 L849.90 100.00 L864.90 100.00Z" fill-rule="evenodd"/></svg></a></header>
+<main class="ledger">
+  <section class="cell a-orbe" style="--d:1.35s">
+    <span class="bar">Orbe</span>
+    <div class="pad">
+      <h1 class="title">The creator's side of every sponsorship deal.</h1>
+      <p class="body">Brands are getting agents. Orbe is the creator's: it negotiates inside their rules, waits for one tap on anything binding, and holds the money until the work is delivered.</p>
+      <a class="more" href="https://eoinforker.github.io/orbe-site/">Visit Orbe ↗</a>
     </div>
   </section>
-
-  <section class="grid section" id="company" data-tone="light">
-    <h2>Company</h2>
-    <div class="body prose">
-      <p>We sit on the side of the person who made the work, never across the table from them. We earn when they earn, and we build for decades rather than rounds: plain records, clear rules, nothing we would be embarrassed to explain.</p>
-      <p>Antimony, element 51, is almost never found alone in nature; its old name was read as anti-monos, not alone. Alchemists used it to purify gold. Both are what we want our products to do for the people who use them.</p>
-    </div>
+  <div class="cell hatch side a-h1" style="--d:1.45s"></div>
+  <section class="cell a-about" style="--d:1.55s">
+    <span class="bar">Antimony</span>
+    <div class="pad"><p class="body">Antimony builds software for the people who make the work, and sits on their side of the table. Element 51 is almost never found alone; alchemists used it to purify gold.</p></div>
   </section>
-
-  <section class="grid section letters" id="letters" data-tone="light">
-    <h2>Letters</h2>
-    <div class="body">
-      <p class="prose" style="font-size:18px;color:var(--ink-2)">Occasional, numbered letters from the company, on deals, money and the business of making things.</p>
-      <div class="entry"><b>Antimony 001: Never alone</b><span class="label">In preparation</span></div>
-    </div>
+  <div class="cell crystal dots" style="--d:1.3s"><canvas id="px" aria-label="The Antimony crystal, built from pixels"></canvas></div>
+  <section class="cell a-letters" style="--d:1.5s">
+    <span class="bar">Letters</span>
+    <div class="entry"><span class="chip">In preparation</span><b>Antimony 001: Never alone</b><span>Why we are building Orbe, and why the company is called Antimony.</span></div>
   </section>
+  <div class="cell hatch side a-h2" style="--d:1.6s"></div>
 </main>
-
-<footer class="grid" data-tone="dark">
-  <svg class="big" viewBox="-8 -4 924 110" role="img" aria-label="Antimony"><path d="M83.90 65.89 L100.94 100.00 L116.87 100.00 L96.58 59.38 L94.37 54.96 L66.91 0.00 L43.49 0.00 L-6.47 100.00 L9.46 100.00 L26.50 65.89 L55.20 52.00ZM37.04 44.79 L55.20 8.44 L73.36 44.79 L55.20 36.00ZM225.90 0.00 L210.90 0.00 L210.90 79.86 L151.71 0.00 L133.90 0.00 L133.90 100.00 L148.90 100.00 L148.90 20.14 L208.09 100.00 L225.90 100.00ZM248.40 0.00 L248.40 13.20 L288.05 13.20 L288.05 100.00 L303.05 100.00 L303.05 13.20 L342.70 13.20 L342.70 0.00 L303.05 0.00 L288.05 0.00ZM380.20 100.00 L380.20 0.00 L365.20 0.00 L365.20 100.00ZM509.48 0.00 L468.50 48.91 L427.52 0.00 L408.70 0.00 L408.70 100.00 L423.70 100.00 L423.70 17.63 L468.50 71.09 L513.30 17.63 L513.30 100.00 L528.30 100.00 L528.30 0.00ZM584.98 -0.90 L583.17 -0.58 L581.39 -0.18 L579.62 0.31 L577.88 0.88 L576.18 1.54 L574.50 2.28 L572.87 3.10 L571.27 4.01 L569.73 4.99 L568.23 6.04 L566.79 7.17 L565.40 8.36 L564.07 9.62 L562.81 10.95 L561.62 12.34 L560.49 13.78 L559.44 15.28 L558.46 16.82 L557.55 18.42 L556.73 20.05 L555.99 21.73 L555.33 23.43 L554.76 25.17 L554.27 26.94 L553.87 28.72 L553.55 30.53 L553.33 32.34 L553.19 34.17 L553.15 36.00 L553.15 64.00 L553.19 65.83 L553.33 67.66 L553.55 69.47 L553.87 71.28 L554.27 73.06 L554.76 74.83 L555.33 76.57 L555.99 78.27 L556.73 79.95 L557.55 81.58 L558.46 83.18 L559.44 84.72 L560.49 86.22 L561.62 87.66 L562.81 89.05 L564.07 90.38 L565.40 91.64 L566.79 92.83 L568.23 93.96 L569.73 95.01 L571.27 95.99 L572.87 96.90 L574.50 97.72 L576.18 98.46 L577.88 99.12 L579.62 99.69 L581.39 100.18 L583.17 100.58 L584.98 100.90 L586.79 101.12 L588.62 101.26 L590.45 101.30 L632.15 101.30 L633.98 101.26 L635.81 101.12 L637.62 100.90 L639.43 100.58 L641.21 100.18 L642.98 99.69 L644.72 99.12 L646.42 98.46 L648.10 97.72 L649.73 96.90 L651.33 95.99 L652.87 95.01 L654.37 93.96 L655.81 92.83 L657.20 91.64 L658.53 90.38 L659.79 89.05 L660.98 87.66 L662.11 86.22 L663.16 84.72 L664.14 83.18 L665.05 81.58 L665.87 79.95 L666.61 78.27 L667.27 76.57 L667.84 74.83 L668.33 73.06 L668.73 71.28 L669.05 69.47 L669.27 67.66 L669.41 65.83 L669.45 64.00 L669.45 36.00 L669.41 34.17 L669.27 32.34 L669.05 30.53 L668.73 28.72 L668.33 26.94 L667.84 25.17 L667.27 23.43 L666.61 21.73 L665.87 20.05 L665.05 18.42 L664.14 16.82 L663.16 15.28 L662.11 13.78 L660.98 12.34 L659.79 10.95 L658.53 9.62 L657.20 8.36 L655.81 7.17 L654.37 6.04 L652.87 4.99 L651.33 4.01 L649.73 3.10 L648.10 2.28 L646.42 1.54 L644.72 0.88 L642.98 0.31 L641.21 -0.18 L639.43 -0.58 L637.62 -0.90 L635.81 -1.12 L633.98 -1.26 L632.15 -1.30 L590.45 -1.30 L588.62 -1.26 L586.79 -1.12ZM632.72 12.42 L634.01 12.71 L635.29 13.06 L636.55 13.48 L637.78 13.96 L638.99 14.49 L640.18 15.09 L641.33 15.74 L642.45 16.45 L643.53 17.21 L644.58 18.03 L645.58 18.89 L646.54 19.81 L647.46 20.77 L648.32 21.77 L649.14 22.82 L649.90 23.90 L650.61 25.02 L651.26 26.17 L651.86 27.36 L652.39 28.57 L652.87 29.80 L653.29 31.06 L653.64 32.34 L653.93 33.63 L654.16 34.94 L654.32 36.25 L654.42 37.58 L654.45 38.90 L654.45 61.10 L654.42 62.42 L654.32 63.75 L654.16 65.06 L653.93 66.37 L653.64 67.66 L653.29 68.94 L652.87 70.20 L652.39 71.43 L651.86 72.64 L651.26 73.83 L650.61 74.98 L649.90 76.10 L649.14 77.18 L648.32 78.23 L647.46 79.23 L646.54 80.19 L645.58 81.11 L644.58 81.97 L643.53 82.79 L642.45 83.55 L641.33 84.26 L640.18 84.91 L638.99 85.51 L637.78 86.04 L636.55 86.52 L635.29 86.94 L634.01 87.29 L632.72 87.58 L631.41 87.81 L630.10 87.97 L628.77 88.07 L627.45 88.10 L595.15 88.10 L593.83 88.07 L592.50 87.97 L591.19 87.81 L589.88 87.58 L588.59 87.29 L587.31 86.94 L586.05 86.52 L584.82 86.04 L583.61 85.51 L582.42 84.91 L581.27 84.26 L580.15 83.55 L579.07 82.79 L578.02 81.97 L577.02 81.11 L576.06 80.19 L575.14 79.23 L574.28 78.23 L573.46 77.18 L572.70 76.10 L571.99 74.98 L571.34 73.83 L570.74 72.64 L570.21 71.43 L569.73 70.20 L569.31 68.94 L568.96 67.66 L568.67 66.37 L568.44 65.06 L568.28 63.75 L568.18 62.42 L568.15 61.10 L568.15 38.90 L568.18 37.58 L568.28 36.25 L568.44 34.94 L568.67 33.63 L568.96 32.34 L569.31 31.06 L569.73 29.80 L570.21 28.57 L570.74 27.36 L571.34 26.17 L571.99 25.02 L572.70 23.90 L573.46 22.82 L574.28 21.77 L575.14 20.77 L576.06 19.81 L577.02 18.89 L578.02 18.03 L579.07 17.21 L580.15 16.45 L581.27 15.74 L582.42 15.09 L583.61 14.49 L584.82 13.96 L586.05 13.48 L587.31 13.06 L588.59 12.71 L589.88 12.42 L591.19 12.19 L592.50 12.03 L593.83 11.93 L595.15 11.90 L627.45 11.90 L628.77 11.93 L630.10 12.03 L631.41 12.19ZM786.30 0.00 L771.30 0.00 L771.30 79.86 L712.11 0.00 L694.30 0.00 L694.30 100.00 L709.30 100.00 L709.30 20.14 L768.49 100.00 L786.30 100.00ZM864.90 54.19 L911.18 0.00 L892.44 0.00 L860.84 37.00 L853.96 37.00 L822.36 0.00 L803.62 0.00 L849.90 54.19 L849.90 100.00 L864.90 100.00Z" fill-rule="evenodd"/></svg>
-  <div class="cols"><span>Antimony, London</span><span><a href="https://eoinforker.github.io/orbe-site/">Orbe</a></span><span>© 2026</span></div>
+<footer>
+  <div class="foot"><div class="hatch"></div><svg viewBox="-8 -4 924 110" role="img" aria-label="Antimony"><path d="M83.90 65.89 L100.94 100.00 L116.87 100.00 L96.58 59.38 L94.37 54.96 L66.91 0.00 L43.49 0.00 L-6.47 100.00 L9.46 100.00 L26.50 65.89 L55.20 52.00ZM37.04 44.79 L55.20 8.44 L73.36 44.79 L55.20 36.00ZM225.90 0.00 L210.90 0.00 L210.90 79.86 L151.71 0.00 L133.90 0.00 L133.90 100.00 L148.90 100.00 L148.90 20.14 L208.09 100.00 L225.90 100.00ZM248.40 0.00 L248.40 13.20 L288.05 13.20 L288.05 100.00 L303.05 100.00 L303.05 13.20 L342.70 13.20 L342.70 0.00 L303.05 0.00 L288.05 0.00ZM380.20 100.00 L380.20 0.00 L365.20 0.00 L365.20 100.00ZM509.48 0.00 L468.50 48.91 L427.52 0.00 L408.70 0.00 L408.70 100.00 L423.70 100.00 L423.70 17.63 L468.50 71.09 L513.30 17.63 L513.30 100.00 L528.30 100.00 L528.30 0.00ZM584.98 -0.90 L583.17 -0.58 L581.39 -0.18 L579.62 0.31 L577.88 0.88 L576.18 1.54 L574.50 2.28 L572.87 3.10 L571.27 4.01 L569.73 4.99 L568.23 6.04 L566.79 7.17 L565.40 8.36 L564.07 9.62 L562.81 10.95 L561.62 12.34 L560.49 13.78 L559.44 15.28 L558.46 16.82 L557.55 18.42 L556.73 20.05 L555.99 21.73 L555.33 23.43 L554.76 25.17 L554.27 26.94 L553.87 28.72 L553.55 30.53 L553.33 32.34 L553.19 34.17 L553.15 36.00 L553.15 64.00 L553.19 65.83 L553.33 67.66 L553.55 69.47 L553.87 71.28 L554.27 73.06 L554.76 74.83 L555.33 76.57 L555.99 78.27 L556.73 79.95 L557.55 81.58 L558.46 83.18 L559.44 84.72 L560.49 86.22 L561.62 87.66 L562.81 89.05 L564.07 90.38 L565.40 91.64 L566.79 92.83 L568.23 93.96 L569.73 95.01 L571.27 95.99 L572.87 96.90 L574.50 97.72 L576.18 98.46 L577.88 99.12 L579.62 99.69 L581.39 100.18 L583.17 100.58 L584.98 100.90 L586.79 101.12 L588.62 101.26 L590.45 101.30 L632.15 101.30 L633.98 101.26 L635.81 101.12 L637.62 100.90 L639.43 100.58 L641.21 100.18 L642.98 99.69 L644.72 99.12 L646.42 98.46 L648.10 97.72 L649.73 96.90 L651.33 95.99 L652.87 95.01 L654.37 93.96 L655.81 92.83 L657.20 91.64 L658.53 90.38 L659.79 89.05 L660.98 87.66 L662.11 86.22 L663.16 84.72 L664.14 83.18 L665.05 81.58 L665.87 79.95 L666.61 78.27 L667.27 76.57 L667.84 74.83 L668.33 73.06 L668.73 71.28 L669.05 69.47 L669.27 67.66 L669.41 65.83 L669.45 64.00 L669.45 36.00 L669.41 34.17 L669.27 32.34 L669.05 30.53 L668.73 28.72 L668.33 26.94 L667.84 25.17 L667.27 23.43 L666.61 21.73 L665.87 20.05 L665.05 18.42 L664.14 16.82 L663.16 15.28 L662.11 13.78 L660.98 12.34 L659.79 10.95 L658.53 9.62 L657.20 8.36 L655.81 7.17 L654.37 6.04 L652.87 4.99 L651.33 4.01 L649.73 3.10 L648.10 2.28 L646.42 1.54 L644.72 0.88 L642.98 0.31 L641.21 -0.18 L639.43 -0.58 L637.62 -0.90 L635.81 -1.12 L633.98 -1.26 L632.15 -1.30 L590.45 -1.30 L588.62 -1.26 L586.79 -1.12ZM632.72 12.42 L634.01 12.71 L635.29 13.06 L636.55 13.48 L637.78 13.96 L638.99 14.49 L640.18 15.09 L641.33 15.74 L642.45 16.45 L643.53 17.21 L644.58 18.03 L645.58 18.89 L646.54 19.81 L647.46 20.77 L648.32 21.77 L649.14 22.82 L649.90 23.90 L650.61 25.02 L651.26 26.17 L651.86 27.36 L652.39 28.57 L652.87 29.80 L653.29 31.06 L653.64 32.34 L653.93 33.63 L654.16 34.94 L654.32 36.25 L654.42 37.58 L654.45 38.90 L654.45 61.10 L654.42 62.42 L654.32 63.75 L654.16 65.06 L653.93 66.37 L653.64 67.66 L653.29 68.94 L652.87 70.20 L652.39 71.43 L651.86 72.64 L651.26 73.83 L650.61 74.98 L649.90 76.10 L649.14 77.18 L648.32 78.23 L647.46 79.23 L646.54 80.19 L645.58 81.11 L644.58 81.97 L643.53 82.79 L642.45 83.55 L641.33 84.26 L640.18 84.91 L638.99 85.51 L637.78 86.04 L636.55 86.52 L635.29 86.94 L634.01 87.29 L632.72 87.58 L631.41 87.81 L630.10 87.97 L628.77 88.07 L627.45 88.10 L595.15 88.10 L593.83 88.07 L592.50 87.97 L591.19 87.81 L589.88 87.58 L588.59 87.29 L587.31 86.94 L586.05 86.52 L584.82 86.04 L583.61 85.51 L582.42 84.91 L581.27 84.26 L580.15 83.55 L579.07 82.79 L578.02 81.97 L577.02 81.11 L576.06 80.19 L575.14 79.23 L574.28 78.23 L573.46 77.18 L572.70 76.10 L571.99 74.98 L571.34 73.83 L570.74 72.64 L570.21 71.43 L569.73 70.20 L569.31 68.94 L568.96 67.66 L568.67 66.37 L568.44 65.06 L568.28 63.75 L568.18 62.42 L568.15 61.10 L568.15 38.90 L568.18 37.58 L568.28 36.25 L568.44 34.94 L568.67 33.63 L568.96 32.34 L569.31 31.06 L569.73 29.80 L570.21 28.57 L570.74 27.36 L571.34 26.17 L571.99 25.02 L572.70 23.90 L573.46 22.82 L574.28 21.77 L575.14 20.77 L576.06 19.81 L577.02 18.89 L578.02 18.03 L579.07 17.21 L580.15 16.45 L581.27 15.74 L582.42 15.09 L583.61 14.49 L584.82 13.96 L586.05 13.48 L587.31 13.06 L588.59 12.71 L589.88 12.42 L591.19 12.19 L592.50 12.03 L593.83 11.93 L595.15 11.90 L627.45 11.90 L628.77 11.93 L630.10 12.03 L631.41 12.19ZM786.30 0.00 L771.30 0.00 L771.30 79.86 L712.11 0.00 L694.30 0.00 L694.30 100.00 L709.30 100.00 L709.30 20.14 L768.49 100.00 L786.30 100.00ZM864.90 54.19 L911.18 0.00 L892.44 0.00 L860.84 37.00 L853.96 37.00 L822.36 0.00 L803.62 0.00 L849.90 54.19 L849.90 100.00 L864.90 100.00Z" fill-rule="evenodd"/></svg></div>
+  <div class="fine"><span>© 2026 Antimony</span><a href="https://eoinforker.github.io/orbe-site/">Orbe ↗</a></div>
 </footer>
-
 <script>
 (() => {
-  // the navigation takes the tone of the section under it
-  const tones = [...document.querySelectorAll("[data-tone]:not(body)")];
-  const probe = () => { const y = 34; const s = tones.find(el => { const r = el.getBoundingClientRect(); return r.top <= y && r.bottom > y; }); document.body.dataset.tone = s ? s.dataset.tone : "light"; };
-  addEventListener("scroll", probe, { passive: true }); addEventListener("resize", probe); probe();
-  // the index
-  const btn = document.getElementById("toggle"), label = document.getElementById("tl"), idx = document.getElementById("index");
-  const set = open => { document.body.classList.toggle("open", open); btn.setAttribute("aria-expanded", open); label.textContent = open ? "Close" : "Index"; document.documentElement.style.overflow = open ? "hidden" : ""; if (open) idx.querySelector(".entries a").focus({ preventScroll: true }); };
-  btn.addEventListener("click", () => set(!document.body.classList.contains("open")));
-  addEventListener("keydown", e => { if (e.key === "Escape" && document.body.classList.contains("open")) { set(false); btn.focus(); } });
-  idx.querySelectorAll(".entries a").forEach(a => {
-    const show = () => { idx.querySelectorAll("[data-p]").forEach(el => el.classList.toggle("on", el.dataset.p === a.dataset.p)); };
-    a.addEventListener("mouseenter", show); a.addEventListener("focus", show);
-    a.addEventListener("click", () => { if (a.getAttribute("href").startsWith("#")) set(false); });
-  });
+const c = document.getElementById("px"), x = c.getContext("2d"), still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const FACETS = [ { p: [[50,5],[22,29],[22,71],[50,15]], col: "#16201E" }, { p: [[78,71],[78,29],[50,5],[50,15]], col: "#94E6FF" }, { p: [[50,15],[22,71],[50,58],[78,71]], col: "#2C3A37" }, { p: [[22,71],[50,95],[78,71],[50,58]], col: "#1E2A27" } ];
+const LINES = [[[22,71],[50,15]], [[50,15],[78,71]], [[22,71],[50,58]], [[50,58],[78,71]], [[50,2],[50,15]]];
+const inP = (u, v, p) => { let k = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [a, b] = p[i], [d, e] = p[j]; if ((b > v) !== (e > v) && u < (d - a) * (v - b) / (e - b) + a) k = !k; } return k; };
+const sd = (u, v, [[a, b], [d, e]]) => { const dx = d - a, dy = e - b, t = Math.max(0, Math.min(1, ((u - a) * dx + (v - b) * dy) / (dx * dx + dy * dy))); return Math.hypot(u - a - t * dx, v - b - t * dy); };
+let W, H, cs, cells = [], t0 = performance.now(), mx = -1e9, my = -1e9;
+function build() {
+  const r = c.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); W = r.width; H = r.height; c.width = W * d; c.height = H * d; x.setTransform(d, 0, 0, d, 0, 0);
+  const size = Math.min(W * 0.92, H * 0.9), ox = W / 2 - size / 2, oy = H / 2 - size / 2;
+  cs = Math.max(5, Math.round(size / 60)); cells = [];
+  for (let gy = 0; gy < size; gy += cs) for (let gx = 0; gx < size; gx += cs) {
+    const u = (gx + cs / 2) / size * 100, v = (gy + cs / 2) / size * 100; let col = null;
+    if (LINES.some(s => sd(u, v, s) < 1.25)) col = "#F2F1EC"; else for (const f of FACETS) if (inP(u, v, f.p)) { col = f.col; break; }
+    if (col) cells.push({ x: ox + gx, y: oy + gy, col, d: 1.4 + Math.random() * 0.9 + (v / 100) * 0.7, n: Math.random() * 20 });
+  }
+}
+function frame(now) {
+  const t = (now - t0) / 1000; x.clearRect(0, 0, W, H);
+  for (const k of cells) {
+    const a = still ? 1 : Math.max(0, Math.min(1, (t - k.d) / 0.25)); if (a <= 0) continue;
+    const near = Math.hypot(k.x - mx, k.y - my) < cs * 6, flick = !still && t > 4 && Math.sin(t * 3 + k.n * 7) > 0.995, s = cs * a - 1;
+    x.fillStyle = a < 1 ? "#F2F1EC" : (near || flick) ? (k.col === "#94E6FF" ? "#F2F1EC" : "#94E6FF") : k.col;
+    x.fillRect(k.x + (cs - s) / 2 + (near ? (Math.random() - .5) * 2 : 0), k.y + (cs - s) / 2, s, s);
+  }
+  requestAnimationFrame(frame);
+}
+c.addEventListener("pointermove", e => { const r = c.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; });
+c.addEventListener("pointerleave", () => mx = my = -1e9);
+new ResizeObserver(build).observe(c); build(); requestAnimationFrame(frame);
 })();
 </script>
-</body>
+
 </html>
