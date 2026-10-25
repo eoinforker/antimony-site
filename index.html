@@ -1,123 +1,252 @@
 <!doctype html>
-<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#060808">
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#050707">
 <meta name="description" content="Antimony builds software for the people who make the work. Makers of Orbe.">
-<meta property="og:title" content="Antimony"><meta property="og:image" content="assets/og-image-1200x630.png"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:title" content="Antimony"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <title>Antimony</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap">
 <style>
-/* The Section 9 opening (gradation bands, the crystal built from pixels), landing in a ruled ledger after Initialized:
-   one grid of hairlines, solid label bars, hatched and dotted cells for texture, the wordmark top left,
-   and the wordmark again, the full width of the page, as the foot. */
-:root { --ink: #060808; --paper: #F2F1EC; --rule: rgba(242,241,236,.2); --text: #C7CECB; --dim: #7C8885; --sky: #94E6FF; --cobalt: #2448FF;
-  --sans: "Archivo", "Helvetica Neue", Arial, sans-serif; --g: max(18px, env(safe-area-inset-left, 0px)); --gr: max(18px, env(safe-area-inset-right, 0px)); color-scheme: dark; }
+/* Everything is drawn by one pixel engine: the crystal in the opening, the Orbe product view, and the wordmark at the foot.
+   Around it, panels type themselves in and sit inside corner brackets (after Arasaka), and the list of what we make is
+   a ruled table with filters (after fal's careers page). One mono face, one condensed face, one accent. */
+@font-face { font-family: "Commit Mono"; src: url("assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 400 600; font-display: block; }
+:root { --ink: #050707; --ink-2: #0C1211; --rule: rgba(242,241,236,.16); --text: #C4CCC9; --dim: #6D7A77; --paper: #F2F1EC; --sky: #94E6FF; --cobalt: #2448FF;
+  --mono: "Commit Mono", ui-monospace, Menlo, monospace; --cond: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --g: max(22px, env(safe-area-inset-left, 0px)); --gr: max(22px, env(safe-area-inset-right, 0px)); color-scheme: dark; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { background: var(--ink); } body { background: var(--ink); color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
-a { color: inherit; text-decoration: none; }
+html { background: var(--ink); } body { background: var(--ink); color: var(--text); font: 400 14px/1.6 var(--mono); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: inherit; text-decoration: none; } button { all: unset; cursor: pointer; }
 :focus-visible { outline: 1px solid var(--sky); outline-offset: 3px; }
+::selection { background: var(--sky); color: var(--ink); }
+.up { text-transform: uppercase; letter-spacing: .08em; }
+.k { color: var(--sky); }
 /* the opening */
-.load { position: fixed; inset: 0; z-index: 30; display: grid; grid-template-columns: repeat(6, 1fr); pointer-events: none; }
+.load { position: fixed; inset: 0; z-index: 50; display: grid; grid-template-columns: repeat(6, 1fr); pointer-events: none; }
 .load i { background: linear-gradient(180deg, var(--ink), var(--cobalt) 40%, var(--sky) 62%, var(--paper) 80%, var(--ink)); background-size: 100% 300%; animation: band 1.4s cubic-bezier(.6,0,.2,1) forwards; }
 .load i:nth-child(2) { animation-delay: .05s } .load i:nth-child(3) { animation-delay: .1s } .load i:nth-child(4) { animation-delay: .15s } .load i:nth-child(5) { animation-delay: .2s } .load i:nth-child(6) { animation-delay: .25s }
 @keyframes band { 0% { background-position: 0 0 } 70% { background-position: 0 100%; transform: none } 100% { background-position: 0 100%; transform: translateY(-101%) } }
-/* the masthead: the wordmark alone */
-.mast { padding: calc(22px + env(safe-area-inset-top, 0px)) var(--gr) 18px var(--g); }
-.mast svg { height: 13px; width: auto; fill: var(--paper); display: block; }
-/* the ledger */
-.ledger { margin-inline: var(--g) var(--gr); display: grid; grid-template-columns: 4fr 5fr 3fr; grid-template-rows: auto 1fr auto; grid-template-areas: 'orbe art letters' 'h1 art h2' 'about art h2'; min-height: calc(100svh - 70px - env(safe-area-inset-top, 0px));
-  border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
-.cell { border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); position: relative; min-width: 0; }
-.cell::after { content: ""; position: absolute; inset: -1px; background: var(--ink); transform-origin: 50% 100%; animation: draw .7s cubic-bezier(.2,.7,.2,1) var(--d, 0s) forwards; pointer-events: none; z-index: 3; }
-@keyframes draw { to { transform: scaleY(0) } }
-.bar { display: block; background: var(--paper); color: var(--ink); font: 700 11px/1 var(--sans); font-stretch: 112%; letter-spacing: .12em; text-transform: uppercase; padding: 9px 14px; }
-.pad { padding: 18px 16px 22px; display: grid; gap: 14px; align-content: start; }
-.title { font-weight: 700; font-stretch: 70%; font-size: clamp(34px, 4vw, 66px); line-height: .9; text-transform: uppercase; color: var(--paper); letter-spacing: -.005em; text-wrap: balance; }
-.body { font: 400 16px/1.5 var(--sans); max-width: 34em; color: var(--text); }
-.more { font: 700 11px var(--sans); font-stretch: 112%; letter-spacing: .14em; text-transform: uppercase; color: var(--paper); display: inline-flex; gap: 8px; align-items: center; justify-self: start; border-bottom: 1px solid var(--paper); padding-bottom: 3px; }
-.more:hover { color: var(--sky); border-color: var(--sky); }
-.hatch { background-image: repeating-linear-gradient(135deg, rgba(242,241,236,.22) 0 1px, transparent 1px 7px); min-height: 90px; }
-.dots { background-image: radial-gradient(var(--rule) 1px, transparent 1.4px); background-size: 14px 14px; }
-.crystal { grid-area: art; overflow: hidden; }
-.a-orbe { grid-area: orbe } .a-h1 { grid-area: h1 } .a-about { grid-area: about } .a-letters { grid-area: letters } .a-h2 { grid-area: h2 }
-.crystal canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.entry { display: grid; gap: 6px; padding: 14px 16px; border-bottom: 1px solid var(--rule); }
-.entry:last-child { border-bottom: 0; }
-.chip { justify-self: start; font: 600 10.5px var(--sans); font-stretch: 112%; letter-spacing: .1em; text-transform: uppercase; border: 1px solid var(--rule); border-radius: 30px; padding: 4px 9px; color: var(--dim); }
-.entry b { font: 600 19px/1.15 var(--sans); color: var(--paper); }
-.entry span { font-size: 14.5px; color: var(--dim); }
-a.entry:hover b { color: var(--sky); }
-/* the foot */
-.foot { margin: 0 var(--gr) 0 var(--g); border-left: 1px solid var(--rule); border-right: 1px solid var(--rule); }
-.foot .hatch { min-height: 56px; border-bottom: 1px solid var(--rule); }
-.foot svg { display: block; width: 100%; height: auto; fill: var(--paper); padding: 4vw 2.2vw 2.6vw; }
-.fine { margin: 0 var(--gr) 0 var(--g); border: 1px solid var(--rule); border-top: 0; display: flex; justify-content: space-between; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); font: 500 11px var(--sans); font-stretch: 112%; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+/* the mark: the name, typed, with the cursor */
+.mark { position: fixed; z-index: 20; top: calc(20px + env(safe-area-inset-top, 0px)); left: var(--g); font: 600 14px var(--mono); letter-spacing: .22em; color: var(--paper); mix-blend-mode: difference; }
+.mark::after { content: ""; display: inline-block; width: .62em; height: 1.05em; margin-left: .3em; background: var(--sky); vertical-align: -.16em; animation: blink 1.06s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0 } }
+/* sections */
+section { position: relative; }
+.hero { height: 100svh; min-height: 560px; }
+.hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hero .copy { position: absolute; left: var(--g); right: var(--gr); bottom: calc(38px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 18px; max-width: 760px; }
+.type { white-space: pre-wrap; min-height: 1.6em; }
+.type::after { content: "▌"; color: var(--sky); animation: blink 1.06s steps(1) infinite; }
+.type.done::after { content: ""; }
+.cond { font-family: var(--cond); font-weight: 700; font-stretch: 70%; text-transform: uppercase; line-height: .88; letter-spacing: -.005em; color: var(--paper); }
+.hero h1 { font-size: clamp(46px, 7.4vw, 122px); }
+.reveal { display: block; overflow: hidden; }
+.reveal > span { display: block; transform: translateY(105%); transition: transform .9s cubic-bezier(.2,.7,.2,1); }
+.in .reveal > span { transform: none; }
+.in .reveal:nth-child(2) > span { transition-delay: .08s } .in .reveal:nth-child(3) > span { transition-delay: .16s }
+/* the brackets */
+.bracket { position: relative; padding: 18px 22px; }
+.bracket::before, .bracket::after, .bracket > .c1, .bracket > .c2 { content: ""; position: absolute; width: 12px; height: 12px; border: 0 solid var(--paper); }
+.bracket::before { left: 0; top: 0; border-width: 1px 0 0 1px; } .bracket::after { right: 0; top: 0; border-width: 1px 1px 0 0; }
+.bracket > .c1 { left: 0; bottom: 0; border-width: 0 0 1px 1px; } .bracket > .c2 { right: 0; bottom: 0; border-width: 0 1px 1px 0; }
+/* Orbe */
+.orbe { padding: 16vh var(--gr) 14vh var(--g); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 90px); align-items: center; }
+.frame { position: relative; border: 1px solid var(--rule); aspect-ratio: 844 / 900; max-width: 620px; width: 100%; justify-self: end; background: var(--ink-2); }
+.frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.frame { margin-bottom: 30px; }
+.frame figcaption { position: absolute; left: 0; right: 0; top: calc(100% + 10px); color: var(--dim); font-size: 12px; line-height: 1.4; }
+.orbe h2 { font-size: clamp(40px, 5.4vw, 92px); }
+.orbe h2 .k { color: var(--sky); }
+.orbe .body { max-width: 34em; color: var(--text); }
+.spec { display: grid; grid-template-columns: 110px 1fr; column-gap: 18px; row-gap: 4px; font-size: 12.5px; margin-top: 4px; }
+.spec dt { color: var(--dim); } .spec dd { color: var(--paper); }
+.go { font-size: 13px; color: var(--sky); border-bottom: 1px solid var(--sky); justify-self: start; padding-bottom: 2px; }
+.go:hover { color: var(--paper); border-color: var(--paper); }
+.stack { display: grid; gap: 22px; align-content: center; }
+/* the table */
+.make { padding: 6vh var(--gr) 16vh var(--g); }
+.make h2 { font-size: clamp(36px, 4.4vw, 74px); }
+.filters { display: flex; gap: 6px; flex-wrap: wrap; margin: 30px 0 8px; }
+.filters button { font-size: 12px; padding: 6px 11px; border: 1px solid var(--rule); color: var(--dim); }
+.filters button[aria-pressed="true"] { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+.filters button:hover { color: var(--paper); }
+.rows { border-top: 1px solid var(--rule); }
+.row { display: grid; grid-template-columns: 140px minmax(0, 1fr) 200px 120px; gap: 20px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid var(--rule); transition: background .25s; }
+.row[hidden] { display: none; }
+.row .kind { color: var(--dim); font-size: 12px; }
+.row b { font: 600 clamp(20px, 1.8vw, 26px)/1.2 var(--cond); font-stretch: 100%; color: var(--paper); text-transform: none; letter-spacing: -.01em; }
+.row p { font-size: 13px; color: var(--dim); margin-top: 6px; }
+.row .st { font-size: 12px; }
+.row .act { font-size: 12px; color: var(--sky); justify-self: end; }
+a.row:hover { background: rgba(148,230,255,.05); }
+a.row:hover b { color: var(--sky); }
+/* the foot: the name in pixels */
+.foot { border-top: 1px solid var(--rule); }
+.foot canvas { display: block; width: 100%; height: clamp(120px, 21vw, 360px); }
+.fine { display: flex; justify-content: space-between; gap: 16px; padding: 14px var(--gr) calc(16px + env(safe-area-inset-bottom, 0px)) var(--g); color: var(--dim); font-size: 12px; border-top: 1px solid var(--rule); }
 .fine a:hover { color: var(--paper); }
 @media (max-width: 860px) {
-  .ledger { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: 'art' 'orbe' 'letters' 'about'; min-height: 0; }
-  .crystal { height: 58svh; }
-  .hatch.side { display: none; }
+  .orbe { grid-template-columns: 1fr; padding-top: 10vh; } .frame { justify-self: stretch; max-width: none; margin-bottom: 44px; }
+  .row { grid-template-columns: 1fr auto; } .row .kind { grid-column: 1 / -1; } .row .st { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { .load { display: none; } .cell::after { display: none; } }
+@media (prefers-reduced-motion: reduce) { .load { display: none; } .reveal > span { transform: none; transition: none; } .type::after, .mark::after { animation: none; } }
 </style>
+
 <div class="load" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-<header class="mast"><a href="./" aria-label="Antimony"><svg viewBox="-8 -4 924 110" role="img" aria-label="Antimony"><path d="M83.90 65.89 L100.94 100.00 L116.87 100.00 L96.58 59.38 L94.37 54.96 L66.91 0.00 L43.49 0.00 L-6.47 100.00 L9.46 100.00 L26.50 65.89 L55.20 52.00ZM37.04 44.79 L55.20 8.44 L73.36 44.79 L55.20 36.00ZM225.90 0.00 L210.90 0.00 L210.90 79.86 L151.71 0.00 L133.90 0.00 L133.90 100.00 L148.90 100.00 L148.90 20.14 L208.09 100.00 L225.90 100.00ZM248.40 0.00 L248.40 13.20 L288.05 13.20 L288.05 100.00 L303.05 100.00 L303.05 13.20 L342.70 13.20 L342.70 0.00 L303.05 0.00 L288.05 0.00ZM380.20 100.00 L380.20 0.00 L365.20 0.00 L365.20 100.00ZM509.48 0.00 L468.50 48.91 L427.52 0.00 L408.70 0.00 L408.70 100.00 L423.70 100.00 L423.70 17.63 L468.50 71.09 L513.30 17.63 L513.30 100.00 L528.30 100.00 L528.30 0.00ZM584.98 -0.90 L583.17 -0.58 L581.39 -0.18 L579.62 0.31 L577.88 0.88 L576.18 1.54 L574.50 2.28 L572.87 3.10 L571.27 4.01 L569.73 4.99 L568.23 6.04 L566.79 7.17 L565.40 8.36 L564.07 9.62 L562.81 10.95 L561.62 12.34 L560.49 13.78 L559.44 15.28 L558.46 16.82 L557.55 18.42 L556.73 20.05 L555.99 21.73 L555.33 23.43 L554.76 25.17 L554.27 26.94 L553.87 28.72 L553.55 30.53 L553.33 32.34 L553.19 34.17 L553.15 36.00 L553.15 64.00 L553.19 65.83 L553.33 67.66 L553.55 69.47 L553.87 71.28 L554.27 73.06 L554.76 74.83 L555.33 76.57 L555.99 78.27 L556.73 79.95 L557.55 81.58 L558.46 83.18 L559.44 84.72 L560.49 86.22 L561.62 87.66 L562.81 89.05 L564.07 90.38 L565.40 91.64 L566.79 92.83 L568.23 93.96 L569.73 95.01 L571.27 95.99 L572.87 96.90 L574.50 97.72 L576.18 98.46 L577.88 99.12 L579.62 99.69 L581.39 100.18 L583.17 100.58 L584.98 100.90 L586.79 101.12 L588.62 101.26 L590.45 101.30 L632.15 101.30 L633.98 101.26 L635.81 101.12 L637.62 100.90 L639.43 100.58 L641.21 100.18 L642.98 99.69 L644.72 99.12 L646.42 98.46 L648.10 97.72 L649.73 96.90 L651.33 95.99 L652.87 95.01 L654.37 93.96 L655.81 92.83 L657.20 91.64 L658.53 90.38 L659.79 89.05 L660.98 87.66 L662.11 86.22 L663.16 84.72 L664.14 83.18 L665.05 81.58 L665.87 79.95 L666.61 78.27 L667.27 76.57 L667.84 74.83 L668.33 73.06 L668.73 71.28 L669.05 69.47 L669.27 67.66 L669.41 65.83 L669.45 64.00 L669.45 36.00 L669.41 34.17 L669.27 32.34 L669.05 30.53 L668.73 28.72 L668.33 26.94 L667.84 25.17 L667.27 23.43 L666.61 21.73 L665.87 20.05 L665.05 18.42 L664.14 16.82 L663.16 15.28 L662.11 13.78 L660.98 12.34 L659.79 10.95 L658.53 9.62 L657.20 8.36 L655.81 7.17 L654.37 6.04 L652.87 4.99 L651.33 4.01 L649.73 3.10 L648.10 2.28 L646.42 1.54 L644.72 0.88 L642.98 0.31 L641.21 -0.18 L639.43 -0.58 L637.62 -0.90 L635.81 -1.12 L633.98 -1.26 L632.15 -1.30 L590.45 -1.30 L588.62 -1.26 L586.79 -1.12ZM632.72 12.42 L634.01 12.71 L635.29 13.06 L636.55 13.48 L637.78 13.96 L638.99 14.49 L640.18 15.09 L641.33 15.74 L642.45 16.45 L643.53 17.21 L644.58 18.03 L645.58 18.89 L646.54 19.81 L647.46 20.77 L648.32 21.77 L649.14 22.82 L649.90 23.90 L650.61 25.02 L651.26 26.17 L651.86 27.36 L652.39 28.57 L652.87 29.80 L653.29 31.06 L653.64 32.34 L653.93 33.63 L654.16 34.94 L654.32 36.25 L654.42 37.58 L654.45 38.90 L654.45 61.10 L654.42 62.42 L654.32 63.75 L654.16 65.06 L653.93 66.37 L653.64 67.66 L653.29 68.94 L652.87 70.20 L652.39 71.43 L651.86 72.64 L651.26 73.83 L650.61 74.98 L649.90 76.10 L649.14 77.18 L648.32 78.23 L647.46 79.23 L646.54 80.19 L645.58 81.11 L644.58 81.97 L643.53 82.79 L642.45 83.55 L641.33 84.26 L640.18 84.91 L638.99 85.51 L637.78 86.04 L636.55 86.52 L635.29 86.94 L634.01 87.29 L632.72 87.58 L631.41 87.81 L630.10 87.97 L628.77 88.07 L627.45 88.10 L595.15 88.10 L593.83 88.07 L592.50 87.97 L591.19 87.81 L589.88 87.58 L588.59 87.29 L587.31 86.94 L586.05 86.52 L584.82 86.04 L583.61 85.51 L582.42 84.91 L581.27 84.26 L580.15 83.55 L579.07 82.79 L578.02 81.97 L577.02 81.11 L576.06 80.19 L575.14 79.23 L574.28 78.23 L573.46 77.18 L572.70 76.10 L571.99 74.98 L571.34 73.83 L570.74 72.64 L570.21 71.43 L569.73 70.20 L569.31 68.94 L568.96 67.66 L568.67 66.37 L568.44 65.06 L568.28 63.75 L568.18 62.42 L568.15 61.10 L568.15 38.90 L568.18 37.58 L568.28 36.25 L568.44 34.94 L568.67 33.63 L568.96 32.34 L569.31 31.06 L569.73 29.80 L570.21 28.57 L570.74 27.36 L571.34 26.17 L571.99 25.02 L572.70 23.90 L573.46 22.82 L574.28 21.77 L575.14 20.77 L576.06 19.81 L577.02 18.89 L578.02 18.03 L579.07 17.21 L580.15 16.45 L581.27 15.74 L582.42 15.09 L583.61 14.49 L584.82 13.96 L586.05 13.48 L587.31 13.06 L588.59 12.71 L589.88 12.42 L591.19 12.19 L592.50 12.03 L593.83 11.93 L595.15 11.90 L627.45 11.90 L628.77 11.93 L630.10 12.03 L631.41 12.19ZM786.30 0.00 L771.30 0.00 L771.30 79.86 L712.11 0.00 L694.30 0.00 L694.30 100.00 L709.30 100.00 L709.30 20.14 L768.49 100.00 L786.30 100.00ZM864.90 54.19 L911.18 0.00 L892.44 0.00 L860.84 37.00 L853.96 37.00 L822.36 0.00 L803.62 0.00 L849.90 54.19 L849.90 100.00 L864.90 100.00Z" fill-rule="evenodd"/></svg></a></header>
-<main class="ledger">
-  <section class="cell a-orbe" style="--d:1.35s">
-    <span class="bar">Orbe</span>
-    <div class="pad">
-      <h1 class="title">The creator's side of every sponsorship deal.</h1>
-      <p class="body">Brands are getting agents. Orbe is the creator's: it negotiates inside their rules, waits for one tap on anything binding, and holds the money until the work is delivered.</p>
-      <a class="more" href="https://eoinforker.github.io/orbe-site/">Visit Orbe ↗</a>
-    </div>
-  </section>
-  <div class="cell hatch side a-h1" style="--d:1.45s"></div>
-  <section class="cell a-about" style="--d:1.55s">
-    <span class="bar">Antimony</span>
-    <div class="pad"><p class="body">Antimony builds software for the people who make the work, and sits on their side of the table. Element 51 is almost never found alone; alchemists used it to purify gold.</p></div>
-  </section>
-  <div class="cell crystal dots" style="--d:1.3s"><canvas id="px" aria-label="The Antimony crystal, built from pixels"></canvas></div>
-  <section class="cell a-letters" style="--d:1.5s">
-    <span class="bar">Letters</span>
-    <div class="entry"><span class="chip">In preparation</span><b>Antimony 001: Never alone</b><span>Why we are building Orbe, and why the company is called Antimony.</span></div>
-  </section>
-  <div class="cell hatch side a-h2" style="--d:1.6s"></div>
-</main>
-<footer>
-  <div class="foot"><div class="hatch"></div><svg viewBox="-8 -4 924 110" role="img" aria-label="Antimony"><path d="M83.90 65.89 L100.94 100.00 L116.87 100.00 L96.58 59.38 L94.37 54.96 L66.91 0.00 L43.49 0.00 L-6.47 100.00 L9.46 100.00 L26.50 65.89 L55.20 52.00ZM37.04 44.79 L55.20 8.44 L73.36 44.79 L55.20 36.00ZM225.90 0.00 L210.90 0.00 L210.90 79.86 L151.71 0.00 L133.90 0.00 L133.90 100.00 L148.90 100.00 L148.90 20.14 L208.09 100.00 L225.90 100.00ZM248.40 0.00 L248.40 13.20 L288.05 13.20 L288.05 100.00 L303.05 100.00 L303.05 13.20 L342.70 13.20 L342.70 0.00 L303.05 0.00 L288.05 0.00ZM380.20 100.00 L380.20 0.00 L365.20 0.00 L365.20 100.00ZM509.48 0.00 L468.50 48.91 L427.52 0.00 L408.70 0.00 L408.70 100.00 L423.70 100.00 L423.70 17.63 L468.50 71.09 L513.30 17.63 L513.30 100.00 L528.30 100.00 L528.30 0.00ZM584.98 -0.90 L583.17 -0.58 L581.39 -0.18 L579.62 0.31 L577.88 0.88 L576.18 1.54 L574.50 2.28 L572.87 3.10 L571.27 4.01 L569.73 4.99 L568.23 6.04 L566.79 7.17 L565.40 8.36 L564.07 9.62 L562.81 10.95 L561.62 12.34 L560.49 13.78 L559.44 15.28 L558.46 16.82 L557.55 18.42 L556.73 20.05 L555.99 21.73 L555.33 23.43 L554.76 25.17 L554.27 26.94 L553.87 28.72 L553.55 30.53 L553.33 32.34 L553.19 34.17 L553.15 36.00 L553.15 64.00 L553.19 65.83 L553.33 67.66 L553.55 69.47 L553.87 71.28 L554.27 73.06 L554.76 74.83 L555.33 76.57 L555.99 78.27 L556.73 79.95 L557.55 81.58 L558.46 83.18 L559.44 84.72 L560.49 86.22 L561.62 87.66 L562.81 89.05 L564.07 90.38 L565.40 91.64 L566.79 92.83 L568.23 93.96 L569.73 95.01 L571.27 95.99 L572.87 96.90 L574.50 97.72 L576.18 98.46 L577.88 99.12 L579.62 99.69 L581.39 100.18 L583.17 100.58 L584.98 100.90 L586.79 101.12 L588.62 101.26 L590.45 101.30 L632.15 101.30 L633.98 101.26 L635.81 101.12 L637.62 100.90 L639.43 100.58 L641.21 100.18 L642.98 99.69 L644.72 99.12 L646.42 98.46 L648.10 97.72 L649.73 96.90 L651.33 95.99 L652.87 95.01 L654.37 93.96 L655.81 92.83 L657.20 91.64 L658.53 90.38 L659.79 89.05 L660.98 87.66 L662.11 86.22 L663.16 84.72 L664.14 83.18 L665.05 81.58 L665.87 79.95 L666.61 78.27 L667.27 76.57 L667.84 74.83 L668.33 73.06 L668.73 71.28 L669.05 69.47 L669.27 67.66 L669.41 65.83 L669.45 64.00 L669.45 36.00 L669.41 34.17 L669.27 32.34 L669.05 30.53 L668.73 28.72 L668.33 26.94 L667.84 25.17 L667.27 23.43 L666.61 21.73 L665.87 20.05 L665.05 18.42 L664.14 16.82 L663.16 15.28 L662.11 13.78 L660.98 12.34 L659.79 10.95 L658.53 9.62 L657.20 8.36 L655.81 7.17 L654.37 6.04 L652.87 4.99 L651.33 4.01 L649.73 3.10 L648.10 2.28 L646.42 1.54 L644.72 0.88 L642.98 0.31 L641.21 -0.18 L639.43 -0.58 L637.62 -0.90 L635.81 -1.12 L633.98 -1.26 L632.15 -1.30 L590.45 -1.30 L588.62 -1.26 L586.79 -1.12ZM632.72 12.42 L634.01 12.71 L635.29 13.06 L636.55 13.48 L637.78 13.96 L638.99 14.49 L640.18 15.09 L641.33 15.74 L642.45 16.45 L643.53 17.21 L644.58 18.03 L645.58 18.89 L646.54 19.81 L647.46 20.77 L648.32 21.77 L649.14 22.82 L649.90 23.90 L650.61 25.02 L651.26 26.17 L651.86 27.36 L652.39 28.57 L652.87 29.80 L653.29 31.06 L653.64 32.34 L653.93 33.63 L654.16 34.94 L654.32 36.25 L654.42 37.58 L654.45 38.90 L654.45 61.10 L654.42 62.42 L654.32 63.75 L654.16 65.06 L653.93 66.37 L653.64 67.66 L653.29 68.94 L652.87 70.20 L652.39 71.43 L651.86 72.64 L651.26 73.83 L650.61 74.98 L649.90 76.10 L649.14 77.18 L648.32 78.23 L647.46 79.23 L646.54 80.19 L645.58 81.11 L644.58 81.97 L643.53 82.79 L642.45 83.55 L641.33 84.26 L640.18 84.91 L638.99 85.51 L637.78 86.04 L636.55 86.52 L635.29 86.94 L634.01 87.29 L632.72 87.58 L631.41 87.81 L630.10 87.97 L628.77 88.07 L627.45 88.10 L595.15 88.10 L593.83 88.07 L592.50 87.97 L591.19 87.81 L589.88 87.58 L588.59 87.29 L587.31 86.94 L586.05 86.52 L584.82 86.04 L583.61 85.51 L582.42 84.91 L581.27 84.26 L580.15 83.55 L579.07 82.79 L578.02 81.97 L577.02 81.11 L576.06 80.19 L575.14 79.23 L574.28 78.23 L573.46 77.18 L572.70 76.10 L571.99 74.98 L571.34 73.83 L570.74 72.64 L570.21 71.43 L569.73 70.20 L569.31 68.94 L568.96 67.66 L568.67 66.37 L568.44 65.06 L568.28 63.75 L568.18 62.42 L568.15 61.10 L568.15 38.90 L568.18 37.58 L568.28 36.25 L568.44 34.94 L568.67 33.63 L568.96 32.34 L569.31 31.06 L569.73 29.80 L570.21 28.57 L570.74 27.36 L571.34 26.17 L571.99 25.02 L572.70 23.90 L573.46 22.82 L574.28 21.77 L575.14 20.77 L576.06 19.81 L577.02 18.89 L578.02 18.03 L579.07 17.21 L580.15 16.45 L581.27 15.74 L582.42 15.09 L583.61 14.49 L584.82 13.96 L586.05 13.48 L587.31 13.06 L588.59 12.71 L589.88 12.42 L591.19 12.19 L592.50 12.03 L593.83 11.93 L595.15 11.90 L627.45 11.90 L628.77 11.93 L630.10 12.03 L631.41 12.19ZM786.30 0.00 L771.30 0.00 L771.30 79.86 L712.11 0.00 L694.30 0.00 L694.30 100.00 L709.30 100.00 L709.30 20.14 L768.49 100.00 L786.30 100.00ZM864.90 54.19 L911.18 0.00 L892.44 0.00 L860.84 37.00 L853.96 37.00 L822.36 0.00 L803.62 0.00 L849.90 54.19 L849.90 100.00 L864.90 100.00Z" fill-rule="evenodd"/></svg></div>
-  <div class="fine"><span>© 2026 Antimony</span><a href="https://eoinforker.github.io/orbe-site/">Orbe ↗</a></div>
+<a class="mark" href="#top" aria-label="Antimony">ANTIMONY</a>
+
+<section class="hero" id="top">
+  <canvas id="c-crystal" aria-label="The Antimony crystal, built from pixels"></canvas>
+  <div class="copy">
+    <span class="type up" data-type="ANTIMONY //: MAKERS OF ORBE" data-at="1.9"></span>
+    <h1 class="cond"><span class="reveal"><span>Software for</span></span><span class="reveal"><span>the people who</span></span><span class="reveal"><span>make the work.</span></span></h1>
+  </div>
+</section>
+
+<section class="orbe" id="orbe">
+  <figure class="frame"><canvas id="c-orbe" aria-label="Orbe rating a made-up creator's uploads against channels their size"></canvas><figcaption>Orbe, rating a made-up creator against channels their size.</figcaption></figure>
+  <div class="stack">
+    <span class="type up" data-type="001 //: ORBE"></span>
+    <h2 class="cond"><span class="reveal"><span>The creator's side</span></span><span class="reveal"><span class="k">of every sponsorship deal.</span></span></h2>
+    <p class="body">Brands are getting agents. Orbe is the creator's: it negotiates inside their own rules, waits for one tap on anything binding, and holds the brand's money until the work is delivered.</p>
+    <dl class="spec up">
+      <dt>For</dt><dd>Creators and their managers</dd>
+      <dt>Does</dt><dd>Prices, negotiates, holds payment</dd>
+      <dt>Costs</dt><dd>Nothing for creators</dd>
+      <dt>Status</dt><dd>In preview</dd>
+    </dl>
+    <a class="go up" href="https://eoinforker.github.io/orbe-site/">~ Visit Orbe ↗</a>
+  </div>
+</section>
+
+<section class="make" id="make">
+  <span class="type up" data-type="002 //: WHAT WE MAKE"></span>
+  <h2 class="cond" style="margin-top:14px"><span class="reveal"><span>Products and letters.</span></span></h2>
+  <div class="filters" role="group" aria-label="Show"><button aria-pressed="true" data-f="all">All</button><button aria-pressed="false" data-f="product">Products</button><button aria-pressed="false" data-f="letter">Letters</button></div>
+  <div class="rows">
+    <a class="row" data-k="product" href="https://eoinforker.github.io/orbe-site/"><span class="kind up">Product</span><div><b>Orbe</b><p>The creator's side of every sponsorship deal.</p></div><span class="st up">In preview</span><span class="act up">Visit ↗</span></a>
+    <div class="row" data-k="letter"><span class="kind up">Letter</span><div><b>Antimony 001: Never alone</b><p>Why we are building Orbe, and why the company is called Antimony.</p></div><span class="st up">In preparation</span><span class="act up" style="color:var(--dim)">Soon</span></div>
+    <div class="row" data-k="product"><span class="kind up">Product</span><div><b style="color:var(--dim)">Unannounced</b><p>For the people who make the work.</p></div><span class="st up">In development</span><span class="act up" style="color:var(--dim)">Later</span></div>
+  </div>
+</section>
+
+<footer class="foot">
+  <canvas id="c-name" aria-label="Antimony"></canvas>
+  <div class="fine up"><span>© 2026 Antimony</span><a href="https://eoinforker.github.io/orbe-site/">Orbe ↗</a></div>
 </footer>
+
 <script>
 (() => {
-const c = document.getElementById("px"), x = c.getContext("2d"), still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+"use strict";
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const T0 = performance.now();
+const now = () => (performance.now() - T0) / 1000;
+
+// ── the pixel engine: a canvas of square cells, each with a colour; cells build in when the field starts,
+//    jitter near the pointer, and now and then flick to the accent ──
+function field(canvas, sample, opts = {}) {
+  const x = canvas.getContext("2d"); let W = 0, H = 0, cs = 4, cells = [], start = Infinity, mx = -1e9, my = -1e9, live = false;
+  function build() {
+    const r = canvas.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); if (!r.width) return;
+    W = r.width; H = r.height; canvas.width = Math.round(W * d); canvas.height = Math.round(H * d); x.setTransform(d, 0, 0, d, 0, 0);
+    ({ cs, cells } = sample(W, H));
+  }
+  function draw() {
+    const t = now() - start; x.clearRect(0, 0, W, H);
+    for (const k of cells) {
+      const a = still ? 1 : Math.max(0, Math.min(1, (t - k.d) / 0.22)); if (a <= 0) continue;
+      const near = Math.hypot(k.x - mx, k.y - my) < cs * (opts.reach || 6);
+      const flick = !still && t > 3 && Math.sin(now() * 3 + k.n * 7) > 0.996;
+      const s = cs * a - (opts.gap ?? 1);
+      x.fillStyle = a < 1 ? "#F2F1EC" : (near || flick) ? (k.col === "#94E6FF" ? "#F2F1EC" : "#94E6FF") : k.col;
+      const j = near && !still ? (Math.random() - .5) * cs * .6 : 0;
+      x.fillRect(k.x + (cs - s) / 2 + j, k.y + (cs - s) / 2 + j * .4, s, s);
+    }
+  }
+  canvas.addEventListener("pointermove", e => { const r = canvas.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; });
+  canvas.addEventListener("pointerleave", () => mx = my = -1e9);
+  new ResizeObserver(build).observe(canvas); build();
+  return { rebuild: build, go(delay = 0) { if (start === Infinity) start = now() + delay; live = true; }, draw, get live() { return live; } };
+}
+
+// the crystal
 const FACETS = [ { p: [[50,5],[22,29],[22,71],[50,15]], col: "#16201E" }, { p: [[78,71],[78,29],[50,5],[50,15]], col: "#94E6FF" }, { p: [[50,15],[22,71],[50,58],[78,71]], col: "#2C3A37" }, { p: [[22,71],[50,95],[78,71],[50,58]], col: "#1E2A27" } ];
 const LINES = [[[22,71],[50,15]], [[50,15],[78,71]], [[22,71],[50,58]], [[50,58],[78,71]], [[50,2],[50,15]]];
 const inP = (u, v, p) => { let k = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [a, b] = p[i], [d, e] = p[j]; if ((b > v) !== (e > v) && u < (d - a) * (v - b) / (e - b) + a) k = !k; } return k; };
 const sd = (u, v, [[a, b], [d, e]]) => { const dx = d - a, dy = e - b, t = Math.max(0, Math.min(1, ((u - a) * dx + (v - b) * dy) / (dx * dx + dy * dy))); return Math.hypot(u - a - t * dx, v - b - t * dy); };
-let W, H, cs, cells = [], t0 = performance.now(), mx = -1e9, my = -1e9;
-function build() {
-  const r = c.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); W = r.width; H = r.height; c.width = W * d; c.height = H * d; x.setTransform(d, 0, 0, d, 0, 0);
-  const size = Math.min(W * 0.92, H * 0.9), ox = W / 2 - size / 2, oy = H / 2 - size / 2;
-  cs = Math.max(5, Math.round(size / 60)); cells = [];
+const crystal = field(document.getElementById("c-crystal"), (W, H) => {
+  const narrow = W < 860, size = narrow ? Math.min(W * 1.05, H * 0.56) : Math.min(H * 0.84, W * 0.44);
+  const ox = narrow ? W / 2 - size / 2 : W * 0.74 - size / 2, oy = narrow ? H * 0.1 : H * 0.47 - size / 2, cs = Math.max(5, Math.round(size / (narrow ? 46 : 62))), cells = [];
   for (let gy = 0; gy < size; gy += cs) for (let gx = 0; gx < size; gx += cs) {
     const u = (gx + cs / 2) / size * 100, v = (gy + cs / 2) / size * 100; let col = null;
     if (LINES.some(s => sd(u, v, s) < 1.25)) col = "#F2F1EC"; else for (const f of FACETS) if (inP(u, v, f.p)) { col = f.col; break; }
-    if (col) cells.push({ x: ox + gx, y: oy + gy, col, d: 1.4 + Math.random() * 0.9 + (v / 100) * 0.7, n: Math.random() * 20 });
+    if (col) cells.push({ x: ox + gx, y: oy + gy, col, d: Math.random() * 0.9 + (v / 100) * 0.7, n: Math.random() * 20 });
   }
-}
-function frame(now) {
-  const t = (now - t0) / 1000; x.clearRect(0, 0, W, H);
-  for (const k of cells) {
-    const a = still ? 1 : Math.max(0, Math.min(1, (t - k.d) / 0.25)); if (a <= 0) continue;
-    const near = Math.hypot(k.x - mx, k.y - my) < cs * 6, flick = !still && t > 4 && Math.sin(t * 3 + k.n * 7) > 0.995, s = cs * a - 1;
-    x.fillStyle = a < 1 ? "#F2F1EC" : (near || flick) ? (k.col === "#94E6FF" ? "#F2F1EC" : "#94E6FF") : k.col;
-    x.fillRect(k.x + (cs - s) / 2 + (near ? (Math.random() - .5) * 2 : 0), k.y + (cs - s) / 2, s, s);
+  // a few loose pixels drifting off the crystal's edge, as in fal's scattered clusters
+  for (let i = 0; i < 70; i++) { const a = Math.random() * 6.283, r = size * (0.42 + Math.random() * 0.35); cells.push({ x: Math.round((ox + size / 2 + Math.cos(a) * r) / cs) * cs, y: Math.round((oy + size / 2 + Math.sin(a) * r * 1.1) / cs) * cs, col: Math.random() < .3 ? "#94E6FF" : "#2C3A37", d: 1.2 + Math.random() * 1.6, n: Math.random() * 20 }); }
+  return { cs, cells };
+});
+
+// Orbe: the real product view, dithered into the same pixels
+const img = new Image(); img.src = "assets/orbe-card.png";
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => v / 16);
+const orbe = field(document.getElementById("c-orbe"), (W, H) => {
+  if (!img.complete || !img.naturalWidth) return { cs: 4, cells: [] };
+  const cs = W < 500 ? 3 : 3.5, cols = Math.floor(W / cs), rows = Math.floor(H / cs);
+  const o = document.createElement("canvas"); o.width = cols; o.height = rows; const g = o.getContext("2d", { willReadFrequently: true });
+  g.drawImage(img, 0, 0, cols, rows); const px = g.getImageData(0, 0, cols, rows).data, cells = [];
+  for (let y = 0; y < rows; y++) for (let x2 = 0; x2 < cols; x2++) {
+    const i = (y * cols + x2) * 4, r = px[i], gg = px[i + 1], b = px[i + 2], L = (0.299 * r + 0.587 * gg + 0.114 * b) / 255;
+    let col = null;
+    if (b > r + 50) col = "#94E6FF";                                  // Orbe's blue chip turns to the accent
+    else if (L < 0.42) col = "#F2F1EC";                               // the type, in paper
+    else if (L < 0.72 + BAYER[(y % 4) * 4 + (x2 % 4)] * 0.12) col = "#3A4A47";   // the mid-tones, dithered
+    else if (BAYER[(y % 4) * 4 + (x2 % 4)] > 0.86) col = "#1C2725";   // the card's ground, a sparse screen
+    if (col) cells.push({ x: x2 * cs, y: y * cs, col, d: y / rows * 1.1 + Math.random() * 0.35, n: Math.random() * 20 });
   }
-  requestAnimationFrame(frame);
+  return { cs, cells };
+}, { gap: 0, reach: 9 });
+img.onload = () => orbe.rebuild();
+if (document.fonts) document.fonts.ready.then(() => name.rebuild());
+
+// the name, set in the mono face and built from pixels
+const name = field(document.getElementById("c-name"), (W, H) => {
+  const cs = Math.max(4, Math.round(W / 190)), cols = Math.floor(W / cs), rows = Math.floor(H / cs);
+  const o = document.createElement("canvas"); o.width = cols; o.height = rows; const g = o.getContext("2d", { willReadFrequently: true });
+  g.fillStyle = "#000"; g.fillRect(0, 0, cols, rows); g.fillStyle = "#fff"; g.textBaseline = "middle"; g.textAlign = "center";
+  let fs = rows * 0.9; g.font = `600 ${fs}px "Commit Mono", monospace`; const w = g.measureText("ANTIMONY").width; if (w > cols * 0.94) { fs *= cols * 0.94 / w; g.font = `600 ${fs}px "Commit Mono", monospace`; }
+  g.fillText("ANTIMONY", cols / 2, rows * 0.54);
+  const px = g.getImageData(0, 0, cols, rows).data, cells = [];
+  for (let y = 0; y < rows; y++) for (let x2 = 0; x2 < cols; x2++) if (px[(y * cols + x2) * 4] > 110) cells.push({ x: x2 * cs, y: y * cs, col: x2 / cols > 0.0 && x2 / cols < 0.125 && y / rows < 0.5 ? "#94E6FF" : "#F2F1EC", d: x2 / cols * 0.9 + Math.random() * 0.4, n: Math.random() * 20 });
+  return { cs, cells };
+}, { reach: 5 });
+
+// typing, as a terminal prints
+function type(el, delay = 0) {
+  if (el.dataset.started) return; el.dataset.started = 1; const s = el.dataset.type;
+  if (still) { el.textContent = s; el.classList.add("done"); return; }
+  setTimeout(() => { let i = 0; const t = setInterval(() => { el.textContent = s.slice(0, ++i); if (i >= s.length) { clearInterval(t); setTimeout(() => el.classList.add("done"), 1600); } }, 34); }, delay * 1000);
 }
-c.addEventListener("pointermove", e => { const r = c.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; });
-c.addEventListener("pointerleave", () => mx = my = -1e9);
-new ResizeObserver(build).observe(c); build(); requestAnimationFrame(frame);
+
+// the opening, then each section as it arrives
+crystal.go(1.3);
+setTimeout(() => document.querySelector(".hero").classList.add("in"), still ? 0 : 2300);
+type(document.querySelector(".hero .type"), still ? 0 : 1.9);
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return; const s = e.target; s.classList.add("in");
+  s.querySelectorAll(".type").forEach(t => type(t, 0.1));
+  if (s.id === "orbe") orbe.go(0.2); if (s.classList.contains("foot")) name.go(0.1);
+  io.unobserve(s);
+}), { threshold: 0.28 });
+document.querySelectorAll(".orbe, .make, .foot").forEach(s => io.observe(s));
+
+// the filters
+document.querySelectorAll(".filters button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".filters button").forEach(o => o.setAttribute("aria-pressed", o === b));
+  document.querySelectorAll(".row").forEach(r => r.hidden = b.dataset.f !== "all" && r.dataset.k !== b.dataset.f);
+}));
+
+(function loop() { crystal.draw(); if (orbe.live) orbe.draw(); if (name.live) name.draw(); requestAnimationFrame(loop); })();
 })();
 </script>
 
