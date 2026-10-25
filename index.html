@@ -24,7 +24,7 @@ a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; 
 body.paper .hud i { color: var(--pru); }
 .tl { left: max(20px, env(safe-area-inset-left, 0px)); top: calc(18px + env(safe-area-inset-top, 0px)); }
 .wm { display: block; height: 19px; width: auto; color: var(--hudb); --lit: var(--sky); transition: color .5s ease; margin-bottom: 14px; }
-body.paper .wm { --lit: #2E8FC4; }
+body.paper .wm { --lit: var(--pru); }
 .boot { white-space: pre; transition: opacity .6s ease; }
 .tr { right: max(20px, env(safe-area-inset-right, 0px)); top: calc(20px + env(safe-area-inset-top, 0px)); text-align: right; white-space: pre; }
 .bl { left: max(20px, env(safe-area-inset-left, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); white-space: pre; transition: opacity .5s ease; }
@@ -185,7 +185,8 @@ function frame(now) {
         // the cut edges catch the light, so the silhouette stays sharp
         const e = cw / s / Z * 100 * .9;
         if (!at(STONE, su + e, sv) || !at(STONE, su - e, sv) || !at(STONE, su, sv + e * 1.9) || !at(STONE, su, sv - e * 1.9)) { v = .92; chr = "#"; }
-        v *= 1 - kPush * .8;  // the stone falls away as you go in T = onPaper ? T_INKON : T_STONE; if (onPaper) v = .2 + v * .4;
+        v *= 1 - kPush * .8;  // the stone falls away as you go in
+        T = onPaper ? T_INKON : T_STONE; if (onPaper) v = .2 + v * .4;
       } else if (!onPaper && (k % 7 === 0) && ((k / cols) | 0) % 2 === 0) {
         // the terminal ground
         chr = Math.sin(t * .6 + cc.n) > .97 ? GLYPH[((cc.n * 13) | 0) % GLYPH.length] : "·"; T = T_STONE; v = .14 * (1 - kWipe);
