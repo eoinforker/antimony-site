@@ -10,127 +10,76 @@
 <style>
 @font-face { font-family: "Timeless"; src: url("assets/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
 @font-face { font-family: "Timeless"; src: url("assets/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: swap; }
+@font-face { font-family: "Commit"; src: url("assets/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
 
 :root {
   --ink: #0B0C0C; --stone: #141311; --paper: #EEEAE0; --sky: #94E6FF; --prussian: #1F3F7A;
-  --g: 64px; --mark: 64px; --band: 10px;
-  --jp: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  --s: clamp(132px, 29vmin, 300px);           /* the monolith */
+  --hy: max(calc(var(--s) + 24vh), 54vh);      /* the horizon, from the top */
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { background: var(--paper); color: var(--ink); -webkit-text-size-adjust: 100%; }
-body {
-  font-family: "Timeless", "Iowan Old Style", Georgia, serif;
-  min-height: 100vh; min-height: 100svh; overflow-x: hidden;
-  background: var(--paper);
-  display: flex; flex-direction: column;
-}
-/* paper grain, baked once by the browser */
-body::before {
-  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .5; mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .32  0 0 0 0 .32  0 0 0 0 .36  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+html.op { background: #000; }
+body { font-family: "Timeless", "Iowan Old Style", Georgia, serif; background: var(--paper); min-height: 100vh; min-height: 100svh; overflow-x: hidden; position: relative; }
+/* paper grain over everything, baked once by the browser */
+body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 9; opacity: .42; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .3  0 0 0 0 .31  0 0 0 0 .36  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 a { color: inherit; }
-
-/* the sky: two baked paintings, night under dawn */
-#sky { position: fixed; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; background: var(--ink);
-  clip-path: inset(0 0 calc(100% - var(--band)) 0); }
-#veil { position: fixed; inset: 0; z-index: 1; background: var(--ink); display: none; pointer-events: none; }
-#skyin { position: absolute; left: 0; right: 0; top: 0; height: 100vh; transform: translateY(-40vh); }
-#sky canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-#dawn { opacity: 1; }
-#dust { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; image-rendering: pixelated; display: none; }
-
-/* opening furniture: frame marks and tagline, seen only against the sky */
-.tag .sh { display: none; }
-.tag { position: fixed; z-index: 3; top: 32px; left: 0; right: 0; text-align: center; pointer-events: none; opacity: 0;
-  color: var(--paper); font-size: 10.5px; letter-spacing: .42em; text-transform: uppercase; padding-left: .42em; }
-
-/* page */
-header, main, .ground, .vert { position: relative; z-index: 2; }
-header { padding: calc(var(--band) + 34px) var(--g) 0; }
-.wm { display: block; height: 19px; width: auto; color: var(--ink); --lit: var(--prussian); }
-main { padding: clamp(64px, 12vh, 132px) var(--g) 48px; }
-.copy { max-width: 452px; font-size: 17px; line-height: 1.55; font-weight: 380; letter-spacing: .002em; }
-.copy p + p { margin-top: .95em; }
-.copy em { font-style: italic; }
-.copy a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgba(31,63,122,.45); transition: color .2s, text-decoration-color .2s; }
-.copy a:hover { color: var(--prussian); text-decoration-color: var(--prussian); }
-.copy .c { visibility: hidden; }
-.copy .c.on { visibility: visible; }
-.copy .c.h { background: var(--sky); box-shadow: .6px 0 0 var(--sky); color: var(--ink); }
-.copy .cur { position: relative; display: inline-block; width: 0; height: 1em; vertical-align: baseline; }
-.copy .cur::after { content: ""; position: absolute; left: 1px; bottom: -.2em; width: .48em; height: 1.08em; background: var(--sky); }
-.copy .cur.off::after { opacity: 0; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-.mentions { margin-top: 30px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; font-size: 14px; color: #4b4c4b; list-style: none; }
-.mentions a { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; transition: color .25s; }
-.mentions img { width: 18px; height: 18px; border-radius: 4px; filter: grayscale(1) contrast(.9) brightness(1.04); opacity: .7; transition: filter .25s, opacity .25s; }
-.mentions a:hover { color: var(--ink); }
-.mentions a:hover img, .mentions a:focus-visible img { filter: none; opacity: 1; }
-.mentions .place { color: #77786f; padding-left: 14px; border-left: 1px solid rgba(31,63,122,.22); }
+/* the opening: a typed line, a veil of black, a painted dawn */
+#dawn, #pale { position: absolute; left: 0; top: 0; z-index: 1; display: none; pointer-events: none; }
+#veil { position: fixed; left: 0; right: 0; top: 0; height: 300vh; z-index: 6; display: none; pointer-events: none;
+  background: linear-gradient(#000 0, #000 33.4%, rgba(0,0,0,.86) 41%, rgba(0,0,0,.45) 52%, rgba(0,0,0,0) 66%); }
+#line { position: fixed; z-index: 7; top: 34px; left: 0; right: 0; text-align: center; pointer-events: none; display: none;
+  font: 400 11px/1 "Commit", ui-monospace, monospace; letter-spacing: .26em; padding-left: .26em; color: rgba(238,234,224,.88); white-space: nowrap; }
+#line b { font-weight: 400; color: var(--sky); }
+#line i { font-style: normal; visibility: hidden; }
+#line i.on { visibility: visible; }
 
-/* the ground: hairline horizon, the mark standing on it */
-.ground { margin-top: auto; height: calc(var(--mark) + 72px); }
-.hz { position: absolute; left: 0; right: 0; top: var(--mark); height: 1px; background: rgba(31,63,122,.34); transform-origin: 50% 50%; z-index: 3; }
-.mk { position: absolute; left: var(--g); top: 0; width: var(--mark); height: var(--mark); transform-origin: 0 0; z-index: 4; overflow: visible; }
+/* the stage: one horizon, the monolith standing on it */
+.stage { position: relative; height: var(--hy); z-index: 2; }
+.hz { position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: rgba(31,63,122,.36); }
+.mk { position: absolute; left: 50%; bottom: 0; width: var(--s); height: var(--s); margin-left: calc(var(--s) / -2); }
 .mk svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.mk .gem { fill: var(--sky); }
-.mk .facet { transition: fill-opacity .12s linear; }
-.mk .halo, .mk .rim { opacity: 0; }
-#refl { position: absolute; z-index: 1; display: none; pointer-events: none; }
-#refl i { position: absolute; left: 0; right: 0; overflow: hidden; display: block; }
-#refl svg { position: absolute; left: 0; display: block; transform: scaleY(-1); }
-.vert { position: fixed; right: 26px; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; font-family: var(--jp); font-size: 11px; letter-spacing: .5em; color: var(--prussian); opacity: .7; z-index: 3; }
+.mk .lit { opacity: 0; }
+/* a slow light passing through the crystal, then a long rest */
+.mk .shim { animation: shim 11s cubic-bezier(.45,0,.25,1) 2s infinite; opacity: 0; }
+@keyframes shim { 0% { transform: skewX(-16deg) translateX(0); opacity: 0; } 4% { opacity: 1; } 30% { opacity: 1; } 34% { transform: skewX(-16deg) translateX(92px); opacity: 0; } 100% { transform: skewX(-16deg) translateX(92px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .mk .shim { animation: none; } }
 
+/* the page */
+main { position: relative; z-index: 2; width: min(452px, 100% - 44px); margin: 0 auto; padding: clamp(40px, 7.5vh, 76px) 0 56px; }
+.copy { font-size: 17px; line-height: 1.55; font-weight: 380; letter-spacing: .002em; }
+.copy p + p { margin-top: .95em; }
+.copy a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgba(31,63,122,.45); transition: color .2s, text-decoration-color .2s; }
+.copy a:hover, .copy a:focus-visible { color: var(--prussian); text-decoration-color: var(--prussian); }
+.mentions { margin-top: 30px; display: flex; align-items: center; gap: 0 22px; font-size: 14px; color: #4b4c4b; list-style: none; white-space: nowrap; }
+.mentions a { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; transition: color .25s; }
+.mentions img { width: 17px; height: 17px; border-radius: 4px; filter: grayscale(1) contrast(.9) brightness(1.04); opacity: .7; transition: filter .25s, opacity .25s; }
+.mentions a:hover, .mentions a:focus-visible { color: var(--ink); }
+.mentions a:hover img, .mentions a:focus-visible img { filter: none; opacity: 1; }
+.mentions .place { margin-left: auto; color: #77786f; }
 
 @media (max-width: 720px) {
-  :root { --g: 22px; --mark: 44px; --band: 8px; }
-  header { padding-top: calc(var(--band) + 26px); }
-  .wm { height: 17px; }
-  main { padding-top: 64px; padding-bottom: 36px; }
-  .copy { font-size: 16.5px; }
-  .mentions { margin-top: 26px; gap: 12px 18px; }
-  .vert { right: 10px; font-size: 10px; }
-  .ground { height: calc(var(--mark) + 56px); }
-  .tag { top: 30px; font-size: 9px; letter-spacing: .28em; padding-left: .28em; white-space: nowrap; }
-  .tag .lg { display: none; } .tag .sh { display: inline; }
+  :root { --s: clamp(128px, 36vw, 160px); --hy: max(calc(var(--s) + 28svh), 48svh); }
+  main { width: calc(100% - 44px); padding-top: 34px; padding-bottom: 40px; }
+  .copy { font-size: 16.5px; line-height: 1.52; }
+  .mentions { margin-top: 26px; gap: 0 16px; font-size: 13.5px; }
+  #line { top: 28px; font-size: 10.5px; letter-spacing: .2em; padding-left: .2em; }
 }
 </style>
 </head>
 <body>
+<canvas id="pale" aria-hidden="true"></canvas><canvas id="dawn" aria-hidden="true"></canvas>
 <div id="veil" aria-hidden="true"></div>
-<div id="sky" aria-hidden="true"><div id="skyin"><canvas id="night"></canvas><canvas id="dawn"></canvas><div id="refl"></div></div></div>
-<canvas id="dust" aria-hidden="true"></canvas>
-<div class="tag" aria-hidden="true"><span class="lg">Software for the people who make the work.</span><span class="sh">For the people who make the work.</span></div>
+<div id="line" aria-hidden="true"></div>
 
-<header>
-  <h1 class="sr">Antimony</h1>
-  <svg class="wm" viewBox="-20 -830 4186 1070" role="img" aria-label="antimony"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg>
-</header>
-
-<main>
-  <div class="copy" id="copy" aria-hidden="true">
-    <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/" tabindex="-1">Orbe</a>, the creator’s side of every sponsorship deal.</p>
-    <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
-  </div>
-  <div class="sr">
-    <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator’s side of every sponsorship deal.</p>
-    <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
-  </div>
-  <ul class="mentions" id="mentions">
-    <li><a href="https://eoinforker.github.io/orbe-site/"><img src="assets/orbe.svg" alt="">Orbe</a></li>
-    <li><a href="https://immiscible.ai"><img src="assets/immiscible.svg" alt="">immiscible</a></li>
-    <li><a href="https://idyll.day"><img src="assets/idyll.svg" alt="">Idyll</a></li>
-    <li class="place">London</li>
-  </ul>
-</main>
-
-<div class="vert" aria-hidden="true">アンチモン</div>
-
-<section class="ground" aria-hidden="true">
-  <div class="hz" id="hz"></div>
-  <div class="mk" id="mk" aria-hidden="true">
+<h1 class="sr">Antimony</h1>
+<div class="stage" aria-hidden="true">
+  <div class="mk" id="mk">
     <svg viewBox="0 0 100 100">
       <defs>
         <mask id="cut" maskUnits="userSpaceOnUse" x="-20" y="-20" width="140" height="140">
@@ -139,230 +88,245 @@ main { padding: clamp(64px, 12vh, 132px) var(--g) 48px; }
           <path fill="#000" d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z"/>
         </mask>
         <clipPath id="tc"><rect width="100" height="100" rx="22"/></clipPath>
-        <linearGradient id="rg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E9F1F6" stop-opacity="0"/><stop offset=".3" stop-color="#F3F1EA" stop-opacity=".85"/><stop offset=".62" stop-color="#F6F4EE" stop-opacity="1"/><stop offset="1" stop-color="#E9F1F6" stop-opacity="0"/></linearGradient>
-        <linearGradient id="rs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3F1EA" stop-opacity=".9"/><stop offset=".3" stop-color="#cfeefb" stop-opacity=".55"/><stop offset=".85" stop-color="#94E6FF" stop-opacity=".12"/><stop offset="1" stop-color="#94E6FF" stop-opacity="0"/></linearGradient>
-        <filter id="gl" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter>
-        <radialGradient id="hg"><stop offset="0" stop-color="#94E6FF" stop-opacity=".55"/><stop offset=".45" stop-color="#94E6FF" stop-opacity=".14"/><stop offset="1" stop-color="#94E6FF" stop-opacity="0"/></radialGradient>
+        <linearGradient id="rg" x1="0" y1="0" x2="100" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#EEEAE0" stop-opacity="0"/><stop offset=".26" stop-color="#EEEAE0" stop-opacity=".5"/><stop offset=".55" stop-color="#F4F2EC" stop-opacity=".95"/><stop offset=".8" stop-color="#EEEAE0" stop-opacity=".5"/><stop offset="1" stop-color="#EEEAE0" stop-opacity="0"/></linearGradient>
+        <linearGradient id="rs" x1="0" y1="0" x2="0" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F4F2EC" stop-opacity=".9"/><stop offset=".22" stop-color="#EEEAE0" stop-opacity=".55"/><stop offset=".55" stop-color="#cfe6f2" stop-opacity=".18"/><stop offset=".9" stop-color="#cfe6f2" stop-opacity="0"/></linearGradient>
+        <linearGradient id="gg" x1="58.6" y1="21.5" x2="41.4" y2="81.5" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#D2F5FF"/><stop offset=".38" stop-color="#94E6FF"/><stop offset="1" stop-color="#7DD3F2"/></linearGradient>
+        <radialGradient id="gd" cx="47" cy="60" r="20" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#5BB8E0" stop-opacity=".34"/><stop offset="1" stop-color="#5BB8E0" stop-opacity="0"/></radialGradient>
+        <linearGradient id="gs" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".34"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+        <clipPath id="gc"><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"/></clipPath>
       </defs>
-      
       <rect class="stone" width="100" height="100" rx="22" fill="#141311" mask="url(#cut)"/>
-      <g class="rim" mask="url(#cut)" fill="none" vector-effect="non-scaling-stroke">
-        <path d="M3 13.5A21.7 21.7 0 0 1 22 .3H78A21.7 21.7 0 0 1 97 13.5" stroke="url(#rg)" stroke-width=".32"/>
+      <g class="lit" fill="none" stroke-linejoin="round">
+        <path d="M5.5 11A22 22 0 0 1 22 .35H78A22 22 0 0 1 94.5 11" stroke="url(#rg)" stroke-width="1" vector-effect="non-scaling-stroke" mask="url(#cut)"/>
+        <g clip-path="url(#tc)" mask="url(#cut)">
+          <path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z" stroke="url(#rs)" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+        </g>
       </g>
-      <g class="rim" clip-path="url(#tc)" fill="none">
-        <path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z" stroke="url(#rs)" stroke-width=".28"/>
-      </g>
-      <path class="halo" fill="#94E6FF" filter="url(#gl)" d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"/>
-      <path class="gem" d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"/>
+      <path fill="url(#gg)" d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"/>
+      <path fill="url(#gd)" d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"/>
       <path class="facet" fill="#fff" fill-opacity=".28" d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z"/>
+      <g clip-path="url(#gc)"><rect class="shim" x="14" y="10" width="9" height="84" fill="url(#gs)" transform="skewX(-16)"/></g>
     </svg>
   </div>
-</section>
+  <div class="hz" id="hz"></div>
+</div>
+
+<main id="page">
+  <div class="copy">
+    <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator’s side of every sponsorship deal.</p>
+    <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
+  </div>
+  <ul class="mentions">
+    <li><a href="https://eoinforker.github.io/orbe-site/"><img src="assets/orbe.svg" alt="">Orbe</a></li>
+    <li><a href="https://immiscible.ai"><img src="assets/immiscible.svg" alt="">immiscible</a></li>
+    <li><a href="https://idyll.day"><img src="assets/idyll.svg" alt="">Idyll</a></li>
+    <li class="place">London</li>
+  </ul>
+</main>
 
 <script>
 (() => {
   const $ = (s) => document.querySelector(s);
-  const W = () => innerWidth, H = () => innerHeight;
-
-  /* ---------- the sky, painted once per state ---------- */
-  const HZ = 0.64; // horizon, as a fraction of the viewport, during the opening
-  let seed = 7;
-  const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
-  const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-  const PAL = {
-    night: { sky: [[0, "#020306"], [.45, "#050916"], [.8, "#0b1630"], [1, "#16264a"]], ground: [[0, "#0a1226"], [1, "#020307"]],
-      cloud: "#0d1830", rim: "#1a2a50", sun: [150, 185, 235, .10], stars: 1 },
-    dawn: { sky: [[0, "#0d2150"], [.3, "#1d3c78"], [.58, "#4a78ba"], [.8, "#a3c7e8"], [.93, "#dbe6ee"], [1, "#f3f2ec"]],
-      ground: [[0, "#4a6a99"], [.06, "#273f6c"], [1, "#0c1832"]],
-      cloud: "#456fae", rim: "#e9eff4", sun: [246, 246, 240, .95], stars: 0 }
-  };
-  const CLOUDS = [[.16, .24, .46, .045], [.80, .17, .52, .04], [.66, .43, .40, .032], [.24, .50, .34, .026], [.90, .55, .26, .02], [.42, .12, .30, .03], [.08, .57, .2, .016]];
-  function ramp(stops, t) {
-    let i = 0; while (i < stops.length - 2 && t > stops[i + 1][0]) i++;
-    const [a, ca] = stops[i], [b, cb] = stops[i + 1], k = Math.min(1, Math.max(0, (t - a) / (b - a)));
-    const s = k * k * (3 - 2 * k), A = hex(ca), B = hex(cb);
-    return A.map((v, j) => v + (B[j] - v) * s);
-  }
-  function paint(cv, P) {
-    const k = 0.5, w = Math.max(2, Math.round(W() * k)), h = Math.max(2, Math.round(H() * k));
-    cv.width = w; cv.height = h;
-    const x = cv.getContext("2d"), hy = Math.round(h * HZ);
-    // base gradient, row by row so the banding is ours
-    const img = x.createImageData(w, h), d = img.data;
-    for (let y = 0; y < h; y++) {
-      const c = y < hy ? ramp(P.sky, y / hy) : ramp(P.ground, (y - hy) / (h - hy));
-      for (let i = 0; i < w; i++) { const o = (y * w + i) * 4; d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255; }
-    }
-    x.putImageData(img, 0, 0);
-    // first light behind the monolith
-    const [sr, sg, sb, sa] = P.sun;
-    let g = x.createRadialGradient(w / 2, hy, 0, w / 2, hy, Math.max(w, h) * .55);
-    g.addColorStop(0, `rgba(${sr},${sg},${sb},${sa})`); g.addColorStop(.25, `rgba(${sr},${sg},${sb},${sa * .45})`); g.addColorStop(1, `rgba(${sr},${sg},${sb},0)`);
-    x.save(); x.beginPath(); x.rect(0, 0, w, hy); x.clip(); x.fillStyle = g; x.fillRect(0, 0, w, hy); x.restore();
-    // painterly strata: soft blobs, lit from beneath
-    seed = 11;
-    const blob = (cx, cy, rx, ry, col, a) => {
-      x.save(); x.translate(cx, cy); x.scale(1, ry / rx);
-      const gg = x.createRadialGradient(0, 0, 0, 0, 0, rx); const [r1, g1, b1] = hex(col);
-      gg.addColorStop(0, `rgba(${r1},${g1},${b1},${a})`); gg.addColorStop(.6, `rgba(${r1},${g1},${b1},${a * .45})`); gg.addColorStop(1, `rgba(${r1},${g1},${b1},0)`);
-      x.fillStyle = gg; x.beginPath(); x.arc(0, 0, rx, 0, 7); x.fill(); x.restore();
-    };
-    for (const [cxn, cyn, wn, hn] of CLOUDS) {
-      const cx = cxn * w, cy = cyn * h, cw = wn * w, chh = hn * h;
-      for (let n = 0; n < 16; n++) {
-        const ox = (rnd() - .5) * cw, oy = (rnd() - .5) * chh * .8, rx = cw * (.12 + rnd() * .16);
-        blob(cx + ox, cy + oy, rx, chh * (.5 + rnd() * .5), P.cloud, .5);
-        if (rnd() < .75) blob(cx + ox + rx * .1, cy + oy + chh * .42, rx * .8, chh * .22, P.rim, .32);
-      }
-    }
-    // reflection on the ground beneath the monolith
-    for (let n = 0; n < 18; n++) {
-      const yy = hy + 2 + Math.pow(rnd(), 1.8) * (h - hy) * .5, ww = (1 - (yy - hy) / (h - hy)) * w * (.04 + rnd() * .14);
-      x.fillStyle = `rgba(${P.rim === "#1a2a50" ? "40,60,110" : "236,242,244"},${.08 + rnd() * .2})`;
-      x.fillRect(w / 2 - ww / 2 + (rnd() - .5) * w * .1, yy, ww, 1);
-    }
-    // grain, soft banding, and stars
-    const im = x.getImageData(0, 0, w, h), e = im.data, q = 6;
-    for (let o = 0; o < e.length; o += 4) {
-      const nz = (rnd() + rnd() - 1) * 15;
-      for (let j = 0; j < 3; j++) { const v = e[o + j]; e[o + j] = (v * .55 + Math.round(v / q) * q * .45) + nz; }
-    }
-    if (P.stars) for (let n = 0; n < w * h / 900; n++) {
-      const sx = (rnd() * w) | 0, sy = (Math.pow(rnd(), 1.6) * hy * .9) | 0, o = (sy * w + sx) * 4, b = 90 + rnd() * 150;
-      e[o] = b * .85; e[o + 1] = b * .93; e[o + 2] = b;
-    }
-    x.putImageData(im, 0, 0);
-  }
-
-  /* ---------- typing: set by a precise machine, with a sky highlight ---------- */
-  const copy = $("#copy"), chars = [], paras = [];
-  copy.querySelectorAll("p").forEach((p) => {
-    const start = chars.length;
-    const walk = (node) => {
-      for (const n of [...node.childNodes]) {
-        if (n.nodeType === 3) {
-          const f = document.createDocumentFragment();
-          for (const ch of n.textContent.replace(/\s+/g, " ")) { const s = document.createElement("span"); s.className = "c"; s.textContent = ch; f.appendChild(s); chars.push(s); }
-          n.replaceWith(f);
-        } else walk(n);
-      }
-    };
-    walk(p); paras.push([start, chars.length]);
-  });
-  const cur = document.createElement("span"); cur.className = "cur";
-  function type(done) {
-    let pi = 0, i = paras[0][0];
-    const trail = [], t0 = performance.now(), total = chars.length, span = 1550;
-    const step = () => {
-      const [a, b] = paras[pi];
-      const q = Math.random(), due = Math.round((performance.now() - t0) / span * total) - i, n = Math.max(q < .14 ? 2 : q < .74 ? 3 : 4, Math.min(6, due));
-      for (let m = 0; m < n && i < b; m++, i++) { chars[i].classList.add("on", "h"); trail.push(chars[i]); }
-      while (trail.length > 7) trail.shift().classList.remove("h");
-      chars[i - 1].after(cur);
-      if (i >= b) {
-        setTimeout(() => { trail.splice(0).forEach((s) => s.classList.remove("h")); }, 70);
-        pi++;
-        if (pi < paras.length) { i = paras[pi][0]; return setTimeout(step, 90); }
-        let k = 0; const blink = setInterval(() => { cur.classList.toggle("off"); if (++k > 5) { clearInterval(blink); cur.remove(); } }, 260);
-        return done && done();
-      }
-      setTimeout(step, 18 + Math.random() * Math.random() * 24);
-    };
-    step();
-  }
-
-  /* ---------- dust: a few aliased pixels drifting past the crystal ---------- */
-  function dust(cx, cy, size, until) {
-    const cv = $("#dust"), k = 1, w = Math.round(W() / 2), h = Math.round(H() / 2);
-    cv.width = w; cv.height = h; cv.style.display = "block";
-    const x = cv.getContext("2d"), P = [];
-    for (let n = 0; n < (W() < 700 ? 22 : 34); n++) P.push({
-      x: (cx + (Math.random() - .5) * size * 3.4) / 2, y: (cy + (Math.random() - .3) * size * 1.6) / 2,
-      vx: .05 + Math.random() * .22, vy: -.04 - Math.random() * .16, s: Math.random() < .2 ? 2 : 1,
-      c: Math.random() < .45 ? "148,230,255" : "244,246,242", a: .25 + Math.random() * .6, ph: Math.random() * 6
-    });
-    const t0 = performance.now();
-    const fr = (t) => {
-      const e = t - t0, fade = Math.min(1, e / 500) * Math.max(0, Math.min(1, (until - e) / 500));
-      x.clearRect(0, 0, w, h);
-      for (const p of P) {
-        p.x += p.vx; p.y += p.vy + Math.sin(e / 700 + p.ph) * .04;
-        x.fillStyle = `rgba(${p.c},${p.a * fade * (.7 + .3 * Math.sin(e / 180 + p.ph))})`;
-        x.fillRect(Math.round(p.x), Math.round(p.y), p.s, p.s);
-      }
-      if (e < until) requestAnimationFrame(fr); else cv.style.display = "none";
-    };
-    requestAnimationFrame(fr);
-  }
-
-  /* ---------- the opening ---------- */
-  const night = $("#night"), dawn = $("#dawn"), sky = $("#sky"), mk = $("#mk"), hz = $("#hz");
+  const q = new URLSearchParams(location.search);
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let seen = false; try { seen = sessionStorage.getItem("antimony-daybreak") === "1"; sessionStorage.setItem("antimony-daybreak", "1"); } catch (e) {}
-  const finish = () => { chars.forEach((c) => c.classList.add("on")); };
-  paint(dawn, PAL.dawn);
-  if (reduce || seen || new URLSearchParams(location.search).has("still")) { finish(); }
-  else {
-    paint(night, PAL.night);
-    const E = "cubic-bezier(.2,.7,.1,1)", EI = "cubic-bezier(.7,0,.2,1)", T = 2300, M = .62;
-    const A = (el, kf, o) => el.animate(kf, Object.assign({ fill: "both", easing: E }, o));
-    // where things end, so the opening can be drawn from there
-    const fm = mk.getBoundingClientRect(), fh = hz.getBoundingClientRect();
-    const S = Math.round(Math.min(W() * .78, H() * .5)), hy = H() * HZ;
-    const sc = S / fm.width, dx = W() / 2 - S / 2 - fm.left, dy = hy - S - fm.top, hdy = hy - fh.top;
-    const band = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--band")) || 10;
-    const gem = mk.querySelector(".gem"), facet = mk.querySelector(".facet"), halo = mk.querySelector(".halo");
-    const veil = $("#veil"); veil.style.display = "block";
-    A(veil, [{ opacity: 1 }, { opacity: 1, offset: M }, { opacity: 0, offset: M + .001 }, { opacity: 0 }], { duration: T, easing: "linear" });
-    [$("header"), $("main"), $(".vert")].forEach((el) => A(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 600, delay: 1800 }));
-    const men = A($("#mentions"), [{ opacity: 0, transform: "translateY(3px)" }, { opacity: 1, transform: "none" }], { duration: 800 }); men.pause();
-    // 0.0s black. The horizon is drawn, and the night opens from it like a slit.
-    A(hz, [{ transform: `translateY(${hdy}px) scaleX(0)`, background: "rgba(238,234,224,.55)" }, { transform: `translateY(${hdy}px) scaleX(1)`, background: "rgba(238,234,224,.55)", offset: .17 },
-      { transform: `translateY(${hdy}px) scaleX(1)`, background: "rgba(238,234,224,.4)", offset: M, easing: EI }, { transform: "translateY(0) scaleX(1)", background: "rgba(31,63,122,.34)" }], { duration: T, delay: 40, easing: "linear" });
-    A(sky, [{ clipPath: `inset(${hy}px 0 ${H() - hy}px 0)` }, { clipPath: `inset(${hy}px 0 ${H() - hy}px 0)`, offset: .12, easing: "cubic-bezier(.6,0,.15,1)" },
-      { clipPath: "inset(0px 0 0px 0)", offset: .32 }, { clipPath: "inset(0px 0 0px 0)", offset: M, easing: EI }, { clipPath: `inset(0px 0 ${H() - band}px 0)` }], { duration: T, easing: "linear" });
-    // as the sky rolls up it also rises, leaving its middle blues as the band
-    A($("#skyin"), [{ transform: "translateY(0)" }, { transform: "translateY(0)", offset: M, easing: EI }, { transform: "translateY(-40vh)" }], { duration: T, easing: "linear" });
-    A(dawn, [{ opacity: 0 }, { opacity: 1 }], { duration: 850, delay: 720, easing: "cubic-bezier(.45,0,.3,1)" });
-    // the monolith: a silhouette at night, then the crystal takes the first light
-    A(mk, [{ transform: `translate(${dx}px,${dy}px) scale(${sc})`, opacity: 0 }, { transform: `translate(${dx}px,${dy}px) scale(${sc})`, opacity: 1, offset: .2 },
-      { transform: `translate(${dx}px,${dy}px) scale(${sc})`, offset: M, easing: EI }, { transform: "none", opacity: 1 }], { duration: T, easing: "linear" });
-    A(gem, [{ fill: "#0d1424" }, { fill: "#0d1424", offset: .5 }, { fill: "#94E6FF" }], { duration: 1450, easing: "cubic-bezier(.5,0,.3,1)" });
-    A(facet, [{ fillOpacity: 0 }, { fillOpacity: 0, offset: .7 }, { fillOpacity: .28 }], { duration: 1500, fill: "backwards", easing: "linear" });
-    A(halo, [{ opacity: 0 }, { opacity: 0, offset: .34 }, { opacity: .38, offset: .6 }, { opacity: .34, offset: .68 }, { opacity: 0 }], { duration: T, easing: "linear" });
-    A(mk.querySelector(".stone"), [{ fill: "#070b16" }, { fill: "#070b16", offset: M, easing: EI }, { fill: "#141311" }], { duration: T, easing: "linear" });
-    A(mk.querySelectorAll(".rim")[0], [{ opacity: 0 }, { opacity: 0, offset: .3 }, { opacity: 1, offset: .62 }, { opacity: 1, offset: .72 }, { opacity: 0 }], { duration: T, easing: "linear" });
-    A(mk.querySelectorAll(".rim")[1], [{ opacity: 0 }, { opacity: 0, offset: .34 }, { opacity: .9, offset: .62 }, { opacity: .9, offset: .7 }, { opacity: 0 }], { duration: T, easing: "linear" });
-    // a dark, broken reflection of the monolith in the water, in slices
-    const rf0 = $("#refl"), rf = document.createElement("div"), src = mk.querySelector("svg"), RH = S * .58, NS = 22; seed = 29;
-    rf.style.cssText = "position:absolute;inset:0;filter:blur(" + (S / 450).toFixed(2) + "px)"; rf0.appendChild(rf);
-    Object.assign(rf0.style, { display: "block", left: (W() / 2 - S / 2) + "px", top: (hy + 1) + "px", width: S + "px", height: RH + "px" });
-    for (let n = 0, y = 0; n < NS && y < RH; n++) {
-      const hh = Math.max(2, RH / NS * (.35 + n * .07) * (.5 + rnd())), gap = .4 + n * .22 * rnd() * 2, sl = document.createElement("i"), c = src.cloneNode(true);
-      c.querySelectorAll(".rim,.halo").forEach((e) => e.remove()); c.querySelector(".stone").setAttribute("fill", "#050913");
-      c.querySelectorAll("[id]").forEach((e) => e.id = "r" + n + e.id);
-      c.querySelectorAll("[mask],[fill^='url']").forEach((e) => { for (const at of ["mask", "fill"]) { const v = e.getAttribute(at); if (v && v.startsWith("url(#")) e.setAttribute(at, "url(#r" + n + v.slice(5)); } });
-      c.style.cssText = `width:${S}px;height:${S}px;top:${-y}px;left:${(rnd() - .5) * (1 + n * 1.3) * S / 450}px;`;
-      sl.style.cssText = `top:${y}px;height:${hh}px;opacity:${(.92 * Math.pow(1 - y / RH, 1.3)).toFixed(3)}`;
-      sl.appendChild(c); rf.appendChild(sl); y += hh + gap;
-    }
-    A(rf0, [{ opacity: 0 }, { opacity: .5, offset: .25 }, { opacity: .85, offset: .55 }, { opacity: .85, offset: M }, { opacity: 0, offset: .8 }, { opacity: 0 }], { duration: T, easing: "linear" });
-    A($(".tag"), [{ opacity: .85 }, { opacity: .85, offset: .8 }, { opacity: 0 }], { duration: 1500, easing: "linear" });
-    $(".tag").querySelectorAll("span").forEach((sp) => {
-      const t = sp.textContent; sp.textContent = ""; let i = 0;
-      const go = () => { i = Math.min(t.length, i + 2 + (Math.random() < .5)); sp.textContent = t.slice(0, i); if (i < t.length) setTimeout(go, 18 + Math.random() * 26); };
-      setTimeout(go, 260);
-    });
-    setTimeout(() => dust(W() / 2, hy - S * .5, S, 1900), 650);
-    setTimeout(() => type(() => men.play()), 1800);
-  }
+  const freeze = q.has("t") ? +q.get("t") : null;
+  const mk = $("#mk"), fc = mk.querySelector(".facet");
+
   // the crystal's facet answers the pointer, as if the light moved with it
-  const fc = mk.querySelector(".facet");
   addEventListener("pointermove", (e) => {
-    const r = mk.getBoundingClientRect(), k = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (W() * .5)));
-    fc.style.fillOpacity = (.28 + k * .16).toFixed(3);
+    const r = mk.getBoundingClientRect(), k = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (innerWidth * .5)));
+    fc.style.fillOpacity = (.28 + k * .14).toFixed(3);
   }, { passive: true });
-  let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => paint(dawn, PAL.dawn), 200); });
+
+  if (q.has("still") || (freeze === null && (reduce || seen))) return;
+
+  /* ---------- the timeline, in milliseconds ---------- */
+  const TEXT = [["ANTIMONY //:", 1], [" FIRST LIGHT", 0]];
+  const T = { type: 650, step: 72 };
+  const N = TEXT.reduce((n, [s]) => n + s.length, 0);
+  T.typed = T.type + N * T.step;             // the line is complete
+  T.fade = T.typed + 1000;                   // held a full second, then fades
+  T.dark = T.fade + 800;                     // a beat of pure black
+  T.dawn = T.dark + 650;                     // dawn rises out of the dark
+  T.lit = T.dawn + 1500;                     // the hairlines catch the light
+  T.hold = T.dawn + 2400;                    // dawn, held
+  T.drain = T.hold + 600;                   // the sky drains to paper
+  T.page = T.drain + 1000;                   // the column arrives
+  T.end = T.page + 800;
+
+  const W = innerWidth, H = innerHeight;
+  const de = document.documentElement, meta = $('meta[name="theme-color"]');
+  de.classList.add("op"); meta.content = "#000000";
+
+  /* ---------- the typed line: even steps, no cursor ---------- */
+  const line = $("#line"), glyphs = [];
+  for (const [s, lab] of TEXT) {
+    const host = lab ? document.createElement("b") : line;
+    for (const ch of s) { const i = document.createElement("i"); i.textContent = ch; host.appendChild(i); glyphs.push(i); }
+    if (lab) line.appendChild(host);
+  }
+  line.style.display = "block";
+  let shown = 0;
+  const typeTo = (t) => {
+    const n = Math.max(0, Math.min(N, Math.floor((t - T.type) / T.step) + 1));
+    while (shown < n) glyphs[shown++].classList.add("on");
+  };
+
+  /* ---------- the sky, painted once ---------- */
+  const mr = mk.getBoundingClientRect();
+  const S = mr.width, hy = Math.round(mr.bottom + scrollY), mx = mr.left;
+  const cv = $("#dawn"), pale = $("#pale");
+  let seed = 9;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+  const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const ramp = (stops, t) => {
+    let i = 0; while (i < stops.length - 2 && t > stops[i + 1][0]) i++;
+    const [a, ca] = stops[i], [b, cb] = stops[i + 1], k = Math.min(1, Math.max(0, (t - a) / (b - a))), s = k * k * (3 - 2 * k);
+    const A = hex(ca), B = hex(cb); return A.map((v, j) => v + (B[j] - v) * s);
+  };
+  const SKY = [[0, "#05080f"], [.34, "#0a142a"], [.6, "#132649"], [.8, "#1f3b69"], [.92, "#36578a"], [.972, "#6f8bb0"], [.993, "#b9c3cc"], [1, "#dedbd2"]];
+  const SEA = [[0, "#2a3e60"], [.015, "#16284a"], [.2, "#0f1d38"], [.6, "#08111f"], [1, "#03050b"]];
+  const tile = new Path2D("M22 0H78A22 22 0 0 1 100 22V78A22 22 0 0 1 78 100H22A22 22 0 0 1 0 78V22A22 22 0 0 1 22 0Z");
+  const seamP = new Path2D("M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z");
+  const cavP = new Path2D("M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z");
+  const gemP = new Path2D("M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z");
+  const facP = new Path2D("M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z");
+
+  function paint() {
+    // painted at up to two device pixels per CSS pixel, so the stipple stays crisp on a phone
+    const k = Math.min(2, Math.max(1, devicePixelRatio || 1)), wc = W, hc = Math.max(H, hy + 2);
+    const w = Math.round(wc * k), h = Math.round(hc * k), hp = Math.round(hy * k);
+    for (const c of [cv, pale]) { c.width = w; c.height = h; c.style.width = wc + "px"; c.style.height = hc + "px"; }
+    const x = cv.getContext("2d");
+    // the ground: row by row, with a slow banding of our own
+    const img = x.createImageData(w, h), d = img.data;
+    const band = []; let b = 0; for (let y = 0; y < h; y++) { if (y % k === 0) { b += (rnd() - .5) * .9; b *= .985; } band.push(b); }
+    for (let y = 0; y < h; y++) {
+      const c = y < hp ? ramp(SKY, y / hp) : ramp(SEA, (y - hp) / (h - hp));
+      const f = y < hp ? 1 + band[y] * .018 * (1 - y / hp) : 1;
+      for (let i = 0, o = y * w * 4; i < w; i++, o += 4) { d[o] = c[0] * f; d[o + 1] = c[1] * f; d[o + 2] = c[2] * f; d[o + 3] = 255; }
+    }
+    x.putImageData(img, 0, 0);
+    x.setTransform(k, 0, 0, k, 0, 0);
+    // first light: a long low bloom on the horizon, wide and quiet
+    x.save(); x.beginPath(); x.rect(0, 0, wc, hy); x.clip();
+    x.translate(wc / 2, hy); x.scale(1, .28);
+    let g = x.createRadialGradient(0, 0, 0, 0, 0, wc * .62);
+    g.addColorStop(0, "rgba(232,234,230,.26)"); g.addColorStop(.35, "rgba(190,206,224,.09)"); g.addColorStop(1, "rgba(160,190,220,0)");
+    x.fillStyle = g; x.fillRect(-wc, -hy * 4, wc * 2, hy * 4); x.restore();
+    // two long strata of cloud, barely there, lit from beneath
+    const strata = [[.26, .34, .5, .02, .05], [.74, .6, .44, .014, .045]];
+    for (const [cx, cy, ww, hh, a] of strata) {
+      for (let n = 0; n < 9; n++) {
+        const px = (cx + (rnd() - .5) * ww * .8) * wc, py = cy * hy + (rnd() - .5) * hh * hy * 2, rx = ww * wc * (.18 + rnd() * .2), ry = hh * hy * (.6 + rnd() * .6);
+        x.save(); x.translate(px, py); x.scale(1, ry / rx);
+        const gg = x.createRadialGradient(0, 0, 0, 0, 0, rx);
+        gg.addColorStop(0, `rgba(150,176,210,${a})`); gg.addColorStop(1, "rgba(150,176,210,0)");
+        x.fillStyle = gg; x.beginPath(); x.arc(0, 0, rx, 0, 7); x.fill(); x.restore();
+      }
+    }
+    // the water takes the light: a few thin glints, most of them near the line
+    for (let n = 0; n < 46; n++) {
+      const dpt = Math.pow(rnd(), 2.2), yy = Math.round(hy + 3 + dpt * (hc - hy) * .55), len = (1 - dpt) * wc * (.02 + rnd() * .09);
+      const cx = wc / 2 + (rnd() - .5) * wc * (.18 + dpt * .5);
+      x.fillStyle = `rgba(226,232,236,${(.05 + rnd() * .16) * (1 - dpt)})`;
+      x.fillRect(Math.round(cx - len / 2), yy, Math.round(len), 1);
+    }
+    // the monolith, reflected in slices
+    const off = document.createElement("canvas"), r = Math.ceil(S * k);
+    off.width = r; off.height = r;
+    const o = off.getContext("2d"); o.scale(r / 100, r / 100);
+    o.fillStyle = "#03050b"; o.fill(tile);
+    o.globalCompositeOperation = "destination-out"; o.fill(seamP); o.fill(cavP);
+    o.globalCompositeOperation = "source-over";
+    o.fillStyle = "rgba(122,196,228,.5)"; o.fill(gemP); o.fillStyle = "rgba(255,255,255,.14)"; o.fill(facP);
+    const RH = S * .86;
+    x.save(); if ("filter" in x) x.filter = "blur(" + (.8 * k) + "px)";
+    for (let y = 0, n = 0; y < RH; n++) {
+      const dd = y / RH, hh = Math.max(2, Math.round((3 + dd * 12) * (.5 + rnd()) * S / 260)), gap = dd < .4 ? (rnd() < .65 ? 0 : 1) : Math.max(1, Math.round((.5 + dd * 4) * (.3 + rnd()) * S / 260));
+      const sh = (Math.sin(y * .23 / (S / 260) + 1.3) * (1.5 + dd * 11) + Math.sin(y * .057 / (S / 260)) * dd * 6 + (rnd() - .5) * (1 + dd * 5)) * S / 260;
+      if (dd > .2 && rnd() < .12) { y += hh + gap; continue; }
+      x.globalAlpha = .9 * Math.pow(1 - dd, 1.25);
+      // mirrored: depth y below the line shows the row y above the base
+      x.save(); x.translate(0, hy + 1 + y + hh); x.scale(1, -1);
+      x.drawImage(off, 0, (1 - (y + hh) / S) * r, r, hh / S * r, mx + sh, 0, S, hh);
+      x.restore();
+      y += hh + gap;
+    }
+    x.restore();
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    // grain, a little posterising, and a stipple of light that gathers towards the horizon, as if drawn in dots
+    const im = x.getImageData(0, 0, w, h), e = im.data, qq = 5;
+    for (let p = 0; p < e.length; p += 4) {
+      const nz = (rnd() + rnd() - 1) * 13;
+      for (let j = 0; j < 3; j++) { const v = e[p + j]; e[p + j] = v * .6 + Math.round(v / qq) * qq * .4 + nz; }
+    }
+    const dots = Math.round(w * hp * .006);
+    for (let n = 0; n < dots; n++) {
+      const yy = Math.floor(Math.pow(rnd(), .55) * hp), xx = Math.floor(rnd() * w), o = (yy * w + xx) * 4, t = yy / hp;
+      const lift = (14 + rnd() * 34) * (.35 + t * .9);
+      e[o] += lift * .86; e[o + 1] += lift * .93; e[o + 2] += lift;
+    }
+    x.putImageData(im, 0, 0);
+    // the same scene, washed with full daylight: the drain passes through this, never through grey
+    const pc = pale.getContext("2d"), pi = pc.createImageData(w, h), pd = pi.data;
+    for (let y = 0; y < h; y++) {
+      const tc = y < hp ? [204, 220, 238] : [190, 207, 228];
+      for (let i = 0, o = y * w * 4; i < w; i++, o += 4) { for (let j = 0; j < 3; j++) pd[o + j] = e[o + j] * .22 + tc[j] * .78; pd[o + 3] = 255; }
+    }
+    pc.putImageData(pi, 0, 0);
+    cv.style.display = pale.style.display = "block";
+  }
+  paint();
+
+  /* ---------- the motion ---------- */
+  const veil = $("#veil"), hz = $("#hz"), page = $("#page"), lit = mk.querySelector(".lit");
+  veil.style.display = "block";
+  const OUT = "cubic-bezier(.22,.61,.36,1)", SOFT = "cubic-bezier(.45,0,.25,1)";
+  const anims = [];
+  const A = (el, kf, at, dur, easing) => { const a = el.animate(kf, { delay: at, duration: dur, easing: easing || OUT, fill: "both" }); anims.push(a); return a; };
+  A(line, [{ opacity: 1 }, { opacity: 0 }], T.fade, 800, "cubic-bezier(.4,0,.6,1)");
+  // the veil lifts from the horizon upwards: light rises out of the dark
+  A(veil, [{ transform: "translateY(0)", opacity: 1 }, { transform: `translateY(${-H * 1.55}px)`, opacity: .0 }], T.dawn, 2500, "cubic-bezier(.33,.1,.25,1)");
+  // a silhouette against the dawn; it settles to its own stone as the sky drains
+  A(mk.querySelector(".stone"), [{ fill: "#04060b" }, { fill: "#141311" }], T.drain, 1000, SOFT);
+  A(lit, [{ opacity: 0 }, { opacity: 1 }], T.lit, 900, OUT);
+  A(cv, [{ opacity: 1 }, { opacity: 0 }], T.drain, 750, SOFT);
+  A(pale, [{ opacity: 1 }, { opacity: 0 }], T.drain + 450, 800, SOFT);
+  A(lit, [{ opacity: 1 }, { opacity: 0 }], T.drain, 900, SOFT).effect.updateTiming({ fill: "forwards" });
+  A(hz, [{ opacity: 0 }, { opacity: 1 }], T.drain + 300, 900, SOFT);
+  A(page, [{ opacity: 0 }, { opacity: 1 }], T.page, 800, OUT);
+
+  let done = false;
+  const end = () => {
+    if (done) return; done = true;
+    anims.forEach((a) => { try { a.finish(); } catch (e) {} });
+    typeTo(1e9);
+    veil.remove(); line.remove(); cv.remove(); pale.remove(); lit.style.opacity = 0;
+    de.classList.remove("op"); meta.content = "#EEEAE0";
+    ["pointerdown", "keydown", "wheel", "touchstart", "scroll", "resize"].forEach((ev) => removeEventListener(ev, end));
+  };
+
+  if (freeze !== null) {
+    anims.forEach((a) => { a.pause(); a.currentTime = freeze; });
+    typeTo(freeze);
+    if (freeze >= T.drain) { de.classList.remove("op"); }
+    window.__T = T;
+    return;
+  }
+  window.__T = T;
+  ["pointerdown", "keydown", "wheel", "touchstart", "scroll", "resize"].forEach((ev) => addEventListener(ev, end, { passive: true }));
+  const t0 = performance.now();
+  const tick = (now) => {
+    if (done) return;
+    const t = now - t0;
+    typeTo(t);
+    if (t >= T.drain && de.classList.contains("op")) { de.classList.remove("op"); meta.content = "#EEEAE0"; }
+    if (t >= T.end) return end();
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
 })();
 </script>
 </body>
