@@ -7,120 +7,61 @@
 <style>
 @font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
 @font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: swap; }
-@font-face { font-family: "Commit Mono"; src: url("assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
-:root { --ink: #0B0C0C; --paper: #EEEAE0; --sky: #94E6FF; color-scheme: dark; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { background: var(--ink); }
-body { color: var(--paper); font: 400 18px/1.55 "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; height: 280vh; }
-a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; text-decoration-color: rgba(238,234,224,.35); }
+html, body { background: #0B0C0C; height: 100%; }
+body { color: #EEEAE0; font: 400 17px/1.55 "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; overflow: hidden; }
+a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .22em; text-decoration-color: rgba(238,234,224,.3); transition: text-decoration-color .3s ease; }
 a:hover { text-decoration-color: currentColor; }
-:focus-visible { outline: 1px solid var(--sky); outline-offset: 3px; }
-::selection { background: var(--sky); color: var(--ink); }
-#c, .fallback { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
-.fallback { display: none; place-items: center; } .fallback svg { width: min(36vh, 60vw); height: auto; }
-.nogl .fallback { display: grid; } .nogl #c { display: none; }
-header { position: fixed; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: center;
-  padding: calc(26px + env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-right, 0px)) 0 max(28px, env(safe-area-inset-left, 0px)); pointer-events: none; }
-header svg { height: 20px; width: auto; display: block; color: var(--paper); --lit: var(--sky); }
-.meta { font: 400 11px "Commit Mono", monospace; letter-spacing: .06em; color: #6F716D; }
-main { position: fixed; left: max(28px, env(safe-area-inset-left, 0px)); bottom: calc(32px + env(safe-area-inset-bottom, 0px)); max-width: 30em; font-size: 17px; color: rgba(238,234,224,.82); opacity: 0; pointer-events: none; }
-main.on { pointer-events: auto; }
-main p + p { margin-top: .9em; } main em { font-style: italic; color: var(--paper); }
-.hint { position: fixed; right: max(28px, env(safe-area-inset-right, 0px)); bottom: calc(32px + env(safe-area-inset-bottom, 0px)); font: 400 11px "Commit Mono", monospace; letter-spacing: .06em; color: #6F716D; transition: opacity .8s ease; }
-@media (max-width: 600px) { main { right: 24px; font-size: 16px; } .hint { display: none; } }
+:focus-visible { outline: 1px solid #94E6FF; outline-offset: 4px; }
+::selection { background: #94E6FF; color: #0B0C0C; }
+/* the stone, at the scale of a building: taller than the screen, its right side off the page */
+.stone { position: fixed; height: 132vh; width: 132vh; top: -17vh; left: calc(74vw - 66vh); display: block; }
+.print { transition: transform 2.4s cubic-bezier(.2,.7,.2,1); transform-origin: 50px 52px; }
+.page { position: relative; height: 100%; display: grid; grid-template-rows: auto 1fr auto; padding: max(34px, env(safe-area-inset-top, 0px)) 0 max(30px, env(safe-area-inset-bottom, 0px)); padding-inline: max(48px, env(safe-area-inset-left, 0px)) max(48px, env(safe-area-inset-right, 0px)); }
+header svg { height: 22px; width: auto; display: block; color: #EEEAE0; --lit: #94E6FF; }
+main { align-self: center; max-width: 25em; }
+h1 { font-weight: 400; font-size: clamp(36px, 3.8vw, 60px); line-height: 1.04; letter-spacing: -.022em; text-wrap: balance; margin-bottom: 30px; }
+main p { color: rgba(238,234,224,.66); max-width: 23em; text-wrap: pretty; } main p + p { margin-top: .7em; }
+footer { display: flex; gap: 36px; font-size: 14px; color: rgba(238,234,224,.42); }
+footer .credit { margin-left: auto; text-align: right; max-width: 26em; }
+@media (max-width: 760px) {
+  body { overflow: auto; }
+  .stone { height: 118vw; width: 118vw; top: -8vw; left: 12vw; position: absolute; }
+  .page { min-height: 100%; height: auto; padding-inline: 24px; grid-template-rows: auto 1fr auto; }
+  main { align-self: end; padding-top: 92vw; margin-bottom: 44px; }
+  h1 { font-size: 36px; margin-bottom: 20px; }
+  footer { flex-wrap: wrap; gap: 8px 24px; } footer .credit { margin-left: 0; text-align: left; flex-basis: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .print { transition: none; } }
 </style></head>
 <body>
-<canvas id="c" aria-label="The Antimony mark: a stone split open, with a crystal set in the break"></canvas>
-<div class="fallback" aria-hidden="true"><svg viewBox="0 0 100 100" style="width:100%;height:100%" aria-hidden="true"><defs><clipPath id="bc18"><rect width="100" height="100" rx="22"/></clipPath><mask id="bm18"><rect width="100" height="100" fill="#fff"/><path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z" fill="#000"/><path d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" fill="#000"/></mask></defs><g clip-path="url(#bc18)"><rect width="100" height="100" fill="#1C1B19" mask="url(#bm18)"/><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z" fill="#94E6FF"/><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" fill-opacity=".28"/></g></svg></div>
-<header><svg viewBox="-20 -830 4186 1070" role="img" aria-label="Antimony"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg><span class="meta">london</span></header>
-<main id="m">
-  <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator&#39;s side of every sponsorship deal.</p>
-  <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
-</main>
-<div class="hint" id="hint" aria-hidden="true">scroll</div>
-<script>addEventListener("error", e => { if (/three|WebGL/i.test(String(e.message) + (e.filename || ""))) document.documentElement.classList.add("nogl"); }, true);</script>
-<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/" } }</script>
-<script type="module">
-import * as THREE from "three";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-const G = {"L": [[-29.655, 49.034], [-31.301, 48.84], [-32.926, 48.516], [-34.52, 48.067], [-36.074, 47.493], [-37.579, 46.8], [-39.024, 45.99], [-40.402, 45.07], [-41.703, 44.044], [-42.919, 42.919], [-44.044, 41.703], [-45.07, 40.402], [-45.99, 39.024], [-46.8, 37.579], [-47.493, 36.074], [-48.067, 34.52], [-48.516, 32.926], [-48.84, 31.301], [-49.034, 29.655], [-49.1, 27.982], [-49.1, -27.982], [-49.034, -29.655], [-48.84, -31.301], [-48.516, -32.926], [-48.067, -34.52], [-47.493, -36.074], [-46.8, -37.579], [-45.99, -39.024], [-45.07, -40.402], [-44.044, -41.703], [-42.919, -42.919], [-41.703, -44.044], [-40.402, -45.07], [-39.024, -45.99], [-37.579, -46.8], [-36.074, -47.493], [-34.52, -48.067], [-32.926, -48.516], [-31.301, -48.84], [-29.655, -49.034], [-27.982, -49.1], [-16.584, -49.1], [-13.993, -35.357], [-29.163, -10.33], [-24.0, 7.71], [5.461, 32.677], [11.643, 49.1], [-27.982, 49.1]], "R": [[14.021, 32.319], [29.163, 7.33], [24.0, -10.71], [-5.506, -35.707], [-10.666, -49.1], [27.982, -49.1], [29.655, -49.034], [31.301, -48.84], [32.926, -48.516], [34.52, -48.067], [36.074, -47.493], [37.579, -46.8], [39.024, -45.99], [40.402, -45.07], [41.703, -44.044], [42.919, -42.919], [44.044, -41.703], [45.07, -40.402], [45.99, -39.024], [46.8, -37.579], [47.493, -36.074], [48.067, -34.52], [48.516, -32.926], [48.84, -31.301], [49.034, -29.655], [49.1, -27.982], [49.1, 27.982], [49.034, 29.655], [48.84, 31.301], [48.516, 32.926], [48.067, 34.52], [47.493, 36.074], [46.8, 37.579], [45.99, 39.024], [45.07, 40.402], [44.044, 41.703], [42.919, 42.919], [41.703, 44.044], [40.402, 45.07], [39.024, 45.99], [37.579, 46.8], [36.074, 47.493], [34.52, 48.067], [32.926, 48.516], [31.301, 48.84], [29.655, 49.034], [27.982, 49.1], [17.332, 49.1]], "gem": [[8.6, 28.5], [20.58, 3.3], [17.82, -6.3], [-8.6, -31.5], [-20.58, -6.3], [-17.82, 3.3]]}, still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const main = document.getElementById("m"), hint = document.getElementById("hint"), c = document.getElementById("c");
-let R;
-try { R = new THREE.WebGLRenderer({ canvas: c, antialias: true, powerPreference: "high-performance" }); } catch (e) { document.documentElement.classList.add("nogl"); throw e; }
-R.setPixelRatio(Math.min(2, devicePixelRatio || 1)); R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = .95; R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap; R.setClearColor(new THREE.Color("#0B0C0C"), 1);
-const scene = new THREE.Scene(), pm = new THREE.PMREMGenerator(R);
-scene.environment = pm.fromScene(new RoomEnvironment(), .04).texture;
-const cam = new THREE.PerspectiveCamera(26, 1, 1, 4000);
-
-// grain for the stone: a little noise in its roughness and its surface, so the light has something to catch
-function grain(n = 512) { const cv = document.createElement("canvas"); cv.width = cv.height = n; const g = cv.getContext("2d"), d = g.createImageData(n, n);
-  let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < n * n; i++) { const v = 150 + (r() - .5) * 70 + (r() < .02 ? 40 : 0); d.data[i * 4] = d.data[i * 4 + 1] = d.data[i * 4 + 2] = v; d.data[i * 4 + 3] = 255; }
-  g.putImageData(d, 0, 0); g.filter = "blur(.6px)"; g.drawImage(cv, 0, 0);
-  const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(.02, .02); return t; }
-const gt = grain();
-const stoneM = new THREE.MeshStandardMaterial({ color: 0x100f0e, roughness: .62, metalness: .25, roughnessMap: gt, bumpMap: gt, bumpScale: .12, envMapIntensity: .3 });
-const D = 22, ext = { depth: D, bevelEnabled: true, bevelThickness: 1.1, bevelSize: 0.9, bevelSegments: 5, curveSegments: 1 };
-const half = p => { const s = new THREE.Shape(p.map(([x, y]) => new THREE.Vector2(x, y))); const g = new THREE.ExtrudeGeometry(s, ext); g.translate(0, 0, -D / 2);
-  // world-space uvs, so the grain runs across both halves as one stone
-  const P = g.attributes.position, uv = new Float32Array(P.count * 2); for (let i = 0; i < P.count; i++) { uv[i * 2] = P.getX(i) + P.getZ(i) * .7; uv[i * 2 + 1] = P.getY(i) + P.getZ(i) * .3; } g.setAttribute("uv", new THREE.BufferAttribute(uv, 2)); return new THREE.Mesh(g, stoneM); };
-const L = half(G.L), Rr = half(G.R);
-// the crystal: the hexagon as a prism with a roof, its ridge running from point to point, so its two halves are two facets
-function crystal(h, depth = 12, roof = 10) {
-  const n = h.length, cx = h.reduce((a, p) => a + p[0], 0) / n, cy = h.reduce((a, p) => a + p[1], 0) / n;
-  const sh = h.map(([x, y]) => [cx + (x - cx) * .965, cy + (y - cy) * .965]);
-  const zf = i => (i === 0 || i === 3) ? depth / 2 + roof : depth / 2, v = [];
-  const tri = (a, b, cc) => v.push(...a, ...b, ...cc);
-  const F = i => [sh[i][0], sh[i][1], zf(i)], B = i => [sh[i][0], sh[i][1], -depth / 2];
-  tri(F(0), F(2), F(1)); tri(F(0), F(3), F(2)); tri(F(0), F(5), F(4)); tri(F(0), F(4), F(3));          // the two facets
-  for (let i = 0; i < n; i++) { const j = (i + 1) % n; tri(F(i), F(j), B(j)); tri(F(i), B(j), B(i)); }      // the sides
-  tri(B(0), B(1), B(2)); tri(B(0), B(2), B(3)); tri(B(0), B(3), B(4)); tri(B(0), B(4), B(5));            // the back
-  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(v, 3)); g.computeVertexNormals(); return g; }
-const gemM = new THREE.MeshPhysicalMaterial({ color: 0x62cdf2, emissive: 0x2aa6d6, emissiveIntensity: .22, roughness: .1, metalness: .05, clearcoat: 1, clearcoatRoughness: .04, ior: 1.6, flatShading: true, envMapIntensity: .9, side: THREE.DoubleSide });
-const gem = new THREE.Mesh(crystal(G.gem), gemM);
-const mark = new THREE.Group(); mark.add(L, Rr, gem); scene.add(mark);
-[L, Rr, gem].forEach(m => { m.castShadow = true; m.receiveShadow = true; });
-// it stands on a floor that goes to black, so it is a thing in a room, not a picture of an icon
-const ink = new THREE.Color("#0B0C0C"); scene.fog = new THREE.Fog(ink, 300, 640);
-const pool = (() => { const cv = document.createElement("canvas"); cv.width = cv.height = 256; const g = cv.getContext("2d"), r = g.createRadialGradient(128, 128, 0, 128, 128, 128);
-  r.addColorStop(0, "#fff"); r.addColorStop(.45, "#777"); r.addColorStop(1, "#000"); g.fillStyle = r; g.fillRect(0, 0, 256, 256); return new THREE.CanvasTexture(cv); })();
-// the floor is only a pool of light around the stone, fading into the page
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(520, 520), new THREE.MeshStandardMaterial({ color: 0x0e0e0d, roughness: .72, metalness: .1, envMapIntensity: 0, alphaMap: pool, transparent: true, depthWrite: false }));
-floor.rotation.x = -Math.PI / 2; floor.position.y = -51.2; floor.receiveShadow = true; scene.add(floor);
-// light: one key from the upper left, a cool rim from behind, and the crystal's own light, which reaches the cut faces as the seam opens
-const key = new THREE.SpotLight(0xfff1e0, 9e4, 0, .34, 1, 1.7); key.position.set(-150, 210, 190); key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 6; key.shadow.bias = -.0004; key.shadow.camera.near = 50; key.shadow.camera.far = 800; scene.add(key); scene.add(key.target);
-const rim = new THREE.DirectionalLight(0xe8f4ff, .9); rim.position.set(220, 120, -200); scene.add(rim);
-const low = new THREE.DirectionalLight(0x94e6ff, .25); low.position.set(60, -200, 80); scene.add(low);
-const glow = new THREE.PointLight(0x94e6ff, 0, 90, 1.6); glow.position.set(0, 0, 6); mark.add(glow);
-// the seam, in the drawing's units: its direction, and the normal the halves part along
-const S16 = Math.sin(16 * Math.PI / 180), C16 = Math.cos(16 * Math.PI / 180), SD = new THREE.Vector2(S16, C16), NN = new THREE.Vector2(C16, -S16);
-let W = 1, H = 1, P = 0, Pd = 0, px = 0, py = 0, tx = 0, ty = 0;
-function size() { W = innerWidth; H = innerHeight; R.setSize(W, H, false); cam.aspect = W / H;
-  const want = Math.min(.44, (W / H) * .6); cam.position.set(0, 0, (100 / want) / (2 * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)))); cam.updateProjectionMatrix(); scene.fog.near = cam.position.z * .75; scene.fog.far = cam.position.z * 1.6; }
-const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2, cl = v => Math.max(0, Math.min(1, v)), seg = (p, a, b) => cl((p - a) / (b - a));
-const z0 = () => cam.position.z;
-let Z0 = 0, t0 = performance.now();
-function frame(now) {
-  const t = (now - t0) / 1000, max = document.documentElement.scrollHeight - innerHeight;
-  P = still ? 1 : max > 0 ? cl(scrollY / max) : 0; Pd += (P - Pd) * .06;
-  const turn = ease(seg(Pd, 0, .7)), open = ease(seg(Pd, .15, .8)), text = seg(Pd, .62, .9);
-  px += (tx - px) * .04; py += (ty - py) * .04;
-  const idle = still ? 0 : Math.sin(t * .23) * .5 + .5;
-  // from three quarters to face on, as you scroll; the pointer leans it a little
-  mark.rotation.y = THREE.MathUtils.degToRad(lerp(-32, -4, turn) + px * 4 + (1 - turn) * idle * 2);
-  mark.rotation.x = 0;
-  const g = open * 3.2, sl = open * 1.6;
-  L.position.set(-g - sl * .4, 0, 0); Rr.position.set(g + sl * .4, 0, 0);
-  gem.position.z = open * 3; gem.rotation.z = -open * .03;
-  gemM.emissiveIntensity = .2 + open * .2 + (still ? 0 : Math.sin(t * 1.05) * .02); glow.intensity = open * 2600;
-  const z = Z0 * lerp(1.08, .9, turn); cam.position.set(px * -6, lerp(34, 14, turn) - py * 4, z); cam.lookAt(0, lerp(-6, 2, turn) + text * 6, 0);
-  main.style.opacity = text; main.style.transform = `translateY(${(1 - text) * 10}px)`; main.classList.toggle("on", text > .5);
-  hint.style.opacity = Pd < .03 && t > 1.2 ? 1 : 0;
-  R.render(scene, cam); requestAnimationFrame(frame);
-}
-const lerp = (a, b, t) => a + (b - a) * t;
-addEventListener("pointermove", e => { tx = e.clientX / innerWidth * 2 - 1; ty = e.clientY / innerHeight * 2 - 1; });
-addEventListener("resize", () => { size(); Z0 = z0(); });
-size(); Z0 = z0(); requestAnimationFrame(frame);
+<svg class="stone" viewBox="0 0 100 100" aria-hidden="true">
+<defs>
+  <clipPath id="t"><rect width="100" height="100" rx="22"/></clipPath><clipPath id="g"><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"/></clipPath>
+  <mask id="m"><rect width="100" height="100" fill="#fff"/><path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z" fill="#000"/><path d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" fill="#000"/></mask>
+  <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="2.4" numOctaves="2" seed="4"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .05 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>
+  <linearGradient id="fall" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1C1B19"/><stop offset=".55" stop-color="#141311"/><stop offset="1" stop-color="#0F0F0E"/></linearGradient>
+</defs>
+<g clip-path="url(#t)">
+  <g mask="url(#m)"><rect width="100" height="100" fill="url(#fall)"/><rect width="100" height="100" fill="#fff" filter="url(#grain)"/></g>
+  <g clip-path="url(#g)"><g class="print"><image href="assets/prints/18972.webp" x="24" y="14" width="52" height="76.4" preserveAspectRatio="xMidYMid slice"/></g>
+    <path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" fill-opacity=".07"/></g>
+</g>
+</svg>
+<div class="page">
+  <header><svg viewBox="-20 -830 4186 1070" role="img" aria-label="Antimony"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg></header>
+  <main>
+    <h1>Software for the people who make the work.</h1>
+    <p>Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator&#39;s side of every sponsorship deal.</p>
+    <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
+  </main>
+  <footer><span>London</span><a href="https://eoinforker.github.io/orbe-site/">Orbe</a><span class="credit">In the stone: Utagawa Hiroshige, <i>Autumn Moon over Ishiyama Temple</i>, 1857. Art Institute of Chicago.</span></footer>
+</div>
+<script>
+// the print sits behind the crystal like a view through glass: it shifts a little, the other way, as you move
+(() => { if (matchMedia("(prefers-reduced-motion: reduce)").matches || !matchMedia("(pointer: fine)").matches) return;
+  const p = document.querySelector(".print");
+  addEventListener("pointermove", e => { const x = e.clientX / innerWidth - .5, y = e.clientY / innerHeight - .5; p.style.transform = `translate(${-x * 1.4}px, ${-y * 1.4}px) scale(1.04)`; });
+})();
 </script>
 </body></html>
