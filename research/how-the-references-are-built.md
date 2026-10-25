@@ -49,3 +49,15 @@ Served as readable source, not a bundle: `engine/src/renderer.js`, `scheduler.js
 - **The weakness.** The page is composed for a 3840 by 2160 thumbnail and scaled by one factor (`--s`), so on other shapes it shrinks rather than recomposes.
 
 Antimony's mosaic (`x/mosaic/`) takes the technique and fixes the weakness: the wall is laid out from the viewer's own screen, so a phone gets its own composition.
+
+## Why First of Kind outclasses us (from `src/site.js`)
+
+1. **It opens on nothing.** Black, grain, a masthead in small bold capitals, and one small word tile that calls, blinking now and then, until it is clicked. Left alone for three seconds it moves on by itself. Confidence is the emptiness.
+2. **It runs on film time.** Whole frames at 24 fps, drawn only when the frame changes. Motion reads as cinema, not as a web page at 60 fps.
+3. **The intro is a grammar.** One tile, then the hidden wall opens around it, the title lands, a wave turns the ground, the story's words land a phrase at a time, the camera lands on the portrait, the lockup lands. Two clicks at most; the rest plays itself.
+4. **The lockup is choreographed by the frame.** The panel wipes in over 9 frames; the meta types a character a frame, its lines 3 frames apart; the title's letters resolve in reading order, each trying two of its own case for 2 frames; the chip at 18; each wordmark wipes in every 3 frames.
+5. **The composition is a magazine cover.** The portrait is huge and bleeds off the left and bottom; the panel, in the brand dark, takes the right. On a phone the portrait runs to the bottom edge and the panel is the top.
+6. **Restraint in colour.** Greys, and one red for the story's words. No glow.
+7. **One system.** Art, type, sound and film are one engine fed by one data file; every word's look comes from its meaning.
+
+Our pages lost on every count: they opened loud, moved at screen rate, explained themselves in paragraphs, centred their art, glowed in cyan, and mixed systems.

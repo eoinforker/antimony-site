@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#0B0C0C"><link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<title>Antimony</title>
+<style>
+/* Antimony. A film-time stage: it opens on one word, the wall opens around it, a wave turns the wall into the crystal,
+   the camera lands on it bleeding off the left and the bottom, and the lockup lands in the brand dark on the right.
+   On a phone the crystal runs to the bottom edge and the lockup is the top. */
+@font-face { font-family: "Commit Mono"; src: url("../../assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 400 600; font-display: block; }
+@font-face { font-family: "Timeless Sans"; src: url("../../assets/fonts/timeless-sans-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Timeless Sans"; src: url("../../assets/fonts/timeless-sans-500.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+:root { --ground: #0B0C0C; --panel: rgba(20,22,21,.985); --paper: #F2F1EC; --text: rgba(242,241,236,.68); --faint: rgba(242,241,236,.3); --chip: rgba(242,241,236,.42); --chip-ink: #141615; --sky: #94E6FF;
+  --sans: "Timeless Sans", "Helvetica Neue", Arial, sans-serif; --mono: "Commit Mono", ui-monospace, Menlo, monospace; --gutter: 36px; color-scheme: dark; }
+@media (max-width: 759px) { :root { --gutter: 18px; } }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--ground); overflow: hidden; }
+body { color: var(--text); font: 500 11px/1.3 var(--sans); letter-spacing: .12em; text-transform: uppercase; -webkit-font-smoothing: antialiased; }
+button { all: unset; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 1px solid var(--paper); outline-offset: 3px; }
+a:hover, button:hover:not([disabled]) { color: var(--paper); }
+#stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: manipulation; cursor: pointer; }
+body[data-step="art"] #stage { cursor: default; }
+/* the masthead */
+.mast { position: fixed; z-index: 6; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: baseline; pointer-events: none;
+  padding: calc(20px + env(safe-area-inset-top, 0px)) max(var(--gutter), env(safe-area-inset-right, 0px)) 0 max(var(--gutter), env(safe-area-inset-left, 0px)); }
+.mast > * { pointer-events: auto; display: flex; gap: 16px; align-items: baseline; }
+.mast b { color: var(--paper); font-weight: 500; letter-spacing: .26em; }
+/* the hint */
+.hint { position: fixed; z-index: 6; left: 0; right: 0; bottom: 0; text-align: center; pointer-events: none; min-height: 1.3em;
+  padding: 0 max(var(--gutter), env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(var(--gutter), env(safe-area-inset-left, 0px)); transition: opacity .25s; }
+.hint b { color: var(--paper); font-weight: 500; } .hint i { font-style: normal; color: var(--sky); }
+body[data-step="art"]:not(.narrow) .hint { left: 0; right: 50%; text-align: left; }
+/* the lockup panel: the brand dark, wiping in from the right; on a phone, down from the top */
+.panel { position: fixed; z-index: 4; top: 0; right: 0; bottom: 0; width: 50%; background: var(--panel); color: var(--paper);
+  clip-path: inset(0 0 0 100%); transition: clip-path 375ms cubic-bezier(.33,1,.68,1); display: flex; flex-direction: column; justify-content: center;
+  padding: 0 max(var(--gutter), env(safe-area-inset-right, 0px)) 0 clamp(28px, 6vw, 110px); }
+.panel.on { clip-path: inset(0 0 0 0); }
+body.narrow .panel { width: 100%; bottom: auto; height: var(--ph, 48%); clip-path: inset(0 0 100% 0); justify-content: flex-end; padding: calc(64px + env(safe-area-inset-top, 0px)) max(var(--gutter), env(safe-area-inset-right, 0px)) 26px max(var(--gutter), env(safe-area-inset-left, 0px)); }
+body.narrow .panel.on { clip-path: inset(0 0 0 0); }
+.block { display: flex; flex-direction: column; gap: clamp(18px, 2.4vw, 34px); max-width: 640px; }
+.meta { font: 500 clamp(11px, 1.05vw, 14px)/1.42 var(--mono); letter-spacing: .04em; color: var(--text); white-space: pre; min-height: 4.26em; text-transform: uppercase; }
+.title { font: 500 clamp(36px, 4.9vw, 84px)/.98 var(--sans); letter-spacing: -.052em; text-transform: none; color: var(--paper); min-height: 1.96em; }
+.title .l { display: inline; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; height: 30px; padding: 0 11px 1px; background: var(--paper); color: var(--chip-ink); font-weight: 500; letter-spacing: .02em;
+  opacity: 0; transition: opacity 120ms, background-color 150ms, color 150ms; }
+.chip.on { opacity: 1; }
+.chip.dim { background: var(--chip); }
+a.chip:hover, button.chip:hover { background: var(--sky); color: var(--chip-ink); }
+.chip[aria-disabled="true"] { cursor: default; }
+.bar { display: flex; align-items: center; gap: 14px; color: var(--faint); opacity: 0; transition: opacity 300ms; margin-top: clamp(10px, 3vh, 40px); }
+.bar.on { opacity: 1; }
+.bar img { width: 26px; height: 26px; border-radius: 22%; }
+.bar span b { color: var(--text); font-weight: 500; }
+body.narrow .bar, body.narrow .mast .sub, body.narrow #letters-btn { display: none; }
+/* sheets: the company and its letters, over the stage */
+.sheet { position: fixed; z-index: 8; inset: 0; background: rgba(11,12,12,.95); display: grid; place-items: center; opacity: 0; visibility: hidden; transition: opacity 300ms, visibility 0s 300ms; }
+.sheet.on { opacity: 1; visibility: visible; transition: opacity 300ms; }
+.sheet .in { width: min(720px, calc(100% - 2 * var(--gutter))); display: grid; gap: 22px; text-transform: none; letter-spacing: 0; color: var(--paper); font: 400 clamp(19px, 1.7vw, 24px)/1.42 var(--sans); }
+.sheet .in p + p { color: rgba(242,241,236,.62); }
+.sheet .k { font: 500 11px/1.3 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--text); display: flex; justify-content: space-between; }
+.sheet .row { display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: baseline; border-block: 1px solid rgba(242,241,236,.14); padding-block: 16px; }
+.fallback { position: fixed; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; color: var(--paper); }
+</style>
+<canvas id="stage" aria-label="A wall of words about Antimony and Orbe; their tones draw a crystal with the letter A inside"></canvas>
+<header class="mast">
+  <div><b>ANTIMONY</b><span class="sub">London</span></div>
+  <div><button id="company-btn">Company</button><button id="letters-btn">Letters</button><button id="sound" aria-pressed="false">Sound off</button></div>
+</header>
+<section class="panel" id="panel" aria-label="Antimony">
+  <div class="block">
+    <div class="meta" id="meta" aria-label="Antimony, London, 2026, makers of Orbe"></div>
+    <h1 class="title" id="title" aria-label="We build for the people who make the work."></h1>
+    <div class="chips" id="chips">
+      <a class="chip" href="https://eoinforker.github.io/orbe-site/">VISIT ORBE</a>
+      <button class="chip dim" data-sheet="company">COMPANY</button>
+      <span class="chip dim" aria-disabled="true">LETTERS: SOON</span>
+    </div>
+    <div class="bar" id="bar"><img src="../../assets/orbe-mark-on-sky.svg" alt=""><span><b>ORBE</b> · THE CREATOR'S SIDE OF EVERY SPONSORSHIP DEAL</span></div>
+  </div>
+</section>
+<div class="hint" id="hint"></div>
+<div class="sheet" id="sheet-company" role="dialog" aria-label="Company"><div class="in">
+  <div class="k"><span>Company</span><button data-close>Close</button></div>
+  <p>Antimony is a London company. We build software for the people who make the work, and we sit on their side of the table, never across it. We earn when they earn, and we build for decades rather than rounds: plain records, clear rules, nothing we would be embarrassed to explain.</p>
+  <p>Antimony, element 51, is almost never found alone in nature; its old name was read as anti-monos, not alone. Alchemists used it to purify gold. Both are what we want our products to do for the people who use them.</p>
+  <a class="row" href="https://eoinforker.github.io/orbe-site/"><span>Orbe, the creator's side of every sponsorship deal</span><span class="k" style="display:inline">Visit ↗</span></a>
+</div></div>
+<div class="sheet" id="sheet-letters" role="dialog" aria-label="Letters"><div class="in">
+  <div class="k"><span>Letters</span><button data-close>Close</button></div>
+  <p>Occasional, numbered letters from the company, on deals, money and the business of making things.</p>
+  <div class="row"><span>Antimony 001: Never alone</span><span class="k" style="display:inline">In preparation</span></div>
+</div></div>
+
+<script>
+(() => {
+"use strict";
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const FPS = 24;
+
+// ── the vocabulary, on Antimony's axis from the person who makes the work to the agent that works for them ──
+// skins: 0 ink (craft), 1 flap (names), 2 cursor (tools), 3 latent (agents), 4 screen (money), 5 corrupt (friction)
+const REALMS = [
+  { skin: 0, realm: "Hand", rule: "How a person makes or judges the work",
+    words: ["MAKE", "MADE", "CRAFT", "TASTE", "VOICE", "WORK", "HANDS", "STUDIO", "SONG", "VIDEO", "EDIT", "DRAFT", "TAKE", "CUT", "SCORE", "SKETCH", "SHOOT", "WRITE", "CREATE", "CREATOR", "MAKERS", "ART", "PRINT", "FILM"] },
+  { skin: 1, realm: "Names", rule: "Companies, products and the people on the board",
+    words: ["ORBE", "ANTIMONY", "SB", "51", "LONDON", "OXFORD", "DUBLIN", "MONTREAL", "ADA", "KETTLE", "CRUMB", "MANAGER", "ROSTER", "LABEL", "AGENCY"] },
+  { skin: 2, realm: "Tools", rule: "Rules you set and records you keep",
+    words: ["RULES", "TAP", "FLOOR", "RECORD", "PROOF", "TERMS", "USAGE", "BRIEF", "INVOICE", "LEDGER", "NOTES", "INBOX", "REPLY", "SIGN"] },
+  { skin: 3, realm: "Machine", rule: "It thinks, or works on your behalf",
+    words: ["AGENT", "AGENTS", "MODEL", "COUNTER", "PRICE", "SIGNAL", "ANSWER", "MINUTE", "LEARN", "ASK", "REASON", "MATCH"] },
+  { skin: 4, realm: "Money", rule: "Deals, fees and getting paid",
+    words: ["DEAL", "DEALS", "£900", "£600", "FEE", "RATE", "PAID", "HELD", "PAYOUT", "SPONSOR", "BRANDS", "OFFER", "VALUE", "WORTH"] },
+  { skin: 5, realm: "Friction", rule: "What goes wrong when you negotiate alone",
+    words: ["ALONE", "LOWBALL", "LATE", "CHASE", "UNPAID", "GHOSTED", "EXCLUSIVE", "FINE PRINT", "WAIT"] },
+];
+const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789£.·/-&' ";
+const WORDS = [], WSKIN = [], WIX = new Map();
+const wordId = (w, s) => { if (!WIX.has(w)) { WIX.set(w, WORDS.length); WORDS.push(w); WSKIN.push(s); } return WIX.get(w); };
+REALMS.forEach(r => r.words.forEach(w => wordId(w, r.skin)));
+const SEED_WORD = wordId("ANTIMONY", 1);
+const TITLE_WORDS = [["NEVER", 0], ["ALONE", 5]].map(([w, s]) => [wordId(w, s), s]);
+
+// ── WebGL2 ──
+const canvas = document.getElementById("stage");
+const gl = canvas.getContext("webgl2", { antialias: false, premultipliedAlpha: false });
+if (!gl) { canvas.remove(); document.body.insertAdjacentHTML("beforeend", '<div class="fallback">Antimony · <a href="https://eoinforker.github.io/orbe-site/">Visit Orbe</a></div>'); return; }
+const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; };
+const prog = (v, f) => { const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, v)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, f)); gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); return p; };
+const HASH = `uint bits(uvec3 v){ v = v * 1664525u + 1013904223u; v.x += v.y*v.z; v.y += v.z*v.x; v.z += v.x*v.y; v ^= v >> 16u; v.x += v.y*v.z; v.y += v.z*v.x; v.z += v.x*v.y; return v.x; }
+float h(vec3 p){ return float(bits(uvec3(ivec3(p))) & 0xffffffu) / 16777215.0; }`;
+const TILE_VS = `#version 300 es
+layout(location=0) in vec2 aCorner; layout(location=1) in vec4 aRect; layout(location=2) in vec4 aMeta;
+layout(location=3) in vec4 aState; layout(location=4) in vec4 aState2;
+uniform vec2 uCam; uniform float uZoom; uniform vec2 uRes;
+out vec2 vP; flat out vec4 vRect; flat out vec4 vMeta; flat out vec4 vState; flat out vec4 vState2;
+void main(){ vec2 w = aRect.xy + aCorner * aRect.zw; vec2 px = (w - uCam) * uZoom + 0.5 * uRes;
+  gl_Position = vec4(px / uRes * 2.0 - 1.0, 0.0, 1.0); gl_Position.y = -gl_Position.y;
+  vP = aCorner * aRect.zw; vRect = aRect; vMeta = aMeta; vState = aState; vState2 = aState2; }`;
+const TILE_FS = `#version 300 es
+precision highp float; precision highp int;
+in vec2 vP; flat in vec4 vRect; flat in vec4 vMeta; flat in vec4 vState; flat in vec4 vState2;
+uniform sampler2D uAtlas; uniform highp usampler2D uWords; uniform float uFrame; uniform float uZoom; uniform float uAdv; uniform float uPad; uniform int uGlyphs;
+uniform vec3 uFill[6]; uniform vec3 uInk[6];
+out vec4 o;
+${HASH}
+void main(){
+  float reveal = vState.x; if (reveal <= 0.001) discard;
+  int lvl = int(vMeta.x + 0.5), skin = int(vMeta.y + 0.5); float seed = vMeta.z;
+  int word = int(vState2.y + 0.5);
+  float flare = vState.y, scram = vState.z, pal = vState.w, glitch = vState2.x, accent = vState2.z;
+  vec2 sz = vRect.zw, p = vP;
+  // each skin enters its own way: ink wipes from the left, a name drops like a departures board, the rest cut in
+  if (skin == 0 && p.x / sz.x > reveal) discard;
+  if (skin == 1 && p.y / sz.y > reveal) discard;
+  // the hidden wall is in two greys; the wave turns each tile to its level in the crystal
+  int hid = lvl >= 3 ? 1 : 0;
+  vec3 fill = mix(uFill[hid], uFill[lvl], pal), ink = mix(uInk[hid], uInk[lvl], pal);
+  fill = mix(fill, uFill[5], accent); ink = mix(ink, uInk[5], accent);
+  fill = mix(fill, uFill[4], flare); ink = mix(ink, uInk[4], flare);
+  float f = uFrame;
+  vec2 q = p;
+  if (skin == 5 && glitch > 0.0) q.x += (h(vec3(floor(p.y / 2.0), seed, f)) - 0.5) * sz.y * 1.4 * glitch;
+  float ci = floor((q.x - uPad) / uAdv), a = 0.0;
+  uint len = texelFetch(uWords, ivec2(15, word), 0).r;
+  if (ci >= 0.0 && ci < float(len)) {
+    uint g = texelFetch(uWords, ivec2(int(ci), word), 0).r;
+    if (scram > 0.0 && h(vec3(ci, seed * 97.0, f)) < scram) g = uint(h(vec3(ci, seed, f + 7.0)) * float(uGlyphs - 2));
+    vec2 gq = vec2((q.x - uPad - ci * uAdv) / uAdv, (p.y - sz.y * 0.5) / (sz.y * 0.72) + 0.5);
+    if (all(greaterThanEqual(gq, vec2(0.0))) && all(lessThan(gq, vec2(1.0)))) a = texture(uAtlas, vec2((float(g) + gq.x) / float(uGlyphs), gq.y)).r;
+  }
+  if (skin == 2 && ci == float(len) && mod(floor(f / 9.0 + seed), 2.0) < 1.0 && abs(p.y - sz.y * 0.5) < sz.y * 0.28) a = 1.0;
+  if (skin == 3 && scram > 0.0) { float d = h(vec3(gl_FragCoord.xy, f)); a *= step(scram * 0.85, d); }
+  vec3 c = mix(fill, ink, a);
+  if (skin == 1) c *= 1.0 - 0.12 * smoothstep(0.8, 0.0, abs(p.y - sz.y * 0.5) * uZoom);
+  if (skin == 4) c *= 0.9 + 0.1 * step(0.5, fract(gl_FragCoord.y * 0.5));
+  float al = (skin <= 1) ? 1.0 : reveal;
+  o = vec4(c * al, al);
+}`;
+const FS_VS = `#version 300 es
+out vec2 vUv; void main(){ vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2)); vUv = p; gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0); }`;
+const POST_FS = `#version 300 es
+precision highp float; precision highp int;
+in vec2 vUv; uniform sampler2D uScene; uniform float uFrame; uniform vec2 uRes; uniform vec3 uGround; uniform vec2 uFix; uniform float uBlur; out vec4 o;
+${HASH}
+vec3 tap(vec2 uv){ vec4 s = texture(uScene, uv); return s.rgb + uGround * (1.0 - s.a); }
+void main(){
+  vec2 uv = vUv; vec3 c;
+  // motion blur along the camera's path: a zoom about one fixed point, so every pixel streaks toward it
+  if (uBlur > 0.0005) {
+    vec2 d = (uv - uFix) * uBlur; float j = h(vec3(gl_FragCoord.xy, uFrame));
+    c = vec3(0.0); for (int i = 0; i < 12; i++) c += tap(uv - d * ((float(i) + j) / 12.0 - 0.5)); c /= 12.0;
+  } else c = tap(uv);
+  // halation: light tiles bloom a little into the ground, neutral, as in film
+  c += (textureLod(uScene, uv, 5.0).rgb * 0.6 + textureLod(uScene, uv, 7.0).rgb * 0.4) * 0.16;
+  vec2 q = uv - 0.5; c *= 1.0 - smoothstep(0.15, 0.7, dot(q, q) * 1.5) * 0.45;
+  c += (h(vec3(gl_FragCoord.xy, uFrame)) - 0.5) * 0.045;
+  o = vec4(c, 1.0);
+}`;
+const tileP = prog(TILE_VS, TILE_FS), postP = prog(FS_VS, POST_FS);
+const UL = {}; const U = (p, n) => (UL[n + p.__id] ??= gl.getUniformLocation(p, n)); tileP.__id = "t"; postP.__id = "p";
+
+const G = CHARSET.length, CW = 48, CH = 72, atlas = gl.createTexture();
+function buildAtlas() {
+  const c = document.createElement("canvas"); c.width = G * CW; c.height = CH; const g = c.getContext("2d");
+  g.fillStyle = "#000"; g.fillRect(0, 0, c.width, c.height); g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.font = '500 58px "Commit Mono", ui-monospace, monospace';
+  for (let i = 0; i < G; i++) g.fillText(CHARSET[i], i * CW + CW / 2, CH * 0.54);
+  gl.bindTexture(gl.TEXTURE_2D, atlas); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+}
+const wordTex = gl.createTexture();
+function buildWords() {
+  const d = new Uint8Array(16 * WORDS.length);
+  WORDS.forEach((w, r) => { for (let i = 0; i < Math.min(14, w.length); i++) d[r * 16 + i] = Math.max(0, CHARSET.indexOf(w[i])); d[r * 16 + 15] = Math.min(14, w.length); });
+  gl.bindTexture(gl.TEXTURE_2D, wordTex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8UI, 16, WORDS.length, 0, gl.RED_INTEGER, gl.UNSIGNED_BYTE, d);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+}
+const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+const quad = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, quad); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0,0,1,0,0,1,1,1]), gl.STATIC_DRAW);
+gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+const sBuf = gl.createBuffer(), aBuf = gl.createBuffer(), bBuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, sBuf);
+gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 32, 0); gl.vertexAttribDivisor(1, 1);
+gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 32, 16); gl.vertexAttribDivisor(2, 1);
+gl.bindBuffer(gl.ARRAY_BUFFER, aBuf); gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3, 4, gl.FLOAT, false, 0, 0); gl.vertexAttribDivisor(3, 1);
+gl.bindBuffer(gl.ARRAY_BUFFER, bBuf); gl.enableVertexAttribArray(4); gl.vertexAttribPointer(4, 4, gl.FLOAT, false, 0, 0); gl.vertexAttribDivisor(4, 1);
+const empty = gl.createVertexArray();
+const hex = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16) / 255);
+// six levels: two hidden greys, the crystal's three tones, and one accent for the A
+const LV = [["#151716", "#343A37"], ["#202422", "#6C7470"], ["#4C524F", "#E6E5DF"], ["#B8B9B3", "#131514"], ["#ECEBE5", "#131514"], ["#94E6FF", "#062221"]];
+const FILL = new Float32Array(LV.flatMap(l => hex(l[0]))), INK = new Float32Array(LV.flatMap(l => hex(l[1])));
+
+// ── layout, from this screen ──
+let W, H, dpr, rh, adv, pad, T = [], N = 0, seedTile, aArr, bArr, fbo, ftex, box, narrow, finalCam, startCam;
+let rs = 1; const rnd = () => ((rs = (rs * 1664525 + 1013904223) >>> 0) / 4294967296);
+const FACETS = [ { p: [[50,5],[22,29],[22,71],[50,15]], lv: 2 }, { p: [[78,71],[78,29],[50,5],[50,15]], lv: 4 }, { p: [[50,15],[22,71],[50,58],[78,71]], lv: 3 }, { p: [[22,71],[50,95],[78,71],[50,58]], lv: 2 } ];
+const ALINES = [[[22,71],[50,15]], [[50,15],[78,71]], [[22,71],[50,58]], [[50,58],[78,71]], [[50,2],[50,15]]];
+const inPoly = (x, y, p) => { let c = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [xi, yi] = p[i], [xj, yj] = p[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
+const seg = (x, y, [[ax, ay], [bx, by]]) => { const dx = bx - ax, dy = by - ay, t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy))); return Math.hypot(x - ax - t * dx, y - ay - t * dy); };
+function level(x, y, w) {
+  const pts = [x - w * 0.3, x, x + w * 0.3].map(px => [(px - box.x) / box.s, (y - box.y) / box.s]), lw = Math.max(0.75, rh * 0.36 / box.s);
+  for (const [u, v] of pts) for (const s of ALINES) if (seg(u, v, s) < lw) return 5;
+  const [u, v] = pts[1];
+  for (const f of FACETS) if (inPoly(u, v, f.p)) return rnd() < 0.07 ? (f.lv === 4 ? 3 : f.lv - 1) : f.lv;
+  return rnd() < 0.04 ? 1 : 0;
+}
+function pick() { const r = REALMS[Math.floor(rnd() * REALMS.length)]; return [wordId(r.words[Math.floor(rnd() * r.words.length)], r.skin), r.skin]; }
+function layout() {
+  dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; narrow = W < 760 || W / H < 0.9;
+  document.body.classList.toggle("narrow", narrow);
+  canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+  rh = Math.max(10, Math.min(18, Math.min(W, H) / (narrow ? 40 : 56))); adv = rh * 0.42; pad = rh * 0.32;
+  // the crystal as a magazine cover: huge, bleeding off the left and the bottom; on a phone, across the width to the bottom edge
+  if (narrow) { const s = W * 1.5 / 100; box = { s, x: W / 2 - 50 * s, y: H * 0.43 }; document.documentElement.style.setProperty("--ph", Math.round(H * 0.47) + "px"); }
+  else { const s = H * 1.16 / 100; box = { s, x: W * 0.255 - 50 * s, y: -H * 0.03 }; }
+  rs = 51; T = [];
+  const gap = Math.max(1.5, rh * 0.09), seedAt = { x: box.x + 50 * box.s, y: box.y + 40 * box.s };
+  const titleAt = [{ x: box.x + 50 * box.s, y: box.y + 47 * box.s, k: 0 }, { x: box.x + 50 * box.s, y: box.y + 47 * box.s + rh + gap, k: 1 }];
+  let seeded = false; const placed = [false, false];
+  for (let y = -rh * 2; y < H + rh * 2; y += rh + gap) {
+    let x = -rnd() * rh * 3 - rh * 2;
+    while (x < W + rh * 2) {
+      let id, skin, role = 0;
+      const cy = y + rh / 2;
+      if (!seeded && Math.abs(cy - seedAt.y) < (rh + gap) / 2 && x + rh * 3 > seedAt.x - 4 * adv) { id = SEED_WORD; skin = 1; seeded = true; role = 1; }
+      else { const ti = titleAt.findIndex((t, i) => !placed[i] && Math.abs(cy - t.y) < (rh + gap) / 2 && x + rh * 3 > t.x - 3 * adv);
+        if (ti >= 0) { [id, skin] = TITLE_WORDS[ti]; placed[ti] = true; role = 2; } else [id, skin] = pick(); }
+      const w = WORDS[id].length * adv + 2 * pad + (skin === 2 ? adv * 1.2 : 0);
+      const lv = role ? 4 : level(x + w / 2, cy, w);
+      const t = { x, y, w, h: rh, lv, skin, seed: Math.floor(rnd() * 9999), word: id, cx: x + w / 2, cy, role,
+        enter: 1e9, pal: 1e9, next: 0, ev: -1, evEnd: -1, evKind: 0, call: 0 };
+      if (role === 1) { seedTile = t; t.enter = -99; t.pal = -99; }
+      T.push(t); x += w + gap;
+    }
+  }
+  N = T.length;
+  const st = new Float32Array(N * 8); T.forEach((t, i) => st.set([t.x, t.y, t.w, t.h, t.lv, t.skin, t.seed, t.word], i * 8));
+  gl.bindBuffer(gl.ARRAY_BUFFER, sBuf); gl.bufferData(gl.ARRAY_BUFFER, st, gl.STATIC_DRAW);
+  aArr = new Float32Array(N * 4); bArr = new Float32Array(N * 4);
+  gl.bindBuffer(gl.ARRAY_BUFFER, aBuf); gl.bufferData(gl.ARRAY_BUFFER, aArr, gl.DYNAMIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, bBuf); gl.bufferData(gl.ARRAY_BUFFER, bArr, gl.DYNAMIC_DRAW);
+  if (ftex) { gl.deleteTexture(ftex); gl.deleteFramebuffer(fbo); }
+  ftex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, ftex);
+  gl.texStorage2D(gl.TEXTURE_2D, Math.floor(Math.log2(Math.max(canvas.width, canvas.height))) + 1, gl.RGBA8, canvas.width, canvas.height);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  fbo = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fbo); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, ftex, 0); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  finalCam = { cx: W / 2, cy: H / 2, z: 1 };
+  startCam = { cx: seedTile.cx, cy: seedTile.cy, z: Math.max(2, Math.min(3.4, (narrow ? 30 : 38) / rh)) };
+}
+
+// ── the camera: holds that drift, and one eased move that zooms about the single point that keeps its place ──
+const inOut = u => u < 0.5 ? 8 * u ** 4 : 1 - Math.pow(-2 * u + 2, 4) / 2;
+let moveAt = 1e9; const MOVE = 30;
+function cam(f) {
+  const a = startCam, b = finalCam, drift = still ? 0 : 1;
+  if (f < moveAt) { const k = Math.min(1, Math.max(0, f / 96)); return { cx: a.cx + k * adv * 1.5 * drift, cy: a.cy, z: a.z * (1 + 0.015 * k * drift) }; }
+  const u = Math.min(1, (f - moveAt) / MOVE), e = inOut(u);
+  const a2 = { cx: a.cx + adv * 1.5 * drift, cy: a.cy, z: a.z * (1 + 0.015 * drift) };
+  const z = Math.exp(Math.log(a2.z) * (1 - e) + Math.log(b.z) * e);
+  const qx = (a2.cx * a2.z - b.cx * b.z) / (a2.z - b.z), qy = (a2.cy * a2.z - b.cy * b.z) / (a2.z - b.z);   // the fixed point
+  return { cx: qx - (qx - a2.cx) * a2.z / z, cy: qy - (qy - a2.cy) * a2.z / z, z, qx, qy, moving: u > 0 && u < 1 };
+}
+
+// ── the steps ──
+// seed: one tile, calling now and then. open: the hidden wall opens around it. wave: the wall turns into the crystal.
+// art: the camera lands and the lockup lands. Each step is a click, or three seconds left alone.
+let F0 = performance.now(), step = "seed", stepAt = 0, waveAt = 1e9, artAt = 1e9, idleAt = 0;
+let hover = null, follow = -1, followAt = 0, fx = 0, fy = 0;
+const hint = document.getElementById("hint"), panel = document.getElementById("panel");
+const setHint = html => { hint.style.opacity = 0; setTimeout(() => { hint.innerHTML = html; hint.style.opacity = 1; }, 160); };
+const frameNow = () => Math.floor((performance.now() - F0) / 1000 * FPS);
+function setStep(s, f) { step = s; stepAt = f; document.body.dataset.step = s; }
+function open(f) {
+  if (step !== "seed") return; setStep("open", f); setHint("");
+  const sp = (narrow ? 34 : 44) * (rh / 18);   // world px a frame
+  for (const t of T) { if (t === seedTile) { t.enter = -99; t.pal = -99; continue; } t.enter = f + 2 + Math.hypot(t.cx - seedTile.cx, t.cy - seedTile.cy) / sp + (t.seed % 5); }
+  waveAt = f + 30; moveAt = f + 40; artAt = moveAt + MOVE + 2;
+  for (const t of T) t.pal = waveAt + Math.hypot(t.cx - seedTile.cx, t.cy - seedTile.cy) / (sp * 1.35);
+  sound.burst(1, 0.5);
+}
+function lockup(f) {
+  setStep("art", f); panel.classList.add("on");
+  const meta = "ANTIMONY\nLONDON · 2026\nMAKERS OF ORBE", title = "We build for the people who make the work.";
+  const mEl = document.getElementById("meta"), tEl = document.getElementById("title"), chips = [...document.querySelectorAll("#chips .chip")], bar = document.getElementById("bar");
+  if (still) { mEl.textContent = meta; tEl.textContent = title; chips.forEach(c => c.classList.add("on")); bar.classList.add("on"); setHint("Hover to read · click a word to follow it"); return; }
+  const L = meta.split("\n"), lower = "abcdefghijklmnopqrstuvwxyz", upper = lower.toUpperCase();
+  let k = 0; const tick = setInterval(() => {
+    k++;
+    // the meta types a character a frame from frame 3, its lines 3 frames apart
+    let out = [], start = 3; for (const line of L) { const n = Math.max(0, Math.min(line.length, k - start)); out.push(line.slice(0, n)); start += line.length + 3; } mEl.textContent = out.join("\n");
+    // the title's letters resolve in reading order from frame 6, each trying two of its own case for two frames
+    const span = Math.max(1, 27 / title.length);
+    tEl.innerHTML = [...title].map((ch, i) => { const land = 6 + i * span; if (ch === " ") return " "; if (k >= land + 4) return ch;
+      if (k < land) return `<span style="opacity:0">${ch}</span>`; const set = ch === ch.toUpperCase() ? upper : lower; return set[(i * 7 + k * 3) % 26]; }).join("");
+    chips.forEach((c, i) => { if (k >= 18 + i * 3) c.classList.add("on"); });
+    if (k >= 30) bar.classList.add("on");
+    if (k > 6 + 27 + 6) { tEl.textContent = title; mEl.textContent = meta; clearInterval(tick); setHint("Hover to read · click a word to follow it"); }
+  }, 1000 / FPS);
+  sound.burst(3, 0.75);
+}
+function follows(t, f) {
+  follow = t.word; followAt = f; fx = t.cx; fy = t.cy;
+  const r = REALMS.find(r => r.words.includes(WORDS[t.word])) || REALMS[t.skin], n = T.filter(o => o.word === t.word).length;
+  setHint(`<b>${WORDS[t.word]}</b> · <i>${r.realm}</i> · ${r.rule} · ${n} on the wall`);
+  sound.word(t.skin);
+}
+
+// ── the life of the wall, at 24 frames a second ──
+const RATES = [[1.1, 0], [2.2, 0], [1.3, 0], [3, 0.5], [1.5, 0.2], [0.7, 2.2]];   // per skin, events a minute: [scramble, glitch]
+let lastF = -1, rafId = 0;
+function frame() {
+  const f = frameNow();
+  if (f !== lastF) { lastF = f; draw(f); }
+  rafId = requestAnimationFrame(frame);
+}
+function draw(f) {
+  if (step === "seed" && f - idleAt > 3 * FPS && !still) open(f);
+  if (step === "open" && f >= artAt) lockup(f);
+  const c = cam(f);
+  for (let i = 0; i < N; i++) {
+    const t = T[i], since = f - t.enter;
+    let reveal = 0, scram = 0, shown = t.word, flare = 0, glitch = 0, accent = 0;
+    if (t === seedTile) {
+      reveal = 1;
+      if (step === "seed") { const ph = f % 36; if (ph < 6) { scram = ph < 4 ? 0.7 : 0; flare = ph < 2 ? 0.0 : 0; accent = ph < 6 ? 1 - ph / 6 : 0; } }
+    } else if (since >= 0) {
+      reveal = Math.min(1, since / 6);
+      if (since < 4) shown = WORDS.length > 2 ? Math.floor(((t.seed * 31 + Math.floor(since / 2) * 17) % WORDS.length)) : t.word;   // it tries two words, two frames each
+      else if (since < 8) scram = 1 - (since - 4) / 4;
+    }
+    const pal = still ? 1 : Math.max(0, Math.min(1, (f - t.pal) / 3));
+    if (pal > 0 && f - t.pal < 7) flare = Math.max(flare, 0.5 * (1 - (f - t.pal) / 7));   // the wave's arrival
+    if (step === "art" && !still) {
+      if (f >= t.next) { const [r1, r2] = RATES[t.skin], tot = r1 + r2; t.evKind = Math.random() * tot < r2 ? 1 : 0; t.ev = f; t.evEnd = f + 4 + Math.floor(Math.random() * 12); t.next = f + Math.floor(FPS * 60 / tot * (0.3 + Math.random() * 1.7));
+        if (t.evKind === 1) for (let j = Math.max(0, i - 50); j < Math.min(N, i + 50); j++) { const o = T[j]; if (o !== t && Math.hypot(o.cx - t.cx, o.cy - t.cy) < rh * 3 && Math.random() < 0.55) { o.evKind = 1; o.ev = f + 2; o.evEnd = f + 6 + Math.floor(Math.random() * 6); } }
+        if (t.evKind === 0 && Math.random() < 0.05) sound.grain(t.skin, t.cx / W, 0.05); }
+      if (f >= t.ev && f < t.evEnd) { if (t.evKind) glitch = 1; else scram = Math.max(scram, 1 - (f - t.ev) / (t.evEnd - t.ev)); }
+    }
+    if (hover === t) { accent = 1; scram = 0; }
+    if (t.word === follow) { const arr = followAt + Math.hypot(t.cx - fx, t.cy - fy) / 40; if (f >= arr) accent = Math.max(accent, f - arr < 3 ? 1 : Math.max(0.55, 1 - (f - arr) / 60)); }
+    aArr[i * 4] = reveal; aArr[i * 4 + 1] = flare; aArr[i * 4 + 2] = scram; aArr[i * 4 + 3] = pal;
+    bArr[i * 4] = glitch; bArr[i * 4 + 1] = shown; bArr[i * 4 + 2] = accent;
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo); gl.viewport(0, 0, canvas.width, canvas.height); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  gl.useProgram(tileP); gl.bindVertexArray(vao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, aBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, aArr); gl.bindBuffer(gl.ARRAY_BUFFER, bBuf); gl.bufferSubData(gl.ARRAY_BUFFER, 0, bArr);
+  gl.uniform2f(U(tileP, "uCam"), c.cx, c.cy); gl.uniform1f(U(tileP, "uZoom"), c.z); gl.uniform2f(U(tileP, "uRes"), W, H);
+  gl.uniform1f(U(tileP, "uFrame"), f); gl.uniform1f(U(tileP, "uAdv"), adv); gl.uniform1f(U(tileP, "uPad"), pad); gl.uniform1i(U(tileP, "uGlyphs"), G);
+  gl.uniform3fv(U(tileP, "uFill"), FILL); gl.uniform3fv(U(tileP, "uInk"), INK);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, atlas); gl.uniform1i(U(tileP, "uAtlas"), 0);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, wordTex); gl.uniform1i(U(tileP, "uWords"), 1);
+  gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, N); gl.disable(gl.BLEND);
+  gl.bindTexture(gl.TEXTURE_2D, ftex); gl.generateMipmap(gl.TEXTURE_2D);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.useProgram(postP); gl.bindVertexArray(empty);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, ftex); gl.uniform1i(U(postP, "uScene"), 0);
+  gl.uniform1f(U(postP, "uFrame"), f); gl.uniform2f(U(postP, "uRes"), canvas.width, canvas.height); gl.uniform3fv(U(postP, "uGround"), hex("#0B0C0C"));
+  let blur = 0, fix = [0.5, 0.5];
+  if (c.moving && !still) { const p = cam(f - 0.5), n = cam(f + 0.5); blur = Math.min(0.06, Math.abs(Math.log(n.z / p.z)) * 0.9); fix = [((c.qx - c.cx) * c.z + W / 2) / W, 1 - ((c.qy - c.cy) * c.z + H / 2) / H]; }
+  gl.uniform1f(U(postP, "uBlur"), blur); gl.uniform2f(U(postP, "uFix"), fix[0], fix[1]);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+// ── sound: grains in each skin's voice, off until asked for ──
+const sound = (() => {
+  let ac = null, out = null, on = false;
+  const V = [{ f: 2400, q: 3, d: .05 }, { f: 900, q: 8, d: .03 }, { f: 3600, q: 12, d: .012 }, { f: 5200, q: 20, d: .02 }, { f: 1400, q: 6, d: .025 }, { f: 300, q: 2, d: .08 }];
+  const NOTE = [146.83, 220, 293.66, 329.63, 440];   // D, A, D, E, A: one key for the whole company
+  const init = () => { ac = new AudioContext(); out = ac.createGain(); out.gain.value = .5; const room = ac.createConvolver(), n = ac.sampleRate * 2.6, ir = ac.createBuffer(2, n, ac.sampleRate);
+    for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3); }
+    room.buffer = ir; const wet = ac.createGain(); wet.gain.value = .35; out.connect(ac.destination); out.connect(room); room.connect(wet); wet.connect(ac.destination); };
+  function grain(skin, pan = .5, vol = .07) { if (!on) return; const v = V[skin], t = ac.currentTime, n = Math.ceil(ac.sampleRate * v.d), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2);
+    const s = ac.createBufferSource(); s.buffer = b; const fl = ac.createBiquadFilter(); fl.type = "bandpass"; fl.frequency.value = v.f * (.8 + Math.random() * .4); fl.Q.value = v.q;
+    const g = ac.createGain(); g.gain.value = vol; const p = ac.createStereoPanner(); p.pan.value = pan * 2 - 1; s.connect(fl); fl.connect(g); g.connect(p); p.connect(out); s.start(t); }
+  function tone(fq, at, len, vol) { const o = ac.createOscillator(), g = ac.createGain(); o.type = "sine"; o.frequency.value = fq; g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(vol, at + .02); g.gain.exponentialRampToValueAtTime(.0001, at + len); o.connect(g); g.connect(out); o.start(at); o.stop(at + len + .05); }
+  return { grain, word(skin) { if (!on) return; grain(skin, .5, .2); tone(NOTE[skin % 5] * 2, ac.currentTime, 1.6, .05); },
+    burst(n, pan) { if (!on) return; for (let i = 0; i < n * 6; i++) setTimeout(() => grain(i % 6, Math.random(), .06), i * 42); tone(NOTE[0], ac.currentTime, 3, .05); tone(NOTE[2], ac.currentTime + .1, 3, .035); },
+    toggle() { if (!ac) init(); on = !on; if (on) ac.resume(); return on; } };
+})();
+
+// ── input ──
+const worldAt = (x, y) => { const c = cam(frameNow()); return [(x - W / 2) / c.z + c.cx, (y - H / 2) / c.z + c.cy]; };
+const tileAt = (x, y) => { const [wx, wy] = worldAt(x, y); return T.find(t => wx >= t.x && wx <= t.x + t.w && wy >= t.y && wy <= t.y + t.h && (step === "art" || t === seedTile)) || null; };
+canvas.addEventListener("pointermove", e => { hover = step === "art" ? tileAt(e.clientX, e.clientY) : null; if (step === "seed") canvas.style.cursor = "pointer"; });
+canvas.addEventListener("pointerleave", () => hover = null);
+canvas.addEventListener("click", e => { const f = frameNow(); if (step === "seed") { open(f); return; } if (step === "art") { const t = tileAt(e.clientX, e.clientY); if (t) follows(t, f); } });
+addEventListener("keydown", e => { if (e.key === "Escape") document.querySelectorAll(".sheet.on").forEach(s => s.classList.remove("on")); else if (step === "seed" && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); open(frameNow()); } });
+const sheet = id => document.getElementById("sheet-" + id).classList.add("on");
+document.getElementById("company-btn").addEventListener("click", () => sheet("company"));
+document.getElementById("letters-btn").addEventListener("click", () => sheet("letters"));
+document.querySelectorAll("[data-sheet]").forEach(b => b.addEventListener("click", () => sheet(b.dataset.sheet)));
+document.querySelectorAll(".sheet").forEach(s => s.addEventListener("click", e => { if (e.target === s || e.target.closest("[data-close]")) s.classList.remove("on"); }));
+const sb = document.getElementById("sound"); sb.addEventListener("click", () => { const on = sound.toggle(); sb.textContent = on ? "Sound on" : "Sound off"; sb.setAttribute("aria-pressed", on); });
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { const s = step; layout(); if (s !== "seed") { const f = frameNow(); T.forEach(t => { t.enter = -99; t.pal = -99; }); moveAt = -999; artAt = -999; if (s === "art") { step = "art"; document.body.dataset.step = "art"; } else lockup(f); } }, 150); });
+
+const boot = () => { buildAtlas(); buildWords(); layout(); setStep("seed", 0); idleAt = 0; setHint("Click the word");
+  if (still) { T.forEach(t => { t.enter = -99; t.pal = -99; }); moveAt = -999; artAt = -999; lockup(0); }
+  rafId = requestAnimationFrame(frame); };
+(document.fonts ? Promise.all([document.fonts.load('500 58px "Commit Mono"'), document.fonts.load('500 40px "Timeless Sans"')]) : Promise.resolve()).catch(() => {}).finally(boot);
+})();
+</script>
+
+</html>
