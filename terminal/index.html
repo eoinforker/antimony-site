@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antimony Terminal</title>
+<meta name="description" content="The Antimony terminal. Makers of Orbe.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<style>
+@font-face { font-family: "Commit Mono"; src: url("../assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 400 600; font-display: swap; }
+:root { --bg: #050909; --ph: #94E6FF; --dim: #3E6E78; --faint: #17282B; --paper: #F3F0E8; --mono: "Commit Mono", ui-monospace, Menlo, monospace; }
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; background: #000; }
+body { font-family: var(--mono); color: var(--ph); overflow: hidden; }
+a { color: inherit; }
+/* The tube */
+.tube { position: fixed; inset: 18px; border-radius: 28px; background: radial-gradient(120% 120% at 50% 45%, #0A1416 0%, var(--bg) 60%, #020404 100%); overflow: hidden; box-shadow: inset 0 0 120px rgba(0,0,0,.9), 0 0 0 1px #0F1C1E; }
+.tube::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 5; background: repeating-linear-gradient(180deg, rgba(0,0,0,.28) 0 1px, transparent 1px 3px); }
+.tube::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 6; background: radial-gradient(90% 80% at 50% 50%, transparent 60%, rgba(0,0,0,.55)); }
+.glow { text-shadow: 0 0 6px rgba(148,230,255,.35); }
+/* Standby */
+#standby { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; cursor: pointer; z-index: 2; }
+#crystal { font-size: clamp(7px, 1.05vh, 11px); line-height: 1; white-space: pre; letter-spacing: .02em; }
+.title { text-align: center; letter-spacing: .32em; font-size: 15px; line-height: 1.9; }
+.title span { color: var(--dim); }
+.blink { animation: blink 1.4s steps(2, start) infinite; color: var(--dim); letter-spacing: .14em; font-size: 14px; }
+@keyframes blink { to { visibility: hidden; } }
+/* Shell */
+#shell { position: absolute; inset: 0; display: none; flex-direction: column; z-index: 2; }
+.top { display: flex; justify-content: space-between; padding: 22px 30px 0; font-size: 12px; letter-spacing: .16em; color: var(--dim); }
+#out { flex: 1; overflow-y: auto; padding: 26px 30px 10px; font-size: 15px; line-height: 1.6; white-space: pre-wrap; scrollbar-width: none; }
+#out::-webkit-scrollbar { display: none; }
+#out .d { color: var(--dim); }
+#out .p { color: var(--paper); }
+#out a { text-decoration: underline; text-underline-offset: 3px; }
+#out .mini { font-size: 9px; line-height: 1; color: var(--ph); }
+.line { display: flex; padding: 0 30px 18px; font-size: 15px; }
+.line span { color: var(--paper); margin-right: 10px; white-space: nowrap; }
+#in { flex: 1; background: none; border: 0; outline: 0; color: var(--ph); font: inherit; caret-color: var(--ph); }
+.keys { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 12px 30px 22px; border-top: 1px solid var(--faint); font-size: 12px; letter-spacing: .1em; color: var(--dim); }
+.keys button { all: unset; cursor: pointer; }
+.keys button b { color: var(--ph); font-weight: 500; }
+.keys button:hover, .keys .home:hover { color: var(--paper); }
+.keys .home { margin-left: auto; text-decoration: none; }
+#standby .exit { position: absolute; right: 48px; bottom: 40px; z-index: 10; font-size: 11px; letter-spacing: .14em; color: #555; text-decoration: none; }
+.exit:hover { color: var(--ph); }
+@media (max-width: 640px) {
+  .tube { inset: 8px; border-radius: 18px; }
+  #crystal { font-size: 7px; }
+  .title { font-size: 12px; } .blink { font-size: 12px; }
+  #out { padding: 20px 14px 8px; font-size: min(13.5px, calc((100vw - 46px) / 55 / .6)); }
+  .top, .line, .keys { padding-left: 14px; padding-right: 14px; }
+  .line { font-size: 13.5px; }
+  .exit { right: 18px; bottom: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="tube">
+  <div id="standby" role="button" tabindex="0" aria-label="Power on the Antimony terminal">
+    <pre id="crystal" class="glow" aria-hidden="true"></pre>
+    <div class="title glow">ANTIMONY TERMINAL<br><span>STANDBY</span></div>
+    <div class="blink">Press any key to power on</div>
+    <a class="exit" href="../" onclick="event.stopPropagation()">EXIT TO ANTIMONY.INC</a>
+  </div>
+  <div id="shell">
+    <div class="top"><span>ANTIMONY · LONDON</span><span id="clock"></span></div>
+    <div id="out" class="glow" aria-live="polite"></div>
+    <label class="line glow"><span>antimony:~$</span><input id="in" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Command"></label>
+    <div class="keys">
+      <button data-c="help"><b>[?]</b> help</button>
+      <button data-c="orbe"><b>[1]</b> orbe</button>
+      <button data-c="letters"><b>[2]</b> letters</button>
+      <button data-c="principles"><b>[3]</b> principles</button>
+      <button data-c="about"><b>[4]</b> about</button>
+      <button data-c="crystal"><b>[5]</b> crystal</button>
+      <button data-c="standby"><b>[ESC]</b> standby</button>
+      <a class="home" href="../">antimony.inc</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// A quartz crystal: a hexagonal column with a point at each end, drawn in characters.
+const SHADE = " .:-=+*#%@";
+function crystalMesh() {
+  const V = [], F = [], n = 6, r = 1, h = 0.9, tip = 1.75;
+  for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; V.push([Math.cos(a) * r, h, Math.sin(a) * r]); }
+  for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; V.push([Math.cos(a) * r, -h, Math.sin(a) * r]); }
+  V.push([0, tip, 0], [0, -tip, 0]);
+  const T = 12, B = 13;
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    F.push([i, j, j + n], [i, j + n, i + n]);   // side
+    F.push([T, j, i]);                          // upper point
+    F.push([B, i + n, j + n]);                  // lower point
+  }
+  return { V, F };
+}
+const M = crystalMesh();
+function render(t, W, H) {
+  const buf = Array(W * H).fill(" "), zb = Array(W * H).fill(-1e9);
+  const ry = t * 0.55, rx = 0.28 + Math.sin(t * 0.3) * 0.08;
+  const cy = Math.cos(ry), sy = Math.sin(ry), cx = Math.cos(rx), sx = Math.sin(rx);
+  const P = M.V.map(([x, y, z]) => { let X = x * cy - z * sy, Z = x * sy + z * cy; let Y = y * cx - Z * sx; Z = y * sx + Z * cx; return [X, Y, Z]; });
+  const L = [0.55, 0.45, -0.7], ll = Math.hypot(...L); L[0] /= ll; L[1] /= ll; L[2] /= ll;
+  const sc = H / 4.1;  // rows per unit; characters are about 0.6 as wide as tall
+  for (const [a, b, c] of M.F) {
+    const A = P[a], B = P[b], C = P[c];
+    const u = [B[0]-A[0], B[1]-A[1], B[2]-A[2]], v = [C[0]-A[0], C[1]-A[1], C[2]-A[2]];
+    let N = [u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0]]; const nl = Math.hypot(...N) || 1; N = N.map(q => q / nl);
+    if (N[2] > 0) continue;  // facing away
+    const lum = Math.max(0, N[0]*L[0] + N[1]*L[1] + N[2]*L[2]);
+    const ch = SHADE[Math.min(SHADE.length - 1, 1 + Math.floor(Math.pow(lum, .8) * (SHADE.length - 1.01)))];
+    const pr = q => [W / 2 + q[0] * sc * 1.75, H / 2 - q[1] * sc, -q[2]];
+    const p = [pr(A), pr(B), pr(C)];
+    const minX = Math.max(0, Math.floor(Math.min(p[0][0], p[1][0], p[2][0]))), maxX = Math.min(W - 1, Math.ceil(Math.max(p[0][0], p[1][0], p[2][0])));
+    const minY = Math.max(0, Math.floor(Math.min(p[0][1], p[1][1], p[2][1]))), maxY = Math.min(H - 1, Math.ceil(Math.max(p[0][1], p[1][1], p[2][1])));
+    const ar = (p[1][0]-p[0][0])*(p[2][1]-p[0][1]) - (p[2][0]-p[0][0])*(p[1][1]-p[0][1]); if (Math.abs(ar) < 1e-6) continue;
+    for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
+      const px = x + .5, py = y + .5;
+      const w0 = ((p[1][0]-px)*(p[2][1]-py) - (p[2][0]-px)*(p[1][1]-py)) / ar;
+      const w1 = ((p[2][0]-px)*(p[0][1]-py) - (p[0][0]-px)*(p[2][1]-py)) / ar;
+      const w2 = 1 - w0 - w1;
+      if (w0 < -0.02 || w1 < -0.02 || w2 < -0.02) continue;
+      const z = w0 * p[0][2] + w1 * p[1][2] + w2 * p[2][2], k = y * W + x;
+      if (z > zb[k]) { zb[k] = z; buf[k] = ch; }
+    }
+  }
+  let s = ""; for (let y = 0; y < H; y++) s += buf.slice(y * W, y * W + W).join("") + "\n";
+  return s;
+}
+if (matchMedia("(pointer: coarse)").matches) document.querySelector(".blink").textContent = "Tap to power on";
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const cEl = document.getElementById("crystal");
+let t0 = performance.now(), anim = true;
+function frame(now) { if (!anim) return; cEl.textContent = render(still ? 0.6 : (now - t0) / 1000, 56, 40); if (!still) requestAnimationFrame(frame); }
+requestAnimationFrame(frame);
+
+// Shell
+const out = document.getElementById("out"), inp = document.getElementById("in");
+const ORBE = "https://eoinforker.github.io/orbe-site/";
+const put = (html, cls) => { const d = document.createElement("div"); if (cls) d.className = cls; d.innerHTML = html; out.appendChild(d); out.scrollTop = out.scrollHeight; return d; };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const C = {
+  help: () => put(`<span class="p">Commands</span>
+  <a href="#" data-c="orbe">orbe</a>        our first product
+  <a href="#" data-c="letters">letters</a>     numbered letters
+  <a href="#" data-c="principles">principles</a>  three things we will not trade
+  <a href="#" data-c="about">about</a>       who we are
+  <a href="#" data-c="crystal">crystal</a>     what the mark means
+  <a href="#" data-c="open orbe">open orbe</a>   go to Orbe
+  clear       clear the screen
+  standby     power down`),
+  orbe: () => put(`<span class="p">[001] ORBE</span>
+Brands are getting agents. Creators get Orbe.
+
+Orbe sits on the creator's side of every
+sponsorship deal. It prices and negotiates
+each offer inside the creator's own rules,
+waits for one tap on anything binding, and
+holds the brand's money until the work is
+delivered. Free for creators; brands pay
+when the work is delivered.
+
+<span class="d">Sample from the Orbe demo, a made-up
+creator and brand:</span>
+  Kettle &amp; Crumb's offer .............. £600
+  Ada's floor, from her rules ......... £900
+  What her results support .. £640 to £1,130
+<span class="p">  Orbe's counter ...................... £900</span>
+  Status ............. waiting for Ada's tap
+
+Type <a href="#" data-c="open orbe">open orbe</a> to go there.`),
+  letters: () => put(`<span class="p">[002] LETTERS</span>
+Numbered letters on deals, money and the
+business of making things. They arrive when
+they are ready.
+
+  001  Never alone .................... soon`),
+  principles: () => put(`<span class="p">[003] PRINCIPLES</span>
+Three things we will not trade, at any size.
+
+  01  <span class="p">Never alone.</span>
+      We sit on the side of the person who
+      made the work, never across the table.
+
+  02  <span class="p">Paid when you are.</span>
+      We earn when the people we serve earn.
+
+  03  <span class="p">Built to last.</span>
+      Forty years, not the next round.`),
+  about: () => put(`<span class="p">[004] ABOUT</span>
+Antimony is a London company. We make things
+for people who make things. Our first
+product is Orbe.
+
+Antimony is element 51. It is almost never
+found alone in nature, and its old folk
+name, anti-monos, means "not alone".`),
+  crystal: () => put(`<span class="p">[005] THE CRYSTAL</span>
+Our mark is a crystal with the letter A cut
+into it. The A's crossbar is its own
+reflection: two halves holding each other
+up. Take one away and the other falls.
+
+<span class="d">crystal + letter a + its reflection
+= antimony</span>`),
+  "open orbe": () => { put(`<span class="d">opening orbe ...</span>`); setTimeout(() => location.href = ORBE, 500); },
+  clear: () => { out.innerHTML = ""; },
+  standby: () => standby(),
+};
+async function run(cmd) {
+  cmd = cmd.trim().toLowerCase(); if (!cmd) return;
+  put(`<span class="p">antimony:~$</span> ${cmd.replace(/[<>&]/g, "")}`);
+  const alias = { "?": "help", "1": "orbe", "2": "letters", "3": "principles", "4": "about", "5": "crystal", ls: "help", exit: "standby", open: "open orbe" };
+  const f = C[cmd] || C[alias[cmd]];
+  if (f) f(); else put(`<span class="d">${cmd.replace(/[<>&]/g, "")}: not found. Type help.</span>`);
+}
+out.addEventListener("click", e => { const a = e.target.closest("[data-c]"); if (a) { e.preventDefault(); run(a.dataset.c); } });
+document.querySelectorAll(".keys [data-c]").forEach(b => b.addEventListener("click", () => run(b.dataset.c)));
+inp.addEventListener("keydown", e => { if (e.key === "Enter") { run(inp.value); inp.value = ""; } });
+
+const sb = document.getElementById("standby"), sh = document.getElementById("shell");
+let on = false;
+async function power() {
+  if (on) return; on = true; anim = false;
+  sb.style.display = "none"; sh.style.display = "flex";
+  out.innerHTML = "";
+  const boot = [
+    ["ANTIMONY SYSTEMS · LONDON · MMXXVI", "p"],
+    ["power ................................... ok", "d"],
+    ["element 51 ........................... found", "d"],
+    ["bonded ......................... never alone", "d"],
+    ["orbe ................................ online", "d"],
+    ["", ""],
+    ["We make things for people who make things.", "p"],
+    ["Type help, or press a number below.", "d"],
+  ];
+  for (const [s, c] of boot) { put(s || "&nbsp;", c); await sleep(still ? 0 : 170); }
+  inp.focus({ preventScroll: true });
+}
+function standby() { on = false; sh.style.display = "none"; sb.style.display = "flex"; anim = true; t0 = performance.now(); requestAnimationFrame(frame); }
+sb.addEventListener("click", power);
+document.addEventListener("keydown", e => {
+  if (!on) { if (!e.metaKey && !e.ctrlKey) { e.preventDefault(); power(); } return; }
+  if (e.key === "Escape") { standby(); return; }
+  if ((document.activeElement !== inp || inp.value === "") && /^[1-5?]$/.test(e.key)) { e.preventDefault(); run(e.key); }
+});
+setInterval(() => { const d = new Date(); document.getElementById("clock").textContent = d.toLocaleTimeString("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " LDN"; }, 1000);
+</script>
+</body>
+</html>
