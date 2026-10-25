@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex"><link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<title>Antimony Gallery</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* After fal: paper ground, one confident headline, and art that carries the page in large plates.
+   The navigation is a small dark pill that unfolds into a menu with a picture for each entry. */
+@font-face { font-family: "Timeless Sans"; src: url("../../assets/fonts/timeless-sans-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Timeless Sans"; src: url("../../assets/fonts/timeless-sans-500.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Commit Mono"; src: url("../../assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 400 600; font-display: swap; }
+:root { --paper: #F2F1EC; --paper-2: #E7E5DD; --ink: #0B0D0C; --ink-2: #5A5E5B; --rule: #D5D2C8; --sky: #94E6FF; --cobalt: #2448FF;
+  --sans: "Timeless Sans", "Helvetica Neue", Arial, sans-serif; --mono: "Commit Mono", ui-monospace, monospace; --ease: cubic-bezier(.2,.75,.2,1); color-scheme: light; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--paper); } body { background: var(--paper); color: var(--ink); font: 400 17px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; } button { all: unset; cursor: pointer; } img { display: block; max-width: 100%; }
+:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 3px; }
+.wrap { padding-inline: max(24px, env(safe-area-inset-left, 0px)) max(24px, env(safe-area-inset-right, 0px)); }
+.mono { font: 400 11.5px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+/* the pill */
+.pill { position: fixed; z-index: 20; top: calc(16px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); width: min(640px, calc(100% - 32px));
+  background: var(--ink); color: var(--paper); border-radius: 14px; overflow: hidden; transition: border-radius .4s var(--ease); box-shadow: 0 10px 40px rgba(11,13,12,.18); }
+.bar { display: flex; align-items: center; justify-content: space-between; height: 50px; padding: 0 8px 0 16px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand svg.wm { height: 10px; width: auto; fill: var(--paper); }
+.bar .r { display: flex; gap: 4px; align-items: center; }
+.bar .r a, .bar .r button { font-size: 14px; padding: 7px 11px; border-radius: 8px; color: rgba(242,241,236,.75); transition: background .2s, color .2s; }
+.bar .r a:hover, .bar .r button:hover { background: rgba(242,241,236,.1); color: var(--paper); }
+.bar .r .go { background: var(--paper); color: var(--ink); }
+.bar .r .go:hover { background: var(--sky); color: var(--ink); }
+.drawer { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .55s var(--ease); }
+.pill.open .drawer { grid-template-rows: 1fr; }
+.drawer > div { overflow: hidden; }
+.menu { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 4px 8px 8px; }
+.menu a { border-radius: 9px; overflow: hidden; background: #151917; display: flex; flex-direction: column; opacity: 0; transform: translateY(10px); transition: opacity .4s, transform .5s var(--ease), background .2s; }
+.pill.open .menu a { opacity: 1; transform: none; }
+.pill.open .menu a:nth-child(2) { transition-delay: .05s } .pill.open .menu a:nth-child(3) { transition-delay: .1s }
+.menu a:hover { background: #1E2421; }
+.menu .pic { aspect-ratio: 4/3; overflow: hidden; } .menu .pic img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
+.menu a:hover .pic img { transform: scale(1.06); }
+.menu span { padding: 10px 12px 12px; font-size: 14px; display: flex; justify-content: space-between; } .menu span i { font-style: normal; color: rgba(242,241,236,.5); }
+/* the page */
+.hero { padding-top: calc(150px + env(safe-area-inset-top, 0px)); padding-bottom: 56px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 40px; align-items: end; }
+h1 { font-weight: 500; font-size: clamp(42px, 6.6vw, 108px); line-height: .96; letter-spacing: -.045em; text-wrap: balance; }
+.hero p { font-size: 18px; color: var(--ink-2); max-width: 26em; }
+.plates { display: grid; grid-template-columns: 1.25fr 1fr; gap: 14px; padding-bottom: 14px; }
+.plate { position: relative; border-radius: 14px; overflow: hidden; background: var(--paper-2); }
+.plate img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.4s var(--ease); }
+.plate:hover img { transform: scale(1.03); }
+.plate .cap { position: absolute; left: 16px; right: 16px; bottom: 14px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.plate .cap b { font-weight: 500; font-size: clamp(24px, 2.4vw, 38px); letter-spacing: -.03em; line-height: 1; }
+.plate .chip { font: 400 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; background: var(--paper); color: var(--ink); padding: 6px 9px; border-radius: 6px; white-space: nowrap; }
+.big { aspect-ratio: 1; grid-row: span 2; }
+.orbe { background: var(--sky); display: grid; place-items: center; aspect-ratio: 16/11; }
+.orbe img { width: 28%; height: auto; border-radius: 22%; box-shadow: 0 0 0 1px rgba(11,13,12,.1); }
+.orbe:hover img { transform: scale(1.05); }
+.dark { background: #071010; aspect-ratio: 16/11; } .dark .cap { color: var(--paper); }
+.text { display: grid; grid-template-columns: 1fr 2fr; gap: 40px; padding-block: 110px; border-top: 1px solid var(--rule); margin-top: 90px; }
+.text p { font-size: clamp(21px, 1.9vw, 28px); line-height: 1.38; letter-spacing: -.015em; max-width: 30em; }
+.text p + p { color: var(--ink-2); margin-top: 18px; }
+footer { padding-block: 30px calc(30px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+@media (max-width: 760px) {
+  .bar .r .hide { display: none; }
+  .hero { grid-template-columns: 1fr; padding-top: calc(110px + env(safe-area-inset-top, 0px)); gap: 18px; }
+  .plates { grid-template-columns: 1fr; } .big { grid-row: auto; }
+  .menu { grid-template-columns: 1fr 1fr; } .menu a:nth-child(3) { display: none; }
+  .text { grid-template-columns: 1fr; gap: 14px; padding-block: 70px; margin-top: 50px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0s !important; } }
+</style>
+<header class="pill" id="pill">
+  <div class="bar">
+    <a class="brand" href="#top" aria-label="Antimony"><svg width="14" height="14" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 5L78 29V71L50 95L22 71V29Z" fill="#F2F1EC"/><path d="M78 71L78 29L50 5L50 15Z" fill="#94E6FF"/><path d="M22 71L50 15L78 71L50 58Z" fill="#0B0D0C"/></svg><svg class="wm" viewBox="-8 -4 924 110" aria-hidden="true"><path d="M83.90 65.89 L100.94 100.00 L116.87 100.00 L96.58 59.38 L94.37 54.96 L66.91 0.00 L43.49 0.00 L-6.47 100.00 L9.46 100.00 L26.50 65.89 L55.20 52.00ZM37.04 44.79 L55.20 8.44 L73.36 44.79 L55.20 36.00ZM225.90 0.00 L210.90 0.00 L210.90 79.86 L151.71 0.00 L133.90 0.00 L133.90 100.00 L148.90 100.00 L148.90 20.14 L208.09 100.00 L225.90 100.00ZM248.40 0.00 L248.40 13.20 L288.05 13.20 L288.05 100.00 L303.05 100.00 L303.05 13.20 L342.70 13.20 L342.70 0.00 L303.05 0.00 L288.05 0.00ZM380.20 100.00 L380.20 0.00 L365.20 0.00 L365.20 100.00ZM509.48 0.00 L468.50 48.91 L427.52 0.00 L408.70 0.00 L408.70 100.00 L423.70 100.00 L423.70 17.63 L468.50 71.09 L513.30 17.63 L513.30 100.00 L528.30 100.00 L528.30 0.00ZM584.98 -0.90 L583.17 -0.58 L581.39 -0.18 L579.62 0.31 L577.88 0.88 L576.18 1.54 L574.50 2.28 L572.87 3.10 L571.27 4.01 L569.73 4.99 L568.23 6.04 L566.79 7.17 L565.40 8.36 L564.07 9.62 L562.81 10.95 L561.62 12.34 L560.49 13.78 L559.44 15.28 L558.46 16.82 L557.55 18.42 L556.73 20.05 L555.99 21.73 L555.33 23.43 L554.76 25.17 L554.27 26.94 L553.87 28.72 L553.55 30.53 L553.33 32.34 L553.19 34.17 L553.15 36.00 L553.15 64.00 L553.19 65.83 L553.33 67.66 L553.55 69.47 L553.87 71.28 L554.27 73.06 L554.76 74.83 L555.33 76.57 L555.99 78.27 L556.73 79.95 L557.55 81.58 L558.46 83.18 L559.44 84.72 L560.49 86.22 L561.62 87.66 L562.81 89.05 L564.07 90.38 L565.40 91.64 L566.79 92.83 L568.23 93.96 L569.73 95.01 L571.27 95.99 L572.87 96.90 L574.50 97.72 L576.18 98.46 L577.88 99.12 L579.62 99.69 L581.39 100.18 L583.17 100.58 L584.98 100.90 L586.79 101.12 L588.62 101.26 L590.45 101.30 L632.15 101.30 L633.98 101.26 L635.81 101.12 L637.62 100.90 L639.43 100.58 L641.21 100.18 L642.98 99.69 L644.72 99.12 L646.42 98.46 L648.10 97.72 L649.73 96.90 L651.33 95.99 L652.87 95.01 L654.37 93.96 L655.81 92.83 L657.20 91.64 L658.53 90.38 L659.79 89.05 L660.98 87.66 L662.11 86.22 L663.16 84.72 L664.14 83.18 L665.05 81.58 L665.87 79.95 L666.61 78.27 L667.27 76.57 L667.84 74.83 L668.33 73.06 L668.73 71.28 L669.05 69.47 L669.27 67.66 L669.41 65.83 L669.45 64.00 L669.45 36.00 L669.41 34.17 L669.27 32.34 L669.05 30.53 L668.73 28.72 L668.33 26.94 L667.84 25.17 L667.27 23.43 L666.61 21.73 L665.87 20.05 L665.05 18.42 L664.14 16.82 L663.16 15.28 L662.11 13.78 L660.98 12.34 L659.79 10.95 L658.53 9.62 L657.20 8.36 L655.81 7.17 L654.37 6.04 L652.87 4.99 L651.33 4.01 L649.73 3.10 L648.10 2.28 L646.42 1.54 L644.72 0.88 L642.98 0.31 L641.21 -0.18 L639.43 -0.58 L637.62 -0.90 L635.81 -1.12 L633.98 -1.26 L632.15 -1.30 L590.45 -1.30 L588.62 -1.26 L586.79 -1.12ZM632.72 12.42 L634.01 12.71 L635.29 13.06 L636.55 13.48 L637.78 13.96 L638.99 14.49 L640.18 15.09 L641.33 15.74 L642.45 16.45 L643.53 17.21 L644.58 18.03 L645.58 18.89 L646.54 19.81 L647.46 20.77 L648.32 21.77 L649.14 22.82 L649.90 23.90 L650.61 25.02 L651.26 26.17 L651.86 27.36 L652.39 28.57 L652.87 29.80 L653.29 31.06 L653.64 32.34 L653.93 33.63 L654.16 34.94 L654.32 36.25 L654.42 37.58 L654.45 38.90 L654.45 61.10 L654.42 62.42 L654.32 63.75 L654.16 65.06 L653.93 66.37 L653.64 67.66 L653.29 68.94 L652.87 70.20 L652.39 71.43 L651.86 72.64 L651.26 73.83 L650.61 74.98 L649.90 76.10 L649.14 77.18 L648.32 78.23 L647.46 79.23 L646.54 80.19 L645.58 81.11 L644.58 81.97 L643.53 82.79 L642.45 83.55 L641.33 84.26 L640.18 84.91 L638.99 85.51 L637.78 86.04 L636.55 86.52 L635.29 86.94 L634.01 87.29 L632.72 87.58 L631.41 87.81 L630.10 87.97 L628.77 88.07 L627.45 88.10 L595.15 88.10 L593.83 88.07 L592.50 87.97 L591.19 87.81 L589.88 87.58 L588.59 87.29 L587.31 86.94 L586.05 86.52 L584.82 86.04 L583.61 85.51 L582.42 84.91 L581.27 84.26 L580.15 83.55 L579.07 82.79 L578.02 81.97 L577.02 81.11 L576.06 80.19 L575.14 79.23 L574.28 78.23 L573.46 77.18 L572.70 76.10 L571.99 74.98 L571.34 73.83 L570.74 72.64 L570.21 71.43 L569.73 70.20 L569.31 68.94 L568.96 67.66 L568.67 66.37 L568.44 65.06 L568.28 63.75 L568.18 62.42 L568.15 61.10 L568.15 38.90 L568.18 37.58 L568.28 36.25 L568.44 34.94 L568.67 33.63 L568.96 32.34 L569.31 31.06 L569.73 29.80 L570.21 28.57 L570.74 27.36 L571.34 26.17 L571.99 25.02 L572.70 23.90 L573.46 22.82 L574.28 21.77 L575.14 20.77 L576.06 19.81 L577.02 18.89 L578.02 18.03 L579.07 17.21 L580.15 16.45 L581.27 15.74 L582.42 15.09 L583.61 14.49 L584.82 13.96 L586.05 13.48 L587.31 13.06 L588.59 12.71 L589.88 12.42 L591.19 12.19 L592.50 12.03 L593.83 11.93 L595.15 11.90 L627.45 11.90 L628.77 11.93 L630.10 12.03 L631.41 12.19ZM786.30 0.00 L771.30 0.00 L771.30 79.86 L712.11 0.00 L694.30 0.00 L694.30 100.00 L709.30 100.00 L709.30 20.14 L768.49 100.00 L786.30 100.00ZM864.90 54.19 L911.18 0.00 L892.44 0.00 L860.84 37.00 L853.96 37.00 L822.36 0.00 L803.62 0.00 L849.90 54.19 L849.90 100.00 L864.90 100.00Z" fill-rule="evenodd"/></svg></a>
+    <div class="r"><button id="mb" aria-expanded="false">Menu</button><a class="hide" href="#company">Company</a><a class="go" href="https://eoinforker.github.io/orbe-site/">Visit Orbe</a></div>
+  </div>
+  <div class="drawer"><div><div class="menu">
+    <a href="https://eoinforker.github.io/orbe-site/"><div class="pic" style="background:#94E6FF;display:grid;place-items:center"><img src="../../assets/orbe-mark-on-sky.svg" alt="" style="width:42%;height:auto;border-radius:22%"></div><span>Orbe <i>Product</i></span></a>
+    <a href="#company"><div class="pic"><img src="../../assets/crystal-ink.webp" alt=""></div><span>Company <i>About</i></span></a>
+    <a href="#letters"><div class="pic"><img src="../../assets/art-engraved.svg" alt=""></div><span>Letters <i>Soon</i></span></a>
+  </div></div></div>
+</header>
+<main class="wrap" id="top">
+  <section class="hero">
+    <h1>Software for the people who make the work.</h1>
+    <p>Antimony is a London company. Our first product is Orbe, the creator's side of every sponsorship deal.</p>
+  </section>
+  <section class="plates">
+    <figure class="plate big"><img src="../../assets/crystal-paper.webp" alt="The Antimony crystal in clear glass"><figcaption class="cap"><b>Antimony</b><span class="chip">Plate 1 · Glass</span></figcaption></figure>
+    <a class="plate orbe" href="https://eoinforker.github.io/orbe-site/"><img src="../../assets/orbe-mark-on-sky.svg" alt="Orbe"><div class="cap"><b>Orbe</b><span class="chip">Visit ↗</span></div></a>
+    <figure class="plate dark"><img src="../../assets/art-engraved.svg" alt=""><figcaption class="cap"><b>Element 51</b><span class="chip">Plate 2 · Engraving</span></figcaption></figure>
+  </section>
+  <section class="text" id="company">
+    <span class="mono">Company</span>
+    <div><p>We sit on the side of the person who made the work, never across the table from them. We earn when they earn, and we build for decades rather than rounds.</p>
+    <p>Antimony, element 51, is almost never found alone in nature. Alchemists used it to purify gold. Both are what we want our products to do for the people who use them.</p></div>
+  </section>
+  <section class="text" id="letters" style="margin-top:0">
+    <span class="mono">Letters</span>
+    <div><p>Antimony 001: Never alone. In preparation.</p></div>
+  </section>
+  <footer><span class="mono">Antimony · London</span><span class="mono">© 2026</span></footer>
+</main>
+<script>
+const pill = document.getElementById("pill"), mb = document.getElementById("mb");
+const set = o => { pill.classList.toggle("open", o); mb.setAttribute("aria-expanded", o); mb.textContent = o ? "Close" : "Menu"; };
+mb.addEventListener("click", () => set(!pill.classList.contains("open")));
+pill.addEventListener("mouseleave", () => matchMedia("(hover: hover)").matches && set(false));
+addEventListener("keydown", e => { if (e.key === "Escape") set(false); });
+pill.querySelectorAll(".menu a").forEach(a => a.addEventListener("click", () => set(false)));
+</script>
+
+</html>

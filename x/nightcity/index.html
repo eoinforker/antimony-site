@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex"><link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<title>Antimony Issue</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap">
+<style>
+/* After the Edgerunners Night City magazine: the home page is a cover. Thin frame, outlined masthead across the top,
+   cover lines down the left, a misregistered halftone crystal, a barcode, and a contents page as the navigation. */
+@font-face { font-family: "Commit Mono"; src: url("../../assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 400 600; font-display: swap; }
+:root { --ink: #07090A; --paper: #F2F1EC; --sky: #94E6FF; --cobalt: #2448FF; --dim: #6F7B79;
+  --cond: "Archivo", "Helvetica Neue", Arial, sans-serif; --mono: "Commit Mono", ui-monospace, monospace; color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--ink); color: var(--paper); overflow: hidden; }
+body { font-family: var(--cond); -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; } button { all: unset; cursor: pointer; }
+:focus-visible { outline: 1px solid var(--sky); outline-offset: 3px; }
+.cover { position: fixed; inset: calc(14px + env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
+  border: 1.5px solid var(--sky); overflow: hidden; display: grid; grid-template-rows: auto 1fr auto; padding: 18px 22px 18px; }
+.mast { position: relative; z-index: 3; padding-right: 108px; }
+@media (max-width: 760px) { .mast { padding-right: 96px; } }
+.mast svg { width: 100%; height: auto; fill: none; stroke: var(--paper); stroke-width: 1.3; vector-effect: non-scaling-stroke; }
+.mast .row { display: flex; justify-content: space-between; margin-top: 10px; }
+.mono { font: 400 11px/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+.k { color: var(--sky); }
+.art { position: absolute; z-index: 1; right: -6%; bottom: -8%; width: min(72vh, 58vw); aspect-ratio: 1; }
+.art img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.art .off { mix-blend-mode: screen; filter: sepia(1) saturate(6) hue-rotate(150deg) brightness(.9); opacity: .9; transform: translate(9px, -6px); animation: reg 6s steps(1) infinite; }
+@keyframes reg { 0%,100% { transform: translate(9px,-6px) } 47% { transform: translate(11px,-4px) } 48% { transform: translate(-3px,2px) } 49% { transform: translate(9px,-6px) } }
+.lines { position: relative; z-index: 3; align-self: center; display: grid; gap: clamp(16px, 3vh, 34px); max-width: 520px; }
+.line .n { font: 700 12px var(--mono); color: var(--sky); letter-spacing: .1em; }
+.line b { display: block; font-weight: 800; font-stretch: 66%; font-size: clamp(30px, 4.6vw, 70px); line-height: .9; text-transform: uppercase; letter-spacing: .005em; margin-top: 6px; }
+.line span { display: block; font-size: 15px; line-height: 1.4; color: #B8C0BE; margin-top: 8px; max-width: 30em; }
+.line a:hover b { color: var(--sky); }
+.foot { position: relative; z-index: 3; display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }
+.tag { background: var(--sky); color: var(--ink); font: 800 13px var(--cond); font-stretch: 70%; letter-spacing: .06em; padding: 6px 10px; text-transform: uppercase; }
+.code { display: flex; align-items: flex-end; gap: 12px; }
+.code svg { height: 46px; width: auto; background: var(--paper); padding: 4px 6px; }
+.contents-btn { position: fixed; z-index: 10; top: calc(26px + env(safe-area-inset-top, 0px)); right: max(32px, env(safe-area-inset-right, 0px)); }
+.contents-btn span { font: 800 12px var(--cond); font-stretch: 80%; letter-spacing: .14em; background: var(--paper); color: var(--ink); padding: 7px 10px; }
+/* contents: the navigation, laid out as the magazine's contents page */
+.contents { position: fixed; z-index: 9; inset: 0; background: var(--paper); color: var(--ink); clip-path: inset(0 0 0 100%); transition: clip-path .5s cubic-bezier(.7,0,.2,1);
+  display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: calc(80px + env(safe-area-inset-top, 0px)) max(36px, env(safe-area-inset-right, 0px)) 40px max(36px, env(safe-area-inset-left, 0px)); }
+body.open .contents { clip-path: inset(0 0 0 0); }
+body.open .contents-btn span { background: var(--ink); color: var(--paper); }
+.contents h2 { font-weight: 900; font-stretch: 62%; font-size: clamp(80px, 15vw, 240px); line-height: .8; letter-spacing: -.01em; text-transform: uppercase; align-self: end; }
+.toc { list-style: none; align-self: end; border-top: 2px solid var(--ink); }
+.toc a { display: grid; grid-template-columns: 70px 1fr auto; gap: 14px; align-items: baseline; padding: 16px 0; border-bottom: 1px solid rgba(7,9,10,.2); }
+.toc .p { font: 700 13px var(--mono); }
+.toc b { font-weight: 800; font-stretch: 68%; font-size: clamp(30px, 3.6vw, 54px); line-height: .95; text-transform: uppercase; }
+.toc i { font-style: normal; font-size: 14px; color: #555; max-width: 22em; text-align: right; }
+.toc a:hover b { color: var(--cobalt); }
+@media (max-width: 760px) {
+  .cover { padding: 14px; }
+  .art { width: 118vw; right: -38%; bottom: 4%; opacity: .75; }
+  .line span { display: none; } .lines { gap: 18px; }
+  .code .mono.x { display: none; }
+  .contents { grid-template-columns: 1fr; } .toc a { grid-template-columns: 46px 1fr; } .toc i { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .art .off { animation: none; } .contents { transition: none; } }
+</style>
+<div class="cover">
+  <div class="mast">
+    <svg viewBox="-8 -4 924 110" role="img" aria-label="Antimony"><path d="M83.90 65.89 L100.94 100.00 L116.87 100.00 L96.58 59.38 L94.37 54.96 L66.91 0.00 L43.49 0.00 L-6.47 100.00 L9.46 100.00 L26.50 65.89 L55.20 52.00ZM37.04 44.79 L55.20 8.44 L73.36 44.79 L55.20 36.00ZM225.90 0.00 L210.90 0.00 L210.90 79.86 L151.71 0.00 L133.90 0.00 L133.90 100.00 L148.90 100.00 L148.90 20.14 L208.09 100.00 L225.90 100.00ZM248.40 0.00 L248.40 13.20 L288.05 13.20 L288.05 100.00 L303.05 100.00 L303.05 13.20 L342.70 13.20 L342.70 0.00 L303.05 0.00 L288.05 0.00ZM380.20 100.00 L380.20 0.00 L365.20 0.00 L365.20 100.00ZM509.48 0.00 L468.50 48.91 L427.52 0.00 L408.70 0.00 L408.70 100.00 L423.70 100.00 L423.70 17.63 L468.50 71.09 L513.30 17.63 L513.30 100.00 L528.30 100.00 L528.30 0.00ZM584.98 -0.90 L583.17 -0.58 L581.39 -0.18 L579.62 0.31 L577.88 0.88 L576.18 1.54 L574.50 2.28 L572.87 3.10 L571.27 4.01 L569.73 4.99 L568.23 6.04 L566.79 7.17 L565.40 8.36 L564.07 9.62 L562.81 10.95 L561.62 12.34 L560.49 13.78 L559.44 15.28 L558.46 16.82 L557.55 18.42 L556.73 20.05 L555.99 21.73 L555.33 23.43 L554.76 25.17 L554.27 26.94 L553.87 28.72 L553.55 30.53 L553.33 32.34 L553.19 34.17 L553.15 36.00 L553.15 64.00 L553.19 65.83 L553.33 67.66 L553.55 69.47 L553.87 71.28 L554.27 73.06 L554.76 74.83 L555.33 76.57 L555.99 78.27 L556.73 79.95 L557.55 81.58 L558.46 83.18 L559.44 84.72 L560.49 86.22 L561.62 87.66 L562.81 89.05 L564.07 90.38 L565.40 91.64 L566.79 92.83 L568.23 93.96 L569.73 95.01 L571.27 95.99 L572.87 96.90 L574.50 97.72 L576.18 98.46 L577.88 99.12 L579.62 99.69 L581.39 100.18 L583.17 100.58 L584.98 100.90 L586.79 101.12 L588.62 101.26 L590.45 101.30 L632.15 101.30 L633.98 101.26 L635.81 101.12 L637.62 100.90 L639.43 100.58 L641.21 100.18 L642.98 99.69 L644.72 99.12 L646.42 98.46 L648.10 97.72 L649.73 96.90 L651.33 95.99 L652.87 95.01 L654.37 93.96 L655.81 92.83 L657.20 91.64 L658.53 90.38 L659.79 89.05 L660.98 87.66 L662.11 86.22 L663.16 84.72 L664.14 83.18 L665.05 81.58 L665.87 79.95 L666.61 78.27 L667.27 76.57 L667.84 74.83 L668.33 73.06 L668.73 71.28 L669.05 69.47 L669.27 67.66 L669.41 65.83 L669.45 64.00 L669.45 36.00 L669.41 34.17 L669.27 32.34 L669.05 30.53 L668.73 28.72 L668.33 26.94 L667.84 25.17 L667.27 23.43 L666.61 21.73 L665.87 20.05 L665.05 18.42 L664.14 16.82 L663.16 15.28 L662.11 13.78 L660.98 12.34 L659.79 10.95 L658.53 9.62 L657.20 8.36 L655.81 7.17 L654.37 6.04 L652.87 4.99 L651.33 4.01 L649.73 3.10 L648.10 2.28 L646.42 1.54 L644.72 0.88 L642.98 0.31 L641.21 -0.18 L639.43 -0.58 L637.62 -0.90 L635.81 -1.12 L633.98 -1.26 L632.15 -1.30 L590.45 -1.30 L588.62 -1.26 L586.79 -1.12ZM632.72 12.42 L634.01 12.71 L635.29 13.06 L636.55 13.48 L637.78 13.96 L638.99 14.49 L640.18 15.09 L641.33 15.74 L642.45 16.45 L643.53 17.21 L644.58 18.03 L645.58 18.89 L646.54 19.81 L647.46 20.77 L648.32 21.77 L649.14 22.82 L649.90 23.90 L650.61 25.02 L651.26 26.17 L651.86 27.36 L652.39 28.57 L652.87 29.80 L653.29 31.06 L653.64 32.34 L653.93 33.63 L654.16 34.94 L654.32 36.25 L654.42 37.58 L654.45 38.90 L654.45 61.10 L654.42 62.42 L654.32 63.75 L654.16 65.06 L653.93 66.37 L653.64 67.66 L653.29 68.94 L652.87 70.20 L652.39 71.43 L651.86 72.64 L651.26 73.83 L650.61 74.98 L649.90 76.10 L649.14 77.18 L648.32 78.23 L647.46 79.23 L646.54 80.19 L645.58 81.11 L644.58 81.97 L643.53 82.79 L642.45 83.55 L641.33 84.26 L640.18 84.91 L638.99 85.51 L637.78 86.04 L636.55 86.52 L635.29 86.94 L634.01 87.29 L632.72 87.58 L631.41 87.81 L630.10 87.97 L628.77 88.07 L627.45 88.10 L595.15 88.10 L593.83 88.07 L592.50 87.97 L591.19 87.81 L589.88 87.58 L588.59 87.29 L587.31 86.94 L586.05 86.52 L584.82 86.04 L583.61 85.51 L582.42 84.91 L581.27 84.26 L580.15 83.55 L579.07 82.79 L578.02 81.97 L577.02 81.11 L576.06 80.19 L575.14 79.23 L574.28 78.23 L573.46 77.18 L572.70 76.10 L571.99 74.98 L571.34 73.83 L570.74 72.64 L570.21 71.43 L569.73 70.20 L569.31 68.94 L568.96 67.66 L568.67 66.37 L568.44 65.06 L568.28 63.75 L568.18 62.42 L568.15 61.10 L568.15 38.90 L568.18 37.58 L568.28 36.25 L568.44 34.94 L568.67 33.63 L568.96 32.34 L569.31 31.06 L569.73 29.80 L570.21 28.57 L570.74 27.36 L571.34 26.17 L571.99 25.02 L572.70 23.90 L573.46 22.82 L574.28 21.77 L575.14 20.77 L576.06 19.81 L577.02 18.89 L578.02 18.03 L579.07 17.21 L580.15 16.45 L581.27 15.74 L582.42 15.09 L583.61 14.49 L584.82 13.96 L586.05 13.48 L587.31 13.06 L588.59 12.71 L589.88 12.42 L591.19 12.19 L592.50 12.03 L593.83 11.93 L595.15 11.90 L627.45 11.90 L628.77 11.93 L630.10 12.03 L631.41 12.19ZM786.30 0.00 L771.30 0.00 L771.30 79.86 L712.11 0.00 L694.30 0.00 L694.30 100.00 L709.30 100.00 L709.30 20.14 L768.49 100.00 L786.30 100.00ZM864.90 54.19 L911.18 0.00 L892.44 0.00 L860.84 37.00 L853.96 37.00 L822.36 0.00 L803.62 0.00 L849.90 54.19 L849.90 100.00 L864.90 100.00Z" fill-rule="evenodd"/></svg>
+    <div class="row mono"><span>Issue <span class="k">001</span> · Never alone</span><span>London · Oct 2026</span></div>
+  </div>
+  <div class="lines">
+    <div class="line"><a href="https://eoinforker.github.io/orbe-site/"><span class="n">P.04</span><b>Orbe</b><span>The creator's side of every sponsorship deal. It negotiates inside your rules and holds the money until the work is delivered.</span></a></div>
+    <div class="line"><a href="#company"><span class="n">P.12</span><b>Element 51</b><span>Antimony is almost never found alone. Alchemists used it to purify gold.</span></a></div>
+    <div class="line"><a href="#letters"><span class="n">P.20</span><b>Letters</b><span>Antimony 001, in preparation.</span></a></div>
+  </div>
+  <div class="foot">
+    <span class="tag">Makers of Orbe</span>
+    <div class="code"><span class="mono x" style="color:var(--dim);text-align:right;background:var(--ink);padding:4px 0 4px 8px">Antimony<br>Software for the people<br>who make the work</span><svg id="bc" viewBox="0 0 120 50" aria-hidden="true"></svg></div>
+  </div>
+  <div class="art" aria-hidden="true"><img src="../../assets/art-halftone-night.svg" alt=""><img class="off" src="../../assets/art-halftone-night.svg" alt=""></div>
+</div>
+<button class="contents-btn" id="cb" aria-expanded="false"><span id="cl">CONTENTS</span></button>
+<nav class="contents" aria-label="Contents">
+  <h2>Con&shy;tents</h2>
+  <ul class="toc">
+    <li><a href="https://eoinforker.github.io/orbe-site/"><span class="p">P.04</span><b>Orbe</b><i>The creator's side of every sponsorship deal</i></a></li>
+    <li><a href="#company"><span class="p">P.12</span><b>Company</b><i>Who we are, and why the name</i></a></li>
+    <li><a href="#letters"><span class="p">P.20</span><b>Letters</b><i>Antimony 001, in preparation</i></a></li>
+  </ul>
+</nav>
+<script>
+// a barcode: EAN-style bars from the issue number, guard bars taller
+(() => { const g = document.getElementById("bc"), digits = "9771234051001"; const L = ["0001101","0011001","0010011","0111101","0100011","0110001","0101111","0111011","0110111","0001011"];
+  let bitsS = "101" + digits.slice(1, 7).split("").map(d => L[+d]).join("") + "01010" + digits.slice(7).split("").map(d => L[+d].replace(/./g, c => c === "0" ? "1" : "0")).join("") + "101";
+  const w = 112 / bitsS.length; let out = "";
+  [...bitsS].forEach((b, i) => { if (b === "1") { const guard = i < 3 || i > bitsS.length - 4 || (i >= 45 && i < 50); out += `<rect x="${4 + i * w}" y="2" width="${w + 0.02}" height="${guard ? 46 : 40}" fill="#07090A"/>`; } });
+  g.innerHTML = out; })();
+const cb = document.getElementById("cb"), cl = document.getElementById("cl");
+const set = o => { document.body.classList.toggle("open", o); cb.setAttribute("aria-expanded", o); cl.textContent = o ? "CLOSE" : "CONTENTS"; };
+cb.addEventListener("click", () => set(!document.body.classList.contains("open")));
+addEventListener("keydown", e => { if (e.key === "Escape") set(false); });
+document.querySelectorAll(".toc a").forEach(a => a.addEventListener("click", () => { if (a.getAttribute("href").startsWith("#")) set(false); }));
+</script>
+
+</html>
