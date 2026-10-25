@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><title>Texture lab</title>
+<style>
+@font-face { font-family: "Commit Mono"; src: url("../../../assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 200 700; }
+html, body { margin: 0; background: transparent; overflow: hidden; }
+canvas { display: block; }
+</style></head>
+<body><canvas id="c"></canvas>
+<script>
+/* Each texture is drawn once, at the size asked for: textures.html?t=light&w=1600&h=1000&seed=3
+   light: water and sky light, caustics and stipple (the light in the crystal, opened out)
+   stipple: points of light on ink, gathered where the light is
+   halftone: the same light as a dot screen at 16 degrees
+   chars: the character field, the mark's own source set as text
+   grain: paper grain on cream (or alpha only with &alpha=1)
+   stone: dark stone, a little lighter where the light falls */
+const q = new URLSearchParams(location.search);
+const T = q.get("t") || "light", W = +q.get("w") || 1600, H = +q.get("h") || 1000, SEED = +q.get("seed") || 1;
+const LX = q.has("lx") ? +q.get("lx") : .62, LY = q.has("ly") ? +q.get("ly") : .3;   /* where the light is brightest */
+const c = document.getElementById("c"); c.width = W; c.height = H; c.style.width = W + "px"; c.style.height = H + "px";
+let s = SEED * 9301 + 49297; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+
+const CAUSTIC = `
+float hash(vec2 p){p=fract(p*vec2(443.897,441.423));p+=dot(p,p.yx+19.19);return fract((p.x+p.y)*p.x);}
+float caustic(vec2 p,float t){vec2 i=p;float c=1.;float k=.0065;
+ for(int n=0;n<4;n++){float tt=t*(1.-(3.5/float(n+1)));i=p+vec2(cos(tt-i.x)+sin(tt+i.y),sin(tt-i.y)+cos(tt+i.x));
+  c+=1./length(vec2(p.x/(sin(i.x+tt)/k),p.y/(cos(i.y+tt)/k)));}
+ c/=4.;c=1.17-pow(c,1.4);return pow(abs(c),5.);}
+uniform vec2 uRes;uniform vec2 uL;uniform float uSeed;
+/* the light field, 0 dark to 1 bright, with its colour */
+float field(vec2 q){vec2 r=(q-uL*uRes)/max(uRes.x,uRes.y);
+ float g=clamp(.74-r.y*.8+r.x*.1-length(r)*.32,0.,1.);
+ vec2 p1=q/max(uRes.x,uRes.y)*1.7*6.2832+vec2(-250.+uSeed*3.);vec2 p2=mat2(.87,.5,-.5,.87)*q/max(uRes.x,uRes.y)*1.1*6.2832+vec2(-180.);
+ float c=caustic(p1,23.+uSeed);float c2=caustic(p2,7.+uSeed*.5);
+ return clamp(g+(c*.3+c2*.22)*(.55+g*.45),0.,1.);}
+vec3 water(float g){vec3 deep=vec3(.12,.28,.62),mid=vec3(.22,.47,.84),sky=vec3(.58,.902,1.),pale=vec3(.93,.985,1.);
+ vec3 col=mix(deep,mid,smoothstep(0.,.3,g));col=mix(col,sky,smoothstep(.25,.62,g));col=mix(col,pale,smoothstep(.62,1.,g)*.9);return col;}
+`;
+function glRun(fs) {
+  const gl = c.getContext("webgl", { preserveDrawingBuffer: true, premultipliedAlpha: false });
+  const mk = (t, src) => { const sh = gl.createShader(t); gl.shaderSource(sh, src); gl.compileShader(sh); if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(sh); return sh; };
+  const pr = gl.createProgram();
+  gl.attachShader(pr, mk(gl.VERTEX_SHADER, "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}"));
+  gl.attachShader(pr, mk(gl.FRAGMENT_SHADER, "precision highp float;" + CAUSTIC + fs)); gl.linkProgram(pr); gl.useProgram(pr);
+  const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const l = gl.getAttribLocation(pr, "p"); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 2, gl.FLOAT, false, 0, 0);
+  gl.uniform2f(gl.getUniformLocation(pr, "uRes"), W, H); gl.uniform2f(gl.getUniformLocation(pr, "uL"), LX, LY); gl.uniform1f(gl.getUniformLocation(pr, "uSeed"), SEED);
+  gl.viewport(0, 0, W, H); gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+const FC = "vec2 q=vec2(gl_FragCoord.x,uRes.y-gl_FragCoord.y);";
+const DRAW = {
+  light() {
+    glRun(`void main(){${FC}float g=field(q);vec3 col=water(g);
+      col+=(hash(floor(q))-.5)*.03;
+      float st=hash(floor(q*.7)+vec2(17.,91.));col+=(vec3(.93,.985,1.)-col)*step(.955,st)*.28*(1.-g*.6);
+      gl_FragColor=vec4(col,1.);}`);
+  },
+  stipple() {
+    /* points of pale light on ink; a jittered grid so they never clump, each lit if the light is strong enough */
+    glRun(`void main(){${FC}float cell=${(+q.get("cell") || 6).toFixed(1)};vec2 id=floor(q/cell);
+      vec2 j=vec2(hash(id+3.1),hash(id+7.7));vec2 ctr=(id+.2+j*.6)*cell;float g=field(ctr);
+      float gg=smoothstep(.28,.98,g);float on=step(hash(id+11.3),gg*gg*.96+.012);float d=length(q-ctr);float r=cell*(.1+.17*gg);
+      float a=on*clamp(r-d+.5,0.,1.)*(.38+.62*gg);vec3 ink=vec3(.043,.047,.047);vec3 dot=mix(vec3(.58,.902,1.),vec3(.93,.985,1.),smoothstep(.5,1.,g));
+      vec3 col=mix(ink,dot,a);gl_FragColor=vec4(col,1.);}`);
+  },
+  halftone() {
+    /* a dot screen at the seam's angle: dots grow where the light is dark, as ink would */
+    const dark = q.get("ground") === "ink";
+    glRun(`void main(){${FC}float a=radians(16.);mat2 m=mat2(cos(a),-sin(a),sin(a),cos(a));
+      float cell=${(+q.get("cell") || 9).toFixed(1)};vec2 u=m*q/cell;vec2 id=floor(u)+.5;mat2 mi=mat2(cos(a),sin(a),-sin(a),cos(a));vec2 ctr=mi*(id*cell);
+      float g=field(ctr);float v=${dark ? "g" : "pow(1.-g,1.7)"};float r=sqrt(v)*.62*cell;float d=length((fract(u)-.5)*cell);
+      float k=clamp(r-d+.6,0.,1.);
+      vec3 gr=${dark ? "vec3(.043,.047,.047)" : "vec3(.933,.918,.878)"};vec3 dk=${dark ? "vec3(.58,.902,1.)" : "vec3(.122,.247,.478)"};
+      vec3 col=mix(gr,dk,k);gl_FragColor=vec4(col,1.);}`);
+  },
+  grain() {
+    const x = c.getContext("2d"), alpha = q.get("alpha") === "1";
+    if (!alpha) { x.fillStyle = q.get("ground") || "#EEEAE0"; x.fillRect(0, 0, W, H); }
+    const d = x.getImageData(0, 0, W, H), p = d.data;
+    for (let i = 0; i < p.length; i += 4) {
+      const r = rnd();
+      let cr, cg, cb, a;
+      if (r < .42) { cr = 52; cg = 46; cb = 38; a = (7 + rnd() * 15) / 255; }
+      else if (r < .5) { cr = cg = cb = 255; a = (10 + rnd() * 12) / 255; }
+      else continue;
+      if (alpha) { p[i] = cr; p[i + 1] = cg; p[i + 2] = cb; p[i + 3] = a * 255; }
+      else { p[i] += (cr - p[i]) * a; p[i + 1] += (cg - p[i + 1]) * a; p[i + 2] += (cb - p[i + 2]) * a; }
+    }
+    x.putImageData(d, 0, 0);
+  },
+  stone() {
+    glRun(`void main(){${FC}float g=clamp((q.x*.55+q.y*.85)/(uRes.x*.55+uRes.y*.85),0.,1.);
+      vec3 col=mix(vec3(.152,.145,.133),vec3(.056,.053,.049),g);
+      col+=(hash(floor(q))-.5)*.022;float st=hash(floor(q*.5)+vec2(5.,9.));col+=step(.985,st)*.025;
+      gl_FragColor=vec4(col,1.);}`);
+  },
+  chars() {
+    /* the character field: rows of the mark's own source, brighter towards the light, the Break left dark in the middle */
+    const x = c.getContext("2d"), fs = +q.get("fs") || 13, dpr = 1;
+    x.fillStyle = q.get("ground") || "#0B0C0C"; x.fillRect(0, 0, W, H);
+    const CORPUS = ("antimony. the stone, the seam at sixteen degrees, the cavity, the crystal, the light. " +
+      "tile rect width 100 height 100 rx 22; seam M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112Z; " +
+      "cav M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z; " +
+      "software for the people who make the work. gem #94E6FF M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z; " +
+      "facet opacity .28; ang 16; cy 51.5; stone #141311; paper #EEEAE0; sky #94E6FF; ink #0B0C0C. " +
+      "points move by (cy - y) * tan(16) in x; never rotate, never stretch; the crystal holds light. ").split("");
+    x.font = `500 ${fs}px "Commit Mono", ui-monospace, monospace`; x.textBaseline = "middle"; x.textAlign = "center";
+    const cw = x.measureText("M").width, ch = Math.round(fs * 1.55), cols = Math.ceil(W / cw) + 1, rows = Math.ceil(H / ch) + 1;
+    const cx = LX * W, cy = LY * H, rad = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy));
+    for (let j = 0; j < rows; j++) {
+      let off = Math.floor(rnd() * CORPUS.length), run = 0, ra = 0, gap = 0;
+      for (let i = 0; i < cols; i++) {
+        const px = (i + .5) * cw, py = (j + .5) * ch, r = Math.hypot(px - cx, py - cy) / rad;
+        if (gap > 0) { gap--; continue; }
+        if (run <= 0) { run = 10 + rnd() * 40; ra = [.22, .3, .38, .5][Math.floor(rnd() * 4)]; if (rnd() < r * .55) { gap = 4 + rnd() * 26 * r; continue; } }
+        run--;
+        const k = CORPUS[(off + i) % CORPUS.length]; if (k === " ") continue;
+        const f = Math.pow(1 - Math.min(1, r), 1.4), a = Math.min(.9, ra * (.16 + .84 * f) * (+q.get("boost") || 1));
+        x.fillStyle = (rnd() < .012 * f) ? `rgba(148,230,255,${Math.min(1, a * 2)})` : `rgba(238,234,224,${a})`;
+        x.fillText(k, px, py);
+      }
+    }
+  }
+};
+(document.fonts ? document.fonts.load('500 13px "Commit Mono"') : Promise.resolve()).then(() => { DRAW[T](); document.title = "done"; });
+</script></body></html>

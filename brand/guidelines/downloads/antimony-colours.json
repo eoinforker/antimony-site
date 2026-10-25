@@ -1,0 +1,92 @@
+{
+ "Cream": {
+  "hex": "#EEEAE0",
+  "rgb": [
+   238,
+   234,
+   224
+  ],
+  "contrast_with_cream": 1.0,
+  "contrast_with_ink": 16.3
+ },
+ "Stone": {
+  "hex": "#141311",
+  "rgb": [
+   20,
+   19,
+   17
+  ],
+  "contrast_with_cream": 15.46,
+  "contrast_with_ink": 1.05
+ },
+ "Ink": {
+  "hex": "#0B0C0C",
+  "rgb": [
+   11,
+   12,
+   12
+  ],
+  "contrast_with_cream": 16.3,
+  "contrast_with_ink": 1.0
+ },
+ "Sky": {
+  "hex": "#94E6FF",
+  "rgb": [
+   148,
+   230,
+   255
+  ],
+  "contrast_with_cream": 1.16,
+  "contrast_with_ink": 14.01
+ },
+ "Prussian": {
+  "hex": "#1F3F7A",
+  "rgb": [
+   31,
+   63,
+   122
+  ],
+  "contrast_with_cream": 8.53,
+  "contrast_with_ink": 1.91
+ },
+ "Cobalt": {
+  "hex": "#2448FF",
+  "rgb": [
+   36,
+   72,
+   255
+  ],
+  "contrast_with_cream": 5.07,
+  "contrast_with_ink": 3.21
+ },
+ "Washi": {
+  "hex": "#F3ECDD",
+  "rgb": [
+   243,
+   236,
+   221
+  ],
+  "contrast_with_cream": 1.02,
+  "contrast_with_ink": 16.65
+ },
+ "tones": {
+  "Sky 100": "#E9FAFF",
+  "Sky 200": "#C7F2FF",
+  "Sky 300": "#94E6FF",
+  "Sky 400": "#77BFE1",
+  "Sky 500": "#5E9DC6",
+  "Sky 600": "#477CAC",
+  "Sky 700": "#315B91",
+  "Sky 800": "#1F3F7A",
+  "Sky 900": "#15223A",
+  "Stone 100": "#D5D1C8",
+  "Stone 200": "#B3B0A8",
+  "Stone 300": "#929089",
+  "Stone 400": "#73706B",
+  "Stone 500": "#595752",
+  "Stone 600": "#42413D",
+  "Stone 700": "#2F2E2A",
+  "Stone 800": "#201F1D",
+  "Stone 900": "#141311"
+ }
+}

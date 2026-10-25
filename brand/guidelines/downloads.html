@@ -1,0 +1,200 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#0B0C0C"><title>Downloads, Antimony brand guidelines</title><meta name="description" content="The Antimony brand kit: masters, exports, icons, social images, posters and print."><link rel="icon" href="img/favicon.svg" type="image/svg+xml"><link rel="icon" href="img/favicon-32.png" sizes="32x32" type="image/png"><link rel="apple-touch-icon" href="img/apple-touch-icon.png"><link rel="preload" href="fonts/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin><style>
+@font-face { font-family: "Timeless Serif"; src: url(fonts/TimelessSerifVF.woff2) format("woff2"); font-weight: 200 700; font-display: swap; }
+@font-face { font-family: "Timeless Serif"; src: url(fonts/TimelessSerifItalicVF.woff2) format("woff2"); font-weight: 200 700; font-style: italic; font-display: swap; }
+@font-face { font-family: "Commit Mono"; src: url(fonts/CommitMono-Latin-VF.woff2) format("woff2"); font-weight: 200 700; font-display: swap; }
+:root {
+  --cream: #EEEAE0; --ink: #0B0C0C; --stone: #141311; --sky: #94E6FF; --pru: #1F3F7A; --cob: #2448FF; --washi: #F3ECDD;
+  --fg: #0B0C0C; --rule: #0B0C0C; --hair: rgba(11, 12, 12, .2); --dim: rgba(11, 12, 12, .64);
+  --serif: "Timeless Serif", "Iowan Old Style", Georgia, serif; --mono: "Commit Mono", ui-monospace, Menlo, monospace;
+  --pad: 40px; --gap: 20px; color-scheme: light;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--cream) url(img/tex/grain-alpha.png) 0 0 / 128px 128px; color: var(--fg); -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { font: 500 16px/1.45 var(--serif); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .2em; }
+:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; }
+::selection { background: var(--sky); color: var(--ink); }
+img, svg { display: block; max-width: 100%; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.mono { font: 400 11px/1.5 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.wrap { padding-inline: var(--pad); max-width: 1760px; margin-inline: auto; }
+.g12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gap); }
+
+/* the dark head of every chapter */
+.head { background: var(--ink); color: var(--cream); position: relative; overflow: hidden; }
+.head::before { content: ""; position: absolute; inset: 0; background: url(img/tex/grain-light.png) 0 0 / 128px 128px; pointer-events: none; }
+.head .wrap { min-height: 470px; display: flex; flex-direction: column; justify-content: space-between; padding-top: 34px; padding-bottom: 40px; position: relative; }
+.head.cover .wrap { min-height: min(100svh, 980px); }
+.bar { align-items: center; }
+.bar .home { grid-column: 1 / 4; display: block; width: 132px; text-decoration: none; }
+.bar .title { grid-column: 4 / 9; font-size: 14px; }
+.big { font: 400 clamp(76px, 15.6vw, 244px)/.86 var(--serif); letter-spacing: -.038em; margin-left: -.04em; padding-top: .5em; }
+.cover .big { font-size: clamp(76px, 15.2vw, 248px); line-height: .84; }
+
+/* the menu */
+.mb { position: fixed; z-index: 60; top: 24px; right: 24px; width: 44px; height: 44px; border-radius: 11px; border: 1px solid rgba(238,234,224,.28); background: rgba(11,12,12,.86);
+  color: var(--cream); display: grid; place-items: center; cursor: pointer; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.mb svg { width: 16px; height: 12px; }
+.menu { position: fixed; inset: 0; z-index: 59; background: var(--ink); color: var(--cream); display: none; overflow-y: auto; }
+.menu.on { display: block; }
+.menu .wrap { padding-top: 34px; padding-bottom: 60px; }
+.menu ol { list-style: none; margin-top: 12vh; }
+.menu li a { display: grid; grid-template-columns: 2.2em minmax(0, 1fr); align-items: baseline; text-decoration: none; font: 400 clamp(40px, 6.4vw, 92px)/1.08 var(--serif); letter-spacing: -.025em; padding: .06em 0; }
+.menu li a span { font-size: .42em; color: rgba(238,234,224,.5); letter-spacing: 0; }
+.menu li a:hover em, .menu li a[aria-current] em { color: var(--sky); }
+.menu em { font-style: normal; }
+
+/* contents of a chapter, and the statement */
+.toc { padding-top: 72px; }
+.toc h2 { grid-column: 1 / 4; font: 400 38px/1 var(--serif); letter-spacing: -.02em; }
+.toc ol { grid-column: 4 / 10; list-style: none; }
+.toc li a { font: 600 21px/1.62 var(--serif); text-decoration: none; letter-spacing: -.005em; }
+.toc li a:hover { text-decoration: underline; }
+.intro { padding-top: 120px; align-items: start; }
+.intro .st { grid-column: 1 / 9; font: 500 clamp(28px, 2.9vw, 42px)/1.13 var(--serif); letter-spacing: -.016em; text-wrap: pretty; }
+.intro .act { grid-column: 10 / 13; justify-self: end; padding-top: 10px; }
+.pill { display: inline-flex; align-items: center; gap: 10px; background: var(--sky); color: var(--ink); border-radius: 999px; padding: 10px 20px 11px; font: 600 14px/1 var(--serif); text-decoration: none; white-space: nowrap; }
+.pill:hover { background: #B8EEFF; }
+.pill svg { width: 11px; height: 11px; }
+
+/* sections */
+.sec { padding-top: 150px; }
+.sec > .g12 { border-top: 1px solid var(--rule); padding-top: 16px; row-gap: 18px; }
+.sec .lab { grid-column: 1 / 4; font: 600 23px/1.16 var(--serif); letter-spacing: -.01em; }
+.sec .p1 { grid-column: 4 / 7; } .sec .p2 { grid-column: 7 / 10; } .sec .p12 { grid-column: 4 / 10; }
+.sec .p1, .sec .p2, .sec .p12 { font-size: 15.5px; line-height: 1.46; text-wrap: pretty; }
+.sec .p1 p + p, .sec .p2 p + p, .sec .p12 p + p { margin-top: .8em; }
+.sec .act { grid-column: 10 / 13; justify-self: end; }
+.body { margin-top: 64px; display: grid; gap: var(--gap); }
+.sub { margin-top: 80px; }
+.body > .sub:first-child { margin-top: 8px; }
+.sub > .g12 { border-top: 1px solid var(--hair); padding-top: 14px; }
+.sub .lab { font-size: 18px; }
+
+.r2, .r3, .r4, .r5 { display: grid; gap: var(--gap); }
+.r2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .r3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.r4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } .r5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+figure { min-width: 0; display: grid; gap: 12px; align-content: start; }
+figcaption { font-size: 14px; line-height: 1.42; color: var(--dim); max-width: 34em; }
+figcaption b { display: block; color: var(--fg); font-weight: 600; font-size: 15px; margin-bottom: 2px; }
+
+/* panels: the specimens sit on these */
+.pan { position: relative; aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; min-width: 0; }
+.pan.sq { aspect-ratio: 1; } .pan.tall { aspect-ratio: 4 / 5; } .pan.wide { aspect-ratio: 21 / 8; } .pan.slim { aspect-ratio: 3 / 1; }
+.pan.c { background: var(--cream) url(img/tex/grain-alpha.png) 0 0 / 128px 128px; box-shadow: inset 0 0 0 1px var(--hair); }
+.pan.w { background: var(--washi) url(img/tex/grain-alpha.png) 0 0 / 128px 128px; box-shadow: inset 0 0 0 1px rgba(11,12,12,.08); }
+.pan.i { background: var(--ink); color: var(--cream); }
+.pan.s { background: var(--stone); color: var(--cream); }
+.pan.p { background: var(--pru); color: var(--cream); }
+.pan.k { background: var(--sky); }
+.pan.i::before, .pan.s::before, .pan.p::before { content: ""; position: absolute; inset: 0; background: url(img/tex/grain-light.png) 0 0 / 128px 128px; pointer-events: none; }
+.pan > .art { position: relative; }
+.pan .tag { position: absolute; left: 18px; bottom: 15px; font: 400 10.5px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; opacity: .62; }
+.pan .tag.r { left: auto; right: 18px; }
+.pan .tag.t { bottom: auto; top: 16px; }
+.pan > img.fill { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* mock-ups, drawn at their true size and scaled to fit */
+.mock { position: relative; overflow: hidden; width: 100%; }
+.mock::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 1px var(--hair); pointer-events: none; }
+.mock iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; pointer-events: none; background: transparent; }
+.mockrow { display: flex; gap: 14px; flex-wrap: wrap; font: 400 10.5px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+.mockrow a { color: var(--fg); }
+
+/* tables */
+.tab { width: 100%; border-collapse: collapse; font-size: 15px; }
+.tab th, .tab td { text-align: left; vertical-align: top; padding: 12px 14px 12px 0; border-top: 1px solid var(--hair); }
+.tab thead th { font: 400 10.5px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); border-top: 0; padding-bottom: 8px; }
+.tab td.n { font: 400 13px/1.5 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.scroll { overflow-x: auto; }
+.facts { display: grid; }
+.facts > div { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 9fr); column-gap: var(--gap); border-top: 1px solid var(--hair); padding: 13px 0 14px; }
+.facts b { font: 400 13px/1.5 var(--mono); letter-spacing: .02em; color: var(--pru); }
+.facts span { font-size: 15.5px; }
+
+/* the foot of every chapter */
+.foot { background: var(--pru); color: var(--cream); margin-top: 170px; position: relative; overflow: hidden; }
+.foot::before { content: ""; position: absolute; inset: 0; background: url(img/tex/grain-light.png) 0 0 / 128px 128px; pointer-events: none; }
+.foot .wrap { position: relative; padding-top: 96px; padding-bottom: 46px; }
+.foot .huge { width: 100%; height: auto; }
+.foot hr { border: 0; border-top: 1px solid rgba(238,234,224,.5); margin: 74px 0 30px; }
+.pn { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 24px; }
+.pn a { font: 300 clamp(30px, 4.6vw, 68px)/1 var(--serif); letter-spacing: -.03em; text-decoration: none; white-space: nowrap; }
+.pn a:hover { color: var(--sky); }
+.pn .nx { justify-self: end; } .pn .sym { width: clamp(44px, 4.4vw, 62px); }
+.foot .fine { margin-top: 56px; display: flex; justify-content: space-between; gap: 20px; font: 400 10.5px/1.5 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: rgba(238,234,224,.62); }
+
+@media (max-width: 1100px) {
+  .sec .p1 { grid-column: 4 / 8; } .sec .p2 { grid-column: 8 / 13; } .sec .p12 { grid-column: 4 / 13; }
+  .toc ol { grid-column: 4 / 13; }
+  .r5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .r4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  :root { --pad: 20px; --gap: 12px; }
+  body { font-size: 15px; }
+  .g12 { grid-template-columns: minmax(0, 1fr); }
+  .g12 > * { grid-column: 1 / -1 !important; }
+  .head .wrap { min-height: 340px; padding-top: 22px; padding-bottom: 22px; }
+  .head.cover .wrap { min-height: 88svh; }
+  .bar { display: flex; gap: 16px; }
+  .bar .home { width: 104px; } .bar .title { font-size: 12.5px; }
+  .mb { top: 14px; right: 14px; width: 40px; height: 40px; }
+  .big { font-size: clamp(48px, 16.4vw, 120px); letter-spacing: -.035em; }
+  .cover .big { font-size: clamp(60px, 20.5vw, 120px); }
+  .toc { padding-top: 44px; } .toc h2 { font-size: 30px; margin-bottom: 14px; } .toc li a { font-size: 18px; }
+  .intro { padding-top: 64px; } .intro .st { font-size: 25px; line-height: 1.16; } .intro .act { justify-self: start; padding-top: 24px; }
+  .sec { padding-top: 96px; } .sec .lab { font-size: 21px; } .sec .act { justify-self: start; }
+  .body { margin-top: 36px; }
+  .r2, .r3 { grid-template-columns: minmax(0, 1fr); }
+  .r4, .r5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .r2.keep { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pan .tag { left: 12px; bottom: 10px; font-size: 9px; } .pan .tag.r { right: 12px; } .pan .tag.t { top: 10px; }
+  .facts > div { grid-template-columns: minmax(0, 1fr); row-gap: 2px; }
+  .foot { margin-top: 110px; } .foot .wrap { padding-top: 56px; padding-bottom: 30px; } .foot hr { margin: 44px 0 22px; }
+  .pn { grid-template-columns: minmax(0, 1fr) auto; row-gap: 26px; }
+  .pn .pv { grid-column: 1 / 2; } .pn .sym { grid-column: 2 / 3; grid-row: 1; justify-self: end; } .pn .nx { grid-column: 1 / -1; justify-self: start; }
+  .pn a { font-size: 34px; }
+  .foot .fine { flex-direction: column; gap: 4px; }
+  .tab { font-size: 14px; }
+  .pan.rdp { aspect-ratio: auto; padding: 28px 0 24px; }
+  .rd { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; row-gap: 26px !important; width: 90% !important; }
+  .rd > span[aria-hidden] { display: none; }
+  .ms { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; row-gap: 30px !important; }
+  .cons { overflow-x: auto; justify-items: start; place-items: start; padding: 16px 0; aspect-ratio: auto !important; }
+  .cons > .art { width: 720px !important; flex: none; }
+  .ccombo { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .ramp { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .wts { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; row-gap: 18px; }
+  .pan.wide.gridp { aspect-ratio: 4 / 3; }
+  .pan.anno { aspect-ratio: 4 / 3; }
+  .pan.anno > .art { width: 96% !important; }
+  .scroll { overflow: visible; min-width: 0; max-width: 100%; }
+  .tab { max-width: 100%; }
+  .tab, .tab tbody, .tab tr, .tab th, .tab td { display: block; }
+  .tab thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .tab tr { border-top: 1px solid var(--hair); padding: 12px 0 13px; }
+  .tab tbody th, .tab tbody td { position: relative; padding: 2px 0 2px calc(6.4em + 12px); border-top: 0; white-space: normal !important; }
+  .tab tbody th::before, .tab tbody td::before { content: attr(data-label); position: absolute; left: 0; top: 5px; font: 400 10px/1.5 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+  .tab tbody tr > :first-child { display: block; padding: 0 0 6px; font-weight: 600; }
+  .tab tbody tr > :first-child::before { content: none; }
+  .tab td.n { white-space: normal; overflow-wrap: anywhere; }
+  .scale td div { max-width: 100% !important; }
+  .pan.tl { overflow-x: auto; place-items: center start; padding-left: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style></head><body><button class="mb" type="button" aria-expanded="false" aria-controls="menu" aria-label="Contents"><svg viewBox="0 0 16 12" aria-hidden="true"><path d="M0 .5H16M0 6H16M0 11.5H16" stroke="currentColor" stroke-width="1.1"/></svg></button><nav class="menu" id="menu" aria-label="Chapters"><div class="wrap"><div class="g12 bar"><a class="home" href="index.html" aria-label="Antimony brand guidelines"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -712 9166 724" style="width:100%;height:auto" role="img" aria-label="Antimony"><path d="M444.5155 -286 336 -563 227.4845 -286 336 -374Z" fill="#94E6FF" stroke="#94E6FF" stroke-width="14" stroke-linejoin="round"/><g fill="#EEEAE0"><path d="M111 -95 351 -695H386L628 -95Q643 -57 663.5 -42.5Q684 -28 723 -23V0H460V-23Q497 -27 512.0 -35.5Q527 -44 527 -59Q527 -71 517 -96L463 -236L335.0 -324.0L207 -236L155 -96Q148 -75 148 -66Q148 -47 166.5 -37.0Q185 -27 228 -23V0H15V-23Q52 -27 73.5 -40.5Q95 -54 111 -95ZM444.5154639175258 -286.0 336 -563 227.48453608247422 -286.0 336.0 -374.0Z"/><path d="M989.58 -122V-573Q989.58 -612 979.08 -632.5Q968.58 -653 947.08 -661.0Q925.58 -669 888.58 -672V-695H1060.58L1463.58 -178V-575Q1463.58 -614 1453.08 -634.0Q1442.58 -654 1421.58 -661.5Q1400.58 -669 1362.58 -672V-695H1604.58V-672Q1566.58 -669 1545.58 -661.5Q1524.58 -654 1514.08 -633.5Q1503.58 -613 1503.58 -574L1504.58 0H1476.58L1029.58 -573V-123Q1029.58 -83 1040.08 -62.5Q1050.58 -42 1071.58 -34.0Q1092.58 -26 1130.58 -23V0H888.58V-23Q926.58 -26 947.58 -34.0Q968.58 -42 979.08 -62.5Q989.58 -83 989.58 -122Z" transform="translate(310 0)"/><path d="M1984.16 -112V-657H1901.16Q1850.16 -657 1821.16 -647.5Q1792.16 -638 1773.66 -608.5Q1755.16 -579 1748.16 -519H1727.16L1737.16 -695H2325.16L2335.16 -519H2314.16Q2306.16 -580 2288.16 -609.5Q2270.16 -639 2241.16 -648.0Q2212.16 -657 2161.16 -657H2077.16V-112Q2078.16 -77 2088.66 -59.0Q2099.16 -41 2119.66 -33.5Q2140.16 -26 2177.16 -23V0H1888.16V-23Q1939.16 -27 1961.16 -45.0Q1983.16 -63 1984.16 -112Z" transform="translate(720 0)"/><path d="M2580.7400000000002 -112V-583Q2579.7400000000002 -618 2569.2400000000002 -636.0Q2558.7400000000002 -654 2538.2400000000002 -661.5Q2517.7400000000002 -669 2480.7400000000002 -672V-695H2770.7400000000002V-672Q2719.7400000000002 -668 2697.2400000000002 -650.0Q2674.7400000000002 -632 2673.7400000000002 -583V-112Q2674.7400000000002 -62 2696.7400000000002 -44.5Q2718.7400000000002 -27 2773.7400000000002 -23V0H2483.7400000000002V-23Q2534.7400000000002 -27 2557.2400000000002 -44.5Q2579.7400000000002 -62 2580.7400000000002 -112Z" transform="translate(1105 0)"/><path d="M3042.32 -101 3057.32 -582Q3058.32 -632 3041.82 -650.0Q3025.32 -668 2979.32 -672V-695H3157.32L3403.32 -146L3617.32 -695H3789.32V-672Q3750.32 -668 3734.82 -646.5Q3719.32 -625 3721.32 -588L3741.32 -94Q3742.32 -66 3749.82 -52.0Q3757.32 -38 3773.32 -32.0Q3789.32 -26 3821.32 -23V0H3569.32V-23Q3603.32 -26 3619.82 -32.0Q3636.32 -38 3642.32 -51.5Q3648.32 -65 3647.32 -94L3626.32 -616L3390.32 0H3365.32L3099.32 -595L3084.32 -101Q3083.32 -68 3091.82 -52.5Q3100.32 -37 3118.82 -31.5Q3137.32 -26 3175.32 -23V0H2951.32V-23Q2985.32 -26 3003.82 -32.0Q3022.32 -38 3031.82 -54.0Q3041.32 -70 3042.32 -101Z" transform="translate(1550 0)"/><path d="M3997.9 -349Q3997.9 -452 4043.9 -533.0Q4089.9 -614 4167.9 -659.0Q4245.9 -704 4337.9 -704Q4429.9 -704 4508.9 -659.0Q4587.9 -614 4634.9 -533.0Q4681.9 -452 4681.9 -349Q4681.9 -246 4634.9 -164.5Q4587.9 -83 4508.9 -37.5Q4429.9 8 4337.9 8Q4245.9 8 4167.9 -37.5Q4089.9 -83 4043.9 -164.5Q3997.9 -246 3997.9 -349ZM4567.9 -349Q4567.9 -444 4538.4 -516.0Q4508.9 -588 4456.4 -627.5Q4403.9 -667 4336.9 -667Q4270.9 -667 4219.4 -627.5Q4167.9 -588 4139.4 -515.5Q4110.9 -443 4110.9 -349Q4110.9 -254 4139.4 -181.0Q4167.9 -108 4219.4 -68.0Q4270.9 -28 4336.9 -28Q4403.9 -28 4456.4 -68.0Q4508.9 -108 4538.4 -181.0Q4567.9 -254 4567.9 -349Z" transform="translate(1975 0)"/><path d="M4979.4800000000005 -122V-573Q4979.4800000000005 -612 4968.9800000000005 -632.5Q4958.4800000000005 -653 4936.9800000000005 -661.0Q4915.4800000000005 -669 4878.4800000000005 -672V-695H5050.4800000000005L5453.4800000000005 -178V-575Q5453.4800000000005 -614 5442.9800000000005 -634.0Q5432.4800000000005 -654 5411.4800000000005 -661.5Q5390.4800000000005 -669 5352.4800000000005 -672V-695H5594.4800000000005V-672Q5556.4800000000005 -669 5535.4800000000005 -661.5Q5514.4800000000005 -654 5503.9800000000005 -633.5Q5493.4800000000005 -613 5493.4800000000005 -574L5494.4800000000005 0H5466.4800000000005L5019.4800000000005 -573V-123Q5019.4800000000005 -83 5029.9800000000005 -62.5Q5040.4800000000005 -42 5061.4800000000005 -34.0Q5082.4800000000005 -26 5120.4800000000005 -23V0H4878.4800000000005V-23Q4916.4800000000005 -26 4937.4800000000005 -34.0Q4958.4800000000005 -42 4968.9800000000005 -62.5Q4979.4800000000005 -83 4979.4800000000005 -122Z" transform="translate(2415 0)"/><path d="M5973.06 -112V-281L5771.06 -625Q5761.06 -643 5754.56 -651.0Q5748.06 -659 5736.56 -664.5Q5725.06 -670 5703.06 -672V-695H5951.06V-674Q5917.06 -671 5900.06 -662.5Q5883.06 -654 5883.06 -637Q5883.06 -627 5892.06 -610L6047.06 -340L6199.06 -617Q6208.06 -635 6208.06 -645Q6208.06 -660 6192.06 -665.5Q6176.06 -671 6137.06 -674V-695H6326.06V-674Q6301.06 -671 6290.56 -668.0Q6280.06 -665 6271.06 -654.5Q6262.06 -644 6249.06 -620L6066.06 -288V-112Q6067.06 -62 6089.06 -44.5Q6111.06 -27 6166.06 -23V0H5876.06V-23Q5927.06 -27 5949.56 -44.5Q5972.06 -62 5973.06 -112Z" transform="translate(2820 0)"/></g></svg></a><span class="title">Brand guidelines</span></div><ol><li><a href="index.html"><span>00</span><em>Introduction</em></a></li><li><a href="logo.html"><span>01</span><em>Logo</em></a></li><li><a href="type.html"><span>02</span><em>Typography</em></a></li><li><a href="colour.html"><span>03</span><em>Colour</em></a></li><li><a href="motion.html"><span>04</span><em>Motion</em></a></li><li><a href="art.html"><span>05</span><em>Art direction</em></a></li><li><a href="use.html"><span>06</span><em>Brand in use</em></a></li><li><a href="downloads.html" aria-current="page"><span>07</span><em>Downloads</em></a></li></ol></div></nav><header class="head"><div class="wrap"><div class="g12 bar"><a class="home" href="index.html" aria-label="Antimony brand guidelines, introduction"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -712 9166 724" style="width:100%;height:auto" role="img" aria-label="Antimony"><path d="M444.5155 -286 336 -563 227.4845 -286 336 -374Z" fill="#94E6FF" stroke="#94E6FF" stroke-width="14" stroke-linejoin="round"/><g fill="#EEEAE0"><path d="M111 -95 351 -695H386L628 -95Q643 -57 663.5 -42.5Q684 -28 723 -23V0H460V-23Q497 -27 512.0 -35.5Q527 -44 527 -59Q527 -71 517 -96L463 -236L335.0 -324.0L207 -236L155 -96Q148 -75 148 -66Q148 -47 166.5 -37.0Q185 -27 228 -23V0H15V-23Q52 -27 73.5 -40.5Q95 -54 111 -95ZM444.5154639175258 -286.0 336 -563 227.48453608247422 -286.0 336.0 -374.0Z"/><path d="M989.58 -122V-573Q989.58 -612 979.08 -632.5Q968.58 -653 947.08 -661.0Q925.58 -669 888.58 -672V-695H1060.58L1463.58 -178V-575Q1463.58 -614 1453.08 -634.0Q1442.58 -654 1421.58 -661.5Q1400.58 -669 1362.58 -672V-695H1604.58V-672Q1566.58 -669 1545.58 -661.5Q1524.58 -654 1514.08 -633.5Q1503.58 -613 1503.58 -574L1504.58 0H1476.58L1029.58 -573V-123Q1029.58 -83 1040.08 -62.5Q1050.58 -42 1071.58 -34.0Q1092.58 -26 1130.58 -23V0H888.58V-23Q926.58 -26 947.58 -34.0Q968.58 -42 979.08 -62.5Q989.58 -83 989.58 -122Z" transform="translate(310 0)"/><path d="M1984.16 -112V-657H1901.16Q1850.16 -657 1821.16 -647.5Q1792.16 -638 1773.66 -608.5Q1755.16 -579 1748.16 -519H1727.16L1737.16 -695H2325.16L2335.16 -519H2314.16Q2306.16 -580 2288.16 -609.5Q2270.16 -639 2241.16 -648.0Q2212.16 -657 2161.16 -657H2077.16V-112Q2078.16 -77 2088.66 -59.0Q2099.16 -41 2119.66 -33.5Q2140.16 -26 2177.16 -23V0H1888.16V-23Q1939.16 -27 1961.16 -45.0Q1983.16 -63 1984.16 -112Z" transform="translate(720 0)"/><path d="M2580.7400000000002 -112V-583Q2579.7400000000002 -618 2569.2400000000002 -636.0Q2558.7400000000002 -654 2538.2400000000002 -661.5Q2517.7400000000002 -669 2480.7400000000002 -672V-695H2770.7400000000002V-672Q2719.7400000000002 -668 2697.2400000000002 -650.0Q2674.7400000000002 -632 2673.7400000000002 -583V-112Q2674.7400000000002 -62 2696.7400000000002 -44.5Q2718.7400000000002 -27 2773.7400000000002 -23V0H2483.7400000000002V-23Q2534.7400000000002 -27 2557.2400000000002 -44.5Q2579.7400000000002 -62 2580.7400000000002 -112Z" transform="translate(1105 0)"/><path d="M3042.32 -101 3057.32 -582Q3058.32 -632 3041.82 -650.0Q3025.32 -668 2979.32 -672V-695H3157.32L3403.32 -146L3617.32 -695H3789.32V-672Q3750.32 -668 3734.82 -646.5Q3719.32 -625 3721.32 -588L3741.32 -94Q3742.32 -66 3749.82 -52.0Q3757.32 -38 3773.32 -32.0Q3789.32 -26 3821.32 -23V0H3569.32V-23Q3603.32 -26 3619.82 -32.0Q3636.32 -38 3642.32 -51.5Q3648.32 -65 3647.32 -94L3626.32 -616L3390.32 0H3365.32L3099.32 -595L3084.32 -101Q3083.32 -68 3091.82 -52.5Q3100.32 -37 3118.82 -31.5Q3137.32 -26 3175.32 -23V0H2951.32V-23Q2985.32 -26 3003.82 -32.0Q3022.32 -38 3031.82 -54.0Q3041.32 -70 3042.32 -101Z" transform="translate(1550 0)"/><path d="M3997.9 -349Q3997.9 -452 4043.9 -533.0Q4089.9 -614 4167.9 -659.0Q4245.9 -704 4337.9 -704Q4429.9 -704 4508.9 -659.0Q4587.9 -614 4634.9 -533.0Q4681.9 -452 4681.9 -349Q4681.9 -246 4634.9 -164.5Q4587.9 -83 4508.9 -37.5Q4429.9 8 4337.9 8Q4245.9 8 4167.9 -37.5Q4089.9 -83 4043.9 -164.5Q3997.9 -246 3997.9 -349ZM4567.9 -349Q4567.9 -444 4538.4 -516.0Q4508.9 -588 4456.4 -627.5Q4403.9 -667 4336.9 -667Q4270.9 -667 4219.4 -627.5Q4167.9 -588 4139.4 -515.5Q4110.9 -443 4110.9 -349Q4110.9 -254 4139.4 -181.0Q4167.9 -108 4219.4 -68.0Q4270.9 -28 4336.9 -28Q4403.9 -28 4456.4 -68.0Q4508.9 -108 4538.4 -181.0Q4567.9 -254 4567.9 -349Z" transform="translate(1975 0)"/><path d="M4979.4800000000005 -122V-573Q4979.4800000000005 -612 4968.9800000000005 -632.5Q4958.4800000000005 -653 4936.9800000000005 -661.0Q4915.4800000000005 -669 4878.4800000000005 -672V-695H5050.4800000000005L5453.4800000000005 -178V-575Q5453.4800000000005 -614 5442.9800000000005 -634.0Q5432.4800000000005 -654 5411.4800000000005 -661.5Q5390.4800000000005 -669 5352.4800000000005 -672V-695H5594.4800000000005V-672Q5556.4800000000005 -669 5535.4800000000005 -661.5Q5514.4800000000005 -654 5503.9800000000005 -633.5Q5493.4800000000005 -613 5493.4800000000005 -574L5494.4800000000005 0H5466.4800000000005L5019.4800000000005 -573V-123Q5019.4800000000005 -83 5029.9800000000005 -62.5Q5040.4800000000005 -42 5061.4800000000005 -34.0Q5082.4800000000005 -26 5120.4800000000005 -23V0H4878.4800000000005V-23Q4916.4800000000005 -26 4937.4800000000005 -34.0Q4958.4800000000005 -42 4968.9800000000005 -62.5Q4979.4800000000005 -83 4979.4800000000005 -122Z" transform="translate(2415 0)"/><path d="M5973.06 -112V-281L5771.06 -625Q5761.06 -643 5754.56 -651.0Q5748.06 -659 5736.56 -664.5Q5725.06 -670 5703.06 -672V-695H5951.06V-674Q5917.06 -671 5900.06 -662.5Q5883.06 -654 5883.06 -637Q5883.06 -627 5892.06 -610L6047.06 -340L6199.06 -617Q6208.06 -635 6208.06 -645Q6208.06 -660 6192.06 -665.5Q6176.06 -671 6137.06 -674V-695H6326.06V-674Q6301.06 -671 6290.56 -668.0Q6280.06 -665 6271.06 -654.5Q6262.06 -644 6249.06 -620L6066.06 -288V-112Q6067.06 -62 6089.06 -44.5Q6111.06 -27 6166.06 -23V0H5876.06V-23Q5927.06 -27 5949.56 -44.5Q5972.06 -62 5973.06 -112Z" transform="translate(2820 0)"/></g></svg></a><span class="title">Brand guidelines</span></div><h1 class="big">Downloads</h1></div></header><nav class="wrap toc" aria-label="In this chapter"><div class="g12"><h2>Downloads</h2><ol><li><a href="#kit">The kit</a></li><li><a href="#folders">What is in it</a></li><li><a href="#choosing">Choosing a file</a></li><li><a href="#fonts">Fonts</a></li></ol></div></nav><section class="wrap"><div class="g12 intro"><p class="st">Everything on these pages, as files. Masters in SVG, exports in PNG at 1x and 2x, icons, social images, posters and print.</p><div class=act><a class="pill" href="downloads/antimony-kit-v3.zip" download>Download the kit, 47 MB<svg viewBox="0 0 11 11" aria-hidden="true"><path d="M5.5 0V9M1.5 5.5L5.5 9.5L9.5 5.5M0 10.5H11" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></a></div></div></section><section class="wrap sec" id="kit"><div class="g12"><h2 class="lab">The kit</h2><div class="p1"><p>One archive, <span class=mono style='font-size:12px'>antimony-kit-v3.zip</span>, 47 MB. Unzip it and start with the SVG masters: they are exact, and they scale.</p></div><div class="p2"><p>The PNG files are drawn from the same masters by the same engine as these pages. Use them where SVG is not accepted.</p></div></div><div class="body"><div><a class="pill" href="downloads/antimony-kit-v3.zip" download>Download the kit<svg viewBox="0 0 11 11" aria-hidden="true"><path d="M5.5 0V9M1.5 5.5L5.5 9.5L9.5 5.5M0 10.5H11" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></a></div></div></section><section class="wrap sec" id="folders"><div class="g12"><h2 class="lab">What is in it</h2></div><div class="body"><div class="facts"><div><b>svg/mark/</b><span>The Break in full colour for cream, ink, Prussian and washi; with light; the small drawing for 16 to 30 px; one colour. <span style="color:var(--dim)">10 files.</span></span></div><div><b>svg/line-mark/</b><span>The line mark in ink, cream, Prussian and sky, and a hairline version that keeps one pixel at any size. <span style="color:var(--dim)">8 files.</span></span></div><div><b>svg/wordmark/</b><span>Capitals, lower case, heavy and title case, for each ground and in one colour. <span style="color:var(--dim)">28 files.</span></span></div><div><b>svg/lockup/</b><span>Primary and stacked lockups, for each ground and in one colour. <span style="color:var(--dim)">14 files.</span></span></div><div><b>svg/product/</b><span>Orbe, by Antimony, for cream and ink. <span style="color:var(--dim)">2 files.</span></span></div><div><b>png/</b><span>Every master above, at 1x and 2x, on a transparent ground. <span style="color:var(--dim)">124 files.</span></span></div><div><b>icons/</b><span>favicon.ico and favicon.svg; 16, 32 and 48 px; Apple touch icon; 192, 512 and 1024 px; maskable icon; web manifest. <span style="color:var(--dim)">13 files.</span></span></div><div><b>social/</b><span>LinkedIn banner and avatar, X header, link card, at 1x and 2x. <span style="color:var(--dim)">8 files.</span></span></div><div><b>posters/</b><span>Light, paper and characters, at 2400 by 3394. <span style="color:var(--dim)">3 files.</span></span></div><div><b>print/</b><span>Card front and back, letterhead: PDF at true size, PNG at 300 dpi. <span style="color:var(--dim)">6 files.</span></span></div><div><b>deck/</b><span>The title slide at 1920 by 1080, and 2x. <span style="color:var(--dim)">2 files.</span></span></div><div><b>email/</b><span>The signature as HTML and as a picture, and its lockup image. <span style="color:var(--dim)">3 files.</span></span></div><div><b>textures/</b><span>Paper grain, water light, stippled light, halftone, the character field, stone. <span style="color:var(--dim)">13 files.</span></span></div><div><b>colours/</b><span>Every colour and tone as JSON, with its contrast against cream and ink. <span style="color:var(--dim)">1 file.</span></span></div><div><b>fonts/</b><span>Commit Mono, with its licence. <span style="color:var(--dim)">3 files.</span></span></div></div></div></section><section class="wrap sec" id="choosing"><div class="g12"><h2 class="lab">Choosing a file</h2><div class="p1"><p>Each file says which ground it is drawn for: for-cream, for-ink, for-prussian, for-washi. The stone is always dark; on ink and Prussian its edges carry a hairline of light.</p></div><div class="p2"><p>For one colour on a dark ground, use the line mark. Never place a pale tile on a dark ground, and never recolour a file by hand: if the version you need is missing, ask for it.</p></div></div></section><section class="wrap sec" id="fonts"><div class="g12"><h2 class="lab">Fonts</h2><div class="p1"><p>Commit Mono is in the kit under the SIL Open Font License. Timeless Serif is licensed to Antimony and is not in the kit.</p></div><div class="p2"><p>You do not need either font to use the logos: every wordmark and lockup is drawn as outlines.</p></div></div></section><footer class="foot"><div class="wrap"><svg class="huge" xmlns="http://www.w3.org/2000/svg" viewBox="40 -748 4110 978" style="width:100%;height:auto;display:block" role="img" aria-label="antimony"><g fill="#EEEAE0"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="#94E6FF"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="#fff" fill-opacity=".28"/></svg><hr><nav class="pn" aria-label="Chapters"><a class="pv" href="use.html">&larr; Brand in use</a><span class="sym"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="width:100%;height:auto" aria-hidden="true"><g><path d="M34.16 100L36.96 85.18L21.81 60.2L26.79 42.8L56.22 17.86L62.94 0L22 0A22 22 0 0 0 0 22L0 78A22 22 0 0 0 22 100ZM66.59 0L63.07 17.85L78.19 42.8L73.21 60.2L43.74 85.17L38.02 100L78 100A22 22 0 0 0 100 78L100 22A22 22 0 0 0 78 0Z" fill="#141311"/><clipPath id="c17"><path d="M34.16 100L36.96 85.18L21.81 60.2L26.79 42.8L56.22 17.86L62.94 0L22 0A22 22 0 0 0 0 22L0 78A22 22 0 0 0 22 100ZM66.59 0L63.07 17.85L78.19 42.8L73.21 60.2L43.74 85.17L38.02 100L78 100A22 22 0 0 0 100 78L100 22A22 22 0 0 0 78 0Z"/></clipPath><path d="M34.16 100L36.96 85.18L21.81 60.2L26.79 42.8L56.22 17.86L62.94 0L22 0A22 22 0 0 0 0 22L0 78A22 22 0 0 0 22 100ZM66.59 0L63.07 17.85L78.19 42.8L73.21 60.2L43.74 85.17L38.02 100L78 100A22 22 0 0 0 100 78L100 22A22 22 0 0 0 78 0Z" fill="none" stroke="#EEEAE0" stroke-opacity=".42" stroke-width="1.2" stroke-linejoin="round" clip-path="url(#c17)"/><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z" fill="#94E6FF"/><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" fill-opacity="0.28"/></g></svg></span><a class="nx" href="index.html">Introduction &rarr;</a></nav><div class="fine"><span>Antimony brand guidelines</span><span>Edition three, October 2026</span></div></div></footer><script>
+(function () {
+  var b = document.querySelector(".mb"), m = document.getElementById("menu");
+  function set(on) { m.classList.toggle("on", on); b.setAttribute("aria-expanded", on ? "true" : "false"); b.setAttribute("aria-label", on ? "Close contents" : "Contents");
+    b.innerHTML = on ? '<svg viewBox="0 0 12 12" aria-hidden="true" style="width:12px;height:12px"><path d="M.5 .5L11.5 11.5M11.5 .5L.5 11.5" stroke="currentColor" stroke-width="1.1"/></svg>' : '<svg viewBox="0 0 16 12" aria-hidden="true"><path d="M0 .5H16M0 6H16M0 11.5H16" stroke="currentColor" stroke-width="1.1"/></svg>';
+    document.documentElement.style.overflow = on ? "hidden" : ""; }
+  b.addEventListener("click", function () { set(!m.classList.contains("on")); });
+  addEventListener("keydown", function (e) { if (e.key === "Escape" && m.classList.contains("on")) { set(false); b.focus(); } });
+  m.addEventListener("click", function (e) { if (e.target.closest("a")) set(false); });
+  /* mock-ups are drawn at their true size and scaled to the width they are given */
+  var ms = document.querySelectorAll(".mock");
+  function fit() { ms.forEach(function (d) { var f = d.querySelector("iframe"); var k = d.clientWidth / (+f.getAttribute("width")); f.style.transform = "scale(" + k + ")"; }); }
+  if (ms.length) { fit(); if (window.ResizeObserver) { var ro = new ResizeObserver(fit); ms.forEach(function (d) { ro.observe(d); }); } else addEventListener("resize", fit); }
+})();
+</script></body></html>

@@ -72,9 +72,8 @@ html[data-wm="title"] .wm-title { display: block; width: calc(var(--s) * 1.12); 
 html[data-wm="serif"] .wm-serif { display: block; width: calc(var(--s) * 1.06); margin-top: calc(var(--s) * .29); }
 html[data-wm="heavy"] .wm-heavy { display: block; width: calc(var(--s) * 1.06); margin-top: calc(var(--s) * .29); }
 
-/* the foot: the old sign for antimony, and one line */
+/* the foot: one line */
 .foot { position: fixed; z-index: 2; left: 16px; right: 16px; bottom: 0; padding-bottom: max(clamp(28px, 6.5vh, 76px), env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; gap: 13px; pointer-events: none; }
-.sym { width: 9px; height: 16px; display: block; overflow: visible; color: var(--type); opacity: .62; }
 .foot p { font-size: 10px; line-height: 12px; letter-spacing: .32em; margin-right: -.32em; text-transform: uppercase; color: var(--dimt); white-space: nowrap; }
 
 /* the shards: chipped from the stone, each turns to show one thing made here */
@@ -141,8 +140,6 @@ html.opening .grain { opacity: 0; }
 </main>
 
 <footer class="foot" id="foot">
-  <!-- the alchemists' sign for antimony: an orb with a bar, a cross above -->
-  <svg class="sym" viewBox="0 0 9 16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width=".8" stroke-linecap="round" vector-effect="non-scaling-stroke"><circle cx="4.5" cy="11.5" r="4" vector-effect="non-scaling-stroke"/><path d="M.5 11.5H8.5M4.5 7.5V.5M2.25 3.25H6.75" vector-effect="non-scaling-stroke"/></g></svg>
   <p>Software for the people who make the work</p>
 </footer>
 <div class="grain" id="grain" aria-hidden="true"></div>

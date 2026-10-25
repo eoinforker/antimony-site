@@ -1,0 +1,86 @@
+[
+{
+"url": "file:///home/user/antimony-site/brand/build/guidelines_v3/textures.html?t=light&lx=.56&ly=.12&seed=2&w=2400&h=3394",
+"w": 2400,
+"h": 3394,
+"out": "/home/user/antimony-site/brand/guidelines/img/tex/light-poster.jpg",
+"waitTitle": 1
+},
+{
+"url": "file:///home/user/antimony-site/brand/build/guidelines_v3/textures.html?t=light&lx=.74&ly=.02&seed=5&w=3000&h=1000",
+"w": 3000,
+"h": 1000,
+"out": "/home/user/antimony-site/brand/guidelines/img/tex/light-wide.jpg",
+"waitTitle": 1
+},
+{
+"url": "file:///home/user/antimony-site/brand/build/guidelines_v3/textures.html?t=light&lx=.62&ly=.08&seed=3&w=2400&h=1350",
+"w": 2400,
+"h": 1350,
+"out": "/home/user/antimony-site/brand/guidelines/img/tex/light-panel.jpg",
+"waitTitle": 1
+},
+{
+"url": "file:///home/user/antimony-site/brand/build/guidelines_v3/textures.html?t=stipple&lx=.78&ly=.02&seed=4&cell=8&w=3168&h=792",
+"w": 3168,
+"h": 792,
+"out": "/home/user/antimony-site/brand/guidelines/img/tex/stipple-wide.png",
+"waitTitle": 1
+},
+{
+"url": "file:///home/user/antimony-site/brand/build/guidelines_v3/textures.html?t=stipple&lx=.8&ly=.05&seed=6&cell=8&w=2880&h=1620",
+"w": 2880,
+"h": 1620,
+"out": "/home/user/antimony-site/brand/guidelines/img/tex/stipple-deck.png",
+"waitTitle": 1
+},
+{
+"url": "file:///home/user/antimony-site/brand/build/guidelines_v3/textures.html?t=stipple&lx=.6&ly=.1&seed=3&cell=8&w=2400&h=1350",
+"w": 2400,
+"h": 1350,
+"out": "/home/user/antimony-site/brand/guidelines/img/tex/stipple-panel.png",
+"waitTitle": 1
+},
+{
+"url": "file:///home/user/antimony-site/brand/build/guidelines_v3/textures.html?t=halftone&lx=.6&ly=.1&seed=3&cell=14&w=2400&h=1350",
+"w": 2400,
+"h": 1350,
+"out": "/home/user/antimony-site/brand/guidelines/img/tex/halftone-panel.png",
+"waitTitle": 1
+},
+{
+"url": "file:///home/user/antimony-site/brand/build/guidelines_v3/textures.html?t=halftone&ground=ink&lx=.6&ly=.1&seed=3&cell=14&w=2400&h=1350",
+"w": 2400,
+"h": 1350,
+"out": "/home/user/antimony-site/brand/guidelines/img/tex/halftone-ink-panel.png",
+"waitTitle": 1
+},
+{
+"url": "file:///home/user/antimony-site/brand/build/guidelines_v3/textures.html?t=chars&lx=.5&ly=.5&seed=7&fs=22&w=2400&h=1350",
+"w": 2400,
+"h": 1350,
+"out": "/home/user/antimony-site/brand/guidelines/img/tex/chars-panel.png",
+"waitTitle": 1
+},
+{
+"url": "file:///home/user/antimony-site/brand/build/guidelines_v3/textures.html?t=chars&lx=.5&ly=.46&seed=8&fs=24&boost=1.3&w=2400&h=3394",
+"w": 2400,
+"h": 3394,
+"out": "/home/user/antimony-site/brand/guidelines/img/tex/chars-poster.png",
+"waitTitle": 1
+},
+{
+"url": "file:///home/user/antimony-site/brand/build/guidelines_v3/textures.html?t=stone&seed=1&w=1004&h=650",
+"w": 1004,
+"h": 650,
+"out": "/home/user/antimony-site/brand/guidelines/img/tex/stone-card.jpg",
+"waitTitle": 1
+},
+{
+"url": "file:///home/user/antimony-site/brand/build/guidelines_v3/textures.html?t=stone&seed=1&w=2400&h=1350",
+"w": 2400,
+"h": 1350,
+"out": "/home/user/antimony-site/brand/guidelines/img/tex/stone-panel.jpg",
+"waitTitle": 1
+}
+]
