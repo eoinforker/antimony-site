@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex"><link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<title>Antimony Mosaic</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* One screen. The bands lift, the crystal is drawn by a wall of words on black, after First of Kind; then the ground turns to paper,
+   every pixel flies down to the foot and hands over to the mark, drawn as a clean vector, and two paragraphs are all that is left. */
+@font-face { font-family: "Commit Mono"; src: url("../../assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 400 600; font-display: block; }
+@font-face { font-family: "Timeless Serif"; src: url("../../assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
+@font-face { font-family: "Timeless Serif"; src: url("../../assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: block; }
+:root { --ink: #060808; --paper: #F4F3EE; --text: #26292A; --soft: #6E716D; --sky: #94E6FF; --cobalt: #2448FF;
+  --serif: "Timeless Serif", "Iowan Old Style", Georgia, serif; color-scheme: light; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--ink); color: var(--text); font: 400 19px/1.5 var(--serif); -webkit-font-smoothing: antialiased; overflow: hidden; transition: background-color .7s cubic-bezier(.4,0,.2,1); }
+body.paper { background: var(--paper); }
+a { color: inherit; }
+:focus-visible { outline: 1px solid var(--text); outline-offset: 3px; }
+::selection { background: var(--sky); color: var(--ink); }
+#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.load { position: fixed; inset: 0; z-index: 10; display: grid; grid-template-columns: repeat(6, 1fr); pointer-events: none; }
+.load i { background: linear-gradient(180deg, var(--ink), var(--cobalt) 40%, var(--sky) 62%, var(--paper) 80%, var(--ink)); background-size: 100% 300%; animation: band 1.4s cubic-bezier(.6,0,.2,1) forwards; }
+.load i:nth-child(2) { animation-delay: .05s } .load i:nth-child(3) { animation-delay: .1s } .load i:nth-child(4) { animation-delay: .15s } .load i:nth-child(5) { animation-delay: .2s } .load i:nth-child(6) { animation-delay: .25s }
+@keyframes band { 0% { background-position: 0 0 } 70% { background-position: 0 100%; transform: none } 100% { background-position: 0 100%; transform: translateY(-101%) } }
+main { position: relative; z-index: 2; max-width: 640px; margin: 0 auto; padding: 16vh max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px)); }
+main p { opacity: 0; transform: translateY(6px); transition: opacity 1.1s ease, transform 1.4s cubic-bezier(.2,.7,.2,1); text-wrap: pretty; }
+main p + p { margin-top: 1.4em; }
+body.said main p { opacity: 1; transform: none; }
+body.said main p:nth-child(2) { transition-delay: .35s; }
+main em { font-style: italic; }
+main a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; text-decoration-color: rgba(38,41,42,.35); transition: text-decoration-color .2s; }
+main a:hover { text-decoration-color: var(--text); }
+.mark { position: fixed; z-index: 3; left: 50%; bottom: calc(44px + env(safe-area-inset-bottom, 0px)); width: 60px; height: 60px; transform: translateX(-50%); border-radius: 4px; cursor: pointer; background: none; border: 0; display: grid; place-items: center; }
+.vec { width: 40px; height: 40px; display: block; opacity: 0; transition: transform .5s cubic-bezier(.2,.7,.2,1); }
+.mark:hover .vec { transform: rotate(-6deg) scale(1.06); }
+@media (max-width: 600px) { body { font-size: 17.5px; } main { padding-top: 13vh; } }
+@media (prefers-reduced-motion: reduce) { .load { display: none; } body, main p { transition: none; } }
+</style>
+<div class="load" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<canvas id="c" aria-hidden="true"></canvas>
+<main>
+  <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator's side of every sponsorship deal.</p>
+  <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
+</main>
+<button class="mark" id="mark" aria-label="Antimony. Play the opening again"><svg class="vec" id="vec" viewBox="0 0 100 100" aria-hidden="true"><defs><mask id="cut"><rect x="-10" y="-10" width="120" height="120" fill="#fff"/><g fill="none" stroke="#000" stroke-width="5.2" stroke-linejoin="miter" stroke-miterlimit="8"><polyline points="22,71 50,15 78,71"/><polyline points="50,3 50,15"/><polyline points="22,71 50,58 78,71"/></g></mask></defs><g mask="url(#cut)"><path d="M50 5L78 29V71L50 95L22 71V29Z" fill="#0B0D0C"/><path d="M50 5L78 29V71L50 15Z" fill="#2448FF"/><path d="M78 71L50 95V58Z" fill="#2448FF"/></g></svg></button>
+<script>
+(() => {
+"use strict";
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const c = document.getElementById("c"), x = c.getContext("2d"), vec = document.getElementById("vec");
+// the mark on its 100-unit grid
+const FACETS = [ { p: [[50,5],[22,29],[22,71],[50,15]], lv: 1 }, { p: [[78,71],[78,29],[50,5],[50,15]], lv: 3 }, { p: [[50,15],[22,71],[50,58],[78,71]], lv: 2 }, { p: [[22,71],[50,95],[78,71],[50,58]], lv: 0 } ];
+const LINES = [[[22,71],[50,15]], [[50,15],[78,71]], [[22,71],[50,58]], [[50,58],[78,71]], [[50,2],[50,15]]];
+// five tones, as First of Kind's portrait has: [tile, type]. 0 to 2 the facets in shadow, 3 the lit facet, 4 the A.
+const LV = [["#111816", "#3A4946"], ["#1C2725", "#5F7571"], ["#4C625E", "#D9E3E0"], ["#94E6FF", "#062221"], ["#F2F1EC", "#0B0D0C"]];
+const ACCENT = ["#94E6FF", "#062221"];
+// the words, from the people who make the work to the agents that work for them
+const WORDS = ["MAKE", "MADE", "CRAFT", "TASTE", "VOICE", "WORK", "HANDS", "STUDIO", "SONG", "VIDEO", "EDIT", "DRAFT", "TAKE", "CUT", "SCORE", "SKETCH", "SHOOT", "WRITE", "CREATE", "CREATOR", "MAKERS", "ART", "PRINT", "FILM",
+  "ORBE", "ANTIMONY", "ELEMENT", "51", "MANAGER", "ROSTER", "LABEL", "RULES", "TAP", "FLOOR", "RECORD", "PROOF", "TERMS", "USAGE", "BRIEF", "LEDGER", "REPLY", "SIGN",
+  "AGENT", "AGENTS", "COUNTER", "PRICE", "SIGNAL", "ANSWER", "REASON", "DEAL", "DEALS", "FEE", "RATE", "PAID", "HELD", "PAYOUT", "SPONSOR", "BRANDS", "OFFER", "VALUE", "WORTH",
+  "ALONE", "NEVER", "LOWBALL", "LATE", "CHASE", "UNPAID", "GHOSTED", "FINE PRINT", "WAIT", "GOLD", "PURE", "CRYSTAL", "TRUST", "SIDE", "TABLE"];
+const HERO = { "ANTIMONY": [50, 9], "NEVER": [50, 44], "ALONE": [50, 50], "ORBE": [50, 82] };
+const inP = (u, v, p) => { let k = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [a, b] = p[i], [d, e] = p[j]; if ((b > v) !== (e > v) && u < (d - a) * (v - b) / (e - b) + a) k = !k; } return k; };
+const sd = (u, v, [[a, b], [d, e]]) => { const dx = d - a, dy = e - b, t = Math.max(0, Math.min(1, ((u - a) * dx + (v - b) * dy) / (dx * dx + dy * dy))); return Math.hypot(u - a - t * dx, v - b - t * dy); };
+let W, H, box, rh, fs, adv, pad, tiles = [], sprites = new Map(), T0, mx = -1e9, my = -1e9, mark, dpr;
+const BUILD = 1.3, HOLD = 3.6, FLY = 1.5;
+let rs = 51; const rnd = () => ((rs = (rs * 1664525 + 1013904223) >>> 0) / 4294967296);
+// each word in each tone is drawn once and stamped from then on
+function sprite(word, tone) {
+  const key = word + "|" + tone; if (sprites.has(key)) return sprites.get(key);
+  const w = Math.ceil((word.length * adv + pad * 2) * dpr), h = Math.ceil(rh * dpr), o = document.createElement("canvas"); o.width = w; o.height = h;
+  const g = o.getContext("2d"), [fill, ink] = tone === "a" ? ACCENT : LV[tone];
+  g.fillStyle = fill; g.fillRect(0, 0, w, h); g.fillStyle = ink; g.font = `500 ${fs * dpr}px "Commit Mono", ui-monospace, monospace`; g.textBaseline = "middle"; g.fillText(word, pad * dpr, h * 0.54);
+  sprites.set(key, o); return o;
+}
+function level(cx, cy, w) {
+  const pts = [cx - w * 0.2, cx, cx + w * 0.2].map(px => [(px - box.x) / box.s, (cy - box.y) / box.s]), lw = Math.max(1.4, rh * 0.5 / box.s);
+  if (LINES.some(s => sd(pts[1][0], pts[1][1], s) < lw) || LINES.some(s => sd(pts[0][0], pts[0][1], s) < lw * 0.6 && sd(pts[2][0], pts[2][1], s) < lw * 1.6)) return 4;
+  const [u, v] = pts[1]; for (const f of FACETS) if (inP(u, v, f.p)) return f.lv;
+  return -1;
+}
+function layout() {
+  dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; c.width = W * dpr; c.height = H * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const s = Math.min(H * 0.96, W * (W < 600 ? 1.35 : 0.95)); box = { s: s / 100, x: W / 2 - s / 2, y: H * 0.5 - s / 2 };
+  rh = Math.max(9, Math.round(s / (W < 600 ? 46 : 60))); fs = rh * 0.6; adv = fs * 0.6; pad = rh * 0.28; sprites.clear();
+  const r = vec.getBoundingClientRect(); mark = { x: r.left + r.width / 2, y: r.top + r.height / 2, s: r.width };
+  rs = 51; tiles = []; const gap = Math.max(1, rh * 0.1), placed = {};
+  const top = box.y - rh, seedAt = [box.x + 50 * box.s, box.y + 9 * box.s];
+  for (let y = top; y < box.y + s + rh; y += rh + gap) {
+    let xx = box.x - rnd() * rh * 3;
+    while (xx < box.x + s) {
+      const cy = y + rh / 2; let word = null;
+      for (const [hw, [hu, hv]] of Object.entries(HERO)) { const hx = box.x + hu * box.s, hy = box.y + hv * box.s;
+        if (!placed[hw] && Math.abs(cy - hy) < (rh + gap) / 2 && xx + rh * 2 > hx - hw.length * adv / 2) { word = hw; placed[hw] = 1; } }
+      const hero = !!word; if (!word) word = WORDS[Math.floor(rnd() * WORDS.length)];
+      const w = word.length * adv + pad * 2, lv = hero ? 4 : level(xx + w / 2, cy, w);
+      if (lv >= 0) {
+        const d = Math.hypot(xx + w / 2 - seedAt[0], cy - seedAt[1]) / s;
+        tiles.push({ x: xx, y, w, word, lv, hero, d: hero && word === "ANTIMONY" ? 0 : 0.25 + d * 1.5 + rnd() * 0.25, n: rnd() * 20,
+          tx: mark.x + (rnd() - .5) * mark.s * 0.5, ty: mark.y + (rnd() - .5) * mark.s * 0.6, k: rnd() * 0.35 });
+      }
+      xx += w + gap;
+    }
+  }
+}
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+function frame() {
+  const t = still ? 99 : (performance.now() - T0) / 1000, f = Math.max(0, Math.min(1, (t - BUILD - HOLD) / FLY)), fr = Math.floor(t * 24);
+  x.clearRect(0, 0, W, H);
+  for (const p of tiles) {
+    const since = t - BUILD - p.d; if (since < 0) continue;
+    // a tile tries two other words, a frame and a half each, before it lands on its own
+    let word = p.word, tone = p.lv;
+    if (!still && since < 0.12) word = WORDS[(Math.floor(p.n * 97) + fr) % WORDS.length];
+    if (f <= 0 && since > 0.2) {
+      const near = Math.abs(p.x + p.w / 2 - mx) < p.w / 2 + rh * 2 && Math.abs(p.y + rh / 2 - my) < rh * 2.5;
+      const flick = t > BUILD + 2.4 && Math.sin(t * 2.6 + p.n * 7) > 0.9985;
+      if (near || flick) tone = p.lv === 3 ? 4 : "a";
+    }
+    const img = sprite(word, tone);
+    const e = ease(Math.max(0, Math.min(1, (f - p.k) / (1 - p.k + 1e-6))));
+    const sc = 1 - e * 0.94, X = p.x + (p.tx - p.x - p.w / 2 * sc) * e, Y = p.y + (p.ty - p.y - rh / 2 * sc) * e - Math.sin(e * Math.PI) * 26;
+    const enter = still ? 1 : Math.min(1, since / 0.18);
+    x.globalAlpha = (1 - Math.max(0, (f - 0.7) / 0.3)) * enter;
+    x.drawImage(img, X, Y, p.w * sc * (p.lv === 0 && !still && since < .18 ? enter : 1), rh * sc);
+  }
+  x.globalAlpha = 1;
+  vec.style.opacity = Math.max(0, Math.min(1, (f - 0.8) / 0.2));
+  document.body.classList.toggle("paper", t > BUILD + HOLD + FLY * 0.78);
+  document.body.classList.toggle("said", t > BUILD + HOLD + FLY + 0.5);
+  requestAnimationFrame(frame);
+}
+function play() { T0 = performance.now(); layout(); document.body.classList.remove("paper", "said"); }
+addEventListener("pointermove", e => { mx = e.clientX; my = e.clientY; });
+addEventListener("pointerleave", () => mx = my = -1e9);
+addEventListener("resize", () => { const t0 = T0; layout(); T0 = t0; });
+document.getElementById("mark").addEventListener("click", play);
+(document.fonts ? Promise.all([document.fonts.load('500 12px "Commit Mono"'), document.fonts.load('400 19px "Timeless Serif"')]) : Promise.resolve()).catch(() => {}).finally(() => { play(); requestAnimationFrame(frame); });
+})();
+</script>
+
+</html>
