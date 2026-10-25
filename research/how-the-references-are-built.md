@@ -35,3 +35,17 @@ Our earlier pages were 2D canvas sketches with a free font. That is why they rea
 3. **Real media.** fal, Odin, Initialized and Sequoia all lean on video and drawn art. Antimony needs recorded loops of the crystal (rendered from the WebGL scene), real Orbe screen recordings, and eventually commissioned art.
 4. **Plain around the moment.** Anysphere loads 11 files. Everything that is not the signature moment should be text on a calm page.
 5. **Tools we would use** (all free): Three.js for the 3D, its `EffectComposer` for post-processing, GSAP with ScrollTrigger for scroll choreography (the same version fal ships), Lenis for smooth scrolling, and later Rive or Lottie for small animated marks.
+
+## First of Kind (firstofkind.com)
+
+Served as readable source, not a bundle: `engine/src/renderer.js`, `scheduler.js`, `camera.js`, `motion.js`, `sound.js`, `atlas.js`, `rng.js`, ten `sounds/<skin>.js` voices and a skin registry, with each episode as data (`data/s03e01.json`). Vercel Analytics only; no framework.
+
+- **A word mosaic.** The guest's portrait is drawn by thousands of word tiles from the episode, each on one of five tonal levels. One WebGL2 context, one instanced draw; per-tile state lives in an RGBA32F texture (six texels a tile).
+- **Skins with meaning.** Every word wears the shader skin of its class, on an axis from the lived to the computed: Emulsion (the past), Gate (life), Ink (craft), Smear (pace), Corrupt (friction), Screen (markets), Flap (names, as a departures board), Mask (screens), Cursor (tools), Latent (intelligence).
+- **A life.** The scheduler gives each tile events by its skin's rate: glitches, scrambles, swaps, flares. Glitches spread to neighbours; attention travels as a wave through tiles that share a word.
+- **A camera.** Holds that drift 1.5 characters and 1.5% closer, joined by eased moves that zoom about one fixed point; true shutter-angle motion blur only while moving.
+- **Sound.** Every token sounds as a grain in its skin's voice, mixed at 48 kHz into headlines, movements and rain, in each episode's own mode of one shared key.
+- **Deterministic.** Every function is pure in the frame, so the site, the editor and the exported film match exactly.
+- **The weakness.** The page is composed for a 3840 by 2160 thumbnail and scaled by one factor (`--s`), so on other shapes it shrinks rather than recomposes.
+
+Antimony's mosaic (`x/mosaic/`) takes the technique and fixes the weakness: the wall is laid out from the viewer's own screen, so a phone gets its own composition.
