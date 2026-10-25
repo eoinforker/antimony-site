@@ -1,0 +1,116 @@
+{
+ "core": {
+  "Ink": "#0B0D0C",
+  "Paper": "#F4F3EE",
+  "Cobalt": "#2448FF",
+  "Sky": "#94E6FF"
+ },
+ "cobalt": {
+  "50": "#F3F7FE",
+  "100": "#E5EDFE",
+  "200": "#CBDBFF",
+  "300": "#AAC3FE",
+  "400": "#7FA4FF",
+  "500": "#4D7AFF",
+  "600": "#2448FF",
+  "700": "#172CD4",
+  "800": "#0D17A0",
+  "900": "#050D68"
+ },
+ "neutral": {
+  "50": "#F4F3EE",
+  "100": "#E9EEEC",
+  "200": "#D7DCDA",
+  "300": "#C1C5C3",
+  "400": "#A4A9A7",
+  "500": "#838785",
+  "600": "#666A68",
+  "700": "#4D514F",
+  "800": "#353937",
+  "900": "#1F2321"
+ },
+ "pairs": [
+  {
+   "ground": "Paper",
+   "colour": "Ink",
+   "ratio": 17.55,
+   "text": "AAA"
+  },
+  {
+   "ground": "Paper",
+   "colour": "Cobalt",
+   "ratio": 5.49,
+   "text": "AA"
+  },
+  {
+   "ground": "Paper",
+   "colour": "Sky",
+   "ratio": 1.26,
+   "text": "Never"
+  },
+  {
+   "ground": "Ink",
+   "colour": "Paper",
+   "ratio": 17.55,
+   "text": "AAA"
+  },
+  {
+   "ground": "Ink",
+   "colour": "Cobalt",
+   "ratio": 3.2,
+   "text": "AA large"
+  },
+  {
+   "ground": "Ink",
+   "colour": "Sky",
+   "ratio": 13.95,
+   "text": "AAA"
+  },
+  {
+   "ground": "Cobalt",
+   "colour": "Ink",
+   "ratio": 3.2,
+   "text": "AA large"
+  },
+  {
+   "ground": "Cobalt",
+   "colour": "Paper",
+   "ratio": 5.49,
+   "text": "AA"
+  },
+  {
+   "ground": "Cobalt",
+   "colour": "Sky",
+   "ratio": 4.36,
+   "text": "AA large"
+  }
+ ],
+ "oklch": {
+  "Ink": [
+   0.156,
+   0.004,
+   164.472
+  ],
+  "Paper": [
+   0.964,
+   0.007,
+   97.352
+  ],
+  "Cobalt": [
+   0.519,
+   0.269,
+   266.308
+  ],
+  "Sky": [
+   0.881,
+   0.087,
+   219.206
+  ]
+ },
+ "proportion": {
+  "Paper": 62,
+  "Ink": 30,
+  "Cobalt": 6,
+  "Sky": 2
+ }
+}
