@@ -5,259 +5,122 @@
 <title>Antimony</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
-@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: block; }
-@font-face { font-family: "Commit Mono"; src: url("assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
-:root { --paper: #EEEAE0; --ink: #0B0C0C; --sky: #94E6FF; --pru: #1F3F7A; --hud: #8C918E; --hudb: #E7E2D6; color-scheme: dark; }
-body.paper { --hud: #77746C; --hudb: #26292A; }
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifItalicVF.woff2") format("woff2"); font-weight: 200 700; font-style: italic; font-display: swap; }
+@font-face { font-family: "Commit Mono"; src: url("assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
+:root { --ink: #0B0C0C; --paper: #EEEAE0; --sky: #94E6FF; color-scheme: dark; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { background: var(--ink); }
-body { background: var(--ink); color: #26292A; font: 400 19px/1.55 "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; height: 620vh; }
-a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .18em; text-decoration-color: rgba(38,41,42,.35); } a:hover { text-decoration-color: currentColor; }
-:focus-visible { outline: 1px solid var(--pru); outline-offset: 3px; }
+html, body { background: var(--ink); }
+body { color: var(--paper); font: 400 18px/1.55 "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; height: 280vh; }
+a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; text-decoration-color: rgba(238,234,224,.35); }
+a:hover { text-decoration-color: currentColor; }
+:focus-visible { outline: 1px solid var(--sky); outline-offset: 3px; }
 ::selection { background: var(--sky); color: var(--ink); }
-#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
-.hud { position: fixed; inset: 0; pointer-events: none; font: 400 11px/1.7 "Commit Mono", monospace; letter-spacing: .06em; color: var(--hud); transition: color .5s ease; }
-.hud > * { position: absolute; }
-.hud b { font-weight: 400; color: var(--hudb); transition: color .5s ease; }
-.hud i { font-style: normal; color: var(--sky); }
-body.paper .hud i { color: var(--pru); }
-.tl { left: max(20px, env(safe-area-inset-left, 0px)); top: calc(18px + env(safe-area-inset-top, 0px)); }
-.wm { display: block; height: 19px; width: auto; color: var(--hudb); --lit: var(--sky); transition: color .5s ease; margin-bottom: 14px; }
-body.paper .wm { --lit: var(--pru); }
-.boot { white-space: pre; transition: opacity .6s ease; }
-.tr { right: max(20px, env(safe-area-inset-right, 0px)); top: calc(20px + env(safe-area-inset-top, 0px)); text-align: right; white-space: pre; }
-.bl { left: max(20px, env(safe-area-inset-left, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); white-space: pre; transition: opacity .5s ease; }
-.br { right: max(20px, env(safe-area-inset-right, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); text-align: right; white-space: pre; transition: opacity .5s ease; }
-.bar { display: block; width: 168px; height: 1px; background: currentColor; opacity: .35; margin-top: 8px; position: relative; }
-.bar s { position: absolute; left: 0; top: -1px; height: 3px; width: 0; background: var(--sky); text-decoration: none; }
-body.paper .bar s { background: var(--pru); }
-.hint { left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); text-transform: uppercase; letter-spacing: .16em; transition: opacity .5s ease; }
-.hint::after { content: ""; display: block; width: 1px; height: 22px; margin: 8px auto 0; background: currentColor; animation: fall 2.2s ease-in-out infinite; transform-origin: top; }
-@keyframes fall { 0% { transform: scaleY(0); } 50% { transform: scaleY(1); } 100% { transform: scaleY(1); opacity: 0; } }
-main { position: fixed; left: 0; right: 0; top: 0; max-width: 640px; margin: 0 auto; padding: 18vh max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px)); opacity: 0; pointer-events: none; }
+#c, .fallback { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+.fallback { display: none; place-items: center; } .fallback svg { width: min(36vh, 60vw); height: auto; }
+.nogl .fallback { display: grid; } .nogl #c { display: none; }
+header { position: fixed; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: center;
+  padding: calc(26px + env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-right, 0px)) 0 max(28px, env(safe-area-inset-left, 0px)); pointer-events: none; }
+header svg { height: 20px; width: auto; display: block; color: var(--paper); --lit: var(--sky); }
+.meta { font: 400 11px "Commit Mono", monospace; letter-spacing: .06em; color: #6F716D; }
+main { position: fixed; left: max(28px, env(safe-area-inset-left, 0px)); bottom: calc(32px + env(safe-area-inset-bottom, 0px)); max-width: 30em; font-size: 17px; color: rgba(238,234,224,.82); opacity: 0; pointer-events: none; }
 main.on { pointer-events: auto; }
-.prompt { font: 400 12px "Commit Mono", monospace; color: #6C6A64; letter-spacing: .02em; margin-bottom: 1.6em; }
-.prompt i { font-style: normal; color: var(--pru); }
-main p { text-wrap: pretty; min-height: 1.55em; } main p + p { margin-top: 1.4em; } main em { font-style: italic; }
-.cur { display: inline-block; width: .5em; height: 1.05em; background: var(--sky); vertical-align: -.16em; margin-left: .06em; animation: blink 1.06s steps(1) infinite; }
-@keyframes blink { 50% { opacity: 0; } }
-.foot { position: fixed; left: 50%; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); width: 92px; height: 92px; transform: translateX(-50%); opacity: 0; }
-.foot.on { pointer-events: auto; }
-#top { all: unset; display: block; width: 100%; height: 100%; cursor: pointer; border-radius: 22%; }
-#top:focus-visible { outline: 1px solid var(--pru); outline-offset: 4px; }
-.win, .win > * { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.win .img, .win .pencil { -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cpath%20d%3D%22M58.6%2021.5L70.58%2046.7L67.82%2056.3L41.4%2081.5L29.42%2056.3L32.18%2046.7Z%22/%3E%3C/svg%3E") center / 100% 100% no-repeat; mask: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cpath%20d%3D%22M58.6%2021.5L70.58%2046.7L67.82%2056.3L41.4%2081.5L29.42%2056.3L32.18%2046.7Z%22/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
-.win .img { background: url(assets/prints/19006.webp) 48% 40% / 260% auto no-repeat; animation: drift 24s ease-in-out infinite alternate; }
-@keyframes drift { to { background-position: 56% 52%; } }
-.win .pencil { image-rendering: pixelated; pointer-events: none; }
-@media (max-width: 600px) { body { font-size: 17.5px; } main { padding-top: 15vh; } .foot { width: 76px; height: 76px; } .tr .x { display: none; } .bar { width: 120px; } .br { display: none; } }
-@media (prefers-reduced-motion: reduce) { .win .img, .cur, .hint::after { animation: none; } }
+main p + p { margin-top: .9em; } main em { font-style: italic; color: var(--paper); }
+.hint { position: fixed; right: max(28px, env(safe-area-inset-right, 0px)); bottom: calc(32px + env(safe-area-inset-bottom, 0px)); font: 400 11px "Commit Mono", monospace; letter-spacing: .06em; color: #6F716D; transition: opacity .8s ease; }
+@media (max-width: 600px) { main { right: 24px; font-size: 16px; } .hint { display: none; } }
 </style></head>
 <body>
-<canvas id="c" aria-label="The Antimony mark, a stone split open with a crystal grown in the break, drawn in characters"></canvas>
-<div class="hud" aria-hidden="true">
-  <div class="tl"><svg class="wm" viewBox="-20 -830 4186 1070"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg><div class="boot" id="boot"></div></div>
-  <div class="tr"><b>london</b>  <span id="clk">00:00:00</span>
-<span class="x">51.5074 n  0.1278 w</span></div>
-  <div class="bl" id="bl"><span id="st"></span><span class="bar"><s id="bs"></s></span></div>
-  <div class="br" id="br"><span id="xy">x 0.000  y 0.000</span>
-<i>■</i> tap to ring the stone</div>
-  <div class="hint" id="hint">Scroll</div>
-</div>
+<canvas id="c" aria-label="The Antimony mark: a stone split open, with a crystal set in the break"></canvas>
+<div class="fallback" aria-hidden="true"><svg viewBox="0 0 100 100" style="width:100%;height:100%" aria-hidden="true"><defs><clipPath id="bc18"><rect width="100" height="100" rx="22"/></clipPath><mask id="bm18"><rect width="100" height="100" fill="#fff"/><path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z" fill="#000"/><path d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" fill="#000"/></mask></defs><g clip-path="url(#bc18)"><rect width="100" height="100" fill="#1C1B19" mask="url(#bm18)"/><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z" fill="#94E6FF"/><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" fill-opacity=".28"/></g></svg></div>
+<header><svg viewBox="-20 -830 4186 1070" role="img" aria-label="Antimony"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg><span class="meta">london</span></header>
 <main id="m">
-  <div class="prompt" aria-hidden="true"><i>&gt;</i> antimony, london</div>
-  <p id="p1" data-html="<em>Antimony</em> builds software for the people who make the work. Our first product is <a href=&quot;https://eoinforker.github.io/orbe-site/&quot;>Orbe</a>, the creator&#39;s side of every sponsorship deal."></p>
-  <p id="p2" data-html="We sit on their side of the table, and we mean to stay there for a long time."></p>
-  <noscript><p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator's side of every sponsorship deal.</p><p>We sit on their side of the table, and we mean to stay there for a long time.</p></noscript>
+  <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator&#39;s side of every sponsorship deal.</p>
+  <p>We sit on their side of the table, and we mean to stay there for a long time.</p>
 </main>
-<div class="foot" id="foot"><button id="top" aria-label="Antimony. Back to the top"><span class="win"><span class="img"></span><canvas class="pencil" width="220" height="220"></canvas><svg id="stone" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="sc"><rect width="100" height="100" rx="22"/></clipPath><mask id="sm"><rect width="100" height="100" fill="#fff"/><path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z" fill="#000"/><path d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" fill="#000"/></mask></defs><g clip-path="url(#sc)"><rect width="100" height="100" fill="#141311" mask="url(#sm)"/></g></svg></span></button></div>
-<script>
-(() => { "use strict";
-const Q = {"seam": "M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z", "cav": "M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z", "gem": "M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z", "facet": "M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z"}, WORDS = "ANTIMONY SOFTWARE FOR THE PEOPLE WHO MAKE THE WORK ORBE THE BRIEF THE CONTRACT PAID ON TIME STIBIUM 51 SB WHAT IS LEFT IS YOURS ", BOOT = ["antimony", "sb 51  stibium  121.760", "splitting stone", "growing crystal", "ready"];
-const GLYPH = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/<>[]{}=+*#%&$:";
-const RAMP = " .·:;-=+*x#%@";
-const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const $ = id => document.getElementById(id);
-const c = $("c"), x = c.getContext("2d"), main = $("m"), foot = $("foot"), boot = $("boot"), hint = $("hint");
-const lerp = (a, b, t) => a + (b - a) * t, cl = v => v < 0 ? 0 : v > 1 ? 1 : v;
-const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2, seg = (p, a, b) => cl((p - a) / (b - a));
-const S16 = Math.sin(16 * Math.PI / 180), C16 = Math.cos(16 * Math.PI / 180);
-// the seam runs from the bottom left to the top right, 16 degrees off the vertical; N points from the left half to the right
-const SD = [S16, -C16], N = [C16, S16], CX = 50, CY = 51.5;
+<div class="hint" id="hint" aria-hidden="true">scroll</div>
+<script>addEventListener("error", e => { if (/three|WebGL/i.test(String(e.message) + (e.filename || ""))) document.documentElement.classList.add("nogl"); }, true);</script>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/" } }</script>
+<script type="module">
+import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+const G = {"L": [[-29.655, 49.034], [-31.301, 48.84], [-32.926, 48.516], [-34.52, 48.067], [-36.074, 47.493], [-37.579, 46.8], [-39.024, 45.99], [-40.402, 45.07], [-41.703, 44.044], [-42.919, 42.919], [-44.044, 41.703], [-45.07, 40.402], [-45.99, 39.024], [-46.8, 37.579], [-47.493, 36.074], [-48.067, 34.52], [-48.516, 32.926], [-48.84, 31.301], [-49.034, 29.655], [-49.1, 27.982], [-49.1, -27.982], [-49.034, -29.655], [-48.84, -31.301], [-48.516, -32.926], [-48.067, -34.52], [-47.493, -36.074], [-46.8, -37.579], [-45.99, -39.024], [-45.07, -40.402], [-44.044, -41.703], [-42.919, -42.919], [-41.703, -44.044], [-40.402, -45.07], [-39.024, -45.99], [-37.579, -46.8], [-36.074, -47.493], [-34.52, -48.067], [-32.926, -48.516], [-31.301, -48.84], [-29.655, -49.034], [-27.982, -49.1], [-16.584, -49.1], [-13.993, -35.357], [-29.163, -10.33], [-24.0, 7.71], [5.461, 32.677], [11.643, 49.1], [-27.982, 49.1]], "R": [[14.021, 32.319], [29.163, 7.33], [24.0, -10.71], [-5.506, -35.707], [-10.666, -49.1], [27.982, -49.1], [29.655, -49.034], [31.301, -48.84], [32.926, -48.516], [34.52, -48.067], [36.074, -47.493], [37.579, -46.8], [39.024, -45.99], [40.402, -45.07], [41.703, -44.044], [42.919, -42.919], [44.044, -41.703], [45.07, -40.402], [45.99, -39.024], [46.8, -37.579], [47.493, -36.074], [48.067, -34.52], [48.516, -32.926], [48.84, -31.301], [49.034, -29.655], [49.1, -27.982], [49.1, 27.982], [49.034, 29.655], [48.84, 31.301], [48.516, 32.926], [48.067, 34.52], [47.493, 36.074], [46.8, 37.579], [45.99, 39.024], [45.07, 40.402], [44.044, 41.703], [42.919, 42.919], [41.703, 44.044], [40.402, 45.07], [39.024, 45.99], [37.579, 46.8], [36.074, 47.493], [34.52, 48.067], [32.926, 48.516], [31.301, 48.84], [29.655, 49.034], [27.982, 49.1], [17.332, 49.1]], "gem": [[8.6, 28.5], [20.58, 3.3], [17.82, -6.3], [-8.6, -31.5], [-20.58, -6.3], [-17.82, 3.3]]}, still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const main = document.getElementById("m"), hint = document.getElementById("hint"), c = document.getElementById("c");
+let R;
+try { R = new THREE.WebGLRenderer({ canvas: c, antialias: true, powerPreference: "high-performance" }); } catch (e) { document.documentElement.classList.add("nogl"); throw e; }
+R.setPixelRatio(Math.min(2, devicePixelRatio || 1)); R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = .95; R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap; R.setClearColor(new THREE.Color("#0B0C0C"), 1);
+const scene = new THREE.Scene(), pm = new THREE.PMREMGenerator(R);
+scene.environment = pm.fromScene(new RoomEnvironment(), .04).texture;
+const cam = new THREE.PerspectiveCamera(26, 1, 1, 4000);
 
-// bitmaps of the parts, sampled in mark units (0 to 100)
-const R = 320, K = R / 100;
-function bitmap(draw) { const o = document.createElement("canvas"); o.width = o.height = R; const g = o.getContext("2d"); g.scale(K, K); g.fillStyle = "#fff"; draw(g); const d = g.getImageData(0, 0, R, R).data, a = new Uint8Array(R * R); for (let i = 0; i < a.length; i++) a[i] = d[i * 4 + 3] > 127; return a; }
-const tile = new Path2D(); tile.roundRect ? tile.roundRect(0, 0, 100, 100, 22) : tile.rect(0, 0, 100, 100);
-const STONE = bitmap(g => { g.fill(tile); g.globalCompositeOperation = "destination-out"; g.fill(new Path2D(Q.seam)); g.fill(new Path2D(Q.cav)); });
-const GEM = bitmap(g => g.fill(new Path2D(Q.gem))), FACET = bitmap(g => g.fill(new Path2D(Q.facet)));
-const at = (A, u, v) => u >= 0 && v >= 0 && u < 100 && v < 100 ? A[((v * K) | 0) * R + ((u * K) | 0)] : 0;
-// the print that blooms in the crystal; sampled for brightness once it loads
-let PR = null, PC = null, PW = 0, PH = 0;
-const im = new Image(); im.onload = () => { try { PW = 220; PH = Math.round(220 * im.height / im.width); const o = document.createElement("canvas"); o.width = PW; o.height = PH; const g = o.getContext("2d"); g.drawImage(im, 0, 0, PW, PH); const d = g.getImageData(0, 0, PW, PH).data; PR = new Float32Array(PW * PH); PC = new Array(PW * PH); let lo = 1, hi = 0;
-    for (let i = 0; i < PR.length; i++) { PR[i] = (d[i * 4] * .3 + d[i * 4 + 1] * .55 + d[i * 4 + 2] * .15) / 255; lo = Math.min(lo, PR[i]); hi = Math.max(hi, PR[i]); }
-    // stretch the brightness, and keep the print's own colour, lifted so it glows on black
-    for (let i = 0; i < PR.length; i++) { PR[i] = Math.pow(cl((PR[i] - lo) / (hi - lo)), 1.25); const q = [0, 1, 2].map(k => Math.min(255, (Math.round((d[i * 4 + k] * 1.45 + 18) / 16) * 16) | 0)); PC[i] = `rgb(${q})`; } } catch (e) { PR = null; } };
-im.src = "assets/prints/19006.webp";
-// a little value noise for the grain of the stone
-const hsh = (i, j) => { const s = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; return s - Math.floor(s); };
-const noise = (u, v) => { const i = Math.floor(u), j = Math.floor(v), f = u - i, g = v - j, a = hsh(i, j), b = hsh(i + 1, j), c2 = hsh(i, j + 1), d = hsh(i + 1, j + 1), su = f * f * (3 - 2 * f), sv = g * g * (3 - 2 * g); return lerp(lerp(a, b, su), lerp(c2, d, su), sv); };
-
-// colour tables, built once so the frame loop never parses a colour
-const tab = (a, b, n = 24) => Array.from({ length: n }, (_, i) => { const t = i / (n - 1); return `rgb(${[0, 1, 2].map(k => Math.round(lerp(a[k], b[k], t))).join(",")})`; });
-const INKC = [11, 12, 12], PAPERC = [238, 234, 224];
-const T_STONE = tab([26, 28, 28], [214, 209, 197]), T_SKY = tab([18, 52, 74], [205, 246, 255]), T_INKON = tab([226, 222, 212], [40, 42, 42]), T_PRU = tab([214, 222, 236], [31, 63, 122]);
-const pick = (T, v) => T[(cl(v) * (T.length - 1)) | 0];
-
-let W, H, fs, cw, ch, cols, rows, mark, cells, T0 = 0, mx = -1e9, my = -1e9, P = 0, Pd = 0, rings = [];
-function layout() {
-  const d = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; c.width = W * d; c.height = H * d; x.setTransform(d, 0, 0, d, 0, 0);
-  fs = W < 600 ? 8.5 : W < 1100 ? 10 : 11; cw = fs * .6; ch = fs * 1.18;
-  x.font = `500 ${fs}px "Commit Mono", monospace`; x.textBaseline = "middle"; x.textAlign = "center";
-  cols = Math.ceil(W / cw); rows = Math.ceil(H / ch);
-  const s = Math.min(H * .64, W * .8); mark = { s, ox: W / 2 - s / 2, oy: H * .48 - s / 2 };
-  cells = new Array(cols * rows);
-  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
-    const X = (i + .5) * cw, Y = (j + .5) * ch;
-    cells[j * cols + i] = { X, Y, n: hsh(i * .37, j * .91) * 99, d: Math.hypot(X - W / 2, Y - H * .48) / Math.max(W, H) * 1.6 + hsh(i, j) * .45, w: (j * cols + i) % WORDS.length };
-  }
-}
-let stage = -1;
-const STAGES = ["01  stone", "02  break", "03  light", "04  paper"];
-function hudStage(k, p) {
-  if (k !== stage) { stage = k; $("st").innerHTML = STAGES.map((s, i) => i === k ? `<b>${s}</b>` : s).join("\n"); }
-  $("bs").style.width = (p * 100).toFixed(1) + "%";
-}
+// grain for the stone: a little noise in its roughness and its surface, so the light has something to catch
+function grain(n = 512) { const cv = document.createElement("canvas"); cv.width = cv.height = n; const g = cv.getContext("2d"), d = g.createImageData(n, n);
+  let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < n * n; i++) { const v = 150 + (r() - .5) * 70 + (r() < .02 ? 40 : 0); d.data[i * 4] = d.data[i * 4 + 1] = d.data[i * 4 + 2] = v; d.data[i * 4 + 3] = 255; }
+  g.putImageData(d, 0, 0); g.filter = "blur(.6px)"; g.drawImage(cv, 0, 0);
+  const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(.02, .02); return t; }
+const gt = grain();
+const stoneM = new THREE.MeshStandardMaterial({ color: 0x100f0e, roughness: .62, metalness: .25, roughnessMap: gt, bumpMap: gt, bumpScale: .12, envMapIntensity: .3 });
+const D = 22, ext = { depth: D, bevelEnabled: true, bevelThickness: 1.1, bevelSize: 0.9, bevelSegments: 5, curveSegments: 1 };
+const half = p => { const s = new THREE.Shape(p.map(([x, y]) => new THREE.Vector2(x, y))); const g = new THREE.ExtrudeGeometry(s, ext); g.translate(0, 0, -D / 2);
+  // world-space uvs, so the grain runs across both halves as one stone
+  const P = g.attributes.position, uv = new Float32Array(P.count * 2); for (let i = 0; i < P.count; i++) { uv[i * 2] = P.getX(i) + P.getZ(i) * .7; uv[i * 2 + 1] = P.getY(i) + P.getZ(i) * .3; } g.setAttribute("uv", new THREE.BufferAttribute(uv, 2)); return new THREE.Mesh(g, stoneM); };
+const L = half(G.L), Rr = half(G.R);
+// the crystal: the hexagon as a prism with a roof, its ridge running from point to point, so its two halves are two facets
+function crystal(h, depth = 12, roof = 10) {
+  const n = h.length, cx = h.reduce((a, p) => a + p[0], 0) / n, cy = h.reduce((a, p) => a + p[1], 0) / n;
+  const sh = h.map(([x, y]) => [cx + (x - cx) * .965, cy + (y - cy) * .965]);
+  const zf = i => (i === 0 || i === 3) ? depth / 2 + roof : depth / 2, v = [];
+  const tri = (a, b, cc) => v.push(...a, ...b, ...cc);
+  const F = i => [sh[i][0], sh[i][1], zf(i)], B = i => [sh[i][0], sh[i][1], -depth / 2];
+  tri(F(0), F(2), F(1)); tri(F(0), F(3), F(2)); tri(F(0), F(5), F(4)); tri(F(0), F(4), F(3));          // the two facets
+  for (let i = 0; i < n; i++) { const j = (i + 1) % n; tri(F(i), F(j), B(j)); tri(F(i), B(j), B(i)); }      // the sides
+  tri(B(0), B(1), B(2)); tri(B(0), B(2), B(3)); tri(B(0), B(3), B(4)); tri(B(0), B(4), B(5));            // the back
+  const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(v, 3)); g.computeVertexNormals(); return g; }
+const gemM = new THREE.MeshPhysicalMaterial({ color: 0x62cdf2, emissive: 0x2aa6d6, emissiveIntensity: .22, roughness: .1, metalness: .05, clearcoat: 1, clearcoatRoughness: .04, ior: 1.6, flatShading: true, envMapIntensity: .9, side: THREE.DoubleSide });
+const gem = new THREE.Mesh(crystal(G.gem), gemM);
+const mark = new THREE.Group(); mark.add(L, Rr, gem); scene.add(mark);
+[L, Rr, gem].forEach(m => { m.castShadow = true; m.receiveShadow = true; });
+// it stands on a floor that goes to black, so it is a thing in a room, not a picture of an icon
+const ink = new THREE.Color("#0B0C0C"); scene.fog = new THREE.Fog(ink, 300, 640);
+const pool = (() => { const cv = document.createElement("canvas"); cv.width = cv.height = 256; const g = cv.getContext("2d"), r = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+  r.addColorStop(0, "#fff"); r.addColorStop(.45, "#777"); r.addColorStop(1, "#000"); g.fillStyle = r; g.fillRect(0, 0, 256, 256); return new THREE.CanvasTexture(cv); })();
+// the floor is only a pool of light around the stone, fading into the page
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(520, 520), new THREE.MeshStandardMaterial({ color: 0x0e0e0d, roughness: .72, metalness: .1, envMapIntensity: 0, alphaMap: pool, transparent: true, depthWrite: false }));
+floor.rotation.x = -Math.PI / 2; floor.position.y = -51.2; floor.receiveShadow = true; scene.add(floor);
+// light: one key from the upper left, a cool rim from behind, and the crystal's own light, which reaches the cut faces as the seam opens
+const key = new THREE.SpotLight(0xfff1e0, 9e4, 0, .34, 1, 1.7); key.position.set(-150, 210, 190); key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 6; key.shadow.bias = -.0004; key.shadow.camera.near = 50; key.shadow.camera.far = 800; scene.add(key); scene.add(key.target);
+const rim = new THREE.DirectionalLight(0xe8f4ff, .9); rim.position.set(220, 120, -200); scene.add(rim);
+const low = new THREE.DirectionalLight(0x94e6ff, .25); low.position.set(60, -200, 80); scene.add(low);
+const glow = new THREE.PointLight(0x94e6ff, 0, 90, 1.6); glow.position.set(0, 0, 6); mark.add(glow);
+// the seam, in the drawing's units: its direction, and the normal the halves part along
+const S16 = Math.sin(16 * Math.PI / 180), C16 = Math.cos(16 * Math.PI / 180), SD = new THREE.Vector2(S16, C16), NN = new THREE.Vector2(C16, -S16);
+let W = 1, H = 1, P = 0, Pd = 0, px = 0, py = 0, tx = 0, ty = 0;
+function size() { W = innerWidth; H = innerHeight; R.setSize(W, H, false); cam.aspect = W / H;
+  const want = Math.min(.44, (W / H) * .6); cam.position.set(0, 0, (100 / want) / (2 * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)))); cam.updateProjectionMatrix(); scene.fog.near = cam.position.z * .75; scene.fog.far = cam.position.z * 1.6; }
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2, cl = v => Math.max(0, Math.min(1, v)), seg = (p, a, b) => cl((p - a) / (b - a));
+const z0 = () => cam.position.z;
+let Z0 = 0, t0 = performance.now();
 function frame(now) {
-  const t = still ? 99 : (now - T0) / 1000, built = t - 1.2;
-  const max = document.documentElement.scrollHeight - innerHeight;
-  P = max > 0 ? cl(scrollY / max) : 0; Pd += (P - Pd) * (still ? 1 : .085); if (Math.abs(P - Pd) < 1e-4) Pd = P;
-  const p = Pd;
-  // the timeline
-  const kOpen = ease(seg(p, .06, .34)), kPush = ease(seg(p, .22, .58)), kPrint = ease(seg(p, .36, .56)), kWipe = seg(p, .58, .78), kClose = ease(seg(p, .78, .88)), kText = seg(p, .84, .9);
-  const s = mark.s, gap = kOpen * .62 * 100, slide = kOpen * 22, gs = 1 + kOpen * .22, rot = -kOpen * 12 * Math.PI / 180;
-  const Z = 1 + Math.pow(kPush, 2.2) * (Math.max(W, H) / s * 3.6), gx = mark.ox + CX / 100 * s, gy = mark.oy + CY / 100 * s;
-  const fx = lerp(gx, W / 2, kPush), fy = lerp(gy, H / 2, kPush);
-  const cr = Math.cos(rot), sr = Math.sin(rot);
-  // the paper wipe, along the seam's angle
-  const qmin = -H * S16 - 80, qmax = W * C16 + H * S16 + 80, qw = lerp(qmin, qmax, ease(kWipe));
-  const fade = 1 - kClose;
-  x.fillStyle = "rgb(11,12,12)"; x.fillRect(0, 0, W, H);
-  if (kWipe > 0) { x.fillStyle = `rgb(${PAPERC})`; x.beginPath(); const L = 4000; const ax = qw * C16, ay = qw * S16; x.moveTo(ax - SD[0] * L, ay - SD[1] * L); x.lineTo(ax + SD[0] * L, ay + SD[1] * L); x.lineTo(ax + SD[0] * L - N[0] * L, ay + SD[1] * L - N[1] * L); x.lineTo(ax - SD[0] * L - N[0] * L, ay - SD[1] * L - N[1] * L); x.closePath(); x.fill(); }
-  document.body.classList.toggle("paper", kWipe > .5);
-  const near2 = 110 * 110, rr = rings.map(r => ({ x: r.x, y: r.y, R: (t - r.t) * 820 })).filter(r => r.R < Math.max(W, H) * 1.3);
-  rings = rings.filter(r => (t - r.t) * 820 < Math.max(W, H) * 1.3);
-  let lastF = "";
-  for (let k = 0; k < cells.length; k++) {
-    const cc = cells[k], a = built - cc.d; if (a < 0) continue;
-    const X = cc.X, Y = cc.Y, q = X * C16 + Y * S16, onPaper = q < qw;
-    const edge = Math.abs(q - qw) < ch * 1.6 && kWipe > 0 && kWipe < 1;
-    // screen to mark units, through the camera
-    const wx = (X - fx) / Z + gx, wy = (Y - fy) / Z + gy, mu = (wx - mark.ox) / s * 100, mv = (wy - mark.oy) / s * 100;
-    let chr = "", T = null, v = 0, tint = null;
-    // the crystal, grown and turned about its centre
-    let du = (mu - CX) / gs, dv = (mv - CY) / gs; const gu = CX + du * cr + dv * sr, gv = CY - du * sr + dv * cr;
-    if (at(GEM, gu, gv)) {
-      if (kPrint > 0 && PR && hsh(cc.n, 3) < kPrint * 1.15) {
-        // the print, laid over the whole screen and seen through the crystal
-        const ia = PW / PH, sa = W / H, dw = sa > ia ? W : H * ia, dh = sa > ia ? W / ia : H;
-        const pu = cl((X - (W - dw) / 2) / dw), pv = cl((Y - (H - dh) / 2) / dh), pi = ((pv * (PH - 1)) | 0) * PW + ((pu * (PW - 1)) | 0), L2 = PR[pi];
-        // on black the bright parts of the print are dense; on paper the dark parts are, as ink would be
-        if (onPaper) { chr = RAMP[1 + ((1 - L2) * (RAMP.length - 2)) | 0]; T = T_PRU; v = (1 - L2) * .75; }
-        else { chr = RAMP[1 + (L2 * (RAMP.length - 2)) | 0]; T = null; tint = PC[pi]; }
-      } else {
-        const fc = at(FACET, gu, gv), glint = Math.exp(-Math.pow(((gu * C16 + gv * S16) - (t * 18 % 140) + 20) / 6, 2));
-        chr = WORDS[cc.w]; if (chr === " ") chr = "·"; T = onPaper ? T_INKON : T_SKY; v = (fc ? .95 : .72) + glint * .4 + (noise(gu * .3, gv * .3 + t * .4) - .5) * .2;
-        if (onPaper) v = .55 + v * .3;
-      }
-    } else {
-      // the two halves of the stone, parted along the seam
-      const lu = mu + N[0] * gap / 2 + SD[0] * slide, lv = mv + N[1] * gap / 2 + SD[1] * slide;
-      const ru = mu - N[0] * gap / 2 - SD[0] * slide, rv = mv - N[1] * gap / 2 - SD[1] * slide;
-      const side = (u, w) => (u - CX) * N[0] + (w - CY) * N[1];
-      let su = -1, sv = -1;
-      if (side(lu, lv) < 0 && at(STONE, lu, lv)) { su = lu; sv = lv; } else if (side(ru, rv) >= 0 && at(STONE, ru, rv)) { su = ru; sv = rv; }
-      if (su >= 0) {
-        const grain = noise(su * .16, sv * .16) * .55 + noise(su * .5, sv * .5) * .25, strata = Math.sin((su * N[0] + sv * N[1]) * .55 + grain * 4) * .5 + .5;
-        v = .08 + grain * .42 + strata * .14 + (1 - (su + sv) / 200) * .16;
-        chr = RAMP[1 + (cl(v) * (RAMP.length - 2)) | 0];
-        // the cut edges catch the light, so the silhouette stays sharp
-        const e = cw / s / Z * 100 * .9;
-        if (!at(STONE, su + e, sv) || !at(STONE, su - e, sv) || !at(STONE, su, sv + e * 1.9) || !at(STONE, su, sv - e * 1.9)) { v = .92; chr = "#"; }
-        v *= 1 - kPush * .8;  // the stone falls away as you go in
-        T = onPaper ? T_INKON : T_STONE; if (onPaper) v = .2 + v * .4;
-      } else if (!onPaper && (k % 7 === 0) && ((k / cols) | 0) % 2 === 0) {
-        // the terminal ground
-        chr = Math.sin(t * .6 + cc.n) > .97 ? GLYPH[((cc.n * 13) | 0) % GLYPH.length] : "·"; T = T_STONE; v = .14 * (1 - kWipe);
-      }
-    }
-    if (!chr) { if (!edge) continue; chr = GLYPH[((t * 24 + cc.n * 7) | 0) % GLYPH.length]; T = T_SKY; v = .9; }
-    // arrival, the pointer, the rings and the wipe's edge all scramble
-    let hot = a < .45;
-    const dx = X - mx, dy = Y - my;
-    if (dx * dx + dy * dy < near2 && p < .3 && Math.sin(t * 20 + cc.n) > -.2) hot = true;
-    for (const r of rr) { const dd = Math.hypot(X - r.x, Y - r.y) - r.R; if (dd > -26 && dd < 4) hot = true; }
-    if (edge) hot = true;
-    if (hot) { chr = GLYPH[((t * 30 + cc.n * 7) | 0) % GLYPH.length]; T = onPaper ? T_PRU : T_SKY; v = Math.max(v, .85); tint = null; }
-    if (still && hot) continue;
-    if (!T && !tint) continue;
-    const f = tint || pick(T, v * (onPaper ? fade : 1));
-    if (onPaper && fade < .02) continue;
-    if (f !== lastF) { x.fillStyle = f; lastF = f; }
-    x.fillText(chr, X, Y);
-  }
-  // the hud
-  hudStage(p < .2 ? 0 : p < .4 ? 1 : p < .62 ? 2 : 3, p);
-  hint.style.opacity = p < .02 && built > 1 ? 1 : 0;
-  boot.style.opacity = 1 - seg(p, 0, .05);
-  $("bl").style.opacity = $("br").style.opacity = 1 - kText;
-  foot.style.opacity = kClose; foot.style.transform = `translateX(-50%) scale(${lerp(1.35, 1, kClose)})`; foot.classList.toggle("on", kClose > .5);
-  main.style.opacity = kText; main.style.transform = `translateY(${(1 - kText) * 14}px)`; main.classList.toggle("on", kText > .5);
-  if (kText > .3 && !typed) { typed = true; type(); colourIn(700); }
-  if (p < .5 && typed) typed = false;
-  requestAnimationFrame(frame);
+  const t = (now - t0) / 1000, max = document.documentElement.scrollHeight - innerHeight;
+  P = still ? 1 : max > 0 ? cl(scrollY / max) : 0; Pd += (P - Pd) * .06;
+  const turn = ease(seg(Pd, 0, .7)), open = ease(seg(Pd, .15, .8)), text = seg(Pd, .62, .9);
+  px += (tx - px) * .04; py += (ty - py) * .04;
+  const idle = still ? 0 : Math.sin(t * .23) * .5 + .5;
+  // from three quarters to face on, as you scroll; the pointer leans it a little
+  mark.rotation.y = THREE.MathUtils.degToRad(lerp(-32, -4, turn) + px * 4 + (1 - turn) * idle * 2);
+  mark.rotation.x = 0;
+  const g = open * 3.2, sl = open * 1.6;
+  L.position.set(-g - sl * .4, 0, 0); Rr.position.set(g + sl * .4, 0, 0);
+  gem.position.z = open * 3; gem.rotation.z = -open * .03;
+  gemM.emissiveIntensity = .2 + open * .2 + (still ? 0 : Math.sin(t * 1.05) * .02); glow.intensity = open * 2600;
+  const z = Z0 * lerp(1.08, .9, turn); cam.position.set(px * -6, lerp(34, 14, turn) - py * 4, z); cam.lookAt(0, lerp(-6, 2, turn) + text * 6, 0);
+  main.style.opacity = text; main.style.transform = `translateY(${(1 - text) * 10}px)`; main.classList.toggle("on", text > .5);
+  hint.style.opacity = Pd < .03 && t > 1.2 ? 1 : 0;
+  R.render(scene, cam); requestAnimationFrame(frame);
 }
-// the boot lines, the clock and the pointer readout
-(function bootType() {
-  let lines = [], i = 0;
-  const step = () => { if (i >= BOOT.length) { boot.innerHTML = lines.join("\n"); return; } lines.push(BOOT[i] === "ready" ? "<i>ready</i>" : BOOT[i]); boot.innerHTML = lines.join("\n") + "\n<i>_</i>"; i++; setTimeout(step, still ? 0 : 240); };
-  step();
-})();
-const clock = () => { const d = new Date(), f = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }); $("clk").textContent = f.format(d); };
-clock(); setInterval(clock, 1000);
-addEventListener("pointermove", e => { mx = e.clientX; my = e.clientY; if (mark) $("xy").textContent = `x ${((mx - mark.ox) / mark.s).toFixed(3)}  y ${((my - mark.oy) / mark.s).toFixed(3)}`; });
-addEventListener("pointerleave", () => { mx = my = -1e9; });
-addEventListener("pointerdown", e => { if (Pd < .58 && !still) rings.push({ x: e.clientX, y: e.clientY, t: (performance.now() - T0) / 1000 }); });
-addEventListener("resize", layout);
-// typing the two paragraphs
-let typed = false, tjob = 0;
-function type() {
-  const me = ++tjob, ps = [$("p1"), $("p2")]; ps.forEach(p => p.innerHTML = "");
-  const run = k => { if (me !== tjob || k >= ps.length) return; const p = ps[k], tmp = document.createElement("div"); tmp.innerHTML = p.dataset.html; const full = tmp.textContent; let i = 0;
-    const tick = () => { if (me !== tjob) return; i = Math.min(full.length, i + (still ? full.length : 2)); const clone = tmp.cloneNode(true); let left = i;
-      const walk = n => { for (const ch of [...n.childNodes]) { if (ch.nodeType === 3) { if (left <= 0) ch.remove(); else { if (ch.length > left) ch.textContent = ch.textContent.slice(0, left); left -= ch.length; } } else { walk(ch); if (!ch.textContent.length) ch.remove(); } } };
-      walk(clone); p.innerHTML = clone.innerHTML + '<span class="cur"></span>';
-      if (i < full.length) setTimeout(tick, 18 + Math.random() * 26); else if (k < ps.length - 1) { p.innerHTML = clone.innerHTML; setTimeout(() => run(k + 1), 360); } };
-    tick(); };
-  run(0);
-}
-// the pencil, colouring the light in once
-const pc = foot.querySelector(".pencil"), px = pc.getContext("2d"), NP = pc.width;
-const GP = (Q.gem.match(/-?\d+\.?\d*/g) || []).map(Number).reduce((a, v, i) => (i % 2 ? a[a.length - 1].push(v * NP / 100) : a.push([v * NP / 100]), a), []);
-const tp = Math.min(...GP.map(p => p[1])), bt = Math.max(...GP.map(p => p[1]));
-const span = y => { const xs = []; for (let i = 0; i < GP.length; i++) { const [a, b] = GP[i], [c2, d] = GP[(i + 1) % GP.length]; if ((b <= y) !== (d <= y)) xs.push(a + (c2 - a) * (y - b) / (d - b)); } xs.sort((p, q) => p - q); return xs.length > 1 ? [xs[0], xs[xs.length - 1]] : null; };
-const line = (x0, y0, x1, y1) => { x0 = Math.round(x0); y0 = Math.round(y0); x1 = Math.round(x1); y1 = Math.round(y1); let dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, e = dx + dy; px.fillStyle = "#94E6FF";
-  for (;;) { px.fillRect(x0, y0, 1, 1); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy) { e += dy; x0 += sx; } if (e2 <= dx) { e += dx; y0 += sy; } } };
-let job = 0;
-function colourIn(delay) {
-  if (still) return; const me = ++job; px.clearRect(0, 0, NP, NP); pc.style.transition = "none"; pc.style.opacity = 1; const S = []; let y = tp + 1, l = true;
-  while (y < bt - 1) { const y2 = y + .7 + Math.random() * .9, s = span(y), s2 = span(Math.min(y2, bt - 1)); if (s && s2) S.push(l ? [s[0] - 1 + Math.random() * 1.4, y, s2[1] + 1 - Math.random() * 1.4, y2] : [s[1] + 1 - Math.random() * 1.4, y, s2[0] - 1 + Math.random() * 1.4, y2]); l = !l; y = y2; }
-  let i = 0; const tick = () => { if (me !== job) return; for (let n = 0; n < 3 && i < S.length; n++, i++) line(...S[i]); if (i < S.length) setTimeout(tick, 26); else setTimeout(() => { if (me === job) { pc.style.transition = "opacity 1.4s ease"; pc.style.opacity = 0; } }, 1400); };
-  setTimeout(tick, delay);
-}
-$("top").addEventListener("click", () => scrollTo({ top: 0, behavior: still ? "auto" : "smooth" }));
-(document.fonts ? document.fonts.load('500 12px "Commit Mono"') : Promise.resolve()).catch(() => {}).finally(() => { layout(); T0 = performance.now(); requestAnimationFrame(frame); if (still) scrollTo(0, document.body.scrollHeight); });
-})();
+const lerp = (a, b, t) => a + (b - a) * t;
+addEventListener("pointermove", e => { tx = e.clientX / innerWidth * 2 - 1; ty = e.clientY / innerHeight * 2 - 1; });
+addEventListener("resize", () => { size(); Z0 = z0(); });
+size(); Z0 = z0(); requestAnimationFrame(frame);
 </script>
 </body></html>
