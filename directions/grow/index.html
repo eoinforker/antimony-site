@@ -1040,10 +1040,6 @@ function gBuild() {
     var b = [x, y, hh, ww, grnd(), z, lean, .13 + Math.min(1, Math.max(0, (H - y) / (H - hz))) * .42 + Math.abs(x - GR.ox) / W * .14 + grnd() * .06, tn];
     (NC && y > GR.yFront ? near : far).push(b);
   }
-  /* out of the seam, at the foot of the stone: a few blades, the first thing to grow */
-  var tuft = [[35.0, -.66, 11], [35.5, -.38, 19], [36.0, -.17, 13], [36.3, .02, 24], [36.7, .21, 15], [37.1, .42, 20], [37.5, .66, 10]];
-  var seam = tuft.map(function (q, k) { return [M.x + q[0] * K, M.y + 99.6 * K + (k % 2) * K * .5, q[2] * K * (.9 + .2 * grnd()), Math.max(1.4, K * .95), grnd(), 1.5, q[1], k * .012, .55]; });
-  (NC ? near : far).push.apply(NC ? near : far, seam);
   var byY = function (a, b) { return (a[5] > 1.2) - (b[5] > 1.2) || a[1] - b[1]; };
   far.sort(byY); near.sort(byY);
   gFill(FC, far); if (NC) gFill(NC, near);
