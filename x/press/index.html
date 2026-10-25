@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<title>Antimony Press</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
+<style>
+/* One screen: a security printer's press. Guilloche rings engrave themselves around the crystal, line by line, like a banknote. */
+:root { --ink: #071010; --line: #3F5B56; --sky: #94E6FF; --paper: #F3F0E8; --muted: #7F918D;
+  --serif: "Newsreader", Georgia, serif; --mono: "Commit Mono", ui-monospace, Menlo, monospace; color-scheme: dark; }
+@font-face { font-family: "Commit Mono"; src: url("../fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 400 600; font-display: swap; }
+html, body { height: 100%; background: var(--ink); color: var(--paper); overflow: hidden; }
+canvas { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.note { position: fixed; pointer-events: none; inset: calc(18px + env(safe-area-inset-top, 0px)) max(18px, env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));
+  border: 1px solid #22322F; display: flex; flex-direction: column; justify-content: space-between; padding: 20px 22px; }
+.note::before { content: ""; position: absolute; inset: 6px; border: 1px solid #16211F; }
+.row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: flex-end; position: relative; }
+.mono { font: 500 11.5px var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+.mono b { color: var(--sky); font-weight: 500; }
+.title { font-family: var(--serif); font-size: clamp(22px, 2.6vw, 36px); line-height: 1.15; max-width: 20ch; text-wrap: balance; }
+.title i { color: var(--sky); }
+</style>
+<canvas id="c" aria-label="Guilloche engraving around the Antimony crystal; move to change the pattern"></canvas>
+<div class="note">
+  <div class="row"><span class="mono" style="color:var(--paper);letter-spacing:.34em">ANTIMONY</span><span class="mono">No. <b id="no">0001</b></span></div>
+  <div class="row"><div class="title">Pure gold went through antimony and came out <i>worth more.</i></div><div class="mono" style="text-align:right;line-height:2">Element 51 · Sb<br>London · MMXXVI<br><span id="p">Petals 12 · Depth 6</span></div></div>
+</div>
+<script>
+const c = document.getElementById("c"), x = c.getContext("2d");
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const FACETS = [
+  { p: [[50,5],[22,29],[22,71],[50,15]], a: 25, sp: 4.2, col: "#4E6E68" },
+  { p: [[78,71],[78,29],[50,5],[50,15]], a: 155, sp: 2.3, col: "#94E6FF" },
+  { p: [[50,15],[22,71],[50,58],[78,71]], a: 70, sp: 3, col: "#8FA9A4" },
+  { p: [[22,71],[50,95],[78,71],[50,58]], a: 110, sp: 3.6, col: "#5E7E78" },
+];
+let W, H, dpr, cx, cy, R, k = 12, amp = 6, tk = 12, ta = 6, ring = 0, serial = 1;
+const RINGS = 46;
+function size() { dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; c.width = W * dpr; c.height = H * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0); cx = W / 2; cy = H * 0.47; R = Math.min(W, H) * 0.17; restart(); }
+function restart() { ring = 0; x.fillStyle = "#071010"; x.fillRect(0, 0, W, H); crystal(); }
+function poly(p, s, ox, oy) { x.beginPath(); p.forEach(([u, v], i) => i ? x.lineTo(ox + (u - 50) * s, oy + (v - 50) * s) : x.moveTo(ox + (u - 50) * s, oy + (v - 50) * s)); x.closePath(); }
+function crystal() {
+  const s = R * 1.5 / 50;
+  for (const f of FACETS) {
+    x.save(); poly(f.p, s, cx, cy); x.clip(); x.fillStyle = "#071010"; x.fill();
+    x.translate(cx, cy); x.rotate(f.a * Math.PI / 180); x.strokeStyle = f.col; x.lineWidth = .8; x.beginPath();
+    for (let t = -R * 2; t < R * 2; t += f.sp) { x.moveTo(-R * 2, t); x.lineTo(R * 2, t); } x.stroke(); x.restore();
+  }
+  x.strokeStyle = "#F3F0E8"; x.lineWidth = 1.2;
+  poly([[50,5],[78,29],[78,71],[50,95],[22,71],[22,29]], s, cx, cy); x.stroke();
+  x.beginPath(); [[[22,71],[50,15],[78,71]], [[22,71],[50,58],[78,71]], [[50,5],[50,15]]].forEach(seg => seg.forEach(([u, v], i) => i ? x.lineTo(cx + (u - 50) * s, cy + (v - 50) * s) : x.moveTo(cx + (u - 50) * s, cy + (v - 50) * s))); x.stroke();
+}
+function rosette(i) {
+  const r0 = R * 1.75 + i * Math.min(W, H) * 0.0105, a = amp * (1 + 0.6 * Math.sin(i * 0.4)), ph = i * 0.21;
+  const lit = i % 9 === 4;
+  x.strokeStyle = lit ? "rgba(148,230,255,.85)" : `rgba(110,150,143,${0.5 - i / RINGS * 0.3})`; x.lineWidth = lit ? 1 : .7;
+  x.beginPath();
+  for (let t = 0; t <= 720; t++) {
+    const th = t / 720 * Math.PI * 2, r = r0 + a * Math.sin(k * th + ph) + a * 0.4 * Math.sin((k * 3) * th - ph);
+    const px = cx + Math.cos(th) * r, py = cy + Math.sin(th) * r * 0.92; t ? x.lineTo(px, py) : x.moveTo(px, py);
+  }
+  x.stroke();
+}
+function frame() {
+  const n = still ? RINGS : 1;
+  for (let j = 0; j < n && ring < RINGS; j++) rosette(ring++);
+  if (ring >= RINGS && (tk !== k || ta !== amp)) { k = tk; amp = ta; serial++; document.getElementById("no").textContent = String(serial).padStart(4, "0"); restart(); }
+  requestAnimationFrame(frame);
+}
+function point(e) {
+  const p = e.touches ? e.touches[0] : e;
+  tk = 6 + Math.round(p.clientX / W * 14); ta = 2 + Math.round(p.clientY / H * 12);
+  document.getElementById("p").textContent = `Petals ${tk} · Depth ${ta}`;
+}
+addEventListener("pointermove", point); addEventListener("touchmove", point, { passive: true });
+addEventListener("resize", size); size(); frame();
+</script>
+
+</html>

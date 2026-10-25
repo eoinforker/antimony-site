@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<title>Antimony Gate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..800&display=swap">
+<style>
+/* One screen: a corridor of crystal gates, flown through. Each gate carries one thing Antimony stands for. */
+:root { --ink: #030606; --sky: #94E6FF; --paper: #F3F0E8; --muted: #6F8480;
+  --sans: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif; --mono: "Commit Mono", ui-monospace, Menlo, monospace; color-scheme: dark; }
+@font-face { font-family: "Commit Mono"; src: url("../fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 400 600; font-display: swap; }
+html, body { height: 100%; background: var(--ink); color: var(--paper); overflow: hidden; }
+body { font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+canvas { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; }
+.hud { position: fixed; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between;
+  padding: calc(24px + env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px)); }
+.row { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.mono { font: 500 11.5px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.mono b { color: var(--sky); font-weight: 500; }
+.card { align-self: center; text-align: center; max-width: 34em; transition: opacity .5s; padding: 28px 34px; border-radius: 50%; background: radial-gradient(closest-side, rgba(3,6,6,.92), rgba(3,6,6,.75) 70%, transparent); }
+.card .n { font: 500 12px var(--mono); letter-spacing: .2em; color: var(--sky); }
+.card h1 { font-weight: 600; font-size: clamp(34px, 6vw, 84px); letter-spacing: -.05em; line-height: .95; margin-top: 14px; text-wrap: balance; }
+.card p { color: #9DAEAA; font-size: clamp(15px, 1.3vw, 18px); line-height: 1.5; margin-top: 16px; }
+.card a { pointer-events: auto; display: inline-block; margin-top: 18px; color: var(--ink); background: var(--paper); padding: 11px 17px; border-radius: 7px; font-weight: 600; text-decoration: none; }
+.card a:focus-visible { outline: 2px solid var(--sky); outline-offset: 3px; }
+.bar { height: 2px; background: #12201E; margin-top: 10px; width: min(320px, 60vw); }
+.bar i { display: block; height: 100%; background: var(--sky); width: 0; }
+</style>
+<canvas id="c" aria-hidden="true"></canvas>
+<div class="hud">
+  <div class="row"><span class="mono" style="color:var(--paper);letter-spacing:.32em">ANTIMONY</span><span class="mono">Gate <b id="g">001</b> / 006</span></div>
+  <div class="card" id="card"></div>
+  <div class="row" style="align-items:flex-end"><div><span class="mono" id="hint">Scroll, swipe or hold space to fly</span><div class="bar"><i id="bar"></i></div></div><span class="mono">Depth <b id="d">0000</b> m</span></div>
+</div>
+<script>
+const G = [
+  ["001", "Orbe", "The creator's side of every sponsorship deal. It negotiates inside the creator's own rules and holds the brand's money until the work is delivered.", ["Open Orbe", "https://eoinforker.github.io/orbe-site/"]],
+  ["002", "Never alone.", "Antimony is almost never found alone in nature. Every product we make sits on the side of the person who made the work."],
+  ["003", "Paid when you are.", "We earn when the people we serve earn. Orbe is free for creators; brands pay when the work is delivered."],
+  ["004", "Built to last.", "Forty years, not the next round. Plain records, clear rules, nothing we would be embarrassed to explain."],
+  ["005", "Element 51.", "Alchemists used antimony to purify gold. What passes through comes out worth more."],
+  ["006", "We make things for people who make things.", "Antimony is a London company. Letters arrive when they are ready.", ["Back to Orbe", "https://eoinforker.github.io/orbe-site/"]],
+];
+const c = document.getElementById("c"), x = c.getContext("2d");
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const HEX = [[50,5],[78,29],[78,71],[50,95],[22,71],[22,29]].map(([u,v]) => [(u-50)/45, (v-50)/45]);
+const A = [[[22,71],[50,15],[78,71]],[[22,71],[50,58],[78,71]],[[50,5],[50,15]]].map(s => s.map(([u,v]) => [(u-50)/45, (v-50)/45]));
+const SPACING = 4, PER = 6;           // a gate every sixth frame
+let W, H, dpr, z = 0, v = 0.02, boost = 0, cur = -1;
+function size() { dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; c.width = W * dpr; c.height = H * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0); }
+function proj(px, py, pz) { const f = Math.min(W, H) * 0.9 / pz; return [W / 2 + px * f, H / 2 + py * f]; }
+function card(i) {
+  if (i === cur) return; cur = i; const [n, h, p, l] = G[i % G.length], el = document.getElementById("card");
+  el.style.opacity = 0;
+  setTimeout(() => { el.innerHTML = `<div class="n">[${n}]</div><h1>${h}</h1><p>${p}</p>` + (l ? `<a href="${l[1]}">${l[0]}</a>` : ""); el.style.opacity = 1; }, still ? 0 : 250);
+  document.getElementById("g").textContent = n;
+}
+function frame() {
+  v += ((0.018 + boost) - v) * 0.05; z += still ? 0 : v; boost *= 0.94;
+  x.fillStyle = "rgba(3,6,6,.55)"; x.fillRect(0, 0, W, H);
+  const first = Math.floor(z / SPACING);
+  const rings = [];
+  for (let k = first + 26; k >= first + 1; k--) {
+    const dz = k * SPACING - z; if (dz <= 0.3) continue;
+    const gate = k % PER === 0, tw = (k * 0.17) % (Math.PI * 2);
+    const pts = HEX.map(([px, py]) => proj(px * 1.6, py * 1.6, dz / 4));
+    rings.push([dz, pts, gate, k]);
+  }
+  // rails between rings
+  x.lineWidth = 1;
+  for (let i = 0; i < rings.length - 1; i++) {
+    const [dz, a] = rings[i], b = rings[i + 1][1], fade = Math.max(0, 1 - dz / 90);
+    x.strokeStyle = `rgba(95,128,122,${0.35 * fade})`; x.beginPath();
+    for (let j = 0; j < 6; j++) { x.moveTo(...a[j]); x.lineTo(...b[j]); } x.stroke();
+  }
+  for (const [dz, pts, gate, k] of rings) {
+    const fade = Math.max(0, 1 - dz / 100), near = Math.max(0, 1 - dz / 30);
+    x.beginPath(); pts.forEach((p, i) => i ? x.lineTo(...p) : x.moveTo(...p)); x.closePath();
+    x.strokeStyle = gate ? `rgba(148,230,255,${0.25 + 0.75 * fade})` : `rgba(95,128,122,${0.6 * fade})`; x.lineWidth = gate ? 1.6 : 1; x.stroke();
+    if (gate) {
+      x.beginPath();
+      for (const s of A) s.forEach(([px, py], i) => { const p = proj(px * 1.6, py * 1.6, dz / 4); i ? x.lineTo(...p) : x.moveTo(...p); });
+      x.strokeStyle = `rgba(148,230,255,${0.2 + 0.8 * fade})`; x.stroke();
+      if (dz < 40) { x.fillStyle = `rgba(148,230,255,${0.05 * near})`; x.beginPath(); [pts[0], pts[1], pts[2]].forEach((p, i) => i ? x.lineTo(...p) : x.moveTo(...p)); x.fill(); }
+    }
+  }
+  const next = Math.ceil((z + 0.01) / (SPACING * PER));
+  card(Math.max(0, next - 1) % G.length);
+  document.getElementById("d").textContent = String(Math.floor(z * 10)).padStart(4, "0");
+  const prog = ((z / (SPACING * PER)) % 1); document.getElementById("bar").style.width = (prog * 100).toFixed(1) + "%";
+  requestAnimationFrame(frame);
+}
+function go(a) { boost = Math.min(0.6, boost + a); }
+addEventListener("wheel", e => go(Math.min(0.12, Math.abs(e.deltaY) / 900)), { passive: true });
+let ty = null; addEventListener("touchstart", e => ty = e.touches[0].clientY, { passive: true });
+addEventListener("touchmove", e => { if (ty !== null) { go(Math.abs(ty - e.touches[0].clientY) / 600); ty = e.touches[0].clientY; } }, { passive: true });
+let hold = 0; addEventListener("keydown", e => { if ([" ", "ArrowDown", "ArrowUp", "ArrowRight"].includes(e.key)) { e.preventDefault(); go(0.08); } });
+addEventListener("resize", size); size(); x.fillStyle = "#030606"; x.fillRect(0, 0, W, H); frame();
+</script>
+
+</html>

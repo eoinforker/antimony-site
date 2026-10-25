@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<title>Antimony Refraction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..800&display=swap">
+<style>
+/* One screen: a field of light, bent by a crystal that follows the hand. */
+:root { --ink: #050909; --line: #1A2B28; --mid: #5F807A; --sky: #94E6FF; --paper: #F3F0E8; --muted: #7F8F8B;
+  --sans: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif; --mono: "Commit Mono", ui-monospace, Menlo, monospace; color-scheme: dark; }
+@font-face { font-family: "Commit Mono"; src: url("../fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 400 600; font-display: swap; }
+html, body { height: 100%; background: var(--ink); color: var(--paper); overflow: hidden; }
+body { font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+canvas { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.ui { position: fixed; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between;
+  padding: calc(28px + env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-right, 0px)) calc(28px + env(safe-area-inset-bottom, 0px)) max(28px, env(safe-area-inset-left, 0px)); }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.mono { font: 500 11.5px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.mark { display: flex; align-items: center; gap: 12px; font: 500 13px var(--mono); letter-spacing: .32em; color: var(--paper); }
+h1 { font-weight: 600; font-size: clamp(38px, 7vw, 104px); letter-spacing: -.05em; line-height: .94; max-width: 11ch; text-wrap: balance; }
+.lede { font-size: clamp(15px, 1.3vw, 18px); line-height: 1.5; color: var(--muted); max-width: 32em; margin-top: 18px; }
+a { pointer-events: auto; color: var(--paper); }
+.cta { display: inline-flex; align-items: center; gap: 10px; margin-top: 26px; background: var(--paper); color: var(--ink); text-decoration: none; font-weight: 600; font-size: 15px; padding: 12px 18px; border-radius: 7px; }
+.cta::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--sky); box-shadow: 0 0 0 1px var(--ink); }
+.cta:focus-visible { outline: 2px solid var(--sky); outline-offset: 3px; }
+@media (max-width: 640px) { .ui { padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px)); } }
+</style>
+<canvas id="c" aria-label="A field of horizontal light bent by a crystal that follows your pointer"></canvas>
+<div class="ui">
+  <div class="row"><span class="mark"><svg width="16" height="16" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 5L78 29V71L50 95L22 71V29Z" fill="#F3F0E8"/><path d="M78 71L78 29L50 5L50 15Z" fill="#94E6FF"/><path d="M22 71L50 15L78 71L50 58Z" fill="#050909"/></svg>ANTIMONY</span><span class="mono">London · 51.51° N</span></div>
+  <div>
+    <h1>We make things for people who make things.</h1>
+    <p class="lede">Light goes in plain and comes out changed. Antimony builds the tools that sit on the side of the people who make the work, starting with Orbe.</p>
+    <a class="cta" href="https://eoinforker.github.io/orbe-site/">Open Orbe</a>
+  </div>
+  <div class="row"><span class="mono" id="hint">Move to bend the light</span><span class="mono">Makers of Orbe</span></div>
+</div>
+<script>
+const c = document.getElementById("c"), x = c.getContext("2d");
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+// The mark's four facets, on a 100 by 100 grid. Right flank catches the light.
+const F = [
+  { p: [[50,5],[22,29],[22,71],[50,15]], a: -10, col: "#33504A" },
+  { p: [[78,71],[78,29],[50,5],[50,15]], a: 12, col: "#94E6FF" },
+  { p: [[50,15],[22,71],[50,58],[78,71]], a: 6, col: "#6F918B" },
+  { p: [[22,71],[50,95],[78,71],[50,58]], a: -14, col: "#41605A" },
+];
+let W, H, dpr, gap, S, cx, cy, tx, ty, t = 0, moved = false;
+function size() {
+  dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+  c.width = W * dpr; c.height = H * dpr; x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  gap = W < 640 ? 6 : 7; S = Math.min(H * 0.86, W * (W < 640 ? 1.15 : 0.62)) / 100;
+  if (!moved) { tx = W < 640 ? W * 0.62 : W * 0.7; ty = W < 640 ? H * 0.36 : H * 0.5; }
+  if (cx === undefined) { cx = tx; cy = ty; }
+}
+function lines(y0, y1, x0, x1, phase) {
+  x.beginPath();
+  for (let y = y0 - ((y0 - phase) % gap + gap) % gap; y < y1; y += gap) { x.moveTo(x0, y); x.lineTo(x1, y); }
+  x.stroke();
+}
+function facetPath(f) { x.beginPath(); f.p.forEach(([u, v], i) => { const X = cx + (u - 50) * S, Y = cy + (v - 50) * S; i ? x.lineTo(X, Y) : x.moveTo(X, Y); }); x.closePath(); }
+function frame() {
+  cx += (tx - cx) * 0.08; cy += (ty - cy) * 0.08; t += still ? 0 : 0.006;
+  x.fillStyle = "#050909"; x.fillRect(0, 0, W, H);
+  x.lineWidth = 1; x.strokeStyle = "#1A2B28"; lines(0, H, 0, W, t * 20);
+  for (const f of F) {
+    x.save(); facetPath(f); x.clip();
+    x.fillStyle = "#050909"; x.fillRect(0, 0, W, H);
+    const fx = cx + (f.p.reduce((s, q) => s + q[0], 0) / 4 - 50) * S, fy = cy + (f.p.reduce((s, q) => s + q[1], 0) / 4 - 50) * S;
+    x.translate(fx, fy); x.rotate((f.a + Math.sin(t * 2 + f.a) * 2.5) * Math.PI / 180);
+    x.strokeStyle = f.col; x.lineWidth = 1.1; lines(-H, H, -W, W, t * 34 + f.a);
+    x.restore();
+  }
+  requestAnimationFrame(frame);
+}
+function point(e) { const p = e.touches ? e.touches[0] : e; tx = p.clientX; ty = p.clientY; if (!moved) { moved = true; document.getElementById("hint").textContent = "The light bends through Antimony"; } }
+addEventListener("pointermove", point); addEventListener("touchmove", point, { passive: true });
+addEventListener("resize", size); size(); frame();
+</script>
+
+</html>
