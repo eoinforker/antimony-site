@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Antimony</title>
+<meta name="description" content="Antimony is a software company in London that builds for the people who make the work.">
+<meta name="theme-color" content="#0A1426">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2722%27 fill=%27%23141311%27/%3E%3Cpath fill=%27%2394E6FF%27 d=%27M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z%27/%3E%3C/svg%3E">
+<link rel="preload" href="assets/fonts/timeless-serif.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" as="image" type="image/avif" media="(max-aspect-ratio: 4/5)" href="assets/hero/still-portrait.avif">
+<link rel="preload" as="image" type="image/avif" media="(min-aspect-ratio: 4.0001/5)" imagesrcset="assets/hero/still-1920.avif 1920w, assets/hero/still-2560.avif 2560w" imagesizes="100vw">
+<script>
+/* Before first paint: has this visitor already seen the page arrive in this session? */
+(function () {
+  var h = document.documentElement, st = {};
+  h.classList.add("js");
+  try { st = JSON.parse(sessionStorage.getItem("antimony.investor") || "{}") || {}; } catch (e) {}
+  if (/[?&]again\b/.test(location.search)) st.seen = 0;
+  if (!st.seen && !matchMedia("(prefers-reduced-motion: reduce)").matches) h.classList.add("arrive");
+})();
+</script>
+<style>
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/timeless-serif.woff2") format("woff2"); font-weight: 300 500; font-display: swap; }
+:root {
+  --night: #0A1426;
+  --ink: #0B0C0C;
+  --paper: #EEEAE0;
+  --paper-2: rgba(238, 234, 224, .74);
+  --paper-3: rgba(238, 234, 224, .5);
+  --sky: #94E6FF;
+  --g: clamp(16px, 4.4vw, 56px);
+  --serif: "Timeless Serif", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--night); color: var(--paper); }
+body { min-height: 100vh; min-height: 100svh; overflow-x: clip; font: 400 16px/1.45 var(--serif); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; font-kerning: normal; }
+::selection { background: var(--sky); color: var(--ink); }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 1px solid var(--sky); outline-offset: 4px; border-radius: 2px; }
+
+/* the film: placeholder, still, loop, all in one frame that never moves */
+.film { position: fixed; inset: 0; overflow: hidden; background: var(--night); }
+.film > * { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--fx, 64%) 50%; }
+.ph { background-size: cover; background-position: var(--fx, 64%) 50%; filter: blur(14px); transform: scale(1.06); }
+.still img { width: 100%; height: 100%; object-fit: cover; object-position: var(--fx, 64%) 50%; display: block; }
+.js .still { opacity: 0; transition: opacity .5s ease-out; }
+.js .still.on { opacity: 1; }
+video { opacity: 0; transition: opacity 1.2s ease-out; }
+video.on { opacity: 1; }
+@media (max-aspect-ratio: 4/5) { .film > *, .ph, .still img { --fx: 50%; } }
+/* a little shade where the words sit, as a grader would add it, never a box */
+.shade { background:
+  radial-gradient(120% 80% at 0% 0%, rgba(6, 12, 26, .42), rgba(6, 12, 26, 0) 62%),
+  linear-gradient(to top, rgba(4, 8, 18, .5), rgba(4, 8, 18, 0) 34%); pointer-events: none; }
+@media (max-aspect-ratio: 4/5) { .shade { background:
+  linear-gradient(to bottom, rgba(6, 12, 26, .38), rgba(6, 12, 26, 0) 34%),
+  linear-gradient(to top, rgba(4, 8, 18, .62), rgba(4, 8, 18, 0) 38%); } }
+/* the sun in the crystal: follows the pointer, masked to the crystal's own shape in the render */
+.glint { position: absolute; inset: auto; width: 0; height: 0; pointer-events: none; mix-blend-mode: screen; opacity: 0; transition: opacity .9s ease-out;
+  -webkit-mask: var(--mask) center / 100% 100% no-repeat; mask: var(--mask) center / 100% 100% no-repeat; }
+.glint.on { opacity: 1; }
+.glint i { position: absolute; inset: 0; background: radial-gradient(42% 30% at var(--gx, 30%) var(--gy, 40%), rgba(225, 248, 255, .9), rgba(148, 230, 255, .28) 45%, rgba(148, 230, 255, 0) 72%); }
+__PH__
+.grain { position: fixed; inset: -50%; pointer-events: none; opacity: .07; background: url("assets/grain.png"); mix-blend-mode: overlay; }
+
+/* the words */
+main { position: relative; min-height: 100vh; min-height: 100svh; display: grid; grid-template-rows: auto 1fr auto; padding: calc(var(--g) * .9 + env(safe-area-inset-top)) var(--g) calc(var(--g) * .8 + env(safe-area-inset-bottom)); }
+h1 { width: clamp(150px, 13.5vw, 210px); line-height: 0; }
+h1 svg { width: 100%; height: auto; color: var(--paper); --lit: var(--sky); overflow: visible; }
+.lede { margin-top: clamp(22px, 2.6vw, 38px); max-width: 21.5em; font-size: clamp(19px, 1.62vw, 25px); line-height: 1.34; font-weight: 360; letter-spacing: -.003em; color: var(--paper); text-wrap: pretty; }
+.work { grid-row: 3; align-self: end; }
+.work h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.work ul { list-style: none; display: grid; gap: 2px; }
+.work a { display: grid; grid-template-columns: 7.2em minmax(0, 24em) auto; align-items: baseline; column-gap: 1.2em; padding: 7px 0; font-size: clamp(15px, 1.05vw, 17px); border-top: 1px solid rgba(238, 234, 224, .16); width: max-content; max-width: 100%; }
+.work li:last-child a { border-bottom: 1px solid rgba(238, 234, 224, .16); }
+.work b { font-weight: 440; letter-spacing: .005em; }
+.work span { color: var(--paper-2); }
+.work em { font-style: normal; font-size: .72em; letter-spacing: .14em; text-transform: uppercase; color: var(--paper-3); }
+.work a b::after { content: ""; display: inline-block; width: .42em; height: .42em; margin-left: .45em; border-top: 1px solid currentColor; border-right: 1px solid currentColor; transform: translateY(-.1em) rotate(0deg); opacity: 0; transition: opacity .25s, transform .25s; }
+.work a:hover b::after, .work a:focus-visible b::after { opacity: .8; transform: translate(.12em, -.22em); }
+.work a:hover span, .work a:focus-visible span { color: var(--paper); }
+.work ul { width: max-content; max-width: 100%; }
+.sound { position: fixed; right: var(--g); bottom: calc(var(--g) * .8 + env(safe-area-inset-bottom)); width: 36px; height: 36px; display: grid; place-items: center; background: none; border: 0; color: var(--paper-2); cursor: pointer; border-radius: 50%; }
+.sound:hover { color: var(--paper); }
+.sound svg { width: 18px; height: 18px; overflow: visible; }
+.sound .w { opacity: .0; transition: opacity .3s; }
+.sound[aria-pressed="true"] .w { opacity: 1; }
+.sound[aria-pressed="true"] .x { opacity: 0; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 720px) {
+  .work a { grid-template-columns: 1fr auto; grid-template-rows: auto auto; row-gap: 1px; width: 100%; padding: 9px 0; font-size: 15px; }
+  .work ul { width: 100%; }
+  .work span { grid-column: 1 / -1; grid-row: 2; font-size: 14px; }
+  .work em { grid-column: 2; grid-row: 1; }
+  .work { padding-right: 0; }
+  .sound { top: calc(var(--g) * .9 + env(safe-area-inset-top) - 8px); bottom: auto; right: calc(var(--g) - 8px); }
+}
+@media (max-aspect-ratio: 4/5) { .lede { max-width: 17.5em; } }
+
+/* arrival on a first visit: the frame is already there; the words come in once, quietly */
+html.arrive main > * { opacity: 0; transform: translateY(6px); }
+html.arrive.go main > * { opacity: 1; transform: none; transition: opacity .9s cubic-bezier(.2, .7, .2, 1), transform 1.1s cubic-bezier(.2, .7, .2, 1); }
+html.arrive.go main > :nth-child(2) { transition-delay: .18s; }
+html.arrive.go main > :nth-child(3) { transition-delay: .36s; }
+html.arrive .sound { opacity: 0; } html.arrive.go .sound { opacity: 1; transition: opacity .9s .5s; }
+@media (prefers-reduced-motion: reduce) { .still, video, .glint { transition: none; } }
+</style>
+</head>
+<body>
+<div class="film" id="film" aria-hidden="true">
+  <div class="ph" id="ph"></div>
+  <picture class="still" id="still">
+    <source media="(max-aspect-ratio: 4/5)" type="image/avif" srcset="assets/hero/still-portrait.avif">
+    <source media="(max-aspect-ratio: 4/5)" type="image/webp" srcset="assets/hero/still-portrait.webp">
+    <source type="image/avif" srcset="assets/hero/still-1920.avif 1920w, assets/hero/still-2560.avif 2560w" sizes="100vw">
+    <source type="image/webp" srcset="assets/hero/still-1920.webp 1920w, assets/hero/still-2560.webp 2560w" sizes="100vw">
+    <img id="stillimg" src="assets/hero/still-1920.webp" alt="" decoding="async" fetchpriority="high">
+  </picture>
+  <div class="glint" id="glint"><i></i></div>
+  <div class="shade"></div>
+</div>
+<div class="grain" aria-hidden="true"></div>
+
+<main>
+  <header>
+    <h1><svg viewBox="__VB__" role="img" aria-label="Antimony" focusable="false">__WM__</svg></h1>
+    <p class="lede">Antimony is a software company in London that builds for the people who make the work.</p>
+  </header>
+  <nav class="work" aria-labelledby="work-h">
+    <h2 id="work-h">What we make</h2>
+    <ul>
+      <li><a href="https://eoinforker.github.io/orbe-site/"><b>Orbe</b><span>The creator’s side of every sponsorship deal.</span><em>Live</em></a></li>
+      <li><a href="https://immiscible.ai"><b>immiscible</b><span>Rules, approvals and a signed record for what AI agents spend and do.</span><em>Alpha</em></a></li>
+      <li><a href="https://idyll.day"><b>Idyll</b><span>Social without the scroll.</span><em>Soon</em></a></li>
+    </ul>
+  </nav>
+</main>
+<button class="sound" id="sound" type="button" aria-pressed="false" aria-label="Sound">
+  <svg viewBox="0 0 18 18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7h2.6L9 3.8v10.4L5.1 11H2.5z"/><path class="w" d="M11.6 6.6a3.4 3.4 0 0 1 0 4.8M13.6 4.6a6.2 6.2 0 0 1 0 8.8"/><path class="x" d="M12 7.2l3.6 3.6M15.6 7.2L12 10.8"/></svg>
+</button>
+
+<script>
+(function () {
+"use strict";
+var H = document.documentElement;
+var RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+var PORTRAIT = matchMedia("(max-aspect-ratio: 4/5)");
+/* where things are in each version of the frame, as fractions of its width and height (from the render's masks) */
+var FRAME = __FRAME__;
+var st = {};
+try { st = JSON.parse(sessionStorage.getItem("antimony.investor") || "{}") || {}; } catch (e) {}
+function save() { try { sessionStorage.setItem("antimony.investor", JSON.stringify(st)); } catch (e) {} }
+
+var film = document.getElementById("film"), ph = document.getElementById("ph");
+var still = document.getElementById("still"), img = document.getElementById("stillimg");
+var glint = document.getElementById("glint");
+var q = location.search, freeze = /[?&]t=(\d+)/.exec(q);
+
+/* 1. the placeholder is inline in the style sheet, so it paints with the first frame */
+function variant() { return PORTRAIT.matches ? FRAME.portrait : FRAME.landscape; }
+
+/* 2. the still */
+function shown() {
+  still.classList.add("on");
+  arrive();
+  setTimeout(loop, 400);
+}
+if (img.complete && img.naturalWidth) shown(); else img.addEventListener("load", shown, { once: true });
+
+/* the words arrive once a session, and any gesture brings them at once */
+var arrived = false;
+function arrive() {
+  if (arrived) return; arrived = true;
+  if (!H.classList.contains("arrive")) { st.seen = 1; save(); return; }
+  requestAnimationFrame(function () { requestAnimationFrame(function () { H.classList.add("go"); }); });
+  st.seen = 1; save();
+}
+["pointerdown", "keydown", "wheel", "touchstart"].forEach(function (ev) {
+  addEventListener(ev, function () { arrive(); H.classList.add("go"); }, { once: true, passive: true });
+});
+setTimeout(arrive, 1600);
+
+/* 3. the loop, only when it can play without cost: not for reduced motion, not on a saved data plan */
+var video = null;
+function loop() {
+  var c = navigator.connection || {};
+  if (RM || c.saveData || /2g/.test(c.effectiveType || "") || freeze) return;
+  var v = variant(); video = document.createElement("video");
+  video.muted = true; video.loop = true; video.playsInline = true; video.setAttribute("playsinline", ""); video.setAttribute("aria-hidden", "true");
+  video.preload = "auto"; video.disablePictureInPicture = true;
+  [["webm", "video/webm; codecs=vp9"], ["mp4", "video/mp4"]].forEach(function (s) {
+    var e = document.createElement("source"); e.src = v.video + "." + s[0]; e.type = s[1]; video.appendChild(e);
+  });
+  video.addEventListener("playing", function () { video.classList.add("on"); }, { once: true });
+  film.insertBefore(video, glint);
+  var p = video.play(); if (p && p.catch) p.catch(function () {});
+  document.addEventListener("visibilitychange", function () { if (!video) return; if (document.hidden) video.pause(); else video.play().catch(function () {}); });
+}
+PORTRAIT.addEventListener && PORTRAIT.addEventListener("change", function () {
+  if (video) { video.remove(); video = null; loop(); }
+  place();
+});
+
+/* 4. the crystal catches the sun as the pointer moves */
+var box = null;
+function place() {
+  var v = variant(), W = innerWidth, Hh = innerHeight;
+  var ar = v.w / v.h, fx = PORTRAIT.matches ? .5 : .64;
+  var dw, dh; if (W / Hh > ar) { dw = W; dh = W / ar; } else { dh = Hh; dw = Hh * ar; }
+  var ox = (W - dw) * fx, oy = (Hh - dh) * .5;
+  var c = v.crystal;
+  box = { x: ox + c[0] * dw, y: oy + c[1] * dh, w: c[2] * dw, h: c[3] * dh };
+  glint.style.cssText = "left:" + box.x + "px;top:" + box.y + "px;width:" + box.w + "px;height:" + box.h + "px;--mask:url(" + v.mask + ")";
+}
+place(); addEventListener("resize", place, { passive: true });
+if (!RM) {
+  var tx = .3, ty = .4, cx = .3, cy = .4, raf = 0, lastMove = 0;
+  function tick() {
+    cx += (tx - cx) * .08; cy += (ty - cy) * .08;
+    glint.style.setProperty("--gx", (cx * 100).toFixed(1) + "%");
+    glint.style.setProperty("--gy", (cy * 100).toFixed(1) + "%");
+    if (Math.abs(tx - cx) + Math.abs(ty - cy) > .002) raf = requestAnimationFrame(tick); else raf = 0;
+  }
+  function move(e) {
+    if (!box) return;
+    var ccx = box.x + box.w / 2, ccy = box.y + box.h / 2;
+    /* the light sits where the pointer would put the sun: across the facets, opposite the pointer */
+    var dx = (e.clientX - ccx) / (innerWidth * .5), dy = (e.clientY - ccy) / (innerHeight * .5);
+    tx = Math.max(-.1, Math.min(1.1, .5 + dx * .7)); ty = Math.max(0, Math.min(1, .45 + dy * .6));
+    var near = Math.max(0, 1 - Math.hypot(dx, dy) * .9);
+    glint.style.opacity = (.18 + .82 * near).toFixed(2);
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  addEventListener("pointermove", move, { passive: true });
+  addEventListener("pointerdown", move, { passive: true });
+  glint.classList.add("on"); glint.style.opacity = ".18";
+}
+
+/* 5. sound: off until asked for; made here, nothing downloaded */
+var btn = document.getElementById("sound"), ac = null, master = null;
+function build() {
+  var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+  ac = new AC(); master = ac.createGain(); master.gain.value = 0;
+  var comp = ac.createDynamicsCompressor(); comp.threshold.value = -24; comp.ratio.value = 3;
+  master.connect(comp); comp.connect(ac.destination);
+  /* air over water: pink noise through a slow, wandering band pass */
+  var len = ac.sampleRate * 6, buf = ac.createBuffer(2, len, ac.sampleRate);
+  for (var ch = 0; ch < 2; ch++) {
+    var d = buf.getChannelData(ch), b0 = 0, b1 = 0, b2 = 0;
+    for (var i = 0; i < len; i++) { var w = Math.random() * 2 - 1; b0 = .997 * b0 + w * .029; b1 = .985 * b1 + w * .032; b2 = .95 * b2 + w * .048; d[i] = (b0 + b1 + b2) * .35; }
+    for (var k = 0; k < 2000; k++) { var f = k / 2000; d[k] *= f; d[len - 1 - k] *= f; }
+  }
+  var air = ac.createBufferSource(); air.buffer = buf; air.loop = true;
+  var bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 520; bp.Q.value = .6;
+  var lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1800;
+  var ag = ac.createGain(); ag.gain.value = .32;
+  air.connect(bp); bp.connect(lp); lp.connect(ag); ag.connect(master);
+  var lfo = ac.createOscillator(); lfo.frequency.value = .045; var lg = ac.createGain(); lg.gain.value = 240; lfo.connect(lg); lg.connect(bp.frequency);
+  var lfo2 = ac.createOscillator(); lfo2.frequency.value = .031; var lg2 = ac.createGain(); lg2.gain.value = .12; lfo2.connect(lg2); lg2.connect(ag.gain);
+  air.start(); lfo.start(); lfo2.start();
+  /* a held chord, low and far: D, A, E and F sharp, each partial drifting a little against its neighbour */
+  var pad = ac.createGain(); pad.gain.value = .0; var plp = ac.createBiquadFilter(); plp.type = "lowpass"; plp.frequency.value = 900; plp.Q.value = .3;
+  pad.connect(plp); plp.connect(master);
+  [73.42, 110, 164.81, 185, 220].forEach(function (fq, n) {
+    [-1, 1].forEach(function (s) {
+      var o = ac.createOscillator(); o.type = n ? "sine" : "triangle"; o.frequency.value = fq; o.detune.value = s * (3 + n);
+      var g = ac.createGain(); g.gain.value = [.16, .11, .06, .035, .03][n];
+      var pan = ac.createStereoPanner ? ac.createStereoPanner() : null;
+      o.connect(g); if (pan) { pan.pan.value = s * .35; g.connect(pan); pan.connect(pad); } else g.connect(pad);
+      o.start();
+    });
+  });
+  var swell = ac.createOscillator(); swell.frequency.value = 1 / 8; var sg = ac.createGain(); sg.gain.value = .05; swell.connect(sg); sg.connect(pad.gain); swell.start();
+  pad.gain.setValueAtTime(0, ac.currentTime); pad.gain.linearRampToValueAtTime(.11, ac.currentTime + 6);
+  return true;
+}
+function setSound(on) {
+  if (on && !ac && !build()) return;
+  btn.setAttribute("aria-pressed", on ? "true" : "false");
+  st.sound = on ? 1 : 0; save();
+  if (!ac) return;
+  if (on && ac.state === "suspended") ac.resume();
+  var t = ac.currentTime; master.gain.cancelScheduledValues(t); master.gain.setValueAtTime(master.gain.value, t);
+  master.gain.linearRampToValueAtTime(on ? .5 : 0, t + (on ? 2.5 : .8));
+}
+btn.addEventListener("click", function () { setSound(btn.getAttribute("aria-pressed") !== "true"); });
+/* if sound was on earlier in this session, it returns with the first gesture (browsers ask for one) */
+if (st.sound) {
+  btn.setAttribute("aria-pressed", "true");
+  var resume = function (e) { if (e.target.closest && e.target.closest("#sound")) return; setSound(true); };
+  addEventListener("pointerdown", resume, { once: true }); addEventListener("keydown", resume, { once: true });
+}
+})();
+</script>
+</body>
+</html>
