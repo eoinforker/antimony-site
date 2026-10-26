@@ -101,6 +101,7 @@ for v in ('visible_diffuse', 'visible_glossy', 'visible_transmission', 'visible_
 
 # ------------------------------------------------------------------ ground: a hillside falling to the field, the dry moat, the rise to the plate
 MOAT0, MOAT1, MOAT_D = 150.0, 185.0, 10.0
+MX, MY = arg('mx', 1.6), arg('my', 17.0)
 def smooth(a, b, x):
     t = np.clip((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t)
 def ground_h(x, y):
@@ -108,6 +109,7 @@ def ground_h(x, y):
     h = 4.6 * (1 - smooth(6, 45, y))                                     # the crest we stand on
     h += 0.35 * np.sin(x * 0.11 + 1.3) * np.sin(y * 0.07) * smooth(10, 40, y)
     h += 1.8 * np.sin(x * 0.012 + 0.4) * np.cos(y * 0.009) * smooth(60, 160, y)
+    h += arg('rise', 0.6) * np.exp(-((x - MX) ** 2 + (y - MY) ** 2) / (2 * 2.6 ** 2))   # the low rise the stone stands on
     h += 9.0 * smooth(MOAT1 + 20, 650, y)                                # the field climbs to the old structures
     inm = (y > MOAT0 + 1.2) & (y < MOAT1 - 1.2)
     return np.where(inm, -MOAT_D, h)
@@ -140,9 +142,9 @@ sep = node(nt, 'ShaderNodeSeparateColor', (-900, 200)); link(nt, vor.outputs['Co
 cr = node(nt, 'ShaderNodeValToRGB', (-650, 200))     # per-cell colour pick
 els = cr.color_ramp.elements; cr.color_ramp.interpolation = 'CONSTANT'
 els[0].position = 0.0; els[0].color = (0.035, 0.07, 0.018, 1)              # turf
-els[1].position = 0.25; els[1].color = (0.80, 0.56, 0.04, 1)               # yellow
-e = els.new(0.58); e.color = (0.33, 0.62, 0.98, 1)                          # sky blue
-e = els.new(0.82); e.color = (0.80, 0.80, 0.76, 1)                          # white
+els[1].position = 0.12; els[1].color = (0.92, 0.6, 0.02, 1)               # yellow
+e = els.new(0.5); e.color = (0.12, 0.42, 1.0, 1)                          # sky blue
+e = els.new(0.84); e.color = (0.80, 0.80, 0.76, 1)                          # white
 e = els.new(0.9); e.color = (0.035, 0.07, 0.018, 1)
 # drifts: shift the pick so some ground runs to blue, some to yellow
 mix = node(nt, 'ShaderNodeMath', (-800, 50), operation='MULTIPLY_ADD')
@@ -310,13 +312,13 @@ def volume_box(name, c, s, dens, col, aniso):
     ob = add_mesh(name, bm, m)
     ob.visible_shadow = True
     return ob
-volume_box('haze', (0, 1700, 140), (12000, 3600, 320), arg('haze', 0.00022), (1.0, 0.86, 0.82), 0.75)
+volume_box('haze', (0, 1700, 140), (12000, 3600, 320), arg('haze', 0.00011), (1.0, 0.86, 0.82), 0.75)
 volume_box('mist', (0, (MOAT0 + MOAT1) / 2, -4.5), (9000, MOAT1 - MOAT0 - 2, 12), arg('mist', 0.008), (1.0, 0.9, 0.9), 0.6)
-volume_box('lowmist', (0, 800, 0), (9000, 1300, 6), arg('lowmist', 0.0007), (1.0, 0.9, 0.9), 0.6)
+volume_box('shafts', (-420, 760, 110), (900, 900, 230), arg('shafts', 0.0005), (1.0, 0.86, 0.8), 0.8)
+volume_box('lowmist', (0, 800, 0), (9000, 1300, 6), arg('lowmist', 0.0004), (1.0, 0.9, 0.9), 0.6)
 
 # ------------------------------------------------------------------ the Break: exact geometry, dark honed stone, sky crystal
 S, T = 0.019, 0.5
-MX, MY = arg('mx', 1.6), arg('my', 17.0)
 MZ = float(ground_h(MX, MY)) - 0.06
 def svg_poly(d):
     nums = [float(v) for v in re.findall(r'-?\d+\.?\d*', d)]
@@ -358,7 +360,7 @@ bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
 me = bpy.data.meshes.new('crystal'); bm.to_mesh(me); bm.free()
 crystal = link_ob(bpy.data.objects.new('crystal', me))
 mark = link_ob(bpy.data.objects.new('mark', None))
-mark.location = (MX, MY, MZ); mark.rotation_euler = (0, 0, math.radians(arg('yaw', -15.0)))
+mark.location = (MX, MY, MZ); mark.rotation_euler = (0, 0, math.radians(arg('yaw', -5.4)))
 for o_ in (tile, crystal, cut_seam, cut_cav): o_.parent = mark
 
 ST = os.path.join(TEX, 'seaside_rock')
@@ -396,7 +398,7 @@ b.inputs['Transmission Weight'].default_value = 0.9; b.inputs['Roughness'].defau
 b.inputs['Coat Weight'].default_value = 1.0; b.inputs['Coat Roughness'].default_value = 0.02
 # caustics are off on CPU, so the sunrise poured through the crystal is put back as a faint glow of its own colour
 emc = node(nt, 'ShaderNodeEmission', (0, -300)); emc.inputs['Color'].default_value = (*SKY, 1)
-emc.inputs['Strength'].default_value = arg('cr-glow', 0.9)
+emc.inputs['Strength'].default_value = arg('cr-glow', 1.4)
 ad = node(nt, 'ShaderNodeAddShader', (200, 0)); link(nt, b.outputs['BSDF'], ad.inputs[0]); link(nt, emc.outputs['Emission'], ad.inputs[1])
 o = node(nt, 'ShaderNodeOutputMaterial', (400, 0)); link(nt, ad.outputs['Shader'], o.inputs['Surface'])
 crystal.data.materials.append(m_cr)
@@ -467,32 +469,32 @@ def ph_objects(asset, names):
 # real scanned flowers (Poly Haven): lesser celandine and empodium for the yellow, heliophila for the sky blue,
 # dandelion clocks for the white
 flib = bpy.data.collections.new('flower_lib'); sc.collection.children.link(flib)
-YEL = ph_objects('celandine_01', [f'celandine_01_{c}_LOD1' for c in 'abc']) + ph_objects('flower_empodium', [f'flower_empodium_{c}_LOD1' for c in 'abcde']) \
-    + ph_objects('dandelion_01', ['dandelion_01_c_LOD1', 'dandelion_01_d_LOD1'])
 WHT = ph_objects('flower_heliophila', ['flower_heliophila_small_LOD3'])
-# the scanned heliophila has white petals: a copy tinted to a true sky blue (only the pale, unsaturated petal pixels move)
-SKYC = [srgb2lin(v / 255) for v in (0x8C, 0xD8, 0xFF)]
-BLU = []
-for ob in WHT:
-    b_ = ob.copy(); b_.data = ob.data.copy(); b_.name = ob.name + '_sky'
-    m = ob.data.materials[0].copy(); m.name = 'heliophila_sky'; b_.data.materials[0] = m
+EMP = ph_objects('flower_empodium', [f'flower_empodium_{c}_LOD1' for c in 'abd'])
+# heliophila is a dense cushion of small scanned flowers with white petals. Copies of it are tinted, petals only
+# (the pale, unsaturated pixels), to buttercup yellow for the front and a true sky blue for the band behind
+def tinted(ob, rgb, tag_):
+    col = [srgb2lin(v / 255) for v in rgb]
+    b_ = ob.copy(); b_.data = ob.data.copy(); b_.name = ob.name + '_' + tag_
+    m = ob.data.materials[0].copy(); m.name = 'heliophila_' + tag_; b_.data.materials[0] = m
     nt = m.node_tree
     for l in list(nt.links):
         if l.to_node.bl_idname == 'ShaderNodeGroup' and l.to_socket.name in ('Diffuse', 'Translucency'):
             src = l.from_socket; dst = l.to_socket
             hsv = nt.nodes.new('ShaderNodeSeparateColor'); hsv.mode = 'HSV'; link(nt, src, hsv.inputs['Color'])
-            mv = nt.nodes.new('ShaderNodeMapRange'); mv.inputs['From Min'].default_value = 0.45; mv.inputs['From Max'].default_value = 0.7
+            mv = nt.nodes.new('ShaderNodeMapRange'); mv.inputs['From Min'].default_value = 0.3; mv.inputs['From Max'].default_value = 0.5
             link(nt, hsv.outputs['Blue'], mv.inputs['Value'])
-            ms_ = nt.nodes.new('ShaderNodeMapRange'); ms_.inputs['From Min'].default_value = 0.35; ms_.inputs['From Max'].default_value = 0.15
+            ms_ = nt.nodes.new('ShaderNodeMapRange'); ms_.inputs['From Min'].default_value = 0.45; ms_.inputs['From Max'].default_value = 0.2
             link(nt, hsv.outputs['Green'], ms_.inputs['Value'])
             mk = nt.nodes.new('ShaderNodeMath'); mk.operation = 'MULTIPLY'; link(nt, mv.outputs['Result'], mk.inputs[0]); link(nt, ms_.outputs['Result'], mk.inputs[1])
-            tint = nt.nodes.new('ShaderNodeMix'); tint.data_type = 'RGBA'; tint.blend_type = 'MULTIPLY'; tint.inputs['Factor'].default_value = 1
-            link(nt, src, tint.inputs['A']); tint.inputs['B'].default_value = (*[c * 1.15 for c in SKYC], 1)
             mx_ = nt.nodes.new('ShaderNodeMix'); mx_.data_type = 'RGBA'
-            link(nt, mk.outputs['Value'], mx_.inputs['Factor']); link(nt, src, mx_.inputs['A']); link(nt, tint.outputs['Result'], mx_.inputs['B'])
+            link(nt, mk.outputs['Value'], mx_.inputs['Factor']); link(nt, src, mx_.inputs['A']); mx_.inputs['B'].default_value = (*col, 1)
             nt.links.remove(l); link(nt, mx_.outputs['Result'], dst)
-    BLU.append(b_)
-for ob in YEL + BLU + WHT: flib.objects.link(ob)
+    return b_
+YEL = [tinted(o, (0xF2, 0xC4, 0x1A), 'yellow') for o in WHT] * 2 + EMP
+BLU = [tinted(o, (0x4F, 0xAE, 0xFF), 'sky') for o in WHT]
+for ob in list(dict.fromkeys(YEL)) + BLU + WHT: flib.objects.link(ob)
+YEL = list(dict.fromkeys(YEL))
 NY, NB, NW = len(YEL), len(BLU), len(WHT)
 print('flower lib', NY, NB, NW)
 
@@ -528,11 +530,11 @@ for ob in dst.objects:
 NG = len(glib.objects)
 
 # ------------------------------------------------------------------ camera: on the hillside, a little above the flowers
-CAM_Z = float(ground_h(0, 0)) + arg('eye', 0.6)
+CAM_Z = float(ground_h(0, 0)) + arg('eye', 1.0)
 cam_d = bpy.data.cameras.new('cam'); cam = link_ob(bpy.data.objects.new('cam', cam_d)); sc.camera = cam
 cam_d.lens = arg('lens', 24.0); cam_d.sensor_width = 36; cam_d.sensor_fit = 'HORIZONTAL'
 cam.location = (0, 0, CAM_Z)
-cam.rotation_euler = (math.pi / 2 + math.radians(arg('pitch', 5.0)), 0, math.radians(arg('cam-yaw', 10.0)))
+cam.rotation_euler = (math.pi / 2 + math.radians(arg('pitch', 3.5)), 0, math.radians(arg('cam-yaw', 10.0)))
 cam_d.dof.use_dof = True; cam_d.dof.focus_distance = math.hypot(MX, MY); cam_d.dof.aperture_fstop = arg('fstop', 4.0)
 cam_d.clip_start = 0.05; cam_d.clip_end = 12000
 HALF = math.atan(18 / cam_d.lens) + math.radians(6)
@@ -553,8 +555,14 @@ def scatter(name, coll, n, rmin, rmax, keep, pick, scl_fn, clump=True):
     rot = np.zeros((m, 3), np.float32); rot[:, 2] = rng.uniform(0, 6.283, m)
     rot[:, 0] = rng.normal(0, 0.05, m); rot[:, 1] = rng.normal(0, 0.05, m)
     s1 = scl_fn(r, m).astype(np.float32)
+    dmk = np.hypot(x - MX, y - MY)
+    lat = np.abs(x - MX * y / MY)
+    s1 *= np.where(dmk < 3.0, 0.35 + 0.65 * np.clip((dmk - 1.3) / 1.7, 0, 1), 1.0)
+    s1 *= np.where((y < MY) & (y > 4) & (lat < 2.2), 0.45 + 0.55 * np.clip((lat - 1.0) / 1.2, 0, 1), 1.0)
+    s1 = s1.astype(np.float32)
     scl = np.stack([s1, s1, s1 * rng.uniform(0.85, 1.2, m)], 1).astype(np.float32)
     pk = pick(m, x, y).astype(np.int32)
+    pass
     for an, data, tp in (('rot', rot, 'FLOAT_VECTOR'), ('scl', scl, 'FLOAT_VECTOR'), ('pick', pk, 'INT')):
         at = me.attributes.new(an, tp, 'POINT'); at.data.foreach_set('vector' if tp == 'FLOAT_VECTOR' else 'value', data.ravel())
     ob = link_ob(bpy.data.objects.new(name, me))
@@ -581,12 +589,29 @@ def fpick(m, x, y):
     band = smooth(13, 19, r) * (1 - smooth(38, 50, r)) * (0.8 + 0.2 * np.sin(x * 0.4 + 1.0))
     band = np.maximum(band, 0.85 * (1 - smooth(1.2, 3.5, np.hypot(x - MX, y - MY))))
     u = rng.uniform(0, 1, m); pb = 0.04 + 0.86 * band
-    return np.where(u < pb, NY + rng.integers(0, NB, m), np.where(u < pb + 0.06, NY + NB + rng.integers(0, NW, m), rng.integers(0, NY, m)))
+    return np.where(u < pb, NY + rng.integers(0, NB, m), np.where(u < pb + 0.06, NY + NB + rng.integers(0, NW, m), np.where(rng.uniform(0, 1, m) < 0.7, 0, rng.integers(1, NY, m))))
 scatter('flowers', flib, int(1400000 * DENS), 0.7, 70, lambda r: np.clip((6 / r) ** 1.15, 0.02, 1.0), fpick,
-        lambda r, m: rng.uniform(1.0, 1.4, m) * (1 + r / 30))
+        lambda r, m: rng.uniform(0.8, 1.15, m) * (1 + r / 60))
 scatter('grass', glib, int(500000 * DENS), 0.7, 50, lambda r: np.clip((5 / r) ** 1.3, 0.02, 1.0),
-        lambda m, x, y: rng.integers(0, NG, m), lambda r, m: rng.uniform(0.7, 1.1, m) * (1 + r / 40), clump=False)
+        lambda m, x, y: rng.integers(0, NG, m), lambda r, m: rng.uniform(0.5, 0.85, m) * (1 + r / 60), clump=False)
 flib.hide_render = True; glib.hide_render = True
+
+# ------------------------------------------------------------------ data passes for the loop: plants, the mark, depth
+vl = sc.view_layers[0]
+for nm_ in ('gm', 'mk'):
+    av = vl.aovs.add(); av.name = nm_; av.type = 'VALUE'
+vl.use_pass_z = True
+def tag(m, name):
+    nt = m.node_tree
+    o = nt.nodes.new('ShaderNodeOutputAOV'); o.aov_name = name; o.inputs['Value'].default_value = 1.0
+plant_mats = set()
+for c in (flib, glib):
+    for ob in c.objects:
+        for m in ob.data.materials:
+            if m: plant_mats.add(m)
+for m in plant_mats: tag(m, 'gm')
+for m in (m_st, m_in, m_cr): tag(m, 'mk')
+PASSES = arg('passes', '')
 
 # ------------------------------------------------------------------ compositor: soft bloom
 sc.use_nodes = True
@@ -597,6 +622,22 @@ gl.inputs['Threshold'].default_value = 1.0; gl.inputs['Smoothness'].default_valu
 gl.inputs['Strength'].default_value = arg('bloom', 0.25); gl.inputs['Size'].default_value = 0.85
 gl.inputs['Tint'].default_value = (1.0, 0.86, 0.85, 1)
 ct.links.new(rl.outputs['Image'], gl.inputs['Image']); ct.links.new(gl.outputs['Image'], comp.inputs['Image'])
+if PASSES:
+    # one 16-bit PNG, stored linear: R plants, G the mark, B depth / 400 m
+    fo = ct.nodes.new('CompositorNodeOutputFile'); fo.base_path = os.path.dirname(PASSES)
+    fo.format.file_format = 'PNG'; fo.format.color_depth = '16'; fo.format.color_mode = 'RGB'
+    fo.format.color_management = 'OVERRIDE'; fo.format.view_settings.view_transform = 'Standard'
+    fo.format.view_settings.look = 'None'; fo.format.view_settings.exposure = 0; fo.format.view_settings.gamma = 1
+    fo.file_slots.clear(); fo.file_slots.new('passes')
+    cc = ct.nodes.new('CompositorNodeCombineColor'); cc.mode = 'RGB'
+    def clamp01(sock, scale=1.0):
+        n1 = ct.nodes.new('CompositorNodeMath'); n1.operation = 'MULTIPLY'; n1.inputs[1].default_value = scale; ct.links.new(sock, n1.inputs[0])
+        n2 = ct.nodes.new('CompositorNodeMath'); n2.operation = 'MINIMUM'; n2.inputs[1].default_value = 1.0; ct.links.new(n1.outputs[0], n2.inputs[0])
+        return n2.outputs[0]
+    ct.links.new(clamp01(rl.outputs['gm']), cc.inputs['Red']); ct.links.new(clamp01(rl.outputs['mk']), cc.inputs['Green'])
+    ct.links.new(clamp01(rl.outputs['Depth'], 1 / 400.0), cc.inputs['Blue'])
+    ct.links.new(cc.outputs['Image'], fo.inputs[0])
+    sc.frame_current = 1
 
 if '--dry' in argv:
     exec(open(arg('chk', '/dev/null')).read()); print('DRY_OK'); sys.exit(0)
@@ -604,3 +645,6 @@ t0 = time.time()
 sc.render.filepath = OUT
 bpy.ops.render.render(write_still=True)
 print('RENDER_SECONDS', round(time.time() - t0, 1))
+if PASSES:
+    cand = os.path.join(os.path.dirname(PASSES), 'passes0001.png')
+    if os.path.exists(cand): os.replace(cand, PASSES)

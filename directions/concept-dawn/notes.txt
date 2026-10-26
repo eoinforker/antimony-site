@@ -1,0 +1,42 @@
+Dawn over the Plate, path traced
+
+What this is
+  Sunrise over a field of flowers. The camera stands 1 m above the flowers on a low crest. Beyond a dry moat
+  (a pale concrete lip with mist in it) the old world stands quiet: a broken plate on its pillars, two cold
+  stacks, far ruins in the haze. The sun sits low under the plate's broken end, so the haze carries shafts
+  between the pillars. In the field the Break stands on a low rise, square to the camera so the seam reads
+  top to bottom and the sky crystal is lit from behind.
+  Camera: 24 mm on 36 mm, eye 1.0 m, pitch 3.5 degrees, yaw 10 degrees left, f/4 focused on the stone (17 m).
+  Blender 4.5.15 LTS, Cycles CPU, OpenImageDenoise, adaptive sampling, AgX Base Contrast, bloom.
+  One cheat: the haze is lit by the sun only (world scatter off), so light has shape instead of a grey veil.
+
+Run
+  blender -b -P dawn_scene.py -- --assets <dir with pink_sunrise_8k.exr, tex/, grass_medium_01/> \
+    --res 2560x1440 --samples 384 --time 1140 --out beauty.png --passes passes.png
+  python3 dawn_compose.py --beauty beauty.png --passes passes.png --out assets --shots shots --crf 19 --vp9-crf 30
+  Final render: 1178 s (about 20 minutes) on 4 shared CPU threads.
+  passes.png: R plants, G the mark, B depth / 400 m.
+
+The loop (6 s, 24 fps, 144 frames, seamless), from one render and its passes
+  - flowers and grass sway by a small warp weighted by the plant pass, stronger the nearer they are
+  - the far air breathes: a soft field that drifts exactly one tile per loop
+  - a few motes drift on closed paths, brighter on the sun's side
+  - the mark is masked out of every motion and never moves
+  All periods divide 6 s, so frame 144 runs into frame 1. Halation, vignette and grain are laid over each frame.
+
+Page
+  index.html: the AVIF/WebP still, the loop over it (WebM or MP4; phone crop on portrait screens, centred on the
+  stone), a short opening (the field comes up out of the dark, then the type), once a session and skippable,
+  the wordmark with "Software, made on purpose.", Orbe, immiscible and Idyll as quiet links, and a sound toggle
+  (muted by default): morning wind, a faint warm chord and a few far birds, all synthesised.
+  Reduced motion: no loop and no opening, the still only. ?t=<ms> freezes the loop for screenshots; ?again replays the opening.
+  The mark is whole at rest at 1440x900 and 390x844; narrower landscape screens crop around it (object-position at its x).
+
+Honest limits
+  - The field between the flowers and the moat reads as a pale grey-lilac band, not as flowers; the far field is
+    a procedural colour texture under haze, and it is the weakest part of the frame.
+  - The old structures are simple masses; they read as silhouettes in haze but not as detailed ruins.
+  - The flowers are one scanned cushion (heliophila) tinted three ways plus scanned empodium; up close they are
+    real, at distance they are a speckle.
+  - The phone loop is a 608x1080 crop of the 1920x1080 loop, so it is softer than the phone still.
+  - Haze does not truly drift; the sway is an image warp, not moving geometry.

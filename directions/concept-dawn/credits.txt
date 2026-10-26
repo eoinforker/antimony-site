@@ -1,4 +1,6 @@
-Dawn over the Plate (first-frame draft): assets and licences. All CC0, from Poly Haven (polyhaven.com).
-HDRI: pink_sunrise (8k EXR). Textures: concrete_wall_008, rusty_metal_02, seaside_rock, sparse_grass.
-Models: celandine_01, flower_empodium, flower_heliophila, dandelion_01, grass_medium_01, grass_medium_02.
-The Break mark geometry is Antimony's own (break-geometry.json). The plate, pillars, stacks and moat are built in dawn_scene.py.
+Dawn over the Plate: assets and licences. All third-party assets are CC0, from Poly Haven (polyhaven.com).
+HDRI: pink_sunrise (8k EXR), the sky and its light.
+Textures: concrete_wall_008 (the old structures and the moat), rusty_metal_02 (torn beams), seaside_rock (the stone, darkened and honed), sparse_grass (the near ground).
+Models: flower_heliophila (the flower cushions; copies tinted petal-only to yellow and sky blue, one left white), flower_empodium (yellow flowers), grass_medium_01 and grass_medium_02 (grass).
+The Break mark geometry is Antimony's own (break-geometry.json). The plate, pillars, stacks, moat and far ruins are simple masses built in dawn_scene.py.
+Sound is synthesised in the browser (Web Audio); no recordings.

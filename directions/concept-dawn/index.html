@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0C0C">
+<meta name="description" content="Antimony: software, made on purpose.">
+<title>Antimony</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2722%27 fill=%27%23141311%27/%3E%3Cpath fill=%27%2394E6FF%27 d=%27M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z%27/%3E%3C/svg%3E">
+<link rel="preload" href="assets/fonts/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin>
+<!-- Copy. The line in use: "Software, made on purpose."
+     Alternatives Eóin may prefer: "Intentional software." / "Software for the people who make the work." -->
+<script>
+/* Before first paint: whether the opening plays, and which framing to use. */
+(function () {
+  var h = document.documentElement, q = location.search, seen = false;
+  try { seen = sessionStorage.getItem("antimony.dawn") === "1"; } catch (e) {}
+  if (/[?&]again\b/.test(q)) seen = false;
+  if (/[?&](rest|t=\d)/.test(q)) seen = true;
+  if (!seen && !matchMedia("(prefers-reduced-motion: reduce)").matches) h.classList.add("opening");
+  h.classList.add(innerWidth / innerHeight < .8 ? "portrait" : "landscape");
+})();
+</script>
+<style>
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
+:root { --ink: #0B0C0C; --paper: #EEEAE0; --sky: #94E6FF; --mx: 62%; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--ink); color: var(--paper); overflow: hidden; }
+body { font: 400 15px/1.5 "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* the field at sunrise: the still, then the loop over it, both framed so the stone is always whole */
+#frame { position: fixed; inset: 0; background: #1b1820; }
+#frame img, #frame video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--mx) 50%; display: block; }
+#frame video { opacity: 0; transition: opacity 1.2s ease; }
+#frame video.on { opacity: 1; }
+#veil { position: fixed; inset: 0; background: var(--ink); pointer-events: none; opacity: 0; }
+html.opening #veil { opacity: 1; }
+#veil.lift { opacity: 0; transition: opacity 3.2s cubic-bezier(.3, .1, .3, 1); }
+.sign { position: fixed; left: max(28px, env(safe-area-inset-left)); bottom: max(26px, env(safe-area-inset-bottom)); }
+.sign svg { display: block; width: 120px; height: auto; color: var(--paper); --lit: var(--sky); opacity: .94; }
+.sign p { margin-top: 8px; font-size: 13px; letter-spacing: .02em; color: rgba(238, 234, 224, .76); }
+.made { position: fixed; right: max(28px, env(safe-area-inset-right)); bottom: max(26px, env(safe-area-inset-bottom)); list-style: none; display: flex; gap: 20px; font-size: 13px; letter-spacing: .02em; }
+.made a { color: rgba(238, 234, 224, .7); text-decoration: none; transition: color .3s; }
+.made a:hover, .made a:focus-visible { color: var(--paper); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; outline: none; }
+#snd { position: fixed; right: max(18px, env(safe-area-inset-right)); top: max(16px, env(safe-area-inset-top)); width: 36px; height: 36px; border: 0; background: none; color: rgba(238, 234, 224, .62); cursor: pointer; display: grid; place-items: center; border-radius: 50%; transition: color .3s; }
+#snd:hover, #snd:focus-visible { color: var(--paper); outline: none; }
+#snd:focus-visible { box-shadow: 0 0 0 1px rgba(238, 234, 224, .5); }
+#snd svg { width: 20px; height: 20px; }
+#snd .w { opacity: 0; transition: opacity .4s; }
+#snd[aria-pressed="true"] .w { opacity: 1; }
+#snd[aria-pressed="true"] .x { opacity: 0; }
+.sign, .made, #snd { transition: opacity 1.2s cubic-bezier(.25, .6, .3, 1); }
+html.opening .sign, html.opening .made, html.opening #snd { opacity: 0; }
+/* a soft shade under the type so it reads on the bright flowers */
+#shade { position: fixed; left: 0; right: 0; bottom: 0; height: 30vh; pointer-events: none; background: linear-gradient(to top, rgba(11, 12, 12, .42), rgba(11, 12, 12, 0)); }
+@media (max-width: 600px) {
+  .sign { left: 16px; bottom: max(18px, env(safe-area-inset-bottom)); }
+  .sign svg { width: 94px; }
+  .sign p { font-size: 12px; }
+  .made { right: 16px; bottom: max(18px, env(safe-area-inset-bottom)); flex-direction: column; gap: 4px; text-align: right; font-size: 12.5px; }
+  #snd { right: 10px; top: max(10px, env(safe-area-inset-top)); }
+}
+</style>
+</head>
+<body>
+<div id="frame" aria-hidden="true">
+  <picture>
+    <source media="(max-aspect-ratio: 4/5)" type="image/avif" srcset="assets/dawn-still-phone.avif">
+    <source media="(max-aspect-ratio: 4/5)" type="image/webp" srcset="assets/dawn-still-phone.webp">
+    <source type="image/avif" srcset="assets/dawn-still.avif">
+    <img id="still" src="assets/dawn-still.webp" alt="">
+  </picture>
+  <video id="loop" muted loop playsinline preload="auto"></video>
+</div>
+<div id="shade"></div>
+<div id="veil"></div>
+<h1 class="vh">Antimony</h1>
+<p class="vh">Sunrise over a field of yellow and sky-blue flowers. Beyond a dry moat, the old structures stand dark and quiet: a broken plate on its pillars and two cold stacks. In the field stands the Antimony mark, a dark stone split by a seam, with a sky-blue crystal in the break, catching the first light.</p>
+<div class="sign">
+  <svg viewBox="-20 -830 4186 1070" role="img" aria-label="Antimony"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg>
+  <p>Software, made on purpose.</p>
+</div>
+<ul class="made" aria-label="What we make">
+  <li><a href="https://eoinforker.github.io/orbe-site/">Orbe</a></li>
+  <li><a href="https://immiscible.ai">immiscible</a></li>
+  <li><a href="https://idyll.day">Idyll</a></li>
+</ul>
+<button id="snd" type="button" aria-pressed="false" aria-label="Sound">
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3.5 7.8h2.6L10 4.6v10.8L6.1 12.2H3.5z"/>
+    <path class="w" d="M12.6 7.4a3.6 3.6 0 0 1 0 5.2M14.8 5.4a6.4 6.4 0 0 1 0 9.2"/>
+    <path class="x" d="M13 8.2l3.6 3.6M16.6 8.2L13 11.8"/>
+  </svg>
+</button>
+<script>
+(function () {
+var html = document.documentElement, $ = function (id) { return document.getElementById(id); };
+var video = $("loop"), veil = $("veil"), q = location.search;
+var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+var KEY = "antimony.dawn";
+var freeze = /[?&]t=(\d+)/.exec(q);
+
+/* the stone's place in the frame (fraction across the render), so a narrow screen crops round it */
+var MARK_X = 0.684;
+function frameIt() {
+  var portrait = innerWidth / innerHeight < .8;
+  html.classList.toggle("portrait", portrait); html.classList.toggle("landscape", !portrait);
+  html.style.setProperty("--mx", portrait ? "50%" : (MARK_X * 100).toFixed(1) + "%");
+  return portrait;
+}
+var portrait = frameIt();
+addEventListener("resize", function () {
+  var p = frameIt();
+  if (p !== portrait) { portrait = p; if (video.src) loadVideo(); }
+});
+
+/* the loop: never under reduced motion; the still stays as poster and fallback */
+function loadVideo() {
+  if (reduced) return;
+  var base = portrait ? "assets/dawn-loop-phone" : "assets/dawn-loop";
+  var webm = video.canPlayType('video/webm; codecs="vp9"');
+  video.src = base + (webm ? ".webm" : ".mp4");
+  video.addEventListener("playing", function () { video.classList.add("on"); }, { once: true });
+  if (freeze) {
+    video.addEventListener("loadeddata", function () { video.pause(); video.currentTime = (+freeze[1] / 1000) % 6; video.classList.add("on"); }, { once: true });
+  } else {
+    var p = video.play(); if (p && p.catch) p.catch(function () {});
+  }
+}
+loadVideo();
+document.addEventListener("visibilitychange", function () {
+  if (!video.src || freeze) return;
+  if (document.hidden) video.pause(); else { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
+});
+
+/* the opening: the field comes up out of the dark, then the type; once a session, skippable */
+function remember() { try { sessionStorage.setItem(KEY, "1"); } catch (e) {} }
+var ended = false;
+function endOpening(fast) {
+  if (ended) return; ended = true; remember();
+  if (fast) { veil.style.transition = "opacity .5s ease"; }
+  veil.classList.add("lift");
+  setTimeout(function () { html.classList.remove("opening"); }, fast ? 250 : 2300);
+  ["click", "keydown", "wheel", "touchstart"].forEach(function (ev) { removeEventListener(ev, skip, true); });
+}
+function skip() { endOpening(true); }
+if (html.classList.contains("opening")) {
+  ["click", "keydown", "wheel", "touchstart"].forEach(function (ev) { addEventListener(ev, skip, { capture: true, passive: true }); });
+  var go = function () { setTimeout(function () { endOpening(false); }, 600); };
+  var img = $("still");
+  if (img.complete) go(); else { img.addEventListener("load", go, { once: true }); img.addEventListener("error", go, { once: true }); }
+} else remember();
+
+/* ================= sound: made here, in the browser; silent until asked ================= */
+var SND = (function () {
+  var AC = null, out = null, on = false, SKEY = "antimony.dawn.sound", btn = $("snd"), timers = [];
+  function gain(v) { var g = AC.createGain(); g.gain.value = v; return g; }
+  function filt(type, f, qv) { var x = AC.createBiquadFilter(); x.type = type; x.frequency.value = f; x.Q.value = qv || .7; return x; }
+  function chain() { for (var i = 0; i < arguments.length - 1; i++) arguments[i].connect(arguments[i + 1]); return arguments[arguments.length - 1]; }
+  function noise(sec) {
+    var n = Math.round(AC.sampleRate * sec), b = AC.createBuffer(2, n, AC.sampleRate);
+    for (var c = 0; c < 2; c++) {
+      var d = b.getChannelData(c), b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (var i = 0; i < n; i++) {
+        var w = Math.random() * 2 - 1;
+        b0 = .99886 * b0 + w * .0555179; b1 = .99332 * b1 + w * .0750759; b2 = .969 * b2 + w * .153852; b3 = .8665 * b3 + w * .3104856; b4 = .55 * b4 + w * .5329522; b5 = -.7616 * b5 - w * .016898;
+        d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * .5362) * .11; b6 = w * .115926;
+      }
+      for (var k = 0; k < 4096; k++) { var f = k / 4096; d[k] *= f; d[n - 1 - k] *= f; }
+    }
+    return b;
+  }
+  var dry, revIn;
+  function build() {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    out = gain(0); out.connect(AC.destination);
+    var comp = AC.createDynamicsCompressor(); comp.threshold.value = -22; comp.ratio.value = 3; comp.connect(out);
+    dry = gain(1); dry.connect(comp);
+    /* open air: a long, soft reverb */
+    var rev = AC.createConvolver(), L = Math.round(AC.sampleRate * 4), ib = AC.createBuffer(2, L, AC.sampleRate);
+    for (var c = 0; c < 2; c++) { var d = ib.getChannelData(c); for (var i = 0; i < L; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / L, 3.6) * (i < 600 ? i / 600 : 1); }
+    rev.buffer = ib; revIn = gain(1); chain(revIn, filt("lowpass", 3800), rev, gain(.6), comp);
+    /* morning wind across the field: filtered noise that swells and falls */
+    var PN = noise(8);
+    var s = AC.createBufferSource(); s.buffer = PN; s.loop = true; s.start();
+    var bp = filt("bandpass", 520, .45), wg = gain(.09);
+    chain(s, filt("highpass", 90), bp, wg, dry); wg.connect(revIn);
+    var l1 = AC.createOscillator(), l1g = gain(.055); l1.frequency.value = .045; chain(l1, l1g, wg.gain); l1.start();
+    var l2 = AC.createOscillator(), l2g = gain(260); l2.frequency.value = .031; chain(l2, l2g, bp.frequency); l2.start();
+    /* a warm, slow chord under it all, barely there */
+    [[146.83, 0], [220.0, .4], [277.18, .8], [329.63, 1.2]].forEach(function (p, i) {
+      var o = AC.createOscillator(); o.type = "sine"; o.frequency.value = p[0];
+      var o2 = AC.createOscillator(); o2.type = "sine"; o2.frequency.value = p[0] * 1.003;
+      var g = gain(0), lf = AC.createOscillator(), lg = gain(.006);
+      lf.frequency.value = .05 + i * .013; chain(lf, lg, g.gain); lf.start();
+      g.gain.setValueAtTime(0, AC.currentTime); g.gain.linearRampToValueAtTime(.009, AC.currentTime + 6 + p[1] * 3);
+      o.connect(g); o2.connect(g); chain(g, filt("lowpass", 900), dry); g.connect(revIn); o.start(); o2.start();
+    });
+    birds();
+  }
+  /* a few distant birds at first light: short, soft sweeps, far off in the reverb */
+  function chirp(t, f0, f1, dur, g, pan) {
+    var o = AC.createOscillator(), e = gain(0), p = AC.createStereoPanner ? AC.createStereoPanner() : gain(1);
+    if (p.pan) p.pan.value = pan;
+    o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(g, t + .012); e.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    chain(o, filt("bandpass", (f0 + f1) / 2, 1.2), e, p); p.connect(revIn); var dg = gain(.35); p.connect(dg); dg.connect(dry);
+    o.start(t); o.stop(t + dur + .05);
+  }
+  function birds() {
+    if (!AC) return;
+    var t = AC.currentTime + .05, n = 2 + Math.floor(Math.random() * 4), base = 2600 + Math.random() * 1800, pan = Math.random() * 1.4 - .7;
+    for (var i = 0; i < n; i++) { var f = base * (1 + (Math.random() - .5) * .25); chirp(t + i * (.11 + Math.random() * .08), f, f * (Math.random() < .5 ? 1.35 : .72), .07 + Math.random() * .07, .012 + Math.random() * .01, pan); }
+    timers.push(setTimeout(birds, 3500 + Math.random() * 9000));
+  }
+  function set(v, store) {
+    on = v; btn.setAttribute("aria-pressed", v ? "true" : "false");
+    if (v) {
+      if (!AC) build();
+      if (AC.state === "suspended") AC.resume();
+      out.gain.cancelScheduledValues(AC.currentTime); out.gain.setTargetAtTime(.9, AC.currentTime, .8);
+    } else if (AC) { out.gain.cancelScheduledValues(AC.currentTime); out.gain.setTargetAtTime(0, AC.currentTime, .25); }
+    if (store !== false) { try { sessionStorage.setItem(SKEY, v ? "1" : "0"); } catch (e) {} }
+  }
+  btn.addEventListener("click", function (e) { e.stopPropagation(); set(!on); });
+  /* the toggle state is remembered, but audio only starts from a gesture */
+  var want = false; try { want = sessionStorage.getItem(SKEY) === "1"; } catch (e) {}
+  if (want) {
+    var resume = function () { set(true, false); removeEventListener("pointerdown", resume, true); removeEventListener("keydown", resume, true); };
+    btn.setAttribute("aria-pressed", "true");
+    addEventListener("pointerdown", resume, true); addEventListener("keydown", resume, true);
+  }
+  return { set: set };
+})();
+})();
+</script>
+</body>
+</html>
