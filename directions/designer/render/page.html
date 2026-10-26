@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Antimony, Lens</title>
+<meta name="description" content="Antimony. Software for the people who make the work.">
+<meta name="theme-color" content="#050608">
+<link rel="preload" href="assets/fonts/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
+@font-face { font-family: "Commit Mono"; src: url("assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
+:root {
+  --ink: #050608; --paper: #EEEAE0; --sky: #94E6FF;
+  --gutter: clamp(16px, 3.6vw, 56px);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--ink); color: var(--paper); overflow: hidden; }
+body { font-family: "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.stage { position: fixed; inset: 0; overflow: hidden; background: var(--ink); touch-action: none; -webkit-tap-highlight-color: transparent; }
+.stage img, .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.stage img { object-fit: cover; object-position: 50% 50%; opacity: 0; transition: opacity 1.6s cubic-bezier(.2,.7,.2,1); }
+.stage img.on { opacity: 1; }
+.stage canvas { opacity: 0; transition: opacity .5s ease-out; }
+.stage canvas.on { opacity: 1; }
+.stage.hot { cursor: pointer; }
+
+/* one line of type, bottom left; three quiet links, bottom right */
+.line {
+  position: fixed; left: var(--gutter); bottom: calc(var(--gutter) * .9 + env(safe-area-inset-bottom));
+  display: flex; align-items: baseline; gap: .95em; margin: 0;
+  font-size: 15px; line-height: 1; letter-spacing: .004em; font-weight: 380;
+  opacity: 0; transform: translateY(4px); transition: opacity 1.2s cubic-bezier(.2,.7,.2,1), transform 1.2s cubic-bezier(.2,.7,.2,1);
+}
+.line h1 { margin: 0; font-size: 1em; line-height: 0; font-weight: inherit; }
+.line svg { display: block; height: 21px; width: auto; color: var(--paper); --lit: var(--sky); transform: translateY(4.4px); }
+.line span { color: rgba(238, 234, 224, .72); white-space: nowrap; }
+.work {
+  position: fixed; right: var(--gutter); bottom: calc(var(--gutter) * .9 + env(safe-area-inset-bottom));
+  display: flex; gap: 1.6em; margin: 0; padding: 0; list-style: none;
+  font: 400 11px/1 "Commit Mono", ui-monospace, monospace; letter-spacing: .02em;
+  opacity: 0; transition: opacity 1.2s cubic-bezier(.2,.7,.2,1) .25s;
+}
+.work a { color: rgba(238, 234, 224, .5); text-decoration: none; transition: color .3s; padding: 6px 0; }
+.work a:hover, .work a:focus-visible { color: var(--paper); }
+.work a:focus-visible, .snd:focus-visible { outline: 1px solid rgba(148, 230, 255, .7); outline-offset: 4px; }
+.snd {
+  position: fixed; right: calc(var(--gutter) - 10px); top: calc(var(--gutter) * .9 - 10px + env(safe-area-inset-top));
+  width: 38px; height: 38px; padding: 10px; border: 0; background: none; color: var(--paper); cursor: pointer;
+  opacity: 0; transition: opacity 1.2s cubic-bezier(.2,.7,.2,1) .4s;
+}
+.snd svg { display: block; width: 18px; height: 18px; overflow: visible; }
+.snd .w { opacity: .28; transition: opacity .5s; }
+.snd[aria-pressed="true"] .w { opacity: .95; }
+.snd .x { opacity: .6; transition: opacity .3s; }
+.snd[aria-pressed="true"] .x { opacity: 0; }
+.ready .line { opacity: 1; transform: none; }
+.ready .work, .ready .snd { opacity: 1; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.let { position: fixed; left: 50%; bottom: calc(var(--gutter) * .9); transform: translateX(-50%); width: auto; height: auto; clip: auto; overflow: visible;
+  opacity: 0; pointer-events: none; padding: 6px 10px; border: 0; background: none; color: rgba(238, 234, 224, .8);
+  font: 400 11px/1 "Commit Mono", ui-monospace, monospace; letter-spacing: .02em; }
+.let:focus-visible { opacity: 1; outline: 1px solid rgba(148, 230, 255, .7); outline-offset: 2px; }
+
+@media (max-width: 720px), (max-aspect-ratio: 9/10) {
+  .line { flex-direction: column; align-items: flex-start; gap: 12px; left: 16px; bottom: calc(56px + env(safe-area-inset-bottom)); font-size: 14px; }
+  .line svg { height: 22px; transform: none; }
+  .work { left: 16px; right: auto; bottom: calc(22px + env(safe-area-inset-bottom)); gap: 1.4em; }
+  .snd { right: 6px; top: calc(8px + env(safe-area-inset-top)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage img, .stage canvas, .line, .work, .snd { transition: none; }
+}
+</style>
+</head>
+<body>
+<main class="stage" id="stage" aria-label="A dark stone with a crystal set in its seam, standing in the rain at night. Through the crystal, a meadow in sunlight.">
+  <img id="still" alt="" decoding="async">
+  <canvas id="gl" aria-hidden="true"></canvas>
+</main>
+<div class="line" id="line">
+  <h1 class="sr">Antimony</h1>
+  <svg viewBox="{{VIEWBOX}}" role="img" aria-label="Antimony">{{WORDMARK}}</svg>
+  <span>Software for the people who make the work</span>
+</div>
+<ul class="work" id="work">
+  <li><a href="https://eoinforker.github.io/orbe-site/">Orbe</a></li>
+  <li><a href="https://immiscible.ai">immiscible</a></li>
+  <li><a href="https://idyll.day">Idyll</a></li>
+</ul>
+<button class="let" id="let" type="button">Let the light through</button>
+<button class="snd" id="snd" type="button" aria-pressed="false" aria-label="Sound">
+  <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2.5 7h2.6L9 4v10l-3.9-3H2.5z"/>
+    <path class="w" d="M11.6 6.6a3.4 3.4 0 0 1 0 4.8M13.6 4.6a6.2 6.2 0 0 1 0 8.8"/>
+    <path class="x" d="M12 7.2l3.6 3.6M15.6 7.2L12 10.8"/>
+  </svg>
+</button>
+
+<script>
+(() => {
+'use strict';
+const KEY = 'antimony.designer';
+const store = (() => { try { return JSON.parse(sessionStorage.getItem(KEY) || '{}') || {}; } catch (e) { return {}; } })();
+const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
+const Q = new URLSearchParams(location.search);
+const FREEZE = Q.has('t') ? parseFloat(Q.get('t')) : null;            // ?t=<ms> freezes time for captures
+const FORCE_SPILL = Q.has('spill') ? parseFloat(Q.get('spill')) : null; // ?spill=0..1
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const COARSE = matchMedia('(pointer: coarse)').matches;
+const stage = document.getElementById('stage'), still = document.getElementById('still'), cv = document.getElementById('gl');
+const sndBtn = document.getElementById('snd');
+const portrait = () => innerWidth / innerHeight < 0.9;
+let SET = portrait() ? 'phone' : 'desktop';
+const A = (p) => 'assets/' + p;
+
+// the opening plays once a session; anything skips it
+let opening = !(store.seen || RM || FREEZE !== null && Q.has('skip'));
+const t0 = performance.now();
+let skipAt = null;
+const skip = () => { if (opening && skipAt === null) skipAt = now(); };
+const now = () => FREEZE !== null ? FREEZE : performance.now() - t0;
+['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach((e) => addEventListener(e, skip, { passive: true }));
+store.seen = true; save();
+
+still.src = A(SET + '/rest.webp');
+// during the opening the still waits (the opening starts from black); it is the fallback without WebGL
+still.onload = () => { if (!opening || !window.WebGLRenderingContext) { still.classList.add('on'); document.body.classList.add('ready'); } };
+
+// ------------------------------------------------------------ pointer, tilt and the crystal
+let meta = null, hitData = null, hitW = 0, hitH = 0, crystal = { x: 0.5, y: 0.5, r: 0.1 };
+const tilt = { x: 0, y: 0, tx: 0, ty: 0, vx: 0, vy: 0 };
+let prox = 0, proxT = 0, pointerIn = false;
+function cover() {
+  // screen to image: the image covers the viewport, centred (as object-fit: cover)
+  const iw = meta ? meta.w : 1920, ih = meta ? meta.h : 1200;
+  const s = Math.max(innerWidth / iw, innerHeight / ih);
+  const sw = innerWidth / (iw * s), sh = innerHeight / (ih * s);
+  return [sw, sh, (1 - sw) / 2, (1 - sh) / 2];
+}
+function toImage(cx, cy) { const c = cover(); return [cx / innerWidth * c[0] + c[2], cy / innerHeight * c[1] + c[3]]; }
+function fromImage(u, v) { const c = cover(); return [(u - c[2]) / c[0] * innerWidth, (v - c[3]) / c[1] * innerHeight]; }
+function onCrystal(cx, cy) {
+  const [u, v] = toImage(cx, cy);
+  const [px, py] = fromImage(crystal.x, crystal.y);
+  const rpx = crystal.r * innerHeight / cover()[1];
+  return Math.hypot(cx - px, cy - py) < rpx * 1.15;
+}
+function aim(cx, cy) {
+  const [px, py] = fromImage(crystal.x, crystal.y);
+  const rpx = crystal.r * innerHeight / cover()[1];
+  const span = Math.min(innerWidth, innerHeight) * 0.55;
+  tilt.tx = Math.max(-1, Math.min(1, (cx - innerWidth / 2) / span));
+  tilt.ty = Math.max(-1, Math.min(1, (cy - innerHeight / 2) / span));
+  const d = Math.hypot(cx - px, cy - py);
+  proxT = 1 - Math.min(1, Math.max(0, (d - rpx * 0.6) / (rpx * 2.6)));
+  stage.classList.toggle('hot', d < rpx * 1.15);
+}
+addEventListener('pointermove', (e) => { if (e.pointerType === 'touch' && !dragging) return; pointerIn = true; aim(e.clientX, e.clientY); }, { passive: true });
+document.addEventListener('pointerleave', () => { pointerIn = false; tilt.tx = 0; tilt.ty = 0; proxT = 0; });
+let dragging = false, orient = false;
+stage.addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'touch') { dragging = true; aim(e.clientX, e.clientY); }
+});
+addEventListener('pointerup', (e) => { if (e.pointerType === 'touch') { dragging = false; if (!orient) { tilt.tx = 0; tilt.ty = 0; } proxT = 0; } });
+stage.addEventListener('click', (e) => { askOrientation(); if (onCrystal(e.clientX, e.clientY) && !opening) letLight(); });
+document.getElementById('let').addEventListener('click', () => { if (opening) skip(); letLight(); });
+addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && document.activeElement === document.body) { e.preventDefault(); letLight(); } });
+let asked = false, base0 = null;
+function askOrientation() {
+  if (asked || !COARSE || typeof DeviceOrientationEvent === 'undefined') return; asked = true;
+  const go = () => addEventListener('deviceorientation', (e) => {
+    if (e.beta === null) return;
+    if (!base0) base0 = { b: e.beta, g: e.gamma };
+    orient = true;
+    tilt.tx = Math.max(-1, Math.min(1, (e.gamma - base0.g) / 18));
+    tilt.ty = Math.max(-1, Math.min(1, (e.beta - base0.b) / 18));
+    proxT = Math.max(0, 1 - Math.hypot(tilt.tx, tilt.ty) * 1.4) * 0.8;
+  });
+  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission().then((r) => { if (r === 'granted') go(); }).catch(() => {});
+  } else go();
+}
+
+// ------------------------------------------------------------ the light, let through
+let spill = 0, spillT0 = -1e9;
+const SP_UP = 900, SP_HOLD = 2300, SP_DOWN = 3600;
+function letLight() { const t = now(); if (t - spillT0 > SP_UP + SP_HOLD * 0.5) { spillT0 = t; audio.glass(); } }
+function spillAt(t) {
+  if (FORCE_SPILL !== null) return FORCE_SPILL;
+  const d = t - spillT0, up = RM ? 1400 : SP_UP;
+  if (d < 0) return 0;
+  if (d < up) { const x = d / up; return 1 - Math.pow(1 - x, 3); }
+  if (d < up + SP_HOLD) return 1;
+  const x = (d - up - SP_HOLD) / SP_DOWN; if (x >= 1) return 0;
+  return 1 - x * x * (3 - 2 * x);
+}
+
+// ------------------------------------------------------------ sound, built here, muted until asked
+const audio = (() => {
+  let ctx = null, master, rainG, windG, padG, verb, on = false;
+  function noiseBuf(sec, colour) {
+    const n = Math.floor(ctx.sampleRate * sec), b = ctx.createBuffer(2, n, ctx.sampleRate);
+    for (let c = 0; c < 2; c++) {
+      const d = b.getChannelData(c); let b0 = 0, b1 = 0, b2 = 0;
+      for (let i = 0; i < n; i++) {
+        const w = Math.random() * 2 - 1;
+        if (colour === 'pink') { b0 = .99765 * b0 + w * .099046; b1 = .963 * b1 + w * .2965; b2 = .57 * b2 + w * 1.0526; d[i] = (b0 + b1 + b2 + w * .1848) * .18; }
+        else d[i] = w * .5;
+      }
+      // fold the ends together so the loop has no seam
+      const f = Math.floor(ctx.sampleRate * .25);
+      for (let i = 0; i < f; i++) { const k = i / f; d[n - f + i] = d[n - f + i] * (1 - k) + d[i] * k; }
+    }
+    return b;
+  }
+  function dropsBuf(sec, rate, bright) {
+    // rain on stone and wet ground: many small, short, filtered ticks, each with its own pitch and place
+    const sr = ctx.sampleRate, n = Math.floor(sr * sec), b = ctx.createBuffer(2, n, sr);
+    const L = b.getChannelData(0), R = b.getChannelData(1);
+    const count = Math.floor(sec * rate);
+    for (let k = 0; k < count; k++) {
+      const at = Math.floor(Math.random() * (n - sr * 0.05)), len = Math.floor(sr * (0.004 + Math.random() * 0.02));
+      const amp = Math.pow(Math.random(), 2.2) * 0.5, pan = Math.random();
+      const f = (900 + Math.random() * 3800) * bright / sr; let ph = 0, lp = 0;
+      for (let i = 0; i < len; i++) {
+        const env = Math.exp(-i / (len * 0.22)) * (1 - Math.exp(-i / 12));
+        ph += f; const s = (Math.sin(ph * 6.283) * 0.6 + (Math.random() * 2 - 1) * 0.4) * env * amp;
+        lp += (s - lp) * 0.5;
+        L[at + i] += lp * (1 - pan); R[at + i] += lp * pan;
+      }
+    }
+    return b;
+  }
+  function impulse(sec, decay) {
+    const sr = ctx.sampleRate, n = Math.floor(sr * sec), b = ctx.createBuffer(2, n, sr);
+    for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); let lp = 0;
+      for (let i = 0; i < n; i++) { const w = (Math.random() * 2 - 1) * Math.pow(1 - i / n, decay); lp += (w - lp) * 0.35; d[i] = lp; } }
+    return b;
+  }
+  function loop(buf, dest, rate) { const s = ctx.createBufferSource(); s.buffer = buf; s.loop = true; if (rate) s.playbackRate.value = rate; s.connect(dest); s.start(); return s; }
+  function build() {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain(); master.gain.value = 0;
+    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 2.5; comp.attack.value = 0.02; comp.release.value = 0.4;
+    master.connect(comp); comp.connect(ctx.destination);
+    verb = ctx.createConvolver(); verb.buffer = impulse(3.4, 3.2);
+    const verbG = ctx.createGain(); verbG.gain.value = 0.35; verb.connect(verbG); verbG.connect(master);
+    // the outer world: rain, a soft hiss far off and drops close by
+    rainG = ctx.createGain(); rainG.gain.value = 0.0; rainG.connect(master);
+    const hiss = ctx.createBiquadFilter(); hiss.type = 'bandpass'; hiss.frequency.value = 2400; hiss.Q.value = 0.35;
+    const hissLp = ctx.createBiquadFilter(); hissLp.type = 'lowpass'; hissLp.frequency.value = 5200;
+    const hissG = ctx.createGain(); hissG.gain.value = 0.32; hiss.connect(hissLp); hissLp.connect(hissG); hissG.connect(rainG);
+    loop(noiseBuf(7, 'pink'), hiss);
+    const near = ctx.createBiquadFilter(); near.type = 'lowpass'; near.frequency.value = 3600;
+    const nearG = ctx.createGain(); nearG.gain.value = 0.55; near.connect(nearG); nearG.connect(rainG); nearG.connect(verb);
+    loop(dropsBuf(6.3, 60, 1.0), near);
+    const far = ctx.createBiquadFilter(); far.type = 'lowpass'; far.frequency.value = 1800;
+    const farG = ctx.createGain(); farG.gain.value = 0.4; far.connect(farG); farG.connect(rainG);
+    loop(dropsBuf(5.1, 260, 0.6), far);
+    // the inner world: wind in tall grass, and something warm under it
+    windG = ctx.createGain(); windG.gain.value = 0.0; windG.connect(master); windG.connect(verb);
+    const wbp = ctx.createBiquadFilter(); wbp.type = 'bandpass'; wbp.frequency.value = 520; wbp.Q.value = 0.6;
+    const wG = ctx.createGain(); wG.gain.value = 0.5; wbp.connect(wG); wG.connect(windG);
+    loop(noiseBuf(9, 'pink'), wbp);
+    const gust = ctx.createOscillator(); gust.frequency.value = 0.071; const gustD = ctx.createGain(); gustD.gain.value = 260;
+    gust.connect(gustD); gustD.connect(wbp.frequency); gust.start();
+    const gust2 = ctx.createOscillator(); gust2.frequency.value = 0.043; const gust2D = ctx.createGain(); gust2D.gain.value = 0.28;
+    gust2.connect(gust2D); gust2D.connect(wG.gain); gust2.start();
+    const rus = ctx.createBiquadFilter(); rus.type = 'highpass'; rus.frequency.value = 3200;
+    const rusG = ctx.createGain(); rusG.gain.value = 0.07; rus.connect(rusG); rusG.connect(windG);
+    const rusMod = ctx.createGain(); rusMod.gain.value = 0.06; gust2.connect(rusMod); rusMod.connect(rusG.gain);
+    loop(noiseBuf(5.3, 'white'), rus, 1);
+    padG = ctx.createGain(); padG.gain.value = 0; padG.connect(master); padG.connect(verb);
+    const padLp = ctx.createBiquadFilter(); padLp.type = 'lowpass'; padLp.frequency.value = 900; padLp.Q.value = 0.3; padLp.connect(padG);
+    [146.83, 220.0, 329.63, 369.99, 493.88].forEach((f, i) => {
+      [-1, 1].forEach((det) => {
+        const o = ctx.createOscillator(); o.type = i < 2 ? 'sine' : 'triangle'; o.frequency.value = f; o.detune.value = det * (4 + i);
+        const g = ctx.createGain(); g.gain.value = [0.16, 0.12, 0.07, 0.05, 0.035][i];
+        const lfo = ctx.createOscillator(); lfo.frequency.value = 0.05 + i * 0.013; const lg = ctx.createGain(); lg.gain.value = g.gain.value * 0.6;
+        lfo.connect(lg); lg.connect(g.gain); lfo.start();
+        o.connect(g); g.connect(padLp); o.start();
+      });
+    });
+  }
+  function set(p, sp) {
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const inner = Math.min(1, p * 0.85 + sp);
+    rainG.gain.setTargetAtTime(0.5 * (1 - inner * 0.82), t, 0.25);
+    windG.gain.setTargetAtTime(0.05 + inner * 0.55, t, 0.3);
+    padG.gain.setTargetAtTime(0.012 + inner * 0.11, t, 0.5);
+  }
+  function glass() {
+    if (!ctx || !on) return;
+    const t = ctx.currentTime + 0.01, f0 = 1174.66;
+    const out = ctx.createGain(); out.gain.value = 0.22; out.connect(master); out.connect(verb);
+    [[1, 1, 4.2], [1.0007, 0.6, 4.0], [2.32, 0.2, 1.9], [4.25, 0.07, 0.9], [6.63, 0.025, 0.45]].forEach(([r, a, d]) => {
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f0 * r;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(a, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o.connect(g); g.connect(out); o.start(t); o.stop(t + d + 0.1);
+    });
+  }
+  return {
+    toggle() {
+      if (!ctx) build();
+      on = !on; if (ctx.state === 'suspended') ctx.resume();
+      master.gain.setTargetAtTime(on ? 0.8 : 0, ctx.currentTime, on ? 0.7 : 0.25);
+      return on;
+    },
+    resumeIf() { if (on && ctx && ctx.state === 'suspended') ctx.resume(); },
+    set, glass, get on() { return on; }
+  };
+})();
+sndBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const v = audio.toggle(); sndBtn.setAttribute('aria-pressed', String(v)); store.sound = v; save();
+});
+// a sound left on earlier in this session comes back with the first gesture here
+if (store.sound) {
+  const once = () => { if (!audio.on) { audio.toggle(); sndBtn.setAttribute('aria-pressed', 'true'); } removeEventListener('pointerdown', once); removeEventListener('keydown', once); };
+  addEventListener('pointerdown', once); addEventListener('keydown', once);
+}
+
+// ------------------------------------------------------------ WebGL
+const gl = cv.getContext('webgl', { antialias: false, alpha: false, premultipliedAlpha: false, powerPreference: 'high-performance' });
+if (!gl) { still.classList.add('on'); document.body.classList.add('ready'); return; }
+
+const VS = `attribute vec2 p; varying vec2 vUv; void main(){ vUv = vec2(p.x * .5 + .5, .5 - p.y * .5); gl_Position = vec4(p, 0., 1.); }`;
+const FS = `
+precision highp float;
+varying vec2 vUv;
+uniform sampler2D uBase, uSpill, uThru, uRay, uGlow, uSky, uGrass;
+uniform vec4 uCover; uniform vec2 uRayRes; uniform vec4 uCam; uniform vec3 uMed;
+uniform vec2 uTilt; uniform float uRest, uMG, uTime, uSpillAmt, uExpo, uOpen, uMeadow, uMlum, uAspect, uMotion;
+float dec(float e){ return (exp2(e * 13.) - 1.) / 256.; }
+vec3 dec(vec3 e){ return (exp2(e * 13.) - 1.) / 256.; }
+float h12(vec2 p){ vec3 q = fract(vec3(p.xyx) * .1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }
+float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
+  return mix(mix(h12(i), h12(i + vec2(1, 0)), f.x), mix(h12(i + vec2(0, 1)), h12(i + vec2(1, 1)), f.x), f.y); }
+float fbm(vec2 p){ return vnoise(p) * .55 + vnoise(p * 2.03 + 7.1) * .3 + vnoise(p * 4.1 + 3.7) * .15; }
+vec2 unpackRay(vec2 uv){
+  vec3 c = floor(texture2D(uRay, uv).rgb * 255. + .5);
+  float lx = floor(c.b / 16.), ly = c.b - lx * 16.;
+  return vec2(c.r * 16. + lx, c.g * 16. + ly) / 4095. * 1.6 - .8;
+}
+vec2 ray(vec2 uv){
+  vec2 p = uv * uRayRes - .5, i = floor(p), f = p - i;
+  vec2 a = unpackRay((i + .5) / uRayRes), b = unpackRay((i + vec2(1.5, .5)) / uRayRes);
+  vec2 c = unpackRay((i + vec2(.5, 1.5)) / uRayRes), d = unpackRay((i + 1.5) / uRayRes);
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+vec3 meadow(vec2 t){
+  vec2 m = vec2((t.x + uMed.x) / (2. * uMed.x), 1. - (t.y - uMed.y) / (uMed.z - uMed.y));
+  // the sky drifts; the grass bends with the wind, more near the eye (low in the frame)
+  vec2 ms = m + vec2(uTime * .0011 + sin(uTime * .05) * .004, 0.);
+  vec3 sky = dec(texture2D(uSky, ms).rgb);
+  float nearness = smoothstep(.5, 1., m.y);
+  float g1 = fbm(vec2(m.x * 5. - uTime * .32, m.y * 2.5));
+  float gust = .5 + .5 * sin(m.x * 4.2 - uTime * .9 + g1 * 3.);
+  vec2 wind = vec2((g1 - .5) * .010 + gust * .006, (g1 - .5) * .002) * nearness * nearness * uMotion;
+  vec4 g = texture2D(uGrass, m + wind);
+  return mix(sky, dec(g.rgb), g.a);
+}
+vec3 agx(vec3 v){
+  v = mat3(.842479062253094, .0423282422610123, .0423756549057051, .0784335999999992, .878468636469772, .0784336,
+           .0792237451477643, .0791661274605434, .879142973793104) * max(v, 1e-10);
+  v = clamp((log2(v) + 12.47393) / 16.499999, 0., 1.);
+  vec3 x2 = v * v, x4 = x2 * x2;
+  v = 15.5 * x4 * x2 - 40.14 * x4 * v + 31.96 * x4 - 6.868 * x2 * v + .4298 * x2 + .1191 * v - .00232;
+  return mat3(1.19687900512017, -.0528968517574562, -.0529716355144438, -.0980208811401368, 1.15190312990417, -.0980434501171241,
+              -.0990297440797205, -.0989611768448433, 1.15107367264116) * v;
+}
+float rainLayer(vec2 p, float cols, float speed, float len, float w, float seed){
+  vec2 q = vec2(p.x * cols, p.y * cols * .12);
+  float col = floor(q.x), r = h12(vec2(col, seed));
+  float y = fract(q.y - uTime * speed * (.8 + r * .4) + r * 7.);
+  float x = fract(q.x) - .5 - (r - .5) * .6;
+  float on = step(.55, h12(vec2(col, floor(q.y - uTime * speed * (.8 + r * .4) + r * 7.) + seed)));
+  return on * smoothstep(w, 0., abs(x)) * smoothstep(0., len * .3, y) * smoothstep(len, len * .5, y);
+}
+void main(){
+  vec2 uv = vUv * uCover.xy + uCover.zw;
+  vec3 col = dec(texture2D(uBase, uv).rgb);
+  float th = texture2D(uThru, uv).r; vec3 T = texture2D(uThru, uv).rgb; T *= T;
+  float sp = uSpillAmt;
+  float glow = texture2D(uGlow, uv).r; glow *= glow;
+  if (th > .002) {
+    vec2 t = ray(uv);
+    vec2 ts = vec2((uv.x * 2. - 1.) * uCam.x + uCam.z, (1. - uv.y * 2.) * uCam.y + uCam.w);
+    vec2 dev = t - ts;
+    // the stone tilts a little: the view through it swings, and each facet bends it a touch more or less
+    vec2 tl = uTilt * vec2(.042, -.034);
+    float k = 1. + dot(uTilt, vec2(.16, -.1));
+    vec2 base = ts + tl;
+    vec3 m = vec3(meadow(base + dev * k * .986).r, meadow(base + dev * k).g, meadow(base + dev * k * 1.016).b);
+    col += T * m * uMeadow * uMG * (1. + sp * .35);
+  }
+  col += (uRest + (1. - uRest) * sp) * dec(texture2D(uSpill, uv).rgb);
+  col += vec3(1., .965, .9) * glow * uMlum * uMG * (.035 * uMeadow + 1.3 * sp);
+  // rain, between us and the stone: it catches the lamp behind it to the upper right, and the daylight when let out
+  vec2 rp = vec2(uv.x * uAspect + uv.y * .06, uv.y);
+  float rn = rainLayer(rp, 130., .55, .45, .05, 1.) * .35 + rainLayer(rp + .37, 74., .42, .6, .07, 2.) * .45 + rainLayer(rp + .71, 30., .3, .8, .1, 3.) * .3;
+  float lamp = .01 + .06 * smoothstep(1.1, 0., length((uv - vec2(.86, .02)) * vec2(1., 1.25)));
+  col += rn * uMotion * (vec3(.75, .84, 1.) * lamp + vec3(1., .965, .9) * glow * sp * 1.4 * uMlum * uMG);
+  vec3 c = agx(col * exp2(uExpo));
+  c *= uOpen;
+  vec2 vq = vUv - .5; c *= 1. - dot(vq, vq) * .22;
+  c += (h12(gl_FragCoord.xy + fract(uTime * 7.3) * 113.) - .5) * .022;
+  gl_FragColor = vec4(c, 1.);
+}`;
+function sh(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+let prog;
+try {
+  prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+} catch (e) { console.warn(e); still.classList.add('on'); document.body.classList.add('ready'); return; }
+gl.useProgram(prog);
+const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+const U = {}; ['uBase', 'uSpill', 'uThru', 'uRay', 'uGlow', 'uSky', 'uGrass', 'uCover', 'uRayRes', 'uCam', 'uMed', 'uTilt', 'uTime', 'uSpillAmt', 'uExpo', 'uOpen', 'uMeadow', 'uMlum', 'uAspect', 'uMotion', 'uMG', 'uRest'].forEach((n) => U[n] = gl.getUniformLocation(prog, n));
+function img(src) { return new Promise((res, rej) => { const i = new Image(); i.decoding = 'async'; i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
+function tex(unit, im, nearest) {
+  const t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false); gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, nearest ? gl.RGB : gl.RGBA, nearest ? gl.RGB : gl.RGBA, gl.UNSIGNED_BYTE, im);
+  const f = nearest ? gl.NEAREST : gl.LINEAR;
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, f); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, f);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return t;
+}
+let ready = false;
+async function load() {
+  meta = await (await fetch(A(SET + '/meta.json'))).json();
+  const names = ['base.webp', 'spill.webp', 'thru.webp', 'ray.png', 'glow.png'];
+  const [b, s, t, r, g, sky, grass] = await Promise.all(names.map((n) => img(A(SET + '/' + n))).concat([img(A('meadow/sky.webp')), img(A('meadow/grass.webp'))]));
+  tex(0, b); tex(1, s); tex(2, t); tex(3, r, true); tex(4, g); tex(5, sky); tex(6, grass);
+  [0, 1, 2, 3, 4, 5, 6].forEach((i, k) => gl.uniform1i(U[['uBase', 'uSpill', 'uThru', 'uRay', 'uGlow', 'uSky', 'uGrass'][k]], i));
+  gl.uniform2f(U.uRayRes, r.width, r.height);
+  gl.uniform4f(U.uCam, meta.tan_w, meta.tan_h, meta.shift_x, meta.shift_y);
+  gl.uniform3f(U.uMed, meta.tw, meta.ty0 - meta.horizon, meta.ty1 - meta.horizon);
+  gl.uniform1f(U.uMlum, meta.mlum); gl.uniform1f(U.uMG, meta.mgain); gl.uniform1f(U.uRest, meta.rest_spill || 0);
+  // find the crystal in the light-through map, for the pointer
+  const c2 = document.createElement('canvas'); hitW = 240; hitH = Math.round(240 * t.height / t.width); c2.width = hitW; c2.height = hitH;
+  const x2 = c2.getContext('2d', { willReadFrequently: true }); x2.drawImage(t, 0, 0, hitW, hitH);
+  hitData = x2.getImageData(0, 0, hitW, hitH).data;
+  let sx = 0, sy = 0, n = 0, minx = 1, maxx = 0, miny = 1, maxy = 0;
+  for (let y = 0; y < hitH; y++) for (let x = 0; x < hitW; x++) {
+    const v = hitData[(y * hitW + x) * 4];
+    if (v > 150) {
+      // the crystal is the wide part; the seam's hairline barely counts
+      let wsum = 0; for (let k = -3; k <= 3; k++) { const xx = Math.min(hitW - 1, Math.max(0, x + k)); wsum += hitData[(y * hitW + xx) * 4] > 150 ? 1 : 0; }
+      if (wsum < 7) continue;
+      sx += x; sy += y; n++; minx = Math.min(minx, x / hitW); maxx = Math.max(maxx, x / hitW); miny = Math.min(miny, y / hitH); maxy = Math.max(maxy, y / hitH);
+    }
+  }
+  if (n) crystal = { x: sx / n / hitW, y: sy / n / hitH, r: Math.max(maxy - miny, (maxx - minx) * hitW / hitH * (t.height / t.width) * (meta.w / meta.h)) * 0.5 };
+  ready = true; cv.classList.add('on');
+}
+let scale = COARSE ? 1.0 : 1.0, frames = 0, slow = 0, lastT = 0;
+function size() {
+  const dpr = Math.min(devicePixelRatio || 1, COARSE ? 1.5 : 1.75);
+  const w = Math.round(innerWidth * dpr * scale), h = Math.round(innerHeight * dpr * scale);
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; gl.viewport(0, 0, w, h); }
+}
+addEventListener('resize', () => {
+  const s = portrait() ? 'phone' : 'desktop';
+  if (s !== SET) { SET = s; still.src = A(SET + '/rest.webp'); ready = false; cv.classList.remove('on'); load().catch(console.warn); }
+  size();
+});
+function ease(x) { x = Math.min(1, Math.max(0, x)); return 1 - Math.pow(1 - x, 3); }
+let lastDraw = 0, lastFrameT = 0;
+function frame(ts) {
+  requestAnimationFrame(frame);
+  if (document.hidden || !ready) return;
+  if (COARSE && ts - lastDraw < 31) return;          // phones: 30 fps
+  const dt = Math.min(0.1, (ts - (lastDraw || ts)) / 1000); lastDraw = ts;
+  size();
+  const t = now();
+  // the opening: the eye adjusting to the dark, then the light in the crystal, then the type
+  let open = 1, mead = 1;
+  if (opening) {
+    const ot = skipAt !== null ? Math.max(t - skipAt, 0) * 4 + 4200 : t;
+    open = ease((ot - 250) / 2600); mead = ease((ot - 2100) / 1500);
+    if (ot > 3400 && !document.body.classList.contains('ready')) document.body.classList.add('ready');
+    if (ot > 6000) { opening = false; still.classList.add('on'); }
+  } else if (!document.body.classList.contains('ready')) document.body.classList.add('ready');
+  // tilt has a little weight to it
+  const k = RM ? 1 : 1 - Math.exp(-dt * 5.5);
+  if (RM) { tilt.tx = 0; tilt.ty = 0; }
+  tilt.x += (tilt.tx - tilt.x) * k; tilt.y += (tilt.ty - tilt.y) * k;
+  prox += (proxT - prox) * (1 - Math.exp(-dt * 3));
+  spill = spillAt(t);
+  audio.set(prox, spill);
+  const c = cover();
+  gl.uniform4f(U.uCover, c[0], c[1], c[2], c[3]);
+  gl.uniform2f(U.uTilt, tilt.x, tilt.y);
+  gl.uniform1f(U.uTime, RM ? 12.0 : t / 1000);
+  gl.uniform1f(U.uMotion, RM ? 0.0 : 1.0);
+  gl.uniform1f(U.uSpillAmt, spill);
+  gl.uniform1f(U.uExpo, meta.expo + spill * 0.12);
+  gl.uniform1f(U.uOpen, open);
+  gl.uniform1f(U.uMeadow, mead);
+  gl.uniform1f(U.uAspect, meta.w / meta.h);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  // adaptive quality: if frames run long, draw fewer pixels
+  if (!FREEZE && lastFrameT) { const ft = ts - lastFrameT; if (ft > (COARSE ? 45 : 26)) slow++; else slow = Math.max(0, slow - 1); if (slow > 20 && scale > 0.55) { scale *= 0.85; slow = 0; } }
+  lastFrameT = ts;
+}
+size();
+load().then(() => requestAnimationFrame(frame)).catch((e) => { console.warn(e); still.classList.add('on'); document.body.classList.add('ready'); });
+})();
+</script>
+</body>
+</html>

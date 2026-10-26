@@ -1,0 +1,46 @@
+Lens, path traced
+
+What this is
+  lens_scene.py builds the Break as an object and renders it with Cycles: a 20 cm tile of dark honed
+  stone, 4 cm thick, wet from rain (a water film over most of the face, drier honed patches, about
+  seventy beads), the seam cut right through it, the cavity a seat 5 mm deep, the crystal a thin
+  faceted lens set flush in a hole its own shape. Every outline is the mark's exact geometry from
+  assets/break-geometry.json. It stands on a wet parapet; the city is far behind it and below, out
+  of focus; a lamp behind it to the right, a cobalt rim from behind on the left, the street behind the
+  camera in its reflections. 85 mm lens, f/5.6 (desktop) or f/10 (phone), focused on the crystal.
+
+  Four passes from one fixed camera, all linear EXR:
+    beauty  the night scene; the openings read black to the camera and to the glass
+    thru    how much light reaches the backplane behind the stone (white backplane, all else black
+            but still mirror-like, so wet reflections of the openings are counted too)
+    uv      the direction each ray leaves the stone, as camera tangents (Window-free, so the meadow
+            can be "at infinity" and the plane can sit right behind the stone)
+    spill   the daylight let out: a warm area light behind the stone and an emissive crystal hidden
+            from the camera, plus a thin mist in front that only camera rays scatter in
+  The page adds light linearly: beauty + thru x meadow(uv + tilt) + k x spill, then AgX.
+
+  meadow.py renders the world inside: a painted gradient sky with real volume cumulus lit by a sun
+  lamp, and about 280,000 grass blades (plus tall foreground stems and a few pale flowers) on rolling
+  ground with aerial haze. Two layers (sky, grass with alpha) so the wind can move the grass on the
+  page. Its camera is a pinhole linear in view tangent: tx in [-0.62, 0.62], ty in [-0.30, 0.54].
+
+  build_assets.py encodes the passes for the page (light as log2(1 + 256x) / 13 in 8 bits; tangents as
+  12 bits each packed in an RGB PNG, read nearest and interpolated by hand) and composes rest.webp,
+  the still shown before WebGL is ready and instead of it.
+
+Render times, 4 shared CPU threads, no GPU (each run waited for the shared lock first)
+  meadow sky    2048 x 1388, 64 samples, volumes     about 13 min (time limit 15)
+  meadow grass  2048 x 1388, 64 samples              about 10 min
+  desktop beauty 1920 x 1200, up to 512 samples      18 min 36 s (stopped by the 18 min 20 s limit)
+  desktop thru   1920 x 1200, 128 samples            4 min 30 s
+  desktop uv     1920 x 1200, 96 samples, no denoise 4 min
+  desktop spill  1920 x 1200, 192 samples, mist      about 12 min
+  phone beauty   1000 x 2160, up to 384 samples      13 min 21 s; thru about 5 min, uv about 5 min
+  phone spill    450 x 972, 64 samples (cut short for time, upscaled; the light is soft)  2 min 28 s
+
+Honest limits
+  The clouds are clustered soft volumes: good at the size they are seen through the crystal, a little
+  cotton-like if you look at meadow_sky on its own. The spill is light from behind and inside the
+  crystal; its caustics are approximate (the emissive crystal is a film-set practical). The tilt moves
+  the view through the glass as the real geometry bends it for the untilted stone, plus a first-order
+  swing; it is not a re-render of a tilted stone, so the stone's own reflections do not move.
