@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05070c">
+<meta name="description" content="Antimony: software for the people who make the work.">
+<title>Antimony, Blade Runner</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2722%27 fill=%27%23141311%27/%3E%3Cpath fill=%27%2394E6FF%27 d=%27M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z%27/%3E%3C/svg%3E">
+<link rel="preload" href="assets/fonts/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin>
+<script>
+/* Before first paint: whether the opening plays. One key holds this session's state. */
+(function () {
+  var h = document.documentElement, q = location.search, st = {};
+  try { st = JSON.parse(sessionStorage.getItem("antimony.bladerunner") || "{}") || {}; } catch (e) {}
+  var seen = !!st.seen;
+  if (/[?&](t=\d|again)/.test(q)) seen = false;
+  if (/[?&]rest\b/.test(q)) seen = true;
+  if (!seen && !matchMedia("(prefers-reduced-motion: reduce)").matches) h.classList.add("opening");
+})();
+</script>
+<style>
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
+@font-face { font-family: "Commit Mono"; src: url("assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
+:root {
+  --ink: #05070c; --paper: #EEEAE0; --sky: #94E6FF;
+  --dim: rgba(238, 234, 224, .62);
+  --g: 40px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--ink); color: var(--paper); overflow: hidden; }
+body { font-family: "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+#stage { position: fixed; inset: 0; overflow: hidden; background: var(--ink); }
+#stage img, #stage video, #stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: cover; object-position: var(--fx, 50%) var(--fy, 50%); }
+#stage video { opacity: 0; pointer-events: none; }
+html.nogl #stage video { opacity: 1; }
+html.gl #stage img { visibility: hidden; }
+#stage canvas { opacity: 0; transition: opacity .6s ease; }
+html.gl.ready #stage canvas { opacity: 1; }
+#veil { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; }
+html.opening #veil { opacity: 1; }
+html.opening.run #veil { opacity: 0; transition: opacity 3.2s cubic-bezier(.45, 0, .2, 1) .7s; }
+
+/* the title: set once, small, as a film sets its credit over the dark of the floor */
+.title { position: fixed; left: var(--g); bottom: calc(var(--g) + env(safe-area-inset-bottom)); z-index: 2; pointer-events: none; }
+.title h1 { font-weight: 400; line-height: 0; }
+.title svg { width: 118px; height: auto; display: block; color: var(--paper); --lit: var(--sky); overflow: visible; }
+.title p { margin-top: 14px; font-size: 12.5px; letter-spacing: .14em; color: var(--dim); font-weight: 380; }
+.made { position: fixed; right: var(--g); bottom: calc(var(--g) + env(safe-area-inset-bottom)); z-index: 2; display: flex; gap: 22px; font: 400 11px/1 "Commit Mono", ui-monospace, monospace; letter-spacing: .04em; }
+.made a { color: rgba(238, 234, 224, .46); text-decoration: none; padding: 6px 0; transition: color .4s ease; }
+.made a:hover, .made a:focus-visible { color: var(--paper); outline: none; }
+.made a:focus-visible { text-decoration: underline; text-underline-offset: 4px; }
+#snd { position: fixed; top: calc(var(--g) - 10px + env(safe-area-inset-top)); right: calc(var(--g) - 10px); z-index: 3; width: 40px; height: 40px; border: 0; background: none; color: rgba(238, 234, 224, .5); cursor: pointer; display: grid; place-items: center; border-radius: 50%; transition: color .4s ease; -webkit-tap-highlight-color: transparent; }
+#snd:hover, #snd:focus-visible { color: var(--paper); outline: none; }
+#snd:focus-visible { box-shadow: 0 0 0 1px rgba(238, 234, 224, .4); }
+#snd svg { width: 18px; height: 18px; overflow: visible; }
+#snd .w { opacity: 0; transition: opacity .4s ease; }
+#snd[aria-pressed="true"] .w { opacity: 1; }
+#snd[aria-pressed="true"] .x { opacity: 0; }
+#snd .x { transition: opacity .3s ease; }
+
+.fade { transition: opacity 1s ease; }
+html.opening .fade { opacity: 0; }
+html.opening.run .t1 { opacity: 1; transition-delay: 4.1s; transition-duration: 1.4s; }
+html.opening.run .t2 { opacity: 1; transition-delay: 4.9s; transition-duration: 1.4s; }
+html.opening.run .t3 { opacity: 1; transition-delay: 5.7s; transition-duration: 1.2s; }
+
+@media (max-width: 720px) {
+  :root { --g: 16px; }
+  .title { bottom: calc(52px + env(safe-area-inset-bottom)); }
+  .title svg { width: 104px; }
+  .title p { font-size: 11.5px; letter-spacing: .1em; }
+  .made { left: var(--g); right: auto; bottom: calc(18px + env(safe-area-inset-bottom)); gap: 20px; }
+  #snd { top: calc(6px + env(safe-area-inset-top)); right: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #stage canvas { transition: none; }
+}
+</style>
+</head>
+<body>
+<div id="stage" aria-hidden="true">
+  <picture><source srcset="assets/still.avif" type="image/avif"><img id="still" src="assets/still.webp" alt="" decoding="async" fetchpriority="high"></picture>
+  <video id="vid" muted playsinline loop preload="auto" poster="assets/still.webp" disablepictureinpicture>
+    <source src="assets/loop.webm" type="video/webm">
+    <source src="assets/loop.mp4" type="video/mp4">
+  </video>
+  <canvas id="gl"></canvas>
+  <div id="veil"></div>
+</div>
+<p class="vh">Night, high in a tower. Rain on the glass, slatted blinds, a canyon of city light far below, and across the void a vast dark tower whose crown carries the Antimony mark, its crystal the one clean cold light. Now and then a searchlight from a craft overhead rakes through the blinds.</p>
+<header class="title">
+  <h1 class="fade t1"><span class="vh">Antimony</span><svg viewBox="-20 -830 4186 1070" aria-hidden="true" focusable="false"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg></h1>
+  <p class="fade t2">Software for the people who make the work</p>
+</header>
+<nav class="made fade t3" aria-label="What we make">
+  <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>
+  <a href="https://immiscible.ai">immiscible</a>
+  <a href="https://idyll.day">Idyll</a>
+</nav>
+<button id="snd" class="fade t3" type="button" aria-pressed="false" aria-label="Sound">
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3 7.6h2.6L9.4 4.4v11.2L5.6 12.4H3z" fill="currentColor" stroke="none" opacity=".9"/>
+    <g class="w"><path d="M12.4 7.4a3.6 3.6 0 0 1 0 5.2"/><path d="M14.6 5.3a6.6 6.6 0 0 1 0 9.4"/></g>
+    <g class="x"><path d="M12.6 8l4 4M16.6 8l-4 4"/></g>
+  </svg>
+</button>
+
+<script>
+(function () {
+"use strict";
+var html = document.documentElement;
+var $ = function (id) { return document.getElementById(id); };
+var cv = $("gl"), vid = $("vid"), still = $("still"), btn = $("snd");
+var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+var FREEZE = /[?&]t=(\d+)/.exec(location.search); FREEZE = FREEZE ? +FREEZE[1] / 1000 : -1;
+var VT = /[?&]vt=([\d.]+)/.exec(location.search); VT = VT ? +VT[1] : -1;       /* freeze the film at a time, for stills */
+var phone = matchMedia("(max-width: 720px), (pointer: coarse)").matches;
+var KEY = "antimony.bladerunner";
+function state() { try { return JSON.parse(sessionStorage.getItem(KEY) || "{}") || {}; } catch (e) { return {}; } }
+function save(k, v) { var s = state(); s[k] = v; try { sessionStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+
+/* ================= the frame: where things are, from the camera that rendered it ================= */
+var FW = 1920, FH = 1200, ASP = FW / FH;
+var CAM = [0.25, -6.4, 1.38], TV = Math.tan(25 * Math.PI / 180), TH = TV * ASP;
+function proj(x, y, z) { var d = y - CAM[1]; return [0.5 + (x - CAM[0]) / d / (2 * TH), 0.5 - (z - CAM[2]) / d / (2 * TV)]; }
+var BAYS = [[-3.6, -1.31], [-1.09, 1.09], [1.31, 3.6]], FOOT = [2.3, 1.5, 1.9], WZ0 = 0.22, WZ1 = 3.0, FR = 0.045;
+var GLASS = BAYS.map(function (b) { var p = proj(b[0] + FR, 0.05, WZ1 - FR), q = proj(b[1] - FR, 0.05, WZ0 + FR); return [p[0], p[1], q[0], q[1]]; });
+/* the lamp and its table stand in front of the left pane */
+var OCC = (function () { var a = proj(-3.03, -1.32, 0.5), b = proj(-2.47, -1.32, 0.0), c = proj(-3.0, -0.85, 1.0), d = proj(-2.47, -0.85, 0.0); return [a[0], c[1], d[0], b[1]]; })();
+var FOOTV = FOOT.map(function (z) { return proj(0, -0.11, z - 0.03)[1]; });
+/* the loop: 20 s at 24 frames a second; the searchlight occupies frames 265 to 372 */
+var LOOP = 20, FPS = 24, SW0 = 265, NSW = 108, SWT0 = (SW0 - 1) / FPS, SWT1 = (SW0 - 1 + NSW) / FPS;
+function sweepState(f) {
+  var s = (f - 1) / (NSW - 1), e = s * s * (3 - 2 * s);
+  var sx = 30 - 60 * (0.5 * s + 0.5 * e), sy = 15 + 2.5 * Math.sin(Math.PI * s), sz = 15.5 + 0.8 * Math.sin(2 * Math.PI * s * 0.7);
+  var tx = 4.4 - 8.8 * (0.35 * s + 0.65 * e) + 0.25 * Math.sin(s * 9), ty = -2.2 - 0.9 * Math.sin(Math.PI * s), tz = 0.4;
+  var k = Math.max(0, Math.min(1, s / 0.12, (1 - s) / 0.14)); k = Math.pow(k, 1.5);
+  var x = Math.min(1, Math.max(0, (f - 46) / 13)); k *= 1 - x * x * (3 - 2 * x);   /* the lamp goes out early, as the film does */
+  return { s: [sx, sy, sz], t: [tx, ty, tz], k: k };
+}
+/* where the beam crosses the glass, in frame coordinates, and how strong it is */
+function beamAt(vt) {
+  var f = vt * FPS + 1 - (SW0 - 1);
+  if (f < 1 || f > NSW) return [0, 0, 0];
+  var st = sweepState(f), S = st.s, T = st.t, a = (0.05 - S[1]) / (T[1] - S[1]);
+  var p = proj(S[0] + (T[0] - S[0]) * a, 0.05, S[2] + (T[2] - S[2]) * a);
+  return [p[0], p[1], st.k];
+}
+
+/* how the frame covers the window: the crop keeps the mark in view on narrow screens */
+var map = [1, 1, 0, 0], fx = 0.5, fy = 0.5;
+function layout() {
+  var w = innerWidth, h = innerHeight, a = w / h;
+  fx = a < 1.05 ? 0.715 : a < 1.45 ? 0.6 : 0.52; fy = 0.5;
+  var sx = 1, sy = 1;
+  if (a < ASP) sx = a / ASP; else sy = ASP / a;
+  map = [sx, sy, (1 - sx) * fx, (1 - sy) * fy];
+  document.body.style.setProperty("--fx", (fx * 100).toFixed(2) + "%");
+  document.body.style.setProperty("--fy", (fy * 100).toFixed(2) + "%");
+}
+layout();
+
+/* ================= the live layer ================= */
+var gl = null;
+try { gl = cv.getContext("webgl", { alpha: false, antialias: false, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: "high-performance" }); } catch (e) {}
+if (!gl) { html.classList.add("nogl"); }
+
+var VS = "attribute vec2 p; varying vec2 v; void main(){ v = p * .5 + .5; v.y = 1. - v.y; gl_Position = vec4(p, 0., 1.); }";
+var FS_BLUR = [
+"precision mediump float; varying vec2 v; uniform sampler2D uS; uniform vec2 uStep;",
+"void main(){ vec3 c = vec3(0.);",
+" for (int i = -2; i <= 2; i++) for (int j = -2; j <= 2; j++) c += texture2D(uS, vec2(v.x, 1. - v.y) * vec2(1., 1.) + vec2(float(i), float(j)) * uStep).rgb;",
+" gl_FragColor = vec4(c / 25., 1.); }"].join("\n");
+var FS = [
+"precision highp float;",
+"varying vec2 v;",
+"uniform sampler2D uV, uB, uM;",
+"uniform vec2 uRes; uniform vec4 uMap; uniform float uT, uFade, uSeed, uMove; uniform vec2 uPtr;",
+"uniform vec4 uG0, uG1, uG2, uOcc; uniform vec3 uFoot; uniform vec3 uBeam;",
+"float h21(vec2 p){ p = fract(p * vec2(234.34, 435.345)); p += dot(p, p + 34.23); return fract(p.x * p.y); }",
+"vec3 h23(vec2 p){ vec3 q = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973)); q += dot(q, q.yxz + 33.33); return fract((q.xxy + q.yzz) * q.zyx); }",
+"float box(vec2 f, vec4 r, float e){ vec2 a = smoothstep(r.xy, r.xy + e, f) * (1. - smoothstep(r.zw - e, r.zw, f)); return a.x * a.y; }",
+/* beads resting on the glass: they gather, sit, and slowly go */
+"vec4 beads(vec2 p, float t, float sc){",
+"  vec2 c = p * sc; vec2 id = floor(c); vec2 q = fract(c) - .5; vec3 r = h23(id + sc);",
+"  vec2 o = (r.xy - .5) * .62; float life = fract(t * (.012 + .02 * r.z) + r.x * 7.13);",
+"  float R = (.1 + .26 * r.z * r.z) * smoothstep(0., .08, life) * smoothstep(1., .75, life) * step(.35, r.y);",
+"  if (R < .02) return vec4(0.);",
+"  vec2 d = q - o; d.y *= 1.12; float l = length(d); float m = smoothstep(R, R * .55, l);",
+"  return vec4(d / R, m, R / sc);",
+"}",
+/* drops that let go and run, leaving a broken trail */
+"vec4 runners(vec2 p, float t, out float trail){",
+"  vec2 g = vec2(.07, .3); vec2 c = p / g; float col = floor(c.x); float rc = h21(vec2(col, 3.1));",
+"  float sp = .05 + .09 * rc; c.y -= t * 0. ; vec2 id = vec2(col, floor(c.y)); vec3 r = h23(id + 1.7);",
+"  vec2 q = (fract(c) - .5) * g; trail = 0.;",
+"  if (r.z > .5) return vec4(0.);",
+"  float ph = fract(t * sp * (1. + r.y) + r.x); ph = ph + .08 * sin(ph * 37. + r.y * 6.);",
+"  float y = (-.55 + ph * 1.1) * g.y; float x = (r.x - .5) * g.x * .45 + sin(y * 60. + r.y * 6.) * g.x * .05;",
+"  float R = g.x * (.07 + .05 * r.y); vec2 d = q - vec2(x, y); d.y *= .75; d.y += max(0., -d.y) * .0;",
+"  float l = length(d); float m = smoothstep(R, R * .5, l);",
+"  float above = y - q.y; float tl = smoothstep(0., .02, above) * smoothstep(g.y * .7, 0., above) * smoothstep(R * 1.2, R * .2, abs(q.x - x));",
+"  trail = tl;",
+"  vec2 tq = vec2(q.x - x, mod(q.y + t * 0., g.y * .055) - g.y * .0275); float tR = R * .45 * smoothstep(g.y * .7, 0., above) * step(.4, h21(floor((q + vec2(0., 9.)) / (g.y * .055)) + id));",
+"  float tm = tR > 1e-4 ? smoothstep(tR, tR * .4, length(tq)) * step(0., above) : 0.;",
+"  if (tm > m) return vec4(tq / tR, tm, tR);",
+"  return vec4(d / R, m, R);",
+"}",
+"float streaks(vec2 p, float t, float sc, float sp, float lean, float seed){",
+"  p.x += p.y * lean; vec2 c = p * vec2(sc, sc * .018); c.y -= t * sp; c.x += seed;",
+"  vec2 id = floor(c); vec2 q = fract(c); float r = h21(id + seed);",
+"  float a = step(.9, r) * smoothstep(0., .4, q.y) * smoothstep(1., .6, q.y) * (.4 + .6 * fract(r * 13.7));",
+"  return a * smoothstep(.12, 0., abs(q.x - .5 - (fract(r * 31.3) - .5) * .8));",
+"}",
+"void main(){",
+"  vec2 f = v * uMap.xy + uMap.zw;",                                      /* frame uv, top left origin */
+"  float e = 1.5 / uRes.y * uMap.y;",
+"  float m0 = box(f, uG0, e), m1 = box(f, uG1, e), m2 = box(f, uG2, e);",
+"  float occ = 1. - box(f, uOcc, e * 2.);",
+"  m0 *= occ;",
+"  float glass = m0 + m1 + m2;",
+"  float foot = uFoot.x * m0 + uFoot.y * m1 + uFoot.z * m2;",
+"  float clear = glass * smoothstep(foot - .002, foot + .004, f.y);",          /* below the blinds */
+"  float seen = clear + (glass - clear) * .22;",                                /* through the slats, a little */
+"  vec2 p = vec2(f.x * 1.6, f.y) * pow(1. / min(uMap.x, uMap.y), .65);",
+"  float t = uT;",
+"  float trail; vec4 a = beads(p, t, 46.), b = beads(p + 3.7, t * .8, 23.), r = runners(p, t, trail);",
+"  vec4 dr = a; if (b.z > dr.z) dr = b; if (r.z > dr.z) dr = r;",
+"  float nl = min(1., length(dr.xy));",
+"  float dm = dr.z * clear;",
+"  vec2 off = -dr.xy * dr.w * 3.2 * dr.z * vec2(1. / 1.6, 1.) * clear;",
+"  vec3 col = texture2D(uV, f + off * 1.0).rgb;",
+"  vec3 bl = texture2D(uB, f).rgb;",
+/* the drops gather the light behind them: a touch brighter and cooler, with a dark rim */
+"  col = mix(col, col * 1.12 + vec3(.003, .005, .009), dm * .8);",
+"  col *= 1. - .55 * smoothstep(.55, 1., nl) * dm;",
+"  col += vec3(1., .78, .55) * smoothstep(.3, .0, length(dr.xy - vec2(-.32, -.42))) * dm * .05;",
+/* condensation low on the cold glass, which a hand can wipe */
+"  float mist = texture2D(uM, f).r * clear * (1. - dm) * (1. - trail * .85);",
+"  col = mix(col, bl * 1.12 + vec3(.012, .015, .022), mist * .82);",
+/* rain beyond the glass, backlit by the city, in two depths that slide with the eye */
+"  vec2 pp = uPtr * vec2(.006, .003);",
+"  float s1 = streaks(p + pp * 1.0, t, 420., 3.2, .09, 1.3), s2 = streaks(p + pp * .45, t, 230., 2.2, .08, 7.9);",
+"  float lum = dot(bl, vec3(.3, .55, .15));",
+"  col += (s1 * .4 + s2 * .3) * (.008 + lum * .42) * vec3(.85, .9, 1.) * seen * uMove;",
+/* the searchlight finds the water on the glass */
+"  float bd = length((f - uBeam.xy) * vec2(1.6, 1.)); float bk = exp(-bd * bd * 18.) * uBeam.z;",
+"  col += bk * (dm * .9 + (s1 + s2) * .35 * uMove + .05) * vec3(.82, .9, 1.) * glass;",
+/* grain, as on film: finer in the light, heavier in the dark */
+"  float gr = h21(gl_FragCoord.xy + uSeed * 137.) + h21(gl_FragCoord.xy * 1.3 + uSeed * 71.) - 1.;",
+"  float L = dot(col, vec3(.3, .59, .11));",
+"  col += gr * (.018 + .02 * (1. - smoothstep(.0, .35, L)));",
+"  gl_FragColor = vec4(col * uFade, 1.);",
+"}"].join("\n");
+
+var P = null, PB = null, quad, texV, texB, fbB, texM, mist, mistBase, MW = 240, MH = 150, BW = 240, BH = 150;
+function shd(t, s) { var o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) { console.error(gl.getShaderInfoLog(o)); return null; } return o; }
+function prog(fs, unis) {
+  var p = gl.createProgram(), a = shd(gl.VERTEX_SHADER, VS), b = shd(gl.FRAGMENT_SHADER, fs);
+  if (!a || !b) return null;
+  gl.attachShader(p, a); gl.attachShader(p, b); gl.bindAttribLocation(p, 0, "p"); gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) { console.error(gl.getProgramInfoLog(p)); return null; }
+  var o = { p: p, u: {} }; unis.forEach(function (n) { o.u[n] = gl.getUniformLocation(p, n); }); return o;
+}
+function mkTex(filter) {
+  var t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return t;
+}
+function initGL() {
+  P = prog(FS, ["uV", "uB", "uM", "uRes", "uMap", "uT", "uFade", "uSeed", "uMove", "uPtr", "uG0", "uG1", "uG2", "uOcc", "uFoot", "uBeam"]);
+  PB = prog(FS_BLUR, ["uS", "uStep"]);
+  if (!P || !PB) { gl = null; html.classList.add("nogl"); return false; }
+  quad = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  texV = mkTex(gl.LINEAR); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([5, 7, 12, 255]));
+  texB = mkTex(gl.LINEAR); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, BW, BH, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  fbB = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fbB); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texB, 0); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  texM = mkTex(gl.LINEAR);
+  buildMist();
+  return true;
+}
+
+/* the condensation: thick along the cold foot of each pane, thinning upward, with a hand's worth of noise */
+function buildMist() {
+  mist = new Float32Array(MW * MH); mistBase = new Float32Array(MW * MH);
+  var seed = 7; function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+  var nz = new Float32Array(32 * 20); for (var i = 0; i < nz.length; i++) nz[i] = rnd();
+  function noise(x, y) { x *= 31; y *= 19; var x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0; fx = fx * fx * (3 - 2 * fx); fy = fy * fy * (3 - 2 * fy);
+    function n(a, b) { return nz[(Math.min(19, b) * 32 + Math.min(31, a))]; }
+    return (n(x0, y0) * (1 - fx) + n(x0 + 1, y0) * fx) * (1 - fy) + (n(x0, y0 + 1) * (1 - fx) + n(x0 + 1, y0 + 1) * fx) * fy; }
+  for (var y = 0; y < MH; y++) for (var x = 0; x < MW; x++) {
+    var u = (x + .5) / MW, vv = (y + .5) / MH, m = 0;
+    GLASS.forEach(function (g) {
+      if (u < g[0] || u > g[2]) return;
+      var k = (vv - g[1]) / (g[3] - g[1]); if (k < 0 || k > 1) return;
+      var edge = Math.min(u - g[0], g[2] - u) / (g[2] - g[0]);
+      var h = Math.pow(Math.max(0, (k - .62) / .38), 1.6) * (.75 + .5 * noise(u, vv)) + Math.max(0, .06 - edge) * 4 * k;
+      m = Math.max(m, Math.min(1, h));
+    });
+    mistBase[y * MW + x] = m; mist[y * MW + x] = m;
+  }
+  uploadMist();
+}
+var mist8 = null;
+function uploadMist() {
+  if (!mist8) mist8 = new Uint8Array(MW * MH);
+  for (var i = 0; i < mist8.length; i++) mist8[i] = Math.max(0, Math.min(255, mist[i] * 255));
+  gl.bindTexture(gl.TEXTURE_2D, texM);
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, MW, MH, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, mist8);
+}
+var mistDirty = false, lastWipe = null;
+function wipe(u, vv) {
+  var R = phone ? 7 : 5.5;
+  var pts = [[u, vv]];
+  if (lastWipe) { var d = Math.hypot(u - lastWipe[0], vv - lastWipe[1]); var n = Math.min(24, Math.ceil(d * MW / 2)); pts = []; for (var i = 1; i <= n; i++) pts.push([lastWipe[0] + (u - lastWipe[0]) * i / n, lastWipe[1] + (vv - lastWipe[1]) * i / n]); }
+  lastWipe = [u, vv];
+  pts.forEach(function (p) {
+    var cx = p[0] * MW, cy = p[1] * MH;
+    for (var y = Math.max(0, Math.floor(cy - R * 1.6)); y < Math.min(MH, cy + R * 1.6); y++)
+      for (var x = Math.max(0, Math.floor(cx - R)); x < Math.min(MW, cx + R); x++) {
+        var dx = (x + .5 - cx) / R, dy = (y + .5 - cy) / (R * 1.6), d2 = dx * dx + dy * dy;
+        if (d2 < 1) { var i = y * MW + x; mist[i] *= Math.min(1, d2 * d2 * 1.2); }
+      }
+  });
+  mistDirty = true;
+}
+function regrow(dt) {
+  var k = 1 - Math.exp(-dt / 14), any = false;
+  for (var i = 0; i < mist.length; i++) { var d = mistBase[i] - mist[i]; if (d > .002) { mist[i] += d * k; any = true; } }
+  if (any) mistDirty = true;
+  return any;
+}
+
+/* ================= drawing ================= */
+var Q = phone ? .62 : 1, dpr = 1, newFrame = true, haveVideo = false, stillReady = false;
+function size() {
+  layout();
+  dpr = Math.min(devicePixelRatio || 1, phone ? 2 : 1.5);
+  var w = Math.round(innerWidth * dpr * Q), h = Math.round(innerHeight * dpr * Q), cap = phone ? 0.9e6 : 2.2e6;
+  if (w * h > cap) { var s = Math.sqrt(cap / (w * h)); w = Math.round(w * s); h = Math.round(h * s); }
+  cv.width = w; cv.height = h;
+}
+function upload(src) {
+  gl.bindTexture(gl.TEXTURE_2D, texV);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  try { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, src); } catch (e) { return false; }
+  /* the small soft copy, for the mist and for the light the rain catches */
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbB); gl.viewport(0, 0, BW, BH);
+  gl.useProgram(PB.p); gl.uniform1i(PB.u.uS, 0); gl.uniform2f(PB.u.uStep, 1.6 / BW, 1.6 / BH);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texV);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  return true;
+}
+var ptr = [0, 0], ptrS = [0, 0], fade = 1, t0 = performance.now(), openAt = -1;
+function draw(now, vt) {
+  gl.viewport(0, 0, cv.width, cv.height);
+  gl.useProgram(P.p); var u = P.u;
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texV); gl.uniform1i(u.uV, 0);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texB); gl.uniform1i(u.uB, 1);
+  gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, texM); gl.uniform1i(u.uM, 2);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.uniform2f(u.uRes, cv.width, cv.height); gl.uniform4fv(u.uMap, map);
+  var t = FREEZE >= 0 ? FREEZE : reduced ? 37 : (now - t0) / 1000;
+  gl.uniform1f(u.uT, t); gl.uniform1f(u.uFade, fade); gl.uniform1f(u.uSeed, reduced || FREEZE >= 0 ? .37 : (t * 24) % 97);
+  gl.uniform1f(u.uMove, reduced ? 0.0 : 1.0);
+  gl.uniform2fv(u.uPtr, ptrS);
+  gl.uniform4fv(u.uG0, GLASS[0]); gl.uniform4fv(u.uG1, GLASS[1]); gl.uniform4fv(u.uG2, GLASS[2]);
+  gl.uniform3fv(u.uFoot, FOOTV); gl.uniform4fv(u.uOcc, OCC);
+  gl.uniform3fv(u.uBeam, vt >= 0 && !reduced ? beamAt(vt) : [0, 0, 0]);
+  gl.bindBuffer(gl.ARRAY_BUFFER, quad); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+var live = false, last = 0, lastDraw = 0, fAvg = 16, fN = 0;
+function loop(now) {
+  if (!live) return;
+  var dt = Math.min(.1, (now - (last || now)) / 1000); last = now;
+  if (phone && now - lastDraw < 31) { requestAnimationFrame(loop); return; }   /* 30 frames a second on phones */
+  lastDraw = now;
+  var k = 1 - Math.exp(-dt * 3); ptrS[0] += (ptr[0] - ptrS[0]) * k; ptrS[1] += (ptr[1] - ptrS[1]) * k;
+  if (haveVideo && newFrame) { if (upload(vid)) newFrame = !("requestVideoFrameCallback" in vid); }
+  if (regrow(dt) || mistDirty) { if (mistDirty) { uploadMist(); mistDirty = false; } }
+  var vt = haveVideo ? vid.currentTime : -1;
+  draw(now, vt);
+  snd.tick(vt);
+  /* render fewer pixels when it struggles */
+  fAvg += (dt * 1000 - fAvg) * .05; fN++;
+  if (fN > 90 && fAvg > (phone ? 40 : 22) && Q > .5) { Q *= .86; fN = 0; size(); }
+  window.__frames = (window.__frames || 0) + 1;
+  requestAnimationFrame(loop);
+}
+function start() { if (!live && !document.hidden) { live = true; last = 0; requestAnimationFrame(loop); } }
+function stop() { live = false; }
+document.addEventListener("visibilitychange", function () {
+  if (document.hidden) { stop(); if (!vid.paused) vid.pause(); snd.hide(true); }
+  else { if (haveVideo && !reduced && VT < 0) vid.play().catch(function () {}); snd.hide(false); if (!reduced && FREEZE < 0) start(); else drawOnce(); }
+});
+addEventListener("resize", function () { size(); if (!live) drawOnce(); });
+function drawOnce() { if (gl && P) { if (haveVideo) upload(vid); else if (stillReady) upload(still); draw(performance.now(), haveVideo ? vid.currentTime : -1); } }
+
+/* the eye moves a little with the hand; the hand can wipe the glass */
+function toFrame(x, y) { return [x / innerWidth * map[0] + map[2], y / innerHeight * map[1] + map[3]]; }
+function onGlass(f) { for (var i = 0; i < 3; i++) { var g = GLASS[i]; if (f[0] > g[0] && f[0] < g[2] && f[1] > Math.max(g[1], FOOTV[i]) && f[1] < g[3]) return true; } return false; }
+addEventListener("pointermove", function (e) {
+  ptr = [e.clientX / innerWidth * 2 - 1, e.clientY / innerHeight * 2 - 1];
+  if (!gl || reduced) return;
+  var f = toFrame(e.clientX, e.clientY);
+  if (onGlass(f) && (e.pointerType === "mouse" || e.buttons)) wipe(f[0], f[1]); else lastWipe = null;
+}, { passive: true });
+addEventListener("pointerdown", function (e) { lastWipe = null; if (gl && !reduced) { var f = toFrame(e.clientX, e.clientY); if (onGlass(f)) wipe(f[0], f[1]); } }, { passive: true });
+addEventListener("pointerup", function () { lastWipe = null; }, { passive: true });
+document.addEventListener("pointerleave", function () { ptr = [0, 0]; lastWipe = null; });
+
+/* ================= sound: all of it synthesised here, nothing sampled ================= */
+var snd = (function () {
+  var ctx = null, on = false, master, wet, dry, verb, started = false, hidden = false, lastVt = -1, nextChord = 0, chordI = 0, nextBell = 0, tickT = 0;
+  function noiseBuf(sec, kind) {
+    var n = Math.floor(ctx.sampleRate * sec), b = ctx.createBuffer(2, n, ctx.sampleRate);
+    for (var c = 0; c < 2; c++) {
+      var d = b.getChannelData(c), last = 0, b0 = 0, b1 = 0, b2 = 0;
+      for (var i = 0; i < n; i++) {
+        var w = Math.random() * 2 - 1;
+        if (kind === "brown") { last = (last + .02 * w) / 1.02; d[i] = last * 3.5; }
+        else if (kind === "pink") { b0 = .99765 * b0 + w * .099046; b1 = .963 * b1 + w * .2965164; b2 = .57 * b2 + w * 1.0526913; d[i] = (b0 + b1 + b2 + w * .1848) * .2; }
+        else d[i] = w;
+      }
+      /* a seamless loop: cross the ends */
+      var x = Math.floor(ctx.sampleRate * .05);
+      for (var j = 0; j < x; j++) { var a = j / x; d[j] = d[j] * a + d[n - x + j] * (1 - a); }
+    }
+    return b;
+  }
+  function impulse(sec, decay) {
+    var n = Math.floor(ctx.sampleRate * sec), b = ctx.createBuffer(2, n, ctx.sampleRate);
+    for (var c = 0; c < 2; c++) {
+      var d = b.getChannelData(c), lp = 0;
+      for (var i = 0; i < n; i++) {
+        var t = i / ctx.sampleRate, k = .5 + .45 * Math.min(1, t / sec * 1.6);       /* it darkens as it dies */
+        lp = lp * k + (Math.random() * 2 - 1) * (1 - k);
+        d[i] = lp * Math.pow(1 - t / sec, decay) * (t < .02 ? t / .02 : 1) * 2.2;
+      }
+    }
+    return b;
+  }
+  function loopSrc(buf, dest, gain) { var s = ctx.createBufferSource(); s.buffer = buf; s.loop = true; var g = ctx.createGain(); g.gain.value = gain; s.connect(g); g.connect(dest); s.start(); return g; }
+  function build() {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain(); master.gain.value = 0;
+    var comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 2.5; comp.attack.value = .05; comp.release.value = .4;
+    var shelf = ctx.createBiquadFilter(); shelf.type = "highshelf"; shelf.frequency.value = 6500; shelf.gain.value = -6;
+    master.connect(shelf); shelf.connect(comp); comp.connect(ctx.destination);
+    verb = ctx.createConvolver(); verb.buffer = impulse(7.5, 2.2);
+    wet = ctx.createGain(); wet.gain.value = .9; dry = ctx.createGain(); dry.gain.value = 1;
+    verb.connect(wet); wet.connect(master); dry.connect(master);
+    /* rain on the glass, close; the rain beyond, wide; the city far below */
+    var white = noiseBuf(3, "white"), pink = noiseBuf(4, "pink"), brown = noiseBuf(5, "brown");
+    var bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 3200; bp.Q.value = .5; bp.connect(dry);
+    loopSrc(white, bp, .045);
+    var lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1100; lp.connect(dry); var lpv = ctx.createGain(); lpv.gain.value = .25; lp.connect(lpv); lpv.connect(verb);
+    loopSrc(pink, lp, .09);
+    var cl = ctx.createBiquadFilter(); cl.type = "lowpass"; cl.frequency.value = 170; cl.connect(dry);
+    var cg = loopSrc(brown, cl, .11);
+    var lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = .05; lg.gain.value = .04; lfo.connect(lg); lg.connect(cg.gain); lfo.start();
+    window.__ctx = ctx;
+  }
+  var mtof = function (m) { return 440 * Math.pow(2, (m - 69) / 12); };
+  /* the pads: slow chords, two detuned saws a note through a breathing low pass, a sub under them, and a swell on top */
+  var CH = [[38, [57, 62, 65, 69, 76]], [34, [58, 62, 65, 69, 74]], [41, [57, 60, 65, 69, 72]], [31, [55, 58, 62, 67, 74]], [33, [57, 62, 64, 69, 76]], [38, [57, 62, 65, 72, 74]]];
+  function chord(at, dur) {
+    var c = CH[chordI++ % CH.length], end = at + dur, out = ctx.createGain();
+    out.gain.setValueAtTime(0, at); out.gain.linearRampToValueAtTime(1, at + dur * .38); out.gain.setValueAtTime(1, end - dur * .42); out.gain.linearRampToValueAtTime(0, end);
+    var f = ctx.createBiquadFilter(); f.type = "lowpass"; f.Q.value = .7;
+    f.frequency.setValueAtTime(260, at); f.frequency.linearRampToValueAtTime(900 + Math.random() * 500, at + dur * .5); f.frequency.linearRampToValueAtTime(300, end);
+    f.connect(out); var sv = ctx.createGain(); sv.gain.value = .55; out.connect(sv); sv.connect(verb); var sd = ctx.createGain(); sd.gain.value = .32; out.connect(sd); sd.connect(dry);
+    c[1].forEach(function (m, i) {
+      [-6, 6].forEach(function (cents, j) {
+        var o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = mtof(m); o.detune.value = cents + (Math.random() - .5) * 4;
+        var pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null, g = ctx.createGain(); g.gain.value = .022 * (i > 3 ? .6 : 1);
+        o.connect(g); if (pan) { pan.pan.value = (j ? .35 : -.35) * (i % 2 ? 1 : -1); g.connect(pan); pan.connect(f); } else g.connect(f);
+        o.start(at); o.stop(end + .1);
+      });
+    });
+    var sub = ctx.createOscillator(), sg = ctx.createGain(); sub.type = "sine"; sub.frequency.value = mtof(c[0]); sg.gain.value = .07; sub.connect(sg); sg.connect(out); sub.start(at); sub.stop(end + .1);
+    /* the swell: brass-like, opening slowly then closing, the top two notes an octave up, mostly reverb */
+    var sw = ctx.createBiquadFilter(); sw.type = "lowpass"; sw.Q.value = 2.2; var swg = ctx.createGain();
+    var a = at + dur * .22; sw.frequency.setValueAtTime(180, a); sw.frequency.exponentialRampToValueAtTime(1900, a + 3.4); sw.frequency.exponentialRampToValueAtTime(240, a + 10);
+    swg.gain.setValueAtTime(0, a); swg.gain.linearRampToValueAtTime(.05, a + 2.6); swg.gain.linearRampToValueAtTime(0, a + 10.5);
+    sw.connect(swg); swg.connect(verb); var swd = ctx.createGain(); swd.gain.value = .25; swg.connect(swd); swd.connect(dry);
+    c[1].slice(-2).forEach(function (m) {
+      [-9, 0, 9].forEach(function (cents) { var o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.value = mtof(m); o.detune.value = cents; o.connect(sw); o.start(a); o.stop(a + 11); });
+    });
+  }
+  function bell(at) {
+    var notes = [74, 76, 81, 86, 88, 93], m = notes[Math.floor(Math.random() * notes.length)];
+    var o = ctx.createOscillator(), mo = ctx.createOscillator(), mg = ctx.createGain(), g = ctx.createGain();
+    o.type = "sine"; o.frequency.value = mtof(m); mo.frequency.value = mtof(m) * 2.001; mg.gain.setValueAtTime(mtof(m) * .9, at); mg.gain.exponentialRampToValueAtTime(1, at + 3);
+    mo.connect(mg); mg.connect(o.frequency);
+    g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(.03, at + .02); g.gain.exponentialRampToValueAtTime(.0001, at + 5);
+    o.connect(g); g.connect(verb); var d = ctx.createGain(); d.gain.value = .15; g.connect(d); d.connect(dry);
+    o.start(at); mo.start(at); o.stop(at + 5.2); mo.stop(at + 5.2);
+  }
+  /* a drop on the glass: a very short, bright tick, panned where it lands */
+  var tickBuf = null;
+  function tick(at) {
+    if (!tickBuf) { var n = Math.floor(ctx.sampleRate * .03); tickBuf = ctx.createBuffer(1, n, ctx.sampleRate); var d = tickBuf.getChannelData(0); for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / n * 9); }
+    var s = ctx.createBufferSource(); s.buffer = tickBuf; s.playbackRate.value = .7 + Math.random() * .8;
+    var hp = ctx.createBiquadFilter(); hp.type = "bandpass"; hp.frequency.value = 2400 + Math.random() * 4000; hp.Q.value = 1.4;
+    var g = ctx.createGain(); g.gain.value = .035 + Math.random() * .09;
+    s.connect(hp); hp.connect(g);
+    if (ctx.createStereoPanner) { var p = ctx.createStereoPanner(); p.pan.value = Math.random() * 1.6 - .8; g.connect(p); p.connect(dry); } else g.connect(dry);
+    s.start(at);
+  }
+  /* the spinner: a turbine whine and its jet wash, coming over from the right, hanging, sliding away left; the lamp's hum under it */
+  function spinner(t0) {
+    var A = t0 - 4.2, B = t0 + (SWT1 - SWT0) + 5.5;
+    var out = ctx.createGain(); out.gain.setValueAtTime(0, A);
+    out.gain.linearRampToValueAtTime(.5, t0 - .6); out.gain.linearRampToValueAtTime(1, t0 + 1.2); out.gain.setValueAtTime(1, t0 + 3.2); out.gain.linearRampToValueAtTime(.35, t0 + 6.2); out.gain.linearRampToValueAtTime(0, B);
+    var pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    var lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(700, A); lp.frequency.linearRampToValueAtTime(5200, t0 + 1.6); lp.frequency.setValueAtTime(5200, t0 + 3); lp.frequency.linearRampToValueAtTime(600, B);
+    lp.connect(out); if (pan) { out.connect(pan); pan.connect(dry); } else out.connect(dry);
+    var sv = ctx.createGain(); sv.gain.value = .5; out.connect(sv); sv.connect(verb);
+    if (pan) {
+      pan.pan.setValueAtTime(.85, A);
+      for (var i = 0; i <= 12; i++) { var f = 1 + (NSW - 1) * i / 12, st = sweepState(f); pan.pan.linearRampToValueAtTime(Math.max(-.8, Math.min(.8, st.s[0] / 36)), t0 + (f - 1) / FPS); }
+      pan.pan.linearRampToValueAtTime(-.85, B);
+    }
+    /* doppler: high coming in, true overhead, falling away */
+    function pitch(param, base) {
+      param.setValueAtTime(base * 1.07, A); param.linearRampToValueAtTime(base * 1.03, t0); param.linearRampToValueAtTime(base * .99, t0 + 3.6); param.linearRampToValueAtTime(base * .9, B);
+    }
+    [[1460, "sine", .028], [2190, "sine", .016], [2934, "triangle", .008], [730, "triangle", .02]].forEach(function (q) {
+      var o = ctx.createOscillator(), g = ctx.createGain(), w = ctx.createOscillator(), wg = ctx.createGain();
+      o.type = q[1]; pitch(o.frequency, q[0]); g.gain.value = q[2];
+      w.frequency.value = 5.3 + Math.random() * 2; wg.gain.value = q[0] * .004; w.connect(wg); wg.connect(o.frequency);
+      o.connect(g); g.connect(lp); o.start(A); w.start(A); o.stop(B + .1); w.stop(B + .1);
+    });
+    var jet = ctx.createBufferSource(); jet.buffer = noiseBuf(2, "pink"); jet.loop = true;
+    var jb = ctx.createBiquadFilter(); jb.type = "bandpass"; jb.Q.value = .8; pitch(jb.frequency, 900);
+    var jg = ctx.createGain(); jg.gain.value = .32; jet.connect(jb); jb.connect(jg); jg.connect(lp); jet.start(A); jet.stop(B + .1);
+    var rum = ctx.createOscillator(), rl = ctx.createBiquadFilter(), rg = ctx.createGain(); rum.type = "sawtooth"; pitch(rum.frequency, 46); rl.type = "lowpass"; rl.frequency.value = 160; rg.gain.value = .09;
+    rum.connect(rl); rl.connect(rg); rg.connect(out); rum.start(A); rum.stop(B + .1);
+    /* the searchlight's hum, with the beam */
+    var hum = ctx.createGain(); hum.gain.setValueAtTime(0, t0);
+    for (var j = 0; j <= 16; j++) { var ff = 1 + (NSW - 1) * j / 16; hum.gain.linearRampToValueAtTime(.05 * sweepState(ff).k, t0 + (ff - 1) / FPS); }
+    hum.gain.linearRampToValueAtTime(0, t0 + (SWT1 - SWT0) + .3);
+    var hl = ctx.createBiquadFilter(); hl.type = "lowpass"; hl.frequency.value = 420; hum.connect(hl); hl.connect(dry);
+    [[60, 1], [120, .55], [180, .3], [240, .12]].forEach(function (q) { var o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = q[0]; g.gain.value = q[1]; o.connect(g); g.connect(hum); o.start(t0); o.stop(t0 + (SWT1 - SWT0) + .6); });
+  }
+  function schedule(vt) {
+    var now = ctx.currentTime;
+    if (now > nextChord - 1.5) { var at = Math.max(now + .05, nextChord), dur = 16; chord(at, dur); nextChord = at + dur * .62; }
+    if (now > nextBell) { bell(now + .1); nextBell = now + 7 + Math.random() * 11; }
+    while (tickT < now + .3) { tickT = Math.max(tickT, now) + .03 + Math.random() * Math.random() * .4; tick(tickT); }
+    /* the spinner arrives on the film's beat: schedule it when the film is a few seconds out */
+    if (vt >= 0) {
+      var lead = SWT0 - 4.6;
+      if (lastVt >= 0 && ((lastVt < lead && vt >= lead) || (vt < lastVt && vt >= lead && vt < SWT0 - 1))) spinner(now + (SWT0 - vt));
+    }
+    lastVt = vt;
+  }
+  return {
+    enable: function () {
+      if (!ctx) build();
+      if (ctx.state === "suspended") ctx.resume();
+      on = true; btn.setAttribute("aria-pressed", "true"); save("sound", 1);
+      var t = ctx.currentTime; master.gain.cancelScheduledValues(t); master.gain.setValueAtTime(master.gain.value, t); master.gain.linearRampToValueAtTime(.8, t + 2.5);
+      if (!started) { started = true; nextChord = t + .2; nextBell = t + 6; tickT = t; }
+      var vt = haveVideo ? vid.currentTime : -1;
+      if (vt >= SWT0 - 4.6 && vt < SWT0 - 1) spinner(t + (SWT0 - vt));
+      lastVt = vt;
+    },
+    disable: function () {
+      on = false; btn.setAttribute("aria-pressed", "false"); save("sound", 0);
+      if (!ctx) return; var t = ctx.currentTime; master.gain.cancelScheduledValues(t); master.gain.setValueAtTime(master.gain.value, t); master.gain.linearRampToValueAtTime(0, t + .6);
+      setTimeout(function () { if (!on && ctx) ctx.suspend(); }, 800);
+    },
+    toggle: function () { if (on) this.disable(); else this.enable(); },
+    tick: function (vt) { if (on && ctx && ctx.state === "running" && !hidden) schedule(vt); },
+    hide: function (h) { hidden = h; if (!ctx || !on) return; if (h) ctx.suspend(); else ctx.resume(); },
+    get on() { return on; }
+  };
+})();
+btn.addEventListener("click", function (e) { e.stopPropagation(); snd.toggle(); });
+/* the toggle was left on earlier in this session: it waits for the next gesture, which may start sound */
+if (state().sound) {
+  btn.setAttribute("aria-pressed", "true");
+  var resume = function (e) { if (e && e.target === btn) return; removeEventListener("pointerdown", resume, true); removeEventListener("keydown", resume, true); snd.enable(); };
+  addEventListener("pointerdown", resume, true); addEventListener("keydown", resume, true);
+}
+
+/* ================= the opening: black, then the room fades up; the title last ================= */
+function finishOpening() {
+  if (!html.classList.contains("opening")) return;
+  html.classList.remove("opening", "run"); save("seen", 1);
+  ["pointerdown", "keydown", "wheel", "touchstart"].forEach(function (ev) { removeEventListener(ev, skip, true); });
+}
+function skip(e) { if (e && e.type === "keydown" && (e.key === "Tab" || e.key === "Shift")) return; finishOpening(); }
+function begin() {
+  size();
+  if (gl) html.classList.add("gl");
+  if (html.classList.contains("opening")) {
+    ["pointerdown", "keydown", "wheel", "touchstart"].forEach(function (ev) { addEventListener(ev, skip, { passive: true, capture: true }); });
+    requestAnimationFrame(function () { requestAnimationFrame(function () { html.classList.add("run"); }); });
+    setTimeout(finishOpening, 7400);
+  } else save("seen", 1);
+  if (FREEZE >= 0 && html.classList.contains("opening")) {
+    /* a still of the opening at a given moment: no transitions, set the values directly */
+    var tt = FREEZE;
+    html.classList.remove("run");
+    var e = function (x) { return 1 - Math.pow(1 - Math.max(0, Math.min(1, x)), 3); };
+    $("veil").style.opacity = String(1 - e((tt - .7) / 3.2));
+    document.querySelectorAll(".fade").forEach(function (el) { var d = el.classList.contains("t1") ? 4.1 : el.classList.contains("t2") ? 4.9 : 5.7; el.style.opacity = String(e((tt - d) / 1.3)); el.style.transition = "none"; });
+    $("veil").style.transition = "none";
+  }
+  html.classList.add("ready");
+}
+
+if (gl && initGL()) {
+  size();
+  var useVideo = !reduced;
+  still.decode ? still.decode().then(function () { stillReady = true; if (!haveVideo) { upload(still); drawOnce(); } }, function () {}) : (stillReady = true);
+  if (useVideo) {
+    var onFrame = function () { newFrame = true; vid.requestVideoFrameCallback(onFrame); };
+    if ("requestVideoFrameCallback" in vid) vid.requestVideoFrameCallback(onFrame);
+    var ready = function () {
+      if (haveVideo) return; haveVideo = true; newFrame = true;
+      if (VT >= 0) { vid.pause(); vid.currentTime = VT; vid.addEventListener("seeked", function () { newFrame = true; upload(vid); window.__seeked = true; drawOnce(); }, { once: true }); }
+    };
+    vid.addEventListener("canplay", ready, { once: true });
+    if (VT < 0) vid.play().catch(function () {});
+    else vid.load();
+  } else { vid.removeAttribute("autoplay"); vid.preload = "none"; }
+  if (reduced || FREEZE >= 0) { var once = function () { drawOnce(); }; addEventListener("load", once); setInterval(function () { if (haveVideo || stillReady) drawOnce(); }, 500); }
+  else start();
+} else {
+  html.classList.add("nogl");
+  if (!reduced) vid.play().catch(function () {}); else { vid.style.display = "none"; html.classList.remove("nogl"); }
+}
+var fontsReady = document.fonts && document.fonts.load ? Promise.race([document.fonts.load("400 13px 'Timeless Serif'"), new Promise(function (r) { setTimeout(r, 1200); })]) : Promise.resolve();
+fontsReady.then(begin, begin);
+})();
+</script>
+</body>
+</html>

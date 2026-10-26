@@ -1,0 +1,56 @@
+Blade Runner, path traced
+
+The scene
+  A high room at night, some 260 m above the street. Three tall bays of glass between concrete
+  fins, slatted blinds let down to different heights, a low stone table with a drum lamp (the one
+  warm practical), a polished dark floor. Out across the void the city falls away into a canyon of
+  lit windows and haze; to the right the Antimony tower, a battered brutalist slab with a few warm
+  slots, carries the Break on its crown: the stone tile as a panel proud of the face, the seam and
+  the cavity cut through to a black recess, the crystal (exact geometry) the one clean cold light.
+  To the left, far off and veiled by the haze, a building sized screen shows the meadow poster
+  (a clean frame exported from directions/poster). Cold light from an unseen advertising wall falls
+  in across the floor with the fins' shadows. Every twenty seconds an unseen spinner hangs above the
+  window and its searchlight rakes through the blinds, the haze and across the floor.
+
+  Blender 4.5.15 LTS, Cycles on CPU (4 threads), OpenImageDenoise with albedo and normal,
+  adaptive sampling, light tree; the AgX view applied in compose.py through OpenColorIO.
+
+  Cheats, as on a film set
+  - Haze is seen, not bounced through: only camera rays scatter in it.
+  - The city's lit windows are not sampled as lights (they glow, they do not light); their glow
+    in the haze comes from a few big area lights at street level (mostly cold, two sodium).
+  - Every area light is invisible to the camera and to reflections.
+  - Rain mist close to the glass exists only in the searchlight pass, so the beam has something
+    to show up in while the rest frame stays clear.
+
+Passes and the loop (20 s at 24 fps, 480 frames, seamless)
+  scene.py --pass full     everything at rest, with haze            1920 x 1200
+  scene.py --pass nohaze   the same without haze                    1920 x 1200
+  scene.py --pass flick    only the two failing advertising walls   1920 x 1200
+  scene.py --pass sweep    only the searchlight, every other frame   960 x 600, frames 1 to 108
+  compose.py then builds each frame from linear light:
+    nohaze + min(h, 0) + drift(x, y, t) * max(h, 0), h = full - nohaze: the haze's glow drifting left
+    + (v(t) - 1) * flick                         the ad walls stutter and brown out
+    + sweep(t)                                   frames 265 to 323 (11.0 s to 13.4 s), lamp out from 12.9 s
+  with the in between searchlight frames as the mean of their neighbours, a soft bloom, a
+  vignette, AgX, then straight into ffmpeg (H.264 and VP9) with no frames on disk.
+  The drift fields are periodic noise scrolled by whole periods, so frame 480 runs into frame 1.
+
+Render times (4 slow cores shared with other jobs; every render inside the shared lock)
+  full     1920 x 1200, 256 samples cap, stopped by its 19 min limit   1178 s render (26.5 min wall with lock waits)
+  nohaze   1920 x 1200, 160 samples                                    663 s
+  flick    1920 x 1200, 96 samples                                     448 s
+  sweep    960 x 600, 16 samples, frames 1 to 59 odd (30 frames)        about 32 s each, 16 min
+  compose  480 frames, bloom, AgX, H.264 and VP9 in one pass           12 min
+  Cut short at Eóin's request for speed: the searchlight frames 61 to 108 were never rendered, so
+  compose.py fades the lamp out over frames 46 to 59 (12.9 s to 13.4 s) instead of letting the
+  spinner carry it across the room and away. A full re-render would add those 48 frames (about
+  26 min), all 108 at 1920 x 1200 and 32 samples (about 3 hours), and a longer full pass.
+
+The live layer (index.html, WebGL over the film, composited in frame coordinates)
+  Rain on the glass: beads that gather and evaporate, and drops that let go and run with broken
+  trails, each a small lens showing the city refracted and inverted; only on clear glass below the
+  blinds, never over the lamp. Rain beyond the glass in two depths, backlit by
+  the city and sliding with the pointer. Condensation low on the cold panes that the pointer
+  wipes and that slowly fogs back. When the searchlight crosses the glass its water glints, in
+  sync with the film. Film grain.
