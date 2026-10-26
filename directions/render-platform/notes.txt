@@ -1,0 +1,78 @@
+Platform, path traced
+
+What this is
+  platform_scene.py builds the Platform scene procedurally and renders it with Cycles. The world
+  matches the real-time version: the far wall across the tracks, a 4.98 by 2.8 lightbox with its
+  foot 0.35 above platform level, the vault springing at 3.7 as a half ellipse (6 across, 2.4 up),
+  the platform edge 3 m from the far wall, the track bed 1.05 below, the camera at eye height
+  9.5 m back with a vertical field of 40 degrees and 1.5 degrees of yaw.
+  Glazed subway tile in brick bond (per-tile tilt, bevelled edges, a glaze coat, soot, leaks and
+  grimy grout), a Prussian tile band above and below the box, cast iron ribs every five metres,
+  a cornice with tube lamps (the right-hand one failing and dimmer, two dead ones over the box,
+  more off frame behind the camera), sleepers, running and conductor rails on their pots, a wet
+  slab floor with standing water, a coated figure standing still in the print's light, drips
+  falling from the vault, a little haze.
+  The only image is the print: Antimony's Grow page (directions/grow/shots/rest-desktop.png),
+  cropped to 16:9, with the Break mark redrawn from its exact geometry (the Grow shot has a blade
+  of grass at the foot of the seam; the redraw removes it, so nothing grows on the mark).
+
+  Blender 4.5.15 LTS, Cycles on CPU (4 threads), OpenImageDenoise with albedo and normal,
+  adaptive sampling, light tree, AgX view (Base Contrast), a soft bloom.
+
+  Two deliberate cheats, both common on film sets:
+  - The print is a practical on a dimmer: the camera and mirror reflections see it at a level
+    that keeps the print readable, while the light it throws on tiles, floor and figure is
+    2.2 times brighter (camera rays versus shadow and diffuse rays).
+  - The haze scatters camera rays only. It is seen but not bounced through, which roughly halves
+    the cost of the volume on CPU.
+
+  Run: blender -b -P platform_scene.py -- --variant night        (or overgrown)
+  The loop (see below):
+    --variant loop --pass on   --out on.exr  --samples 160
+    --variant loop --pass off  --out off.exr --samples 160
+    --variant loop --pass anim --out anim_####.exr --samples 48 --frames 1-72
+    --variant loop --pass compose --src <folder of the EXRs> --out f_####.png --frames 1-72
+  then ffmpeg (24 fps, H.264 CRF 17 and VP9 CRF 30).
+
+Render times, 4 CPU threads, no GPU
+  night.png      1920 x 1200   1393 s (23 min 13 s), about 98 samples, stopped by the 23 minute limit
+  overgrown.png  1920 x 1200   1400 s (23 min 20 s), about 98 samples, stopped by the 23 minute limit
+  night-loop     1280 x 800, 72 frames at 24 fps (3 s), seamless
+                 lamp on pass 431 s, lamp off pass 421 s (160 samples each),
+                 moving water 72 frames at about 15 s each (18 min), compose 42 s, encode seconds
+                 total about 33 minutes
+  Part of the session shared the machine with other jobs; an early night render under that load
+  reached only about 40 samples in the same 23 minutes.
+
+How the loop is made, and its limits
+  Light adds linearly, so the failing lamp's flicker is exact as off + v(t) (on minus off),
+  from two still passes in linear EXR. The drips (real objects with motion blur) and the rings
+  they leave in the puddles are rendered every frame on their own, with the rest of the station
+  set to indirect only, so each drip refracts and reflects the real scene, then laid over the
+  stills and taken through the same AgX view. Every motion repeats on a 24, 36 or 72 frame
+  period, so frame 72 runs straight into frame 1.
+  Not in this loop: haze drift (the haze is static; drifting haze changes every pixel and needs
+  full renders per frame), and the drips do not cast light or shadow onto the scene.
+
+What a 1920 x 1080, 8 second loop would cost (192 frames at 24 fps)
+  The same pass method (static light, a flickering lamp, moving water):
+    two still passes at 1920 x 1080 (about 2 x 7.2 min x 2.0 for the pixels) about 30 min
+    192 water frames at about 30 s                                            about 1.6 h
+    total on this machine                                                     about 2 to 2.5 hours
+  Full renders of every frame (needed for drifting haze, swaying grass in the overgrown version,
+  any camera move): about 21 min a frame at the quality of the stills, so
+    192 x 21 min                                                              about 67 hours
+  On one current desktop GPU the full renders would be roughly 1 to 2 min a frame, about 3 to 6
+  hours; a small render farm brings it under an hour.
+
+Overgrown, and one honest limit
+  The vault has opened near the far side, left of the box (a broken grating, sky visible at the
+  top of the frame) and a newer glazed skylight runs along the crown out of frame; a shaft of
+  daylight falls through the opening into the track bed with dust and pollen held in it. Tall
+  grass and ferns fill the track bed and rise above the platform edge as a strip of real meadow
+  under the printed one; tufts grow from the platform joints and the tile joints (never within
+  a hand's width of the box), moss in the grout, ivy trailing from the cornice and the opening.
+  Puddles full of sky: with the real-time framing, the floor in frame can only mirror the far
+  wall below about 2 m, never the opening or the skylight, so the puddles mirror the print, the
+  meadow in the track bed and the lit tiles rather than sky. A lower or tilted camera would be
+  needed to put sky in them.
