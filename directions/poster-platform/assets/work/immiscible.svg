@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="immiscible: the cardinal squares, a paper square and a coral square interlocking"><title>immiscible</title><style>
+.w { animation: in-w 1.4s cubic-bezier(.2,.7,.1,1) both, breathe-w 5s 2.4s ease-in-out infinite; }
+.c { animation: in-c 1.4s cubic-bezier(.2,.7,.1,1) both, breathe-c 5s 2.4s ease-in-out infinite; }
+.k { animation: weave 1.4s cubic-bezier(.2,.7,.1,1) both, breathe-w 5s 2.4s ease-in-out infinite; }
+@keyframes in-w { from { transform: translate(-90px,-90px); opacity: 0; } 40% { opacity: 1; } to { transform: none; } }
+@keyframes in-c { from { transform: translate(90px,90px); opacity: 0; } 40% { opacity: 1; } to { transform: none; } }
+@keyframes weave { 0%, 70% { opacity: 0; transform: translate(-90px,-90px); } 100% { opacity: 1; transform: none; } }
+@keyframes breathe-w { 0%, 60%, 100% { transform: none; } 30% { transform: translate(-22px,-22px); } }
+@keyframes breathe-c { 0%, 60%, 100% { transform: none; } 30% { transform: translate(22px,22px); } }
+@media (prefers-reduced-motion: reduce) { .w, .c, .k { animation: none; } }
+</style><rect width="1024" height="1024" rx="225" fill="#0B0D15"/><path class="w" fill="#F7F8FA" fill-rule="evenodd" d="M160 160H688V688H160ZM248 248V600H600V248Z"/><path class="c" fill="#F0563A" fill-rule="evenodd" d="M336 336H864V864H336ZM424 424V776H776V424Z"/><path class="k" fill="#F7F8FA" d="M600 292H688V468H600Z"/></svg>
