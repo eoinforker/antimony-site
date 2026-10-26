@@ -1,0 +1,50 @@
+Rain, path traced
+
+What this is
+  A frontal view, at eye height, of a pale sandstone garden wall in a green city at blue hour, in gentle rain.
+  A large lightbox (1.74 by 2.61 m, half again a six sheet) is set flush into the wall; Antimony's Grow poster
+  is drawn live into it in the browser. Ivy falls from the coping. Ferns, pale blue periwinkle, white flowers and
+  a little yellow celandine grow in a bed at the wall's foot (only low celandine under the box, so nothing rises
+  past its bottom edge), with two low warm path lights. A water rill runs in the paving. On the left there is a
+  timber bench and a small tree. On the right is a larch-clad cafe: a steamed window onto a warm room (shelves
+  of jars, three pendant lamps, a table, plants), a lit upper window, a canopy with ferns, and a bronze rain chain
+  into a stone basin. Beyond the wall are the garden's trees, then planted terraces stepping back into mist.
+  Camera: 27 mm on 36 mm, 7.4 m back, 1.55 m high, verticals straight (shift, no tilt), f/4.
+
+  Blender 4.5.15 LTS, Cycles on CPU (4 threads), OpenImageDenoise, adaptive sampling, light tree, AgX Base Contrast.
+  One cheat, common on film sets: the haze scatters camera rays only (seen, not bounced through).
+
+Run
+  blender -b -P rain_scene.py -- --assets <polyhaven dir> --acg <ambientcg dir> --poster <png> \
+    --shift 0.03 --cam-x 0 --sky 1.8 --warm-str 1.1 --cafe-w 90 --bollard-w 25 --bollard 40 --poster-str 3 \
+    --exposure 0.25 --res 2560x1440 --samples 400 --time 1050 --exr <prefix> --corners corners.json --out beauty.png
+  The EXR holds three light groups (sky, poster, warm), each denoised, plus mist, depth and the data passes
+  (plant, wet, rill and puddle mask, face, glass).
+
+  blender -b --factory-startup -P rain_compose.py -- --exr <prefix>0001.exr --mode still|spill|loop ...
+  Everything is composed in scene-linear light and taken through Blender's own AgX (via OpenColorIO) once.
+
+The loop (6 s, 24 fps, 144 frames, seamless), made from passes, not from per-frame renders
+  - rain: three layers of streaks lit by a broad blur of the lit frame, so rain shows where the light is
+  - drips: from the canopy edge, the coping and the tree, each gathering then falling on its own period
+  - water down the rain chain
+  - rings in the puddles and the rill: small radial warps with a faint highlight, flattened by perspective
+  - leaves: a small displacement in the wind, weighted by the foliage mask (strongest high up)
+  - the warm lights breathe by 5 percent over the loop
+  Every motion repeats on a period that divides 6 s, so frame 144 runs straight into frame 1.
+
+Live layer (index.html)
+  The render is the background: an AVIF/WebP still, then the H.264 or WebM loop over it. The Grow poster is drawn
+  live (WebGL) on a canvas placed exactly over the lightbox face from the exported corners. It keeps Poster 1's
+  pointer wind, the water in the crystal and the chip-off into the grass. There is rain beading and running on its
+  glass, and rain falling in front. The poster's light on the street is a precomputed pass: (all lights) minus
+  (all but the poster), in display terms. It sits over the video in difference blend, and its opacity follows the
+  poster's measured brightness, so the street is lit by what the poster shows (and dark before it comes on).
+
+Honest limits
+  - The poster image seen in puddle reflections and glass is the rest state; when shards chip off, the
+    reflections do not change.
+  - Drips and rain do not cast light or wet anything new; leaves sway by image warp, not by moving geometry.
+  - The terraces beyond are procedural boxes with a window shader and fern scatter; they read in the mist but
+    would not hold up close.
+  - Haze does not drift.

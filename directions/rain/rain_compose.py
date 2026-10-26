@@ -1,0 +1,255 @@
+# Rain: composes the final still and the seamless loop from the light-group EXR of rain_scene.py.
+# Runs inside Blender's Python for its numpy, OpenImageIO and OpenColorIO (so the view transform is Blender's own AgX):
+#   blender -b --factory-startup -P rain_compose.py -- --exr passes_0001.exr --mode still --out still.png
+#   blender -b --factory-startup -P rain_compose.py -- --exr passes_0001.exr --mode loop --out frames/f_%04d.png --res 1920
+#   blender -b --factory-startup -P rain_compose.py -- --exr passes_0001.exr --mode spill --out spill.png --res 1920
+# Light adds linearly, so everything is built in scene-linear light and taken through AgX once, at the end.
+# The loop is 6 s at 24 fps; every motion repeats on a period that divides it, so the last frame runs into the first.
+import sys, os, math
+import numpy as np
+import OpenImageIO as oiio
+import PyOpenColorIO as ocio
+
+argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
+def arg(name, default):
+    k = '--' + name
+    return type(default)(argv[argv.index(k) + 1]) if k in argv else default
+EXR = arg('exr', ''); MODE = arg('mode', 'still'); OUT = arg('out', 'out.png'); RES = arg('res', 0)
+EXPO = arg('exposure', 0.25); FPS = 24; T = arg('seconds', 6.0); NF = int(FPS * T)
+F0, F1 = arg('f0', 0), arg('f1', NF)
+rng = np.random.default_rng(5)
+
+# ---------------------------------------------------------------- load
+inp = oiio.ImageInput.open(EXR); spec = inp.spec(); names = list(spec.channelnames)
+px = inp.read_image(0, 0, 0, len(names), 'float'); inp.close()
+px = np.asarray(px, np.float32).reshape(spec.height, spec.width, len(names))
+def ch(n): return px[:, :, names.index(n)]
+def rgb(g): return np.stack([ch(g + '.R'), ch(g + '.G'), ch(g + '.B')], -1)
+SRC_W = spec.width
+P = {g: rgb(g) for g in ('sky', 'poster', 'warm')}
+D = {n: ch(n + '.V') for n in ('Mist', 'Depth', 'plant', 'rill', 'face', 'glass')}
+del px
+
+def resize(a, w, h):
+    sh = a.shape; c = 1 if a.ndim == 2 else sh[2]
+    b = oiio.ImageBuf(oiio.ImageSpec(sh[1], sh[0], c, 'float')); b.set_pixels(oiio.ROI(), np.ascontiguousarray(a.reshape(sh[0], sh[1], c)))
+    r = oiio.ImageBufAlgo.resize(b, roi=oiio.ROI(0, w, 0, h, 0, 1, 0, c))
+    o = np.asarray(r.get_pixels(oiio.FLOAT)).reshape(h, w, c)
+    return o[:, :, 0] if a.ndim == 2 else o
+if RES and RES != SRC_W:
+    w = RES; h = int(round(spec.height * RES / SRC_W))
+    P = {k: resize(v, w, h) for k, v in P.items()}; D = {k: resize(v, w, h) for k, v in D.items()}
+H, W = P['sky'].shape[:2]
+S = W / 2560.0                         # scale relative to the 2560 render
+
+# ---------------------------------------------------------------- the camera, as in rain_scene.py (for drips and the chain)
+CX, CY, CZ, FL, SHIFT = 0.0, -7.4, 1.55, 27.0 / 36.0, 0.03
+def proj(x, y, z):
+    d = y - CY
+    return np.array([W * (0.5 + (x - CX) / d * FL), H / 2 - ((z - CZ) / d * FL - SHIFT) * W]), W * FL / d   # pixel, px per metre
+
+# ---------------------------------------------------------------- helpers
+def box1(a, r, axis):
+    if r < 1: return a
+    c = np.cumsum(a, axis=axis, dtype=np.float32)
+    pad = [(0, 0)] * a.ndim; pad[axis] = (r + 1, r)
+    c = np.pad(c, pad, mode='edge')
+    sl_hi = [slice(None)] * a.ndim; sl_lo = [slice(None)] * a.ndim
+    n = a.shape[axis]
+    sl_hi[axis] = slice(2 * r + 1, 2 * r + 1 + n); sl_lo[axis] = slice(0, n)
+    return (c[tuple(sl_hi)] - c[tuple(sl_lo)]) / (2 * r + 1)
+def blur(a, r):
+    for _ in range(3):
+        a = box1(box1(a, r, 0), r, 1)
+    return a
+def down(a, k):
+    h, w = a.shape[0] // k * k, a.shape[1] // k * k
+    a = a[:h, :w]
+    return a.reshape(h // k, k, w // k, k, *a.shape[2:]).mean(axis=(1, 3))
+def up(a, h, w):
+    return resize(a, w, h)
+def sample(img, x, y):
+    # bilinear lookup of img at float pixel coords x, y (arrays)
+    x = np.clip(x, 0, W - 1.001); y = np.clip(y, 0, H - 1.001)
+    x0 = x.astype(np.int32); y0 = y.astype(np.int32); fx = (x - x0)[..., None]; fy = (y - y0)[..., None]
+    a = img[y0, x0]; b = img[y0, x0 + 1]; c = img[y0 + 1, x0]; d = img[y0 + 1, x0 + 1]
+    return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy
+def splat(acc, xs, ys, cols):
+    # additive bilinear splats of colours at float pixel coords
+    ok = (xs >= 0) & (xs < W - 1) & (ys >= 0) & (ys < H - 1)
+    xs, ys, cols = xs[ok], ys[ok], cols[ok]
+    x0 = xs.astype(np.int64); y0 = ys.astype(np.int64); fx = (xs - x0)[:, None]; fy = (ys - y0)[:, None]
+    flat = acc.reshape(-1, 3)
+    for dx, dy, wgt in ((0, 0, (1 - fx) * (1 - fy)), (1, 0, fx * (1 - fy)), (0, 1, (1 - fx) * fy), (1, 1, fx * fy)):
+        np.add.at(flat, (y0 + dy) * W + (x0 + dx), cols * wgt)
+
+# ---------------------------------------------------------------- view transform: Blender's AgX, Base Contrast
+cfg = ocio.GetCurrentConfig()
+dvt = ocio.DisplayViewTransform(src='Linear Rec.709', display='sRGB', view='AgX')
+vp = ocio.LegacyViewingPipeline(); vp.setDisplayViewTransform(dvt)
+vp.setLooksOverrideEnabled(True); vp.setLooksOverride('AgX - Base Contrast')
+CPU = vp.getProcessor(cfg).getDefaultCPUProcessor()
+def view(lin):
+    a = np.ascontiguousarray(np.clip(lin * (2 ** EXPO), 0, 1e4).astype(np.float32))
+    CPU.applyRGB(a); return np.clip(a, 0, 1)
+
+# ---------------------------------------------------------------- static parts
+FOG = np.array([0.30, 0.38, 0.52], np.float32); FOG = np.where(FOG > 0.04045, ((FOG + 0.055) / 1.055) ** 2.4, FOG / 12.92) * 0.1
+fogk = np.clip(D['Mist'], 0, 1)[..., None] * 0.82
+PL = arg('poster-k', 1.0)
+def light(kw=1.0, kp=PL):
+    L = P['sky'] + P['poster'] * kp + P['warm'] * kw
+    return L * (1 - fogk) + FOG * fogk
+plant = np.clip(D['plant'], 0, 1)
+plantb = blur(plant, max(1, int(4 * S)))
+water = np.clip(D['rill'], 0, 1); water = np.maximum(water, (D['rill'] > 1.5).astype(np.float32))
+yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+# a smooth random phase field, so leaves answer the wind at their own moment
+ph1 = blur(rng.uniform(0, 1, (H // 8 + 1, W // 8 + 1)).astype(np.float32), 3); ph1 = (ph1 - ph1.min()) / (np.ptp(ph1) + 1e-6)
+ph1 = up(ph1, H, W) * 2 * np.pi * 2.0
+ph2 = blur(rng.uniform(0, 1, (H // 16 + 1, W // 16 + 1)).astype(np.float32), 2); ph2 = (ph2 - ph2.min()) / (np.ptp(ph2) + 1e-6)
+ph2 = up(ph2, H, W) * 2 * np.pi * 3.0
+sway_amp = (1.0 + 1.2 * np.clip(1 - yy / (H * 0.55), 0, 1)) * S * arg('sway', 1.0) * plantb
+# where the light is, for lighting the rain: a broad blur of the lit frame
+def lightfield(L):
+    l = down(L, 8); l = blur(l, 3)
+    return up(l, H, W)
+
+# ---------------------------------------------------------------- rain, drips, rings: all periodic on T
+class Streaks:
+    def __init__(self, n, lmin, lmax, wt, cycles, depth_k):
+        self.x = rng.uniform(-0.1 * W, 1.05 * W, n); self.y0 = rng.uniform(0, 1, n)
+        self.L = rng.uniform(lmin, lmax, n) * S; self.wt = wt * rng.uniform(0.5, 1.0, n)
+        self.cyc = rng.integers(cycles[0], cycles[1] + 1, n); self.k = depth_k
+    def draw(self, acc, t, Lf):
+        span = H + self.L * 2
+        yc = ((self.y0 + self.cyc * t / T) % 1.0) * span - self.L
+        K = max(8, int(self.L.max() / 0.9))
+        u = np.linspace(-0.5, 0.5, K)[None, :]
+        ys = yc[:, None] + u * self.L[:, None]; xs = self.x[:, None] + ys * 0.07
+        prof = np.sin((u + 0.5) * np.pi) ** 1.5
+        c = sample(Lf, np.clip(xs[:, K // 2], 0, W - 2), np.clip(ys[:, K // 2], 0, H - 2))
+        col = (c * self.k + 0.0015)[:, None, :] * (self.wt[:, None] * prof)[..., None] * (self.L[:, None, None] / K) * 0.06
+        splat(acc, xs.ravel(), ys.ravel(), col.reshape(-1, 3))
+RAIN = [Streaks(int(arg('near', 90)), 90, 150, 1.0, (9, 12), 1.0), Streaks(int(arg('mid', 420)), 40, 70, 0.8, (6, 8), 0.8),
+        Streaks(int(arg('far', 1100)), 14, 26, 0.6, (4, 5), 0.6)]
+
+# drips: from the canopy edge, the coping, the tree; each falls on its own period
+DRIPS = []
+def add_drip(x, y, z, zg, period, phase):
+    p0, k = proj(x, y, z); p1, _ = proj(x, y, zg)
+    DRIPS.append((p0, p1[1], k, period, phase))
+for i in range(9):
+    add_drip(rng.uniform(1.7, 4.8), -0.74, 2.76, 0.0, float(rng.choice([1.5, 2.0, 3.0])), rng.uniform(0, 1))
+for i in range(10):
+    x = rng.uniform(-4.5, 1.3)
+    if -1.05 < x < 1.05: continue
+    add_drip(x, -0.07, 3.38, 0.17, float(rng.choice([2.0, 3.0, 6.0])), rng.uniform(0, 1))
+# tree drips: emitters on bright-edged leaves in the upper left
+cand = np.argwhere((plant[: int(H * 0.45), : int(W * 0.35)] > 0.9))
+for i in range(min(10, len(cand))):
+    yx = cand[rng.integers(len(cand))]
+    DRIPS.append((np.array([yx[1], yx[0]], np.float32), H * 0.98, W * FL / 5.0, float(rng.choice([1.5, 2.0, 3.0])), rng.uniform(0, 1)))
+def draw_drips(acc, t, Lf):
+    for p0, yground, k, per, ph in DRIPS:
+        a = ((t / per + ph) % 1.0) * per
+        hang = 0.45
+        if a < hang:                                       # the drop gathers on the edge
+            c = sample(Lf, np.array([p0[0]]), np.array([p0[1] + 2]))[0] * (a / hang) * 0.5 + 0.002
+            splat(acc, np.array([p0[0]]), np.array([p0[1] + 2 * S]), (c * 3.0)[None, :]); continue
+        tf = a - hang; g = 9.8 * k; y = p0[1] + 0.5 * g * tf * tf; v = g * tf
+        if y > yground: continue
+        L = max(3 * S, v / 48.0); K = max(6, int(L / 0.8)); ys = y - np.linspace(0, L, K); xs = np.full(K, p0[0])
+        c = sample(Lf, xs[:1], np.clip(ys[:1], 0, H - 2))[0]
+        splat(acc, xs, ys, np.tile((c * 1.1 + 0.002) * 1.4 / K * (L / S) * 0.25, (K, 1)))
+# the rain chain: water running down it, a quick bright thread
+CH0, kc = proj(1.80, -0.58, 2.70); CH1, _ = proj(1.80, -0.58, 0.14)
+CHD = [(rng.uniform(0, 1), rng.integers(3, 6), rng.uniform(-1, 1)) for _ in range(26)]
+def draw_chain(acc, t, Lf):
+    for ph, cyc, ox in CHD:
+        f = (ph + cyc * t / T) % 1.0; y = CH0[1] + f * (CH1[1] - CH0[1]); x = CH0[0] + ox * 2.2 * S + math.sin(y * 0.35) * 1.2 * S
+        K = 6; ys = y - np.linspace(0, 9 * S, K); xs = np.full(K, x)
+        c = sample(Lf, xs[:1], ys[:1])[0]
+        splat(acc, xs, ys, np.tile((c * 1.6 + 0.003) / K * 2.0, (K, 1)))
+# rings in the puddles and the rill
+wy, wx = np.nonzero(water[int(H * 0.72):, :] > 0.6); wy = wy + int(H * 0.72)
+RINGS = []
+for i in range(int(arg('rings', 70))):
+    j = rng.integers(len(wy)) if len(wy) else 0
+    if not len(wy): break
+    y, x = float(wy[j]), float(wx[j]); d = max(1.0, float(D['Depth'][int(y), int(x)]))
+    k = W * FL / d; fl = min(0.6, CZ / d)
+    RINGS.append((x, y, k, fl, rng.uniform(0, T), rng.uniform(0.55, 0.8)))
+def rings(t):
+    dx = np.zeros((H, W), np.float32); dy = np.zeros((H, W), np.float32); hl = np.zeros((H, W), np.float32)
+    for x, y, k, fl, s0, life in RINGS:
+        a = ((t - s0) % T)
+        if a > life: continue
+        u = a / life; R = (0.02 + 0.13 * u) * k; amp = (1 - u) ** 2 * 1.4 * S
+        rx = R + 6 * S; ry = rx * fl + 2
+        x0, x1 = int(max(0, x - rx - 2)), int(min(W, x + rx + 3)); y0, y1 = int(max(0, y - ry - 2)), int(min(H, y + ry + 3))
+        if x1 <= x0 or y1 <= y0: continue
+        gx = xx[y0:y1, x0:x1] - x; gy = (yy[y0:y1, x0:x1] - y) / max(fl, 0.05)
+        r = np.sqrt(gx * gx + gy * gy) + 1e-3; band = np.exp(-((r - R) / (2.2 * S)) ** 2)
+        wv = np.sin((r - R) / (2.0 * S) * np.pi) * band * amp
+        dx[y0:y1, x0:x1] += gx / r * wv; dy[y0:y1, x0:x1] += gy / r * wv * fl
+        hl[y0:y1, x0:x1] += band * (1 - u) * 0.6
+    return dx, dy, hl
+
+# ---------------------------------------------------------------- finishing: bloom with a warm halation, aberration, vignette, grain
+vig = 1 - 0.28 * np.clip(((xx / W - 0.5) ** 2 * 1.3 + (yy / H - 0.5) ** 2 * 1.0) * 2.4 - 0.15, 0, 1) ** 1.3
+def bloom(L):
+    hi = np.maximum(L - 0.6, 0)
+    b = np.zeros_like(L); h = hi
+    for i, wgt in enumerate((0.5, 0.35, 0.25, 0.18)):
+        h = down(h, 2) if i else down(h, 4)
+        b += up(blur(h, 2), H, W) * wgt
+    hal = b * np.array([1.25, 0.95, 0.75], np.float32)
+    return L + hal * arg('bloom', 0.07)
+def finish(img, t=0.0, grain=0.0):
+    out = img * vig[..., None]
+    ca = arg('ca', 0.6) * S                                  # lateral colour fringe, growing to the corners
+    rx = (xx - W / 2) / (W / 2); ry_ = (yy - H / 2) / (W / 2)
+    out[..., 0] = sample(out[..., :1], xx + rx * ca, yy + ry_ * ca)[..., 0]
+    out[..., 2] = sample(out[..., 2:3], xx - rx * ca, yy - ry_ * ca)[..., 0]
+    if grain:
+        g = rng.normal(0, grain, (H, W)).astype(np.float32); g = (g + blur(g, 1) * 0.5)
+        out = out + g[..., None] * (0.35 + 0.65 * (1 - out))
+    return np.clip(out, 0, 1)
+
+def frame(t, rain=True, kp=PL, warm_breath=True):
+    kw = 1.0 + (0.05 * math.sin(2 * math.pi * t / T) if warm_breath else 0.0)
+    L = light(kw, kp)
+    if rain:
+        # leaves in the wind: a small displacement, weighted by the foliage mask
+        dx = sway_amp * (np.sin(2 * np.pi * t / T * 2 + ph1) * 0.65 + np.sin(2 * np.pi * t / T * 3 + ph2) * 0.35)
+        dy = dx * 0.25 + sway_amp * 0.3 * np.sin(2 * np.pi * t / T * 3 + ph1 * 0.7)
+        rdx, rdy, hl = rings(t)
+        L = sample(L, xx - dx - rdx, yy - dy - rdy)
+        Lf = lightfield(L)
+        L = L + Lf * hl[..., None] * 0.25
+        acc = np.zeros_like(L)
+        for r in RAIN: r.draw(acc, t, Lf)
+        draw_drips(acc, t, Lf); draw_chain(acc, t, Lf)
+        L = L + acc * arg('rain', 10.0)
+    return bloom(L)
+
+def save(path, img, bits=8):
+    o = (img * 255 + rng.uniform(-0.5, 0.5, img.shape) if bits == 8 else img * 65535).round()
+    o = np.clip(o, 0, 255 if bits == 8 else 65535).astype(np.uint8 if bits == 8 else np.uint16)
+    out = oiio.ImageOutput.create(path); sp = oiio.ImageSpec(W, H, 3, oiio.UINT8 if bits == 8 else oiio.UINT16)
+    out.open(path, sp); out.write_image(o); out.close()
+
+if MODE == 'still':
+    save(OUT, finish(view(frame(arg('t', 1.3), rain=arg('rain-on', 1) == 1)), grain=arg('grain', 0.012)))
+elif MODE == 'spill':
+    # the poster's own light, as it shows on screen: (all lights) minus (all but the poster), in display terms
+    on = finish(view(frame(0.0, rain=False))); off = finish(view(frame(0.0, rain=False, kp=0.0)))
+    save(OUT, np.clip(on - off, 0, 1))
+    save(OUT.replace('.png', '_off.png'), off)
+elif MODE == 'loop':
+    import time
+    for f in range(F0, F1):
+        t0 = time.time()
+        save(OUT % (f + 1), finish(view(frame(f / FPS))))
+        print('frame', f + 1, round(time.time() - t0, 2), flush=True)

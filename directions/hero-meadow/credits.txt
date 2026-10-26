@@ -1,0 +1,27 @@
+Hero Meadow: assets and licences
+
+All third-party assets are from Poly Haven (polyhaven.com) and ambientCG (ambientcg.com),
+and are CC0 (public domain).
+Nothing else is photographic. The stone's form, the crystal, the tall grass blades, the seed
+heads and the wildflowers (buttercups, a pale blue five-petal flower, daisies) are built in
+meadow_scene.py.
+
+HDRI (lighting and sky)
+  drackenstein_quarry, 4k HDR          https://polyhaven.com/a/drackenstein_quarry
+
+Textures
+  ambientCG Rock041, 2K (colour, normal, roughness): the stone, darkened and honed,
+  blended by noise with
+  Poly Haven seaside_rock, 2k (diffuse, normal, roughness)
+                                       https://ambientcg.com/view?id=Rock041
+                                       https://polyhaven.com/a/seaside_rock
+  ambientCG Ground037, 2K, blended with Poly Haven sparse_grass, 2k: the ground under the grass
+                                       https://ambientcg.com/view?id=Ground037
+                                       https://polyhaven.com/a/sparse_grass
+
+Models
+  grass_medium_01, 2k (LOD1 clumps): the lower layer of the meadow; its scanned atlas also
+  colours the procedural tall blades and supplies the seed-head cards
+                                       https://polyhaven.com/a/grass_medium_01
+
+The Break mark geometry is Antimony's own (break-geometry.json).

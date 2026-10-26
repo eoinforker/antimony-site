@@ -1,0 +1,17 @@
+Rain: assets used in the render (all CC0, no attribution required; listed anyway)
+
+Poly Haven (polyhaven.com)
+  beach_parking (HDRI, 4k): the blue dusk sky light, cooled
+  wood_planks_grey (texture, 2k): the cafe's larch cladding
+  fern_02, shrub_04, shrub_01, periwinkle_plant (petals recoloured pale blue), celandine_01, moss_01 (models, 2k)
+  tree_small_02 (model, 2k): the tree, the garden trees, and its leaf sprigs for the ivy
+  modular_street_seating (model, 2k): the bench
+  potted_plant_01, potted_plant_02 (models, 2k): in the cafe
+
+ambientCG (ambientcg.com)
+  Bricks084 (2K): the pale sandstone wall, its coping, the kerb, the sill and the basin
+  PavingStones128 (2K): the paving, with water held in its joints from the height map
+
+Everything else (the lightbox, the rain chain, the rill, the room, the terraces beyond, the rain, drips and rings)
+is built in rain_scene.py and rain_compose.py. The poster is Antimony's own Grow page, drawn live in the browser.
+Fonts: Timeless Serif, licensed to Antimony.

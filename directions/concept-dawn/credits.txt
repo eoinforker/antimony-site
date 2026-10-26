@@ -1,0 +1,4 @@
+Dawn over the Plate (first-frame draft): assets and licences. All CC0, from Poly Haven (polyhaven.com).
+HDRI: pink_sunrise (8k EXR). Textures: concrete_wall_008, rusty_metal_02, seaside_rock, sparse_grass.
+Models: celandine_01, flower_empodium, flower_heliophila, dandelion_01, grass_medium_01, grass_medium_02.
+The Break mark geometry is Antimony's own (break-geometry.json). The plate, pillars, stacks and moat are built in dawn_scene.py.
