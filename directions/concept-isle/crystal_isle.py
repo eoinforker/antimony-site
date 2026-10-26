@@ -98,8 +98,12 @@ vol = N.new('ShaderNodeVolumePrincipled')
 vol.inputs['Color'].default_value = SKY
 vol.inputs['Density'].default_value = 0.012; vol.inputs['Absorption Color'].default_value = SKY
 vol.inputs['Emission Color'].default_value = SKY
-vol.inputs['Emission Strength'].default_value = 0.05
-L.new(vol.outputs[0], N['Material Output'].inputs['Volume'])
+vol.inputs['Emission Strength'].default_value = 0.02
+# tint the light passing through the body so the backlit dawn turns sky blue inside the glass
+ab = N.new('ShaderNodeVolumeAbsorption'); ab.inputs['Color'].default_value = (0.12, 0.62, 1.0, 1)
+ab.inputs['Density'].default_value = 0.05
+addv = N.new('ShaderNodeAddShader'); L.new(vol.outputs[0], addv.inputs[0]); L.new(ab.outputs[0], addv.inputs[1])
+L.new(addv.outputs[0], N['Material Output'].inputs['Volume'])
 crystal.data.materials.append(m)
 
 # light inside: a smaller inner gem of pale blue light, the same shape
@@ -107,12 +111,12 @@ core = gem_mesh('core', SCALE * 0.42, 0.30, 0.2)
 core.location = (0, 6, 70); core.rotation_euler = crystal.rotation_euler
 m, N, L = mat('core_light')
 N.remove(N['Principled BSDF'])
-em = N.new('ShaderNodeEmission'); em.inputs['Color'].default_value = (0.42, 0.85, 1.0, 1)
-em.inputs['Strength'].default_value = 2.5
+em = N.new('ShaderNodeEmission'); em.inputs['Color'].default_value = (0.18, 0.62, 1.0, 1)
+em.inputs['Strength'].default_value = 0.9
 L.new(em.outputs[0], N['Material Output'].inputs['Surface'])
 core.data.materials.append(m)
 core.visible_shadow = False; core.visible_diffuse = False; core.visible_volume_scatter = False
-pl = bpy.data.lights.new("crystal_glow", "POINT"); pl.energy = 2.5e5; pl.color = SKY[:3]
+pl = bpy.data.lights.new("crystal_glow", "POINT"); pl.energy = 1.6e5; pl.color = SKY[:3]
 pl.shadow_soft_size = 14
 plo = link_obj("crystal_glow", pl); plo.location = (0, 6, 66); plo.visible_glossy = False; plo.visible_camera = False
 
@@ -330,7 +334,7 @@ def haze_bank():
 # ---------------------------------------------------------------- sun and sky
 sun = bpy.data.lights.new('sun', 'SUN'); sun.energy = 22.0; sun.angle = math.radians(1.0)
 sun.color = (1.0, 0.70, 0.62)
-so = link_obj('sun', sun); so.visible_glossy = False
+so = link_obj('sun', sun); so.visible_glossy = False; so.visible_transmission = False
 el, az = math.radians(4.5), math.radians(11.0)        # low, behind the island's right shoulder
 to_sun = Vector((math.sin(az) * math.cos(el), math.cos(az) * math.cos(el), math.sin(el)))
 so.rotation_euler = to_sun.to_track_quat('Z', 'Y').to_euler()
@@ -372,11 +376,11 @@ def place(src, loc, rot, sc):
     return ob
 for (x, y, sc, k) in [(-38, -304, 3.2, 0), (-31, -299, 2.4, 1), (-43, -296, 2.0, 2), (-27, -306, 1.6, 3),
                       (-4, -300, 1.8, 2), (2, -296, 1.3, 0)]:
-    r = place(ROCKS[k], (x, y, -1.2 * sc / 2), rng.uniform(0, 6.28), (sc, sc, sc * 0.9))
+    r = place(ROCKS[k], (x, y, -0.25 * sc), rng.uniform(0, 6.28), (sc, sc, sc * 0.9))
     for q in range(int(10 * sc)):
         gx, gy = x + rng.uniform(-1.2, 1.2) * sc, y + rng.uniform(-1.0, 1.0) * sc
         gs = rng.uniform(4.0, 7.0)
-        place(rng.choice(GRASS), (gx, gy, rng.uniform(0.2, 0.9) * sc), rng.uniform(0, 6.28), (gs, gs, gs * 1.4))
+        place(rng.choice(GRASS), (gx, gy, rng.uniform(0.3, 0.8) * sc), rng.uniform(0, 6.28), (gs, gs, gs * 1.4))
 
 # ---------------------------------------------------------------- camera
 cam = bpy.data.cameras.new('cam'); cam.lens = 35; cam.sensor_width = 36
