@@ -1,0 +1,22 @@
+Concept Nier: assets and licences
+
+Every third-party asset is CC0 (public domain). The scene takes the feeling of an abandoned,
+reclaimed city; it uses no assets, characters, logos or text from any game.
+
+Poly Haven (polyhaven.com)
+  HDRI       kloppenheim_06_puresky (2k): sky and daylight; its sun is replaced by a matched sun lamp
+  Models     grass_medium_01, grass_medium_02: the meadow grass
+             celandine_01, flower_empodium (yellow), flower_heliophila (pale blue), dandelion_01 (white)
+             tree_small_02, island_tree_01, island_tree_02: trees on the broken tops and in the meadow
+             shrub_02: shrubs on ledges, tops and at the feet of the walls
+             rock_moss_set_01: rubble half buried in the grass
+
+ambientCG (ambientcg.com)
+  Facade019A                  concrete window grid on the towers (its glazing keyed out to empty rooms)
+  Concrete044B, Concrete031   weathered and broken concrete over the facade frame
+  LeafSet017                  scanned ivy leaves hung on the towers
+  Moss002                     moss on every upward face and at the feet of the walls
+  Rock041, Rock030            the stone of the Break, darkened and honed
+  Ground037, Grass004         soil near the camera, turf in the distance
+
+The Break mark geometry is Antimony's own (break-geometry.json).
