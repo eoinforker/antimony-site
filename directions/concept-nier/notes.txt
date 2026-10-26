@@ -1,0 +1,57 @@
+Concept Nier, path traced
+
+What this is
+  A quiet city long abandoned and gently reclaimed, in bright, soft, slightly washed daylight. Seven concrete
+  towers stand in the haze, two leaning, four with their tops sheared off; whole bays are punched out of their
+  walls with rebar left hanging, and ivy climbs from their feet and pours from their broken tops, heaviest on the
+  near tower. Trees grow on the breaks. A wide meadow of tall grass, yellow celandine and empodium, a little pale
+  blue heliophila and white dandelion runs where the streets were. In the foreground the Break stands clean in
+  the grass: a dark honed stone, its cut faces darker still, the crystal as real glass held to sky #94E6FF.
+  The feeling of NieR: Automata's city ruins; none of its assets, characters, logos or text.
+  Camera: 40 mm on 36 mm, 1.45 m high, pitched up 4 degrees, f/4 focused on the stone 14.8 m away.
+
+  Blender 4.5.15 LTS, Cycles on CPU (4 threads), OpenImageDenoise, adaptive sampling, light tree, AgX.
+  One cheat, as in Rain: the haze scatters camera rays only (seen, not bounced through), so the low sun still
+  shapes it through the towers without volume speckle.
+
+Keeping the mark whole
+  Nothing grows on the stone (its footprint is kept clear), and nothing in front of it may rise over it: every
+  plant between the lens and the stone has its height capped at the line from the lens to the foot of the stone's
+  front face (each view ray is met with the face itself). The loop never warps the stone or the crystal and no
+  seed crosses them. On the page, the crop anchors on the stone's centre across and its foot down, so the whole
+  mark stays in view at any window shape; phones get their own 9:16 crop centred on it.
+
+Run
+  blender -b -P nier_meadow.py -- --ph <assets/polyhaven> --acg <assets/ambientcg> \
+    --res 2560x1440 --samples 48 --time 1150 --exr <prefix_>
+  It writes <prefix_>0001.exr (denoised beauty, depth, and masks for plants, the stone and the crystal) and
+  <prefix_>mark.json (where the stone lands on the frame).
+
+  blender -b --factory-startup -P nier_compose.py -- --exr <prefix_>0001.exr --mark <prefix_>mark.json \
+    --mode still|loop --out <png or frames/f_%04d.png> [--phone <png or %04d>] [--res 1920] \
+    --exposure 0.3 --sat 1.08 --lift 0.8
+  Composed in scene-linear light, through Blender's own AgX (Base Contrast) once, then a gentle display grade:
+  pale pastel blacks, warm highlights, slight lateral colour, vignette, fine grain.
+
+The loop (6 s, 24 fps, 144 frames, seamless), made from passes, not per-frame renders
+  - wind in the grass: a gust that travels left to right, weighted by the plant mask; nearer blades move further
+  - the haze breathes: two soft noise fields drift through one period each, only in the distance
+  - seeds in the warm air: dandelion fluff turning on closed paths, drifting in and out of the light; a few near
+    ones are soft discs, out of focus
+  Every motion repeats on a period that divides 6 s, so frame 144 runs straight into frame 1.
+
+The page (index.html)
+  The render is the background: an AVIF/WebP still, then the WebM or H.264 loop over it (phones load the 9:16
+  crop). The opening is short and skippable (click, key, scroll or touch; once per session): the haze over the
+  meadow thins and clears, then the name arrives. The wordmark is the serif capitals with the crystal cut A, the
+  cut filled with sky, over "Software, made on purpose." Orbe, immiscible and Idyll are three quiet text links.
+  Sound is built in the browser (wind through tall grass from filtered pink noise, a warm distant air of three
+  quiet tones), muted until the one small toggle is pressed. Reduced motion shows the still with no opening.
+
+Honest limits
+  - The sun is soft: the light reads as bright hazy daylight, not hard sun; shadows across the meadow are gentle.
+  - The towers are bevelled slabs dressed with a scanned facade and concrete; their window grid is regular, and at
+    this distance the rebar is barely visible.
+  - The ivy is scanned leaf cards scaled with distance so it reads through the haze; close up it would need real
+    vines.
+  - The grass moves by image warp, not by moving geometry.

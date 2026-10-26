@@ -1,4 +1,4 @@
-# Concept Nier: first-frame draft.
+# Concept Nier: the finished render.
 # A quiet city long abandoned and gently reclaimed: tall concrete towers, some leaning or broken,
 # hung with ivy and crowned with trees; a wide meadow of tall grass and wildflowers where the streets
 # were; bright, soft, slightly washed daylight. The Break stands clean in the meadow, catching the light.
@@ -14,8 +14,10 @@
 #
 # Run (always under the shared lock):
 #   flock <scratch>/blender.lock nice -n 5 blender -b -P nier_meadow.py -- \
-#     --ph <assets/polyhaven> --acg <assets/ambientcg> --out <final.png> [--res 1600x900 --samples 24 --time 420]
+#     --ph <assets/polyhaven> --acg <assets/ambientcg> --exr <dir/prefix_> [--res 2560x1440 --samples 64 --time 1100]
 #   --dry builds the scene and exits without rendering.
+#   The render writes one multilayer EXR (denoised beauty, depth, and masks for plants, the stone and the crystal);
+#   nier_compose.py makes the graded still, the phone crop and the seamless loop from it.
 import bpy, bmesh, math, json, os, re, sys, time
 import numpy as np
 from mathutils import Vector, Matrix, Euler
@@ -28,8 +30,7 @@ def arg(name, default):
 HERE = os.path.dirname(os.path.abspath(__file__))
 PH = arg('ph', '')
 ACG = arg('acg', '')
-OUT = arg('out', '/tmp/nier.png')
-RAW = arg('raw', OUT.replace('.png', '_raw.png'))
+EXR = arg('exr', '/tmp/nier_')
 RES = arg('res', '1600x900')
 SAMPLES = arg('samples', 24)
 TIME = arg('time', 0.0)
@@ -57,6 +58,10 @@ sc.view_settings.view_transform = 'AgX'; sc.view_settings.look = 'None'; sc.view
 sc.render.image_settings.file_format = 'PNG'; sc.render.image_settings.color_depth = '16'
 sc.render.image_settings.color_mode = 'RGB'
 vl = sc.view_layers[0]; vl.use_pass_z = True
+for nm_ in ('pl', 'mk', 'cr'):
+    a_ = vl.aovs.add(); a_.name = nm_; a_.type = 'VALUE'
+def aov(nt_, name, value=1.0):
+    o_ = nt_.nodes.new('ShaderNodeOutputAOV'); o_.aov_name = name; o_.inputs['Value'].default_value = value
 
 # ------------------------------------------------------------------ helpers
 def mat(name):
@@ -96,7 +101,7 @@ su, sv = (ix * 8 + 4) / hdr.size[0], (iy * 8 + 4) / hdr.size[1]
 del px, small
 src_az = (su - 0.5) * 2 * math.pi          # Blender equirect: u = atan2(y, -x) / 2pi + 0.5
 sun_el = (sv - 0.5) * math.pi
-SUN_AZ = math.radians(arg('sun-az', 212.0))  # target heading of the sun, measured from +X towards +Y
+SUN_AZ = math.radians(arg('sun-az', 163.0))  # target heading of the sun, measured from +X towards +Y
 dst_az = math.atan2(math.sin(SUN_AZ), -math.cos(SUN_AZ))
 print('hdri sun u v', round(su, 3), round(sv, 3), 'elev', round(math.degrees(sun_el), 1))
 wld = bpy.data.worlds.new('sky'); sc.world = wld; wld.use_nodes = True
@@ -110,16 +115,16 @@ clampn = node(wn, 'ShaderNodeMix', (-300, 0)); clampn.data_type = 'RGBA'; clampn
 clampn.inputs['Factor'].default_value = 1.0; link(wn, env.outputs['Color'], clampn.inputs['A'])
 clampn.inputs['B'].default_value = (arg('sky-clamp', 6.0),) * 3 + (1,)
 wash = node(wn, 'ShaderNodeMix', (-100, 0)); wash.data_type = 'RGBA'; wash.blend_type = 'MIX'
-wash.inputs['Factor'].default_value = arg('sky-wash', 0.16)
-link(wn, clampn.outputs['Result'], wash.inputs['A']); wash.inputs['B'].default_value = (1.05, 1.02, 0.98, 1)
+wash.inputs['Factor'].default_value = arg('sky-wash', 0.2)
+link(wn, clampn.outputs['Result'], wash.inputs['A']); wash.inputs['B'].default_value = (0.96, 0.99, 1.04, 1)
 bg = node(wn, 'ShaderNodeBackground', (100, 0)); bg.inputs['Strength'].default_value = arg('sky', 1.0)
 link(wn, wash.outputs['Result'], bg.inputs['Color'])
 wo = node(wn, 'ShaderNodeOutputWorld', (300, 0)); link(wn, bg.outputs['Background'], wo.inputs['Surface'])
 wld.cycles.sampling_method = 'MANUAL'; wld.cycles.sample_map_resolution = 1024
-SUN_EL = math.radians(arg('sun-el', 36.0))
+SUN_EL = math.radians(arg('sun-el', 21.0))
 sdir = Vector((math.cos(SUN_EL) * math.cos(SUN_AZ), math.cos(SUN_EL) * math.sin(SUN_AZ), math.sin(SUN_EL)))
-sun_d = bpy.data.lights.new('sun', 'SUN'); sun_d.energy = arg('sun', 5.2); sun_d.angle = math.radians(1.2)
-sun_d.color = (1.0, 0.9, 0.76)
+sun_d = bpy.data.lights.new('sun', 'SUN'); sun_d.energy = arg('sun', 12.0); sun_d.angle = math.radians(1.2)
+sun_d.color = (1.0, 0.86, 0.68)
 sun = link_ob(bpy.data.objects.new('sun', sun_d))
 sun.rotation_euler = (-sdir).to_track_quat('-Z', 'Y').to_euler()
 
@@ -128,14 +133,14 @@ cam_d = bpy.data.cameras.new('cam'); cam = link_ob(bpy.data.objects.new('cam', c
 cam_d.lens = arg('lens', 40.0); cam_d.sensor_width = 36; cam_d.sensor_fit = 'HORIZONTAL'
 CAM = Vector((0, 0, arg('eye', 1.45)))
 cam.location = CAM
-cam.rotation_euler = (math.pi / 2 + math.radians(arg('pitch', 5.0)), 0, math.radians(arg('cam-yaw', 0.0)))
+cam.rotation_euler = (math.pi / 2 + math.radians(arg('pitch', 4.0)), 0, math.radians(arg('cam-yaw', 0.0)))
 cam_d.clip_start = 0.05; cam_d.clip_end = 5000
 HALF = math.atan(18 / cam_d.lens) + math.radians(5)
 
 # ------------------------------------------------------------------ the Break: exact geometry, dark honed scanned stone, glass crystal
 S = 0.019; T = arg('thick', 0.46)
-MX, MY = arg('mx', 2.5), arg('my', 12.5)
-MYAW = math.radians(arg('yaw', -16.0))
+MX, MY = arg('mx', 3.0), arg('my', 14.5)
+MYAW = math.radians(arg('yaw', -22.0))
 def svg_poly(d):
     nums = [float(v) for v in re.findall(r'-?\d+\.?\d*', d)]
     return [(nums[i], nums[i + 1]) for i in range(0, len(nums), 2)]
@@ -176,12 +181,12 @@ me = bpy.data.meshes.new('crystal'); bm.to_mesh(me); bm.free()
 crystal = link_ob(bpy.data.objects.new('crystal', me))
 bvc = crystal.modifiers.new('arris', 'BEVEL'); bvc.width = 0.0025; bvc.segments = 2; bvc.limit_method = 'ANGLE'
 mark = link_ob(bpy.data.objects.new('mark', None))
-mark.location = (MX, MY, -0.05); mark.rotation_euler = (0, 0, MYAW)
+mark.location = (MX, MY, -0.03); mark.rotation_euler = (0, 0, MYAW)
 for o in [tile, crystal] + cuts: o.parent = mark
 
 m_st, nt = mat('stone')
 tco = node(nt, 'ShaderNodeTexCoord', (-1200, 0))
-mpp = node(nt, 'ShaderNodeMapping', (-1000, 0)); mpp.inputs['Scale'].default_value = (0.9,) * 3
+mpp = node(nt, 'ShaderNodeMapping', (-1000, 0)); mpp.inputs['Scale'].default_value = (arg('st-scale', 3.2),) * 3
 link(nt, tco.outputs['Object'], mpp.inputs['Vector'])
 nz = node(nt, 'ShaderNodeTexNoise', (-1000, 500)); nz.inputs['Scale'].default_value = 1.6; nz.inputs['Detail'].default_value = 3
 link(nt, tco.outputs['Object'], nz.inputs['Vector'])
@@ -198,21 +203,24 @@ cd = mixc(nt, nzr.outputs['Result'], boxtex(nt, acg('Rock041', 'Color'), False, 
 crr = mixc(nt, nzr.outputs['Result'], boxtex(nt, acg('Rock041', 'Roughness'), True, V).outputs['Color'], boxtex(nt, acg('Rock030', 'Roughness'), True, V).outputs['Color'])
 cn = mixc(nt, nzr.outputs['Result'], boxtex(nt, acg('Rock041', 'NormalGL'), True, V).outputs['Color'], boxtex(nt, acg('Rock030', 'NormalGL'), True, V).outputs['Color'])
 hsv = node(nt, 'ShaderNodeHueSaturation'); hsv.inputs['Saturation'].default_value = 0.1
-hsv.inputs['Value'].default_value = arg('st-val', 0.13); link(nt, cd, hsv.inputs['Color'])
-rr = node(nt, 'ShaderNodeMapRange'); rr.inputs['To Min'].default_value = 0.24; rr.inputs['To Max'].default_value = 0.46
+hsv.inputs['Value'].default_value = arg('st-val', 0.12); link(nt, cd, hsv.inputs['Color'])
+rr = node(nt, 'ShaderNodeMapRange'); rr.inputs['To Min'].default_value = 0.24; rr.inputs['To Max'].default_value = 0.4
 link(nt, crr, rr.inputs['Value'])
-nm = node(nt, 'ShaderNodeNormalMap'); nm.inputs['Strength'].default_value = 0.55; link(nt, cn, nm.inputs['Color'])
+nm = node(nt, 'ShaderNodeNormalMap'); nm.inputs['Strength'].default_value = 0.22; link(nt, cn, nm.inputs['Color'])
 bvn = node(nt, 'ShaderNodeBevel'); bvn.samples = 6; bvn.inputs['Radius'].default_value = 0.004
 link(nt, nm.outputs['Normal'], bvn.inputs['Normal'])
 bsdf = node(nt, 'ShaderNodeBsdfPrincipled'); bsdf.inputs['Specular IOR Level'].default_value = 0.55
 link(nt, hsv.outputs['Color'], bsdf.inputs['Base Color']); link(nt, rr.outputs['Result'], bsdf.inputs['Roughness'])
 link(nt, bvn.outputs['Normal'], bsdf.inputs['Normal'])
 o = node(nt, 'ShaderNodeOutputMaterial'); link(nt, bsdf.outputs['BSDF'], o.inputs['Surface'])
+aov(nt, 'mk')
 m_in = m_st.copy(); m_in.name = 'stone_cut'
 for n_ in m_in.node_tree.nodes:
-    if n_.bl_idname == 'ShaderNodeHueSaturation': n_.inputs['Value'].default_value = 0.07
+    # the cut faces: unpolished and dark, so the seam and the cavity read as cuts, never as pale bands
+    if n_.bl_idname == 'ShaderNodeHueSaturation': n_.inputs['Value'].default_value = 0.025
     if n_.bl_idname == 'ShaderNodeMapRange' and n_.inputs['To Min'].default_value == 0.24:
-        n_.inputs['To Min'].default_value = 0.6; n_.inputs['To Max'].default_value = 0.8
+        n_.inputs['To Min'].default_value = 0.8; n_.inputs['To Max'].default_value = 0.95
+    if n_.bl_idname == 'ShaderNodeBsdfPrincipled': n_.inputs['Specular IOR Level'].default_value = 0.15
 dg = bpy.context.evaluated_depsgraph_get()
 me_cut = bpy.data.meshes.new_from_object(tile.evaluated_get(dg))
 tile.modifiers.clear(); tile.data = me_cut
@@ -236,6 +244,7 @@ b.inputs['IOR'].default_value = 1.52; b.inputs['Coat Weight'].default_value = 1.
 emc = node(nt, 'ShaderNodeEmission'); emc.inputs['Color'].default_value = (*SKY, 1); emc.inputs['Strength'].default_value = arg('cr-glow', 0.25)
 ad = node(nt, 'ShaderNodeAddShader'); link(nt, b.outputs['BSDF'], ad.inputs[0]); link(nt, emc.outputs['Emission'], ad.inputs[1])
 o = node(nt, 'ShaderNodeOutputMaterial'); link(nt, ad.outputs['Shader'], o.inputs['Surface'])
+aov(nt, 'mk'); aov(nt, 'cr')
 crystal.data.materials.append(m_cr)
 
 # ------------------------------------------------------------------ ground: scanned soil near, scanned turf far
@@ -256,7 +265,7 @@ link(nt, gp.outputs['Position'], cam_dist.inputs[0]); link(nt, cam_dist.outputs[
 gc = mixc(nt, far.outputs['Result'], flat(acg('Ground037', 'Color'), False, v1), flat(acg('Grass004', 'Color'), False, v2))
 gr = mixc(nt, far.outputs['Result'], flat(acg('Ground037', 'Roughness'), True, v1), flat(acg('Grass004', 'Roughness'), True, v2))
 gn_ = mixc(nt, far.outputs['Result'], flat(acg('Ground037', 'NormalGL'), True, v1), flat(acg('Grass004', 'NormalGL'), True, v2))
-ghs = node(nt, 'ShaderNodeHueSaturation'); ghs.inputs['Value'].default_value = 0.8; link(nt, gc, ghs.inputs['Color'])
+ghs = node(nt, 'ShaderNodeHueSaturation'); ghs.inputs['Value'].default_value = 0.32; link(nt, gc, ghs.inputs['Color'])
 nmg = node(nt, 'ShaderNodeNormalMap'); link(nt, gn_, nmg.inputs['Color'])
 bg_ = node(nt, 'ShaderNodeBsdfPrincipled')
 link(nt, ghs.outputs['Color'], bg_.inputs['Base Color']); link(nt, gr, bg_.inputs['Roughness']); link(nt, nmg.outputs['Normal'], bg_.inputs['Normal'])
@@ -328,6 +337,10 @@ def tower_material(name, val=1.0):
     o_ = node(nt_, 'ShaderNodeOutputMaterial'); link(nt_, p_.outputs['BSDF'], o_.inputs['Surface'])
     return m
 M_TOWER = tower_material('tower', arg('con-val', 0.95))
+M_REBAR, nt = mat('rebar')
+p_ = node(nt, 'ShaderNodeBsdfPrincipled'); p_.inputs['Base Color'].default_value = (0.09, 0.045, 0.03, 1)
+p_.inputs['Roughness'].default_value = 0.8; p_.inputs['Metallic'].default_value = 0.4
+o_ = node(nt, 'ShaderNodeOutputMaterial'); link(nt, p_.outputs['BSDF'], o_.inputs['Surface'])
 
 # x, y (metres from camera), width, depth, height, yaw, lean about x, lean about y (deg), broken top (dx, dz slope)
 TOWERS = [
@@ -359,6 +372,37 @@ for k, (tx, ty, tw, td, th, yaw, lx, ly, brk) in enumerate(TOWERS):
         cut.rotation_euler = (math.radians(rng.uniform(-6, 6)), math.atan(slope * depth / tw), 0)
         md = ob.modifiers.new('break', 'BOOLEAN'); md.operation = 'DIFFERENCE'; md.solver = 'FAST'; md.object = cut
         cut.hide_render = True; cut.hide_viewport = True
+    # broken bays: whole sections of the wall gone, one to three bays wide, a floor or three high, deep into the slab
+    bm = bmesh.new(); notches = []
+    for _ in range(int(rng.integers(5, 10))):
+        f_ = int(rng.integers(0, 4)); u_ = rng.uniform(-0.38, 0.38); zc = rng.uniform(8, th - 22)
+        bw, bh, bd = rng.uniform(4.5, 13), rng.uniform(3.2, 9.5), rng.uniform(2.5, 5.0)
+        wid = tw if f_ < 2 else td
+        cx_, cy_ = [(u_ * tw, -td / 2), (u_ * tw, td / 2), (tw / 2, u_ * td), (-tw / 2, u_ * td)][f_]
+        sx_, sy_ = (bw, bd * 2) if f_ < 2 else (bd * 2, bw)
+        r_ = bmesh.ops.create_cube(bm, size=1.0)
+        bmesh.ops.scale(bm, vec=(sx_, sy_, bh), verts=r_['verts']); bmesh.ops.translate(bm, vec=(cx_, cy_, zc), verts=r_['verts'])
+        notches.append((f_, cx_, cy_, zc, bw, bh))
+    nme = bpy.data.meshes.new(f'bays{k}'); bm.to_mesh(nme); bm.free()
+    bays = link_ob(bpy.data.objects.new(f'bays{k}', nme)); bays.parent = ob; bays.hide_render = True; bays.hide_viewport = True
+    md = ob.modifiers.new('bays', 'BOOLEAN'); md.operation = 'DIFFERENCE'; md.solver = 'EXACT'; md.object = bays
+    md.use_self = True; md.use_hole_tolerant = True
+    # rebar: bars left hanging from the top edge of each break, bent down by their own weight
+    bm = bmesh.new()
+    for f_, cx_, cy_, zc, bw, bh in notches:
+        nrm = [(0, -1), (0, 1), (1, 0), (-1, 0)][f_]; tan = (abs(nrm[1]), abs(nrm[0]))
+        for _ in range(int(rng.integers(4, 9))):
+            o_ = rng.uniform(-0.45, 0.45) * bw; L_ = rng.uniform(0.8, 2.6); droop = rng.uniform(0.2, 1.0)
+            base = Vector((cx_ + tan[0] * o_ - nrm[0] * 0.4, cy_ + tan[1] * o_ - nrm[1] * 0.4, zc + bh / 2 - 0.15))
+            pts = [base + Vector((nrm[0] * L_ * t, nrm[1] * L_ * t, -droop * L_ * t * t)) for t in np.linspace(0, 1, 5)]
+            prev = None
+            for p_ in pts:
+                ring = [bm.verts.new(p_ + Vector((tan[0] * 0.03 * math.cos(a), tan[1] * 0.03 * math.cos(a), 0.03 * math.sin(a)))) for a in (0, 2.1, 4.2)]
+                if prev:
+                    for j in range(3): bm.faces.new((prev[j], prev[(j + 1) % 3], ring[(j + 1) % 3], ring[j]))
+                prev = ring
+    rme = bpy.data.meshes.new(f'rebar{k}'); bm.to_mesh(rme); bm.free(); rme.materials.append(M_REBAR)
+    rb = link_ob(bpy.data.objects.new(f'rebar{k}', rme)); rb.parent = ob
     bvm = ob.modifiers.new('arris', 'BEVEL'); bvm.width = 0.25; bvm.segments = 2; bvm.limit_method = 'ANGLE'
     towers.append((ob, tw, td, th))
 bpy.context.view_layer.update()
@@ -386,6 +430,22 @@ def ph_objects(asset, names, res='2k'):
         for md_ in list(ob.modifiers): ob.modifiers.remove(md_)
         out.append(ob)
     return out
+def dress(obs, sat=1.0, val=1.0, hue=0.5):
+    # every scanned plant gets a mask for the loop; grass can be pushed greener without touching its scan
+    done = set()
+    for ob in obs:
+        for slot in ob.material_slots:
+            m = slot.material
+            if not m or m.name in done or not m.use_nodes: continue
+            done.add(m.name); nt_ = m.node_tree
+            aov(nt_, 'pl')
+            if sat == 1.0 and val == 1.0 and hue == 0.5: continue
+            for n_ in list(nt_.nodes):
+                if n_.bl_idname != 'ShaderNodeBsdfPrincipled' or not n_.inputs['Base Color'].is_linked: continue
+                lk = n_.inputs['Base Color'].links[0]; src = lk.from_socket
+                hs_ = nt_.nodes.new('ShaderNodeHueSaturation')
+                hs_.inputs['Hue'].default_value = hue; hs_.inputs['Saturation'].default_value = sat; hs_.inputs['Value'].default_value = val
+                nt_.links.remove(lk); nt_.links.new(src, hs_.inputs['Color']); nt_.links.new(hs_.outputs['Color'], n_.inputs['Base Color'])
 def library(name, obs):
     c = bpy.data.collections.new(name); sc.collection.children.link(c)
     for ob in obs: c.objects.link(ob)
@@ -440,8 +500,9 @@ itp = node(nt, 'ShaderNodeBsdfTransparent')
 im2 = node(nt, 'ShaderNodeMixShader'); link(nt, ia.outputs['Color'], im2.inputs['Fac'])
 link(nt, itp.outputs['BSDF'], im2.inputs[1]); link(nt, im1.outputs['Shader'], im2.inputs[2])
 o = node(nt, 'ShaderNodeOutputMaterial'); link(nt, im2.outputs['Shader'], o.inputs['Surface'])
+aov(nt, 'pl')
 
-def ivy_on_tower(ob, tw, td, th, count):
+def ivy_on_tower(ob, tw, td, th, count, heavy=False):
     # points on the four walls in local space; ivy climbs from the foot in uneven curtains and
     # pours down from the broken top and the ledges
     mw = ob.matrix_world
@@ -450,8 +511,8 @@ def ivy_on_tower(ob, tw, td, th, count):
     z = rng.uniform(-6, th - 6, count * 3)
     width = np.where(face < 2, tw, td)
     s = u * width + face * 97.0
-    climb = 5 + 30 * fbm(s, np.zeros_like(s), 0.05, ob.location.x * 0.01) ** 1.4
-    hang = 2 + 26 * fbm(s, np.ones_like(s) * 3, 0.07, 1.3 + ob.location.y * 0.01) ** 2.2
+    climb = (14 if heavy else 5) + (60 if heavy else 30) * fbm(s, np.zeros_like(s), 0.05, ob.location.x * 0.01) ** 1.4
+    hang = (6 if heavy else 2) + (50 if heavy else 26) * fbm(s, np.ones_like(s) * 3, 0.07, 1.3 + ob.location.y * 0.01) ** 2.2
     top = th - 6
     p = np.maximum(1 - smooth(climb * 0.75, climb, z), 1 - smooth(hang * 0.7, hang, top - z))
     p = np.maximum(p, 0.5 * (fbm(s, z, 0.12, 2.0) > 0.86))
@@ -499,13 +560,16 @@ def build_leaves(name, P, N, size, wall_frame):
     ob = link_ob(bpy.data.objects.new(name, me)); print(name, n, 'leaves'); return ob
 
 IVY = arg('ivy', 26000)
+for ob_, *_ in towers:
+    print('tower', ob_.name, len(ob_.evaluated_get(bpy.context.evaluated_depsgraph_get()).data.vertices), 'verts')
 dg = bpy.context.evaluated_depsgraph_get()
 for k, (ob, tw, td, th) in enumerate(towers):
     dist = ob.location.length
     size = 0.5 * max(1.0, dist / 260)          # leaves grow with distance so the curtains read through the haze
-    P, N, n = ivy_on_tower(ob, tw, td, th, int(IVY * DENS * (1.2 if dist < 350 else 0.7)))
-    if TOWERS[k][8]:
-        # a sheared top: keep only the leaves that still have wall behind them (a short ray cast into the wall)
+    P, N, n = ivy_on_tower(ob, tw, td, th, int(IVY * DENS * (3.2 if k == 0 else 1.2 if dist < 350 else 0.7)), heavy=(k == 0))
+    if True:
+        # keep only the leaves that still have wall behind them (a short ray cast into the wall): none over the
+        # broken bays or above a sheared top
         mw = ob.matrix_world; R = mw.to_3x3(); ok = np.zeros(n, bool)
         for i in range(n):
             wp = mw @ Vector(P[i]); wn_ = R @ Vector(N[i])
@@ -517,9 +581,9 @@ for k, (ob, tw, td, th) in enumerate(towers):
 # ------------------------------------------------------------------ trees and shrubs: scanned models on the broken tops, ledges and in the meadow
 TREES = ph_objects('tree_small_02', ['tree_small_02_LOD1'], '1k') + ph_objects('island_tree_01', ['island_tree_01_LOD1'], '1k') \
     + ph_objects('island_tree_02', ['island_tree_02_LOD1'], '1k')
-tlib = library('tree_lib', TREES)
+dress(TREES, 1.1, 1.0); tlib = library('tree_lib', TREES)
 SHRUBS = ph_objects('shrub_02', [f'shrub_02_{c}_LOD1' for c in 'abcd'], '1k')
-slib = library('shrub_lib', SHRUBS)
+dress(SHRUBS, 1.15, 1.0); slib = library('shrub_lib', SHRUBS)
 ROCKS = ph_objects('rock_moss_set_01', [f'rock_moss_set_01_rock0{i}' for i in range(1, 7)], '1k')
 rlib = library('rock_lib', ROCKS)
 dg = bpy.context.evaluated_depsgraph_get()
@@ -544,6 +608,9 @@ for _ in range(arg('meadow-trees', 26)):
     x_, y_ = r_ * math.sin(th_), r_ * math.cos(th_)
     if abs(x_ - 0) < 12 and y_ < 120: continue           # keep the gap behind the stone open
     tp.append(Vector((x_, y_, -0.2))); tsc.append(rng.uniform(1.4, 2.6)); tpk.append(rng.integers(0, len(TREES)))
+# three nearer trees on the left, so the low sun lays their shadows across the meadow
+for x_, y_ in ((-21, 40), (-33, 58), (-12, 76)):
+    tp.append(Vector((x_, y_, -0.2))); tsc.append(rng.uniform(1.8, 2.4)); tpk.append(rng.integers(0, len(TREES)))
 tp = np.array([tuple(v) for v in tp]); n_ = len(tp)
 trot = np.zeros((n_, 3)); trot[:, 2] = rng.uniform(0, 6.283, n_); trot[:, 0] = rng.normal(0, 0.05, n_)
 tsc = np.array(tsc); instancer('trees', tlib, tp, trot, np.stack([tsc, tsc, tsc * rng.uniform(0.9, 1.15, n_)], 1), np.array(tpk))
@@ -564,12 +631,27 @@ sp_ = np.array(sp_); n_ = len(sp_); ss_ = np.array(ss_)
 srot = np.zeros((n_, 3)); srot[:, 2] = rng.uniform(0, 6.283, n_)
 instancer('shrubs', slib, sp_, srot, np.stack([ss_] * 3, 1), rng.integers(0, len(SHRUBS), n_))
 
+# the mark's span on screen (x over y), so nothing near the lens may rise over it
+_c, _s = math.cos(MYAW), math.sin(MYAW)
+_corn = [(MX + dx * _c - dy * _s, MY + dx * _s + dy * _c) for dx in (-0.97, 0.97) for dy in (-T / 2, T / 2)]
+U0 = min(x_ / y_ for x_, y_ in _corn) - 0.012; U1 = max(x_ / y_ for x_, y_ in _corn) + 0.012
+YS = min(y_ for x_, y_ in _corn)
+def los_cap(x, y):
+    # the tallest a plant at (x, y) may stand and still stay below the line from the lens to the foot of the
+    # mark's front face: each view ray is met with the face itself, so the turned stone is covered end to end
+    u = x / np.maximum(y, 0.1)
+    c, s_ = math.cos(-MYAW), math.sin(-MYAW)
+    yf = (-(T / 2 + 0.02) + MX * s_ + MY * c) / (u * s_ + c)          # where the ray at u meets the front face
+    inside = (u > U0) & (u < U1) & (y < yf + 0.05)
+    cap = CAM.z - (CAM.z - 0.02) * y / yf
+    return np.where(inside, np.maximum(cap, 0.0), 99.0)
 # rubble in the grass: scanned mossy rocks standing in for fallen concrete, half buried
 rp = []
 for _ in range(arg('rocks', 40)):
     r_ = rng.uniform(6, 140); th_ = rng.uniform(-HALF, HALF)
     x_, y_ = r_ * math.sin(th_), r_ * math.cos(th_)
     if math.hypot(x_ - MX, y_ - MY) < 3.0: continue
+    if U0 - 0.03 < x_ / y_ < U1 + 0.03 and y_ < MY + 2: continue
     rp.append((x_, y_, -0.25))
 rp = np.array(rp); n_ = len(rp); rs = rng.uniform(0.15, 0.55, n_) * (1 + np.linalg.norm(rp[:, :2], axis=1) / 60)
 rrot = np.zeros((n_, 3)); rrot[:, 2] = rng.uniform(0, 6.283, n_)
@@ -583,12 +665,18 @@ if not GR:
     GR = [o_ for o_ in dst.objects if o_]
     for o_ in GR: o_.location = (0, 0, 0); o_.rotation_euler = (0, 0, 0); o_.parent = None
 GR += ph_objects('grass_medium_02', [f'grass_medium_02_{c}' for c in 'bcde'])
-glib = library('grass_lib', GR)
+dress(GR, arg('grass-sat', 1.5), arg('grass-val', 1.15), 0.53); glib = library('grass_lib', GR)
 YEL = ph_objects('celandine_01', [f'celandine_01_{c}_LOD1' for c in 'abcde']) + ph_objects('flower_empodium', [f'flower_empodium_{c}_LOD1' for c in 'abcde'])
 BLU = ph_objects('flower_heliophila', ['flower_heliophila_small_LOD3'])
 WHT = ph_objects('dandelion_01', ['dandelion_01_a_LOD2', 'dandelion_01_b_LOD2'])
-flib = library('flower_lib', YEL + BLU + WHT)
-NY, NB, NW = len(YEL), len(BLU), len(WHT)
+dress(YEL + WHT); dress(BLU, 1.9, 0.95, 0.51); flib = library('flower_lib', YEL + BLU + WHT)
+FN = sorted(o_.name for o_ in flib.objects)        # Collection Info picks children in name order
+IY = np.array([i for i, n in enumerate(FN) if 'celandine' in n or 'empodium' in n])
+IB = np.array([i for i, n in enumerate(FN) if 'heliophila' in n]); IW = np.array([i for i, n in enumerate(FN) if 'dandelion' in n])
+NY, NB, NW = len(IY), len(IB), len(IW)
+def fpick(m, pw, pb):
+    u = rng.uniform(0, 1, m)
+    return np.where(u < pw, IW[rng.integers(0, NW, m)], np.where(u < pw + pb, IB[rng.integers(0, NB, m)], IY[rng.integers(0, NY, m)]))
 print('libs grass', len(GR), 'flowers', NY, NB, NW, 'trees', len(TREES))
 
 def field(n, rmin, rmax, keep):
@@ -600,29 +688,51 @@ def field(n, rmin, rmax, keep):
     ok = ~((np.abs(lx) < 1.06) & (np.abs(ly) < T / 2 + 0.06))         # nothing grows on the mark
     return x[ok], y[ok], r[ok]
 def plant(name, coll, x, y, r, scl, pick):
+    # heights are capped so that no blade or flower in front of the mark rises over it: the mark stays whole
+    dimz = np.array([o_.dimensions.z for o_ in sorted(coll.objects, key=lambda o_: o_.name)]) * 1.1   # Collection Info picks in name order
+    sz = scl * rng.uniform(0.85, 1.25, len(x))
+    f = np.minimum(1.0, los_cap(x, y) / np.maximum(dimz[pick] * sz, 1e-3))
+    keep = f > 0.12
+    x, y, scl, sz, pick, f = x[keep], y[keep], scl[keep], sz[keep], pick[keep], f[keep]
     m = len(x); P = np.stack([x, y, np.full(m, -0.02)], 1)
     rot = np.zeros((m, 3)); rot[:, 2] = rng.uniform(0, 6.283, m); rot[:, 0] = rng.normal(0, 0.06, m); rot[:, 1] = rng.normal(0, 0.06, m)
-    return instancer(name, coll, P, rot, np.stack([scl, scl, scl * rng.uniform(0.85, 1.25, m)], 1), pick)
+    return instancer(name, coll, P, rot, np.stack([scl * f, scl * f, sz * f], 1), pick)
 # patches: the old street grid still shows as lower, flowerier strips through the tall grass
 def patches(x, y): return fbm(x, y, 0.06, 0.4)
 x, y, r = field(int(2600000 * DENS), 1.2, 260, lambda r, x, y: np.clip((10 / r) ** 1.15, 0.02, 1.0))
 dm = np.hypot(x - MX, y - MY)
 gs = rng.uniform(1.15, 1.85, len(x)) * (1 + r / 70) * (0.55 + 0.45 * smooth(1.2, 4.0, dm)) * (0.75 + 0.5 * patches(x, y))
 plant('grass', glib, x, y, r, gs, rng.integers(0, len(GR), len(x)))
-x, y, r = field(int(900000 * DENS), 1.2, 220, lambda r, x, y: np.clip((9 / r) ** 1.1, 0.02, 1.0) * (0.35 + 0.65 * patches(x, y)))
+x, y, r = field(int(650000 * DENS), 1.2, 220, lambda r, x, y: np.clip((9 / r) ** 1.1, 0.02, 1.0) * (0.35 + 0.65 * patches(x, y)))
 u = rng.uniform(0, 1, len(x))
-pick = np.where(u < 0.3, NY + NB + rng.integers(0, NW, len(x)), np.where(u < 0.45, NY + rng.integers(0, NB, len(x)), rng.integers(0, NY, len(x))))
-fs = rng.uniform(1.0, 1.6, len(x)) * (1 + r / 45)
+pick = fpick(len(x), 0.08, 0.05)
+fs = rng.uniform(1.0, 1.6, len(x)) * (1 + r / 45) * np.where(np.isin(pick, IY), 1.35, 1.0)
 plant('flowers', flib, x, y, r, fs, pick)
+# set dressing by the lens: tall grass and a few flowers within arm's reach, soft with depth of field, kept to the
+# lower corners and clear of the mark
+n_ = int(26000 * DENS)
+x = rng.uniform(-1.6, 2.6, n_); y = rng.uniform(0.45, 2.6, n_)
+u_ = x / y; corner = (u_ < -0.12) | (u_ > U1 + 0.08)
+x, y = x[corner], y[corner]
+plant('fore_grass', glib, x, y, np.hypot(x, y), rng.uniform(1.2, 2.0, len(x)), rng.integers(0, len(GR), len(x)))
+n_ = int(3500 * DENS)
+x = rng.uniform(-1.6, 2.6, n_); y = rng.uniform(0.6, 2.6, n_)
+u_ = x / y; corner = (u_ < -0.15) | (u_ > U1 + 0.1)
+x, y = x[corner], y[corner]
+u = rng.uniform(0, 1, len(x))
+plant('fore_flowers', flib, x, y, np.hypot(x, y), rng.uniform(1.0, 1.4, len(x)),
+      fpick(len(x), 0.1, 0.06))
 
-# ------------------------------------------------------------------ haze: an optional thin real volume (--vol 1; off in the draft, too noisy at
-# low samples), and aerial perspective by depth in the composite
-if arg('vol', 0):
+# ------------------------------------------------------------------ haze: a thin real volume that scatters camera rays only (the sun still
+# shapes it through the towers, without the speckle), and aerial perspective by depth in nier_compose.py
+if arg('vol', 1):
     bpy.ops.mesh.primitive_cube_add(size=1); vb = bpy.context.object; vb.name = 'haze'
     vb.scale = (2400, 2400, 180); vb.location = (0, 1100, 89)
     m_v, nt = mat('haze')
-    pv = node(nt, 'ShaderNodeVolumePrincipled'); pv.inputs['Density'].default_value = arg('haze', 0.0011)
-    pv.inputs['Color'].default_value = (0.92, 0.95, 1.0, 1); pv.inputs['Anisotropy'].default_value = 0.55
+    pv = node(nt, 'ShaderNodeVolumePrincipled')
+    lpv = node(nt, 'ShaderNodeLightPath'); dn = node(nt, 'ShaderNodeMath', operation='MULTIPLY'); dn.inputs[1].default_value = arg('haze', 0.00035)
+    link(nt, lpv.outputs['Is Camera Ray'], dn.inputs[0]); link(nt, dn.outputs['Value'], pv.inputs['Density'])
+    pv.inputs['Color'].default_value = (0.95, 0.96, 1.0, 1); pv.inputs['Anisotropy'].default_value = 0.6
     o = node(nt, 'ShaderNodeOutputMaterial'); link(nt, pv.outputs['Volume'], o.inputs['Volume'])
     vb.data.materials.append(m_v)
     vb.visible_shadow = False
@@ -631,58 +741,26 @@ cam_d.dof.use_dof = True
 cam_d.dof.focus_distance = math.hypot(MX, MY) - 0.2
 cam_d.dof.aperture_fstop = arg('fstop', 4.0); cam_d.dof.aperture_blades = 7
 
-# ------------------------------------------------------------------ compositor: aerial perspective by depth, soft bloom
+# ------------------------------------------------------------------ output: one multilayer EXR of passes; grading happens in nier_compose.py
 sc.use_nodes = True
 ct = sc.node_tree; ct.nodes.clear()
 rl = ct.nodes.new('CompositorNodeRLayers'); comp = ct.nodes.new('CompositorNodeComposite')
-fz = ct.nodes.new('CompositorNodeMapRange'); fz.use_clamp = True
-fz.inputs['From Min'].default_value = 45; fz.inputs['From Max'].default_value = arg('fog-far', 1400)
-fz.inputs['To Min'].default_value = 0; fz.inputs['To Max'].default_value = arg('fog', 0.32)
-ct.links.new(rl.outputs['Depth'], fz.inputs['Value'])
-skyk = ct.nodes.new('CompositorNodeMath'); skyk.operation = 'LESS_THAN'; skyk.inputs[1].default_value = 4000
-ct.links.new(rl.outputs['Depth'], skyk.inputs[0])
-fk = ct.nodes.new('CompositorNodeMath'); fk.operation = 'MULTIPLY'
-ct.links.new(fz.outputs['Value'], fk.inputs[0]); ct.links.new(skyk.outputs['Value'], fk.inputs[1])
-pw = ct.nodes.new('CompositorNodeMath'); pw.operation = 'POWER'; pw.inputs[1].default_value = 0.7
-ct.links.new(fk.outputs['Value'], pw.inputs[0])
-fm = ct.nodes.new('CompositorNodeMixRGB'); fm.blend_type = 'MIX'
-hz = arg('haze-level', 1.1)
-fm.inputs[2].default_value = (0.86 * hz, 0.89 * hz, 0.93 * hz, 1)
-ct.links.new(pw.outputs[0], fm.inputs[0]); ct.links.new(rl.outputs['Image'], fm.inputs[1])
-gl = ct.nodes.new('CompositorNodeGlare'); gl.glare_type = 'BLOOM'; gl.quality = 'HIGH'
-gl.inputs['Threshold'].default_value = 0.85; gl.inputs['Smoothness'].default_value = 0.7
-gl.inputs['Strength'].default_value = arg('bloom', 0.3); gl.inputs['Size'].default_value = 0.9
-gl.inputs['Tint'].default_value = (1.0, 0.93, 0.84, 1)
-ct.links.new(fm.outputs['Image'], gl.inputs['Image']); ct.links.new(gl.outputs['Image'], comp.inputs['Image'])
-
+ct.links.new(rl.outputs['Image'], comp.inputs['Image'])
+fo = ct.nodes.new('CompositorNodeOutputFile'); fo.base_path = EXR; fo.format.file_format = 'OPEN_EXR_MULTILAYER'
+fo.format.color_depth = '32'; fo.format.exr_codec = 'ZIP'
+fo.file_slots.clear()
+for nm_, sock in (('rgb', 'Image'), ('Depth', 'Depth'), ('pl', 'pl'), ('mk', 'mk'), ('cr', 'cr')):
+    fo.file_slots.new(nm_); ct.links.new(rl.outputs[sock], fo.inputs[nm_])
+# where the mark lands on the frame, for the page
+from bpy_extras.object_utils import world_to_camera_view
+bpy.context.view_layer.update()
+pts = [world_to_camera_view(sc, cam, mark.matrix_world @ Vector((x_, 0, z_))) for x_ in (-0.95, 0.95) for z_ in (0, 1.9)]
+json.dump({'u0': min(p.x for p in pts), 'u1': max(p.x for p in pts), 'v0': 1 - max(p.y for p in pts), 'v1': 1 - min(p.y for p in pts)},
+          open(EXR + 'mark.json', 'w'))
+print('MARK', open(EXR + 'mark.json').read())
 if '--dry' in argv:
     print('DRY_OK'); sys.exit(0)
 t0 = time.time()
-sc.render.filepath = RAW
-if '--grade-only' not in argv: bpy.ops.render.render(write_still=True)
+sc.render.filepath = EXR + 'beauty.png'
+bpy.ops.render.render(write_still=True)
 print('RENDER_SECONDS', round(time.time() - t0, 1))
-
-# ------------------------------------------------------------------ grade: filmic lift to pale pastel blacks, warm highlights, lens, grain
-im = bpy.data.images.load(RAW); im.colorspace_settings.name = 'Non-Color'
-a = np.array(im.pixels[:], dtype=np.float32).reshape(H, W, 4)[:, :, :3]
-lift = np.array([0.075, 0.08, 0.095]) * arg('lift', 0.65)
-a = lift + a * (1 - lift)
-lum = a @ np.array([0.2126, 0.7152, 0.0722])
-a = lum[..., None] + (a - lum[..., None]) * arg('sat', 0.96)
-warm = np.array([1.025, 1.0, 0.965]); a = a * (1 + (warm - 1) * smooth(0.45, 1.0, lum)[..., None])
-yy, xx = np.mgrid[0:H, 0:W]; cx_, cy_ = (W - 1) / 2, (H - 1) / 2
-rr2 = ((xx - cx_) / cx_) ** 2 * 0.8 + ((yy - cy_) / cy_) ** 2 * 0.6
-def resample(ch, k):
-    sx = cx_ + (xx - cx_) * k; sy = cy_ + (yy - cy_) * k
-    x0 = np.clip(sx.astype(int), 0, W - 2); y0 = np.clip(sy.astype(int), 0, H - 2); fx = sx - x0; fy = sy - y0
-    return (ch[y0, x0] * (1 - fx) * (1 - fy) + ch[y0, x0 + 1] * fx * (1 - fy) + ch[y0 + 1, x0] * (1 - fx) * fy + ch[y0 + 1, x0 + 1] * fx * fy)
-ca = arg('ca', 0.0007)
-a[..., 0] = resample(a[..., 0], 1 - ca); a[..., 2] = resample(a[..., 2], 1 + ca)
-a *= (1 - 0.14 * np.clip(rr2, 0, 1.4) ** 1.5)[..., None]
-g = rng.normal(0, arg('grain', 0.012), (H, W)).astype(np.float32)
-a += (g * (0.6 + 0.4 * (1 - lum)))[..., None]
-a = np.clip(a, 0, 1)
-outim = bpy.data.images.new('graded', W, H, alpha=False, float_buffer=False); outim.colorspace_settings.name = 'Non-Color'
-outim.pixels.foreach_set(np.concatenate([a, np.ones((H, W, 1))], 2).astype(np.float32).ravel())
-outim.filepath_raw = OUT; outim.file_format = 'PNG'; outim.save()
-print('WROTE', OUT)
