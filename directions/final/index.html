@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#EEEAE0">
-<meta name="description" content="Antimony: software for the people who make the work.">
+<meta name="description" content="Antimony. Software, made on purpose.">
 <title>Antimony</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2722%27 fill=%27%23141311%27/%3E%3Cpath fill=%27%2394E6FF%27 d=%27M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z%27/%3E%3C/svg%3E">
 <link rel="preload" href="assets/fonts/CommitMono-Latin-VF.woff2" as="font" type="font/woff2" crossorigin>
@@ -49,8 +49,8 @@ html:not(.opening) #wall { display: none; }
 .type span.k { color: var(--sky); }
 .type span:last-child { letter-spacing: 0; }
 html:not(.opening) .type { display: none; }
-html.opening:not(.cover) .wm, html.opening:not(.cover) .foot, html.opening:not(.cover) .nav, html.opening:not(.cover) .ui, html.opening:not(.cover) .paper,
-html.wait .foot, html.wait .nav, html.wait .ui, html.opening:not(.cover) .stage { visibility: hidden; }
+html.opening:not(.cover) .wm, html.opening:not(.cover) .foot, html.opening:not(.cover) .ui, html.opening:not(.cover) .paper,
+html.wait .foot, html.wait .ui, html.opening:not(.cover) .stage { visibility: hidden; }
 
 /* the room: paper, and the daylight that falls across it through a window and the leaves outside */
 .paper { position: fixed; inset: 0; z-index: 1; background: var(--ground); overflow: hidden; clip-path: inset(0 0 0 0); transition: clip-path 1.3s cubic-bezier(.65, 0, .35, 1); }
@@ -83,9 +83,7 @@ html.outside .paper { clip-path: inset(0 0 100% 0); transition-delay: .32s; }
 html.outside .stage, html.outside .foot p { opacity: 0; visibility: hidden; transition: opacity .38s ease 0s, visibility 0s .38s; }
 .lock { display: flex; flex-direction: column; align-items: center; }
 .mw { position: relative; width: var(--s); height: var(--s); flex: none; }
-.layer { position: absolute; inset: 0; z-index: 2; perspective: 900px; pointer-events: none; }
 .mark { position: absolute; inset: 0; outline: none; border-radius: 22%; }
-.mark:focus-visible { box-shadow: 0 0 0 8px var(--ground), 0 0 0 9px var(--type); }
 .mark .still { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 html.gl .mark .still { visibility: hidden; }
 .wm { color: var(--type); line-height: 0; width: calc(var(--s) * 1.36); margin-top: calc(var(--s) * .37); }
@@ -95,12 +93,9 @@ html.gl .mark .still { visibility: hidden; }
 /* the foot: one line; and the quiet controls either side of it */
 .foot { position: fixed; z-index: 2; left: 16px; right: 16px; bottom: 0; padding-bottom: max(var(--fb), env(safe-area-inset-bottom)); display: flex; justify-content: center; pointer-events: none; }
 .foot p { font-size: 10px; line-height: 12px; letter-spacing: .32em; margin-right: -.32em; text-transform: uppercase; color: var(--dimt); white-space: nowrap; }
-html.chipped .foot p { opacity: 0; transition: opacity .5s ease 0s; }
-.nav { position: fixed; z-index: 2; top: calc(var(--g) - 10px); right: calc(var(--g) - 10px); }
-.nav ul { list-style: none; display: flex; }
-.nav a, .out { display: block; padding: 10px; font: 400 13px/18px "Timeless Serif", Georgia, serif; letter-spacing: .02em; color: var(--type); text-decoration: none; opacity: .74; transition: opacity .3s ease; }
-.nav a:hover, .nav a:focus-visible, .out:hover, .out:focus-visible { opacity: 1; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
-.nav a:focus-visible, .out:focus-visible, .snd:focus-visible { outline-offset: -2px; }
+.out { display: block; padding: 10px; font: 400 13px/18px "Timeless Serif", Georgia, serif; letter-spacing: .02em; color: var(--type); text-decoration: none; opacity: .74; transition: opacity .3s ease; }
+.out:hover, .out:focus-visible { opacity: 1; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.out:focus-visible, .snd:focus-visible { outline-offset: -2px; }
 .ui { position: fixed; z-index: 2; left: calc(var(--g) - 10px); right: calc(var(--g) - 10px); bottom: calc(max(var(--fb), env(safe-area-inset-bottom)) - 16px); height: 44px; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
 .ui > * { pointer-events: auto; }
 .out { background: none; border: 0; cursor: pointer; min-height: 44px; }
@@ -114,23 +109,7 @@ html.outside .snd svg { filter: drop-shadow(0 0 3px rgba(238, 234, 224, .8)); }
 .snd[aria-pressed="true"] .w { opacity: 1; }
 .snd[aria-pressed="true"] .f { opacity: 0; }
 
-/* the shards: chipped from the stone, each turns over and comes to rest above what it names */
-.shard { position: absolute; z-index: 2; pointer-events: none; text-decoration: none; color: var(--type); outline: none; }
-.shard .spin { position: absolute; inset: 0; transform-style: preserve-3d; pointer-events: auto; will-change: transform; }
-.shard .face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-.shard .face svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.shard .back { transform: rotateY(180deg); }
-.shard .back img { position: absolute; display: block; border-radius: 22%; filter: grayscale(1) contrast(.9) brightness(1.06); transition: filter .6s cubic-bezier(.25, .6, .3, 1); }
-.shard:hover .back img, .shard:focus-visible .back img { filter: none; }
-.shard .sh { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgba(40, 30, 18, .2), rgba(40, 30, 18, 0)); opacity: 0; pointer-events: none; }
-.shard .cap { position: absolute; transform: translateX(-50%); text-align: center; pointer-events: auto; }
-.shard .cap > span { display: block; opacity: 0; }
-.cap .n { font-size: 15px; line-height: 20px; letter-spacing: .01em; }
-.cap .d { margin-top: 3px; font-size: 13px; line-height: 18px; color: rgba(11, 12, 12, .64); text-wrap: balance; }
-.cap .st { margin-top: 9px; font-size: 9.5px; line-height: 12px; letter-spacing: .3em; margin-right: -.3em; text-transform: uppercase; color: var(--cut); }
-.shard:hover .n, .shard:focus-visible .n { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
-.shard:focus-visible .cap { outline: 1px solid var(--type); outline-offset: 6px; }
-.bit { position: absolute; z-index: 2; pointer-events: none; width: 8px; height: 8px; overflow: visible; }
+
 
 /* paper grain, fine and even */
 .grain { position: fixed; inset: 0; z-index: 6; pointer-events: none; background-size: 128px 128px; }
@@ -144,9 +123,6 @@ html.opening .grain { opacity: 0; }
   .wm { width: calc(var(--s) * 1.46); }
   .foot { padding-bottom: calc(max(var(--fb), env(safe-area-inset-bottom)) + 34px); }
   .foot p { font-size: 9px; letter-spacing: .24em; margin-right: -.24em; }
-  .cap .n { font-size: 14px; line-height: 18px; }
-  .cap .d { font-size: 12px; line-height: 16px; }
-  .cap .st { margin-top: 7px; font-size: 9px; letter-spacing: .24em; margin-right: -.24em; }
 }
 @media (max-width: 350px) { .foot p { letter-spacing: .14em; margin-right: -.14em; } }
 @media (prefers-reduced-motion: reduce) {
@@ -172,16 +148,10 @@ html.opening .grain { opacity: 0; }
 
 <div class="paper" id="paper" aria-hidden="true"><div class="sun" id="sun"><div class="cl"><div class="dr"><canvas id="sunL"></canvas><div class="la"><canvas id="sunA"></canvas></div><div class="lb"><canvas id="sunB"></canvas></div></div></div></div></div>
 
-<nav class="nav" id="nav" aria-label="What we make"><ul>
-  <li><a href="https://eoinforker.github.io/orbe-site/">Orbe<span class="vh">: the creator’s side of every sponsorship deal. Live.</span></a></li>
-  <li><a href="https://immiscible.ai">immiscible<span class="vh">: rules, approvals and a signed record for what AI agents spend and do. Alpha.</span></a></li>
-  <li><a href="https://idyll.day">Idyll<span class="vh">: social without the scroll. Soon.</span></a></li>
-</ul></nav>
-
 <main class="stage" id="stage">
   <div class="lock">
     <div class="mw">
-    <div class="mark" id="mark" tabindex="0" role="button" aria-label="The Antimony mark: a stone split by a seam, with a crystal of water and light in the break. Press Enter to chip a shard from the stone and see what we make; Escape puts the stone back together.">
+    <div class="mark" id="mark" role="img" aria-label="The Antimony mark: a stone split by a seam, with a crystal of water and light in the break.">
       <!-- shown only without WebGL: the Break, still -->
       <svg class="still" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
         <defs>
@@ -195,7 +165,6 @@ html.opening .grain { opacity: 0; }
       </svg>
       <canvas id="gl" aria-hidden="true"></canvas>
     </div>
-    <div class="layer" id="layer"></div>
     </div>
     <h1 class="vh">Antimony</h1>
     <div class="wm" id="wm" aria-hidden="true"><svg viewBox="-10 -705 6338 715" focusable="false"><path class="cA" d="M444.5155 -286 336 -563 227.4845 -286 336 -374Z" stroke-width="14" stroke-linejoin="round"/><g fill="currentColor"><path d="M111 -95 351 -695H386L628 -95Q643 -57 663.5 -42.5Q684 -28 723 -23V0H460V-23Q497 -27 512.0 -35.5Q527 -44 527 -59Q527 -71 517 -96L463 -236L335.0 -324.0L207 -236L155 -96Q148 -75 148 -66Q148 -47 166.5 -37.0Q185 -27 228 -23V0H15V-23Q52 -27 73.5 -40.5Q95 -54 111 -95ZM444.515 -286.0 336 -563 227.484 -286.0 336.0 -374.0Z"/><path d="M989.58 -122V-573Q989.58 -612 979.08 -632.5Q968.58 -653 947.08 -661.0Q925.58 -669 888.58 -672V-695H1060.58L1463.58 -178V-575Q1463.58 -614 1453.08 -634.0Q1442.58 -654 1421.58 -661.5Q1400.58 -669 1362.58 -672V-695H1604.58V-672Q1566.58 -669 1545.58 -661.5Q1524.58 -654 1514.08 -633.5Q1503.58 -613 1503.58 -574L1504.58 0H1476.58L1029.58 -573V-123Q1029.58 -83 1040.08 -62.5Q1050.58 -42 1071.58 -34.0Q1092.58 -26 1130.58 -23V0H888.58V-23Q926.58 -26 947.58 -34.0Q968.58 -42 979.08 -62.5Q989.58 -83 989.58 -122Z"/><path d="M1984.16 -112V-657H1901.16Q1850.16 -657 1821.16 -647.5Q1792.16 -638 1773.66 -608.5Q1755.16 -579 1748.16 -519H1727.16L1737.16 -695H2325.16L2335.16 -519H2314.16Q2306.16 -580 2288.16 -609.5Q2270.16 -639 2241.16 -648.0Q2212.16 -657 2161.16 -657H2077.16V-112Q2078.16 -77 2088.66 -59.0Q2099.16 -41 2119.66 -33.5Q2140.16 -26 2177.16 -23V0H1888.16V-23Q1939.16 -27 1961.16 -45.0Q1983.16 -63 1984.16 -112Z"/><path d="M2580.740 -112V-583Q2579.740 -618 2569.240 -636.0Q2558.740 -654 2538.240 -661.5Q2517.740 -669 2480.740 -672V-695H2770.740V-672Q2719.740 -668 2697.240 -650.0Q2674.740 -632 2673.740 -583V-112Q2674.740 -62 2696.740 -44.5Q2718.740 -27 2773.740 -23V0H2483.740V-23Q2534.740 -27 2557.240 -44.5Q2579.740 -62 2580.740 -112Z"/><path d="M3042.32 -101 3057.32 -582Q3058.32 -632 3041.82 -650.0Q3025.32 -668 2979.32 -672V-695H3157.32L3403.32 -146L3617.32 -695H3789.32V-672Q3750.32 -668 3734.82 -646.5Q3719.32 -625 3721.32 -588L3741.32 -94Q3742.32 -66 3749.82 -52.0Q3757.32 -38 3773.32 -32.0Q3789.32 -26 3821.32 -23V0H3569.32V-23Q3603.32 -26 3619.82 -32.0Q3636.32 -38 3642.32 -51.5Q3648.32 -65 3647.32 -94L3626.32 -616L3390.32 0H3365.32L3099.32 -595L3084.32 -101Q3083.32 -68 3091.82 -52.5Q3100.32 -37 3118.82 -31.5Q3137.32 -26 3175.32 -23V0H2951.32V-23Q2985.32 -26 3003.82 -32.0Q3022.32 -38 3031.82 -54.0Q3041.32 -70 3042.32 -101Z"/><path d="M3997.9 -349Q3997.9 -452 4043.9 -533.0Q4089.9 -614 4167.9 -659.0Q4245.9 -704 4337.9 -704Q4429.9 -704 4508.9 -659.0Q4587.9 -614 4634.9 -533.0Q4681.9 -452 4681.9 -349Q4681.9 -246 4634.9 -164.5Q4587.9 -83 4508.9 -37.5Q4429.9 8 4337.9 8Q4245.9 8 4167.9 -37.5Q4089.9 -83 4043.9 -164.5Q3997.9 -246 3997.9 -349ZM4567.9 -349Q4567.9 -444 4538.4 -516.0Q4508.9 -588 4456.4 -627.5Q4403.9 -667 4336.9 -667Q4270.9 -667 4219.4 -627.5Q4167.9 -588 4139.4 -515.5Q4110.9 -443 4110.9 -349Q4110.9 -254 4139.4 -181.0Q4167.9 -108 4219.4 -68.0Q4270.9 -28 4336.9 -28Q4403.9 -28 4456.4 -68.0Q4508.9 -108 4538.4 -181.0Q4567.9 -254 4567.9 -349Z"/><path d="M4979.480 -122V-573Q4979.480 -612 4968.980 -632.5Q4958.480 -653 4936.980 -661.0Q4915.480 -669 4878.480 -672V-695H5050.480L5453.480 -178V-575Q5453.480 -614 5442.980 -634.0Q5432.480 -654 5411.480 -661.5Q5390.480 -669 5352.480 -672V-695H5594.480V-672Q5556.480 -669 5535.480 -661.5Q5514.480 -654 5503.980 -633.5Q5493.480 -613 5493.480 -574L5494.480 0H5466.480L5019.480 -573V-123Q5019.480 -83 5029.980 -62.5Q5040.480 -42 5061.480 -34.0Q5082.480 -26 5120.480 -23V0H4878.480V-23Q4916.480 -26 4937.480 -34.0Q4958.480 -42 4968.980 -62.5Q4979.480 -83 4979.480 -122Z"/><path d="M5973.06 -112V-281L5771.06 -625Q5761.06 -643 5754.56 -651.0Q5748.06 -659 5736.56 -664.5Q5725.06 -670 5703.06 -672V-695H5951.06V-674Q5917.06 -671 5900.06 -662.5Q5883.06 -654 5883.06 -637Q5883.06 -627 5892.06 -610L6047.06 -340L6199.06 -617Q6208.06 -635 6208.06 -645Q6208.06 -660 6192.06 -665.5Q6176.06 -671 6137.06 -674V-695H6326.06V-674Q6301.06 -671 6290.56 -668.0Q6280.06 -665 6271.06 -654.5Q6262.06 -644 6249.06 -620L6066.06 -288V-112Q6067.06 -62 6089.06 -44.5Q6111.06 -27 6166.06 -23V0H5876.06V-23Q5927.06 -27 5949.56 -44.5Q5972.06 -62 5973.06 -112Z"/></g></svg></div>
@@ -203,7 +172,7 @@ html.opening .grain { opacity: 0; }
 </main>
 
 <footer class="foot" id="foot">
-  <p>Software for the people who make the work</p>
+  <p>Software, made on purpose</p>
 </footer>
 <div class="ui" id="ui">
   <button class="out" id="out" type="button" aria-pressed="false">Look outside</button>
@@ -218,8 +187,8 @@ function main() {
 "use strict";
 var html = document.documentElement;
 var $ = function (id) { return document.getElementById(id); };
-var layer = $("layer"), mark = $("mark"), canvas = $("gl"), wall = $("wall"), typeEl = $("type"), foot = $("foot"), grainEl = $("grain");
-var WMC = $("wm"), nav = $("nav"), ui = $("ui"), say = $("say"), hero = $("hero"), outBtn = $("out"), sndBtn = $("snd"), stage = $("stage");
+var mark = $("mark"), canvas = $("gl"), wall = $("wall"), typeEl = $("type"), foot = $("foot"), grainEl = $("grain");
+var WMC = $("wm"), ui = $("ui"), say = $("say"), hero = $("hero"), outBtn = $("out"), sndBtn = $("snd"), stage = $("stage");
 var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 var FREEZE = /[?&]t=(\d+)/.exec(location.search); FREEZE = FREEZE ? +FREEZE[1] / 1000 : -1;
 var DEBUG = /[?&]debug/.test(location.search);
@@ -386,32 +355,6 @@ function setSound(on, quiet) {
   }
 }
 function live() { return A.c && A.on && A.c.state === "running"; }
-function glass(i) {
-  if (!live()) return;
-  var c = A.c, t = now(), f = [1046.5, 1318.5, 1568][i % 3] * (1 + (Math.random() - .5) * .004);
-  [[1, .07, 2.6], [2.32, .028, 1.3], [4.25, .013, .7], [6.63, .006, .4]].forEach(function (p) {
-    var o = c.createOscillator(), g = c.createGain(); o.type = "sine"; o.frequency.value = f * p[0];
-    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(p[1], t + .004); g.gain.exponentialRampToValueAtTime(.0001, t + p[2]);
-    o.connect(g); g.connect(A.bus); o.start(t); o.stop(t + p[2] + .05);
-  });
-  /* the tick of the stone giving way */
-  var n = c.createBufferSource(); n.buffer = noise(c, .08, false); var hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 2400;
-  var ng = c.createGain(); ng.gain.setValueAtTime(.05, t); ng.gain.exponentialRampToValueAtTime(.0001, t + .05);
-  n.connect(hp); hp.connect(ng); ng.connect(A.bus); n.start(t);
-}
-var CHORDS = [[146.83, 220, 369.99, 659.26], [110, 164.81, 277.18, 493.88], [98, 146.83, 246.94, 440]];
-function chord(i) {
-  if (!live()) return;
-  var c = A.c, t = now(), lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1500; lp.connect(A.bus);
-  CHORDS[i % 3].forEach(function (f, k) {
-    [-4, 4].forEach(function (cents) {
-      var o = c.createOscillator(), g = c.createGain(); o.type = k ? "sine" : "triangle"; o.frequency.value = f; o.detune.value = cents;
-      var at = t + k * .07, pk = .016 - k * .002;
-      g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(pk, at + .45); g.gain.setTargetAtTime(0, at + .9, 1.1);
-      o.connect(g); g.connect(lp); o.start(at); o.stop(at + 6);
-    });
-  });
-}
 function bubble(level) {
   if (!live()) return;
   var c = A.c, t = now(), f = 480 + Math.random() * 420, o = c.createOscillator(), g = c.createGain();
@@ -470,7 +413,6 @@ function setOutside(on) {
   outsideSound(on);
   clearTimeout(parkT);
   if (on) {
-    heal();
     loadHero().then(function () {
       if (!isOut) return;
       html.classList.add("outside"); hero.setAttribute("aria-hidden", "false");
@@ -787,7 +729,7 @@ var VAULT = bez(.64, 0, .28, 1), FLOOD = bez(.42, 0, .22, 1), GATHER = bez(.55, 
 var CORPUS = ("antimony. the stone, the seam at sixteen degrees, the cavity, the crystal, the light. " +
   "tile <rect width=\"100\" height=\"100\" rx=\"22\"/>; seam M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112Z; " +
   "cav M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z; " +
-  "software for the people who make the work. gem fill=\"#94E6FF\" M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z; " +
+  "software, made on purpose. gem fill=\"#94E6FF\" M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z; " +
   "facet opacity=\".28\"; ang=16; cy=51.5; stone #141311; paper #EEEAE0; sky #94E6FF; ink #0B0C0C; london. " +
   "points move by (cy - y) * tan(16) in x; never rotate, never stretch; the crystal holds light. ").split("");
 var DENSE = /[A-Za-z0-9#%&@$=]/;
@@ -877,190 +819,9 @@ function drawWall(t) {
   wctx.globalAlpha = 1;
 }
 
-/* ================= the stone, at rest: cracks, chips, shards, healing ================= */
-var PROJ = [
-  { n: "Orbe", d: "The creator’s side of every sponsorship deal.", s: "Live", u: "https://eoinforker.github.io/orbe-site/", i: "assets/work/orbe.webp" },
-  { n: "immiscible", d: "Rules, approvals and a signed record for what AI agents spend and do.", s: "Alpha", u: "https://immiscible.ai", i: "assets/work/immiscible.webp" },
-  { n: "Idyll", d: "Social without the scroll.", s: "Soon", u: "https://idyll.day", i: "assets/work/idyll.webp" }
-];
-var chipT = 0, shards = [], nextP = 0, healing = 0, kintT = [0, 0, 0], kintA = [0, 0, 0], crT = 0, crAnchor = null;
-var R0 = 9.2, SAFE = [];
-(function () {   /* places a shard of radius R0 can come from, wholly inside one half of the stone */
-  for (var y = 4; y <= 96; y += 2) for (var x = 4; x <= 96; x += 2) [1, -1].forEach(function (s) {
-    for (var a = 0; a < 16; a++) { var t = a / 16 * Math.PI * 2; if (!isStone(x + Math.cos(t) * R0, y + Math.sin(t) * R0, s)) return; }
-    if (!isStone(x, y, s)) return;
-    SAFE.push([x, y, s]);
-  });
-})();
+/* ================= the stone, at rest ================= */
+var shards = [], kintT = [0, 0, 0], kintA = [0, 0, 0], crT = 0;
 function toU(cx, cy) { return [(cx - M.x) / K, (cy - M.y) / K]; }
-function inHole(u) { for (var i = 0; i < 3; i++) if (HA[i * 3] > .5 && sdHalf(HOLES, i * 18, 6, u[0], u[1]) < 0) return true; return false; }
-function stoneSide(u) { return isStone(u[0], u[1], 1) ? 1 : isStone(u[0], u[1], -1) ? -1 : 0; }
-
-/* a fine fracture or two, from the seam towards the point */
-function crack(u, s) {
-  seedN = 1 + (Math.round(u[0] / 3) * 131 + Math.round(u[1] / 3) * 977 + (s > 0 ? 7 : 0)) % 100000;
-  var d = [-TAN * COS, COS], L0 = [58.6, 21.5], k = (u[0] - L0[0]) * d[0] + (u[1] - L0[1]) * d[1];
-  var f = [L0[0] + d[0] * k, L0[1] + d[1] * k], st = f;
-  for (var i = 0; i < 40; i++) { var q = [f[0] + (u[0] - f[0]) * i / 40, f[1] + (u[1] - f[1]) * i / 40]; if (isStone(q[0], q[1], s)) { st = q; break; } }
-  var vx = u[0] - st[0], vy = u[1] - st[1], l = Math.hypot(vx, vy) || 1, nx = -vy / l, ny = vx / l, j = (rnd() - .5) * 3.2;
-  var m1 = [st[0] + vx * .48 + nx * j, st[1] + vy * .48 + ny * j];
-  var a = (rnd() - .5) * .7, ex = (u[0] - m1[0]) * .7, ey = (u[1] - m1[1]) * .7;
-  var e = [u[0] + ex * Math.cos(a) - ey * Math.sin(a), u[1] + ex * Math.sin(a) + ey * Math.cos(a)];
-  var b2 = (rnd() > .5 ? 1 : -1) * (.65 + rnd() * .3), bl = 4 + rnd() * 3.5, bx = vx / l, by = vy / l;
-  var b = [m1[0] + (bx * Math.cos(b2) - by * Math.sin(b2)) * bl, m1[1] + (bx * Math.sin(b2) + by * Math.cos(b2)) * bl];
-  CR.set([st[0], st[1], m1[0], m1[1], m1[0], m1[1], u[0], u[1], u[0], u[1], e[0], e[1], m1[0], m1[1], b[0], b[1]]);
-}
-function hull(P) {
-  P.sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
-  var cr = function (o, a, b) { return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); }, lo = [], up = [];
-  P.forEach(function (p) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); });
-  P.slice().reverse().forEach(function (p) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); });
-  return lo.slice(0, -1).concat(up.slice(0, -1));
-}
-function shardPoly(c) {
-  seedN = 1 + Math.round(c[0] * 37 + c[1] * 101) % 100000;
-  /* an angular, uneven flake: five or six cuts, one long axis, never a regular polygon */
-  var P = [], base = rnd() * Math.PI * 2, n = rnd() < .5 ? 5 : 6, ax = rnd() * Math.PI, st = 1.3 + rnd() * .35;
-  for (var i = 0; i < n; i++) {
-    var t = base + (i + (rnd() - .5) * .8) / n * Math.PI * 2, r = .5 + rnd() * .5;
-    var x = Math.cos(t) * r, y = Math.sin(t) * r, ca = Math.cos(ax), sa = Math.sin(ax);
-    var px = x * ca + y * sa, py = -x * sa + y * ca; px *= st; py /= st * .85;
-    x = px * ca - py * sa; y = px * sa + py * ca;
-    var l = Math.hypot(x, y); if (l > 1) { x /= l; y /= l; }
-    P.push([c[0] + x * R0, c[1] + y * R0]);
-  }
-  return hull(P);
-}
-/* where the shards come to rest: a row of three beneath the wordmark, each over its own name */
-function rowLayout() {
-  var mb = mark.getBoundingClientRect(), wb = WMC.getBoundingClientRect();
-  var phone = innerWidth < 600, col = Math.min(phone ? 1e3 : 236, (innerWidth - 24) / 3);
-  var sz = phone ? 46 : 60, gap = phone ? 34 : Math.max(34, Math.min(58, innerHeight * .06));
-  var cy = wb.bottom + gap + sz / 2, mcx = mb.left + mb.width / 2, mcy = mb.top + mb.height / 2;
-  return { col: col, sz: sz, p: [-1, 0, 1].map(function (k) { return [innerWidth / 2 + k * col - mcx, cy - mcy]; }) };
-}
-function chip(u, s) {
-  if (shards.length >= 3 || isOut) return;
-  var used = shards.map(function (h) { return h.c; });
-  var best = null, bd = 1e9;
-  SAFE.forEach(function (p) {
-    if (used.some(function (c) { return Math.hypot(c[0] - p[0], c[1] - p[1]) < R0 * 2.05; })) return;
-    var dd = Math.hypot(p[0] - u[0], p[1] - u[1]) + (p[2] === s ? 0 : 14);
-    if (dd < bd) { bd = dd; best = p; }
-  });
-  if (!best) return;
-  var c = [best[0], best[1]], poly = shardPoly(c);
-  var hiI = [0, 1, 2].filter(function (i) { return HA[i * 3] < .5 && !shards.some(function (h) { return h.hi === i; }); })[0];
-  var pi = [0, 1, 2].filter(function (i) { return !shards.some(function (h) { return h.pi === i; }); })[0];
-  edges(poly, HOLES, hiI * 18, 6); HA[hiI * 3] = 1; HA[hiI * 3 + 1] = .7; kintT[hiI] = performance.now(); kintA[hiI] = .7;
-  crA = 0;
-  var h = makeShard(poly, c, PROJ[pi], pi); h.hi = hiI; h.c = c; h.pi = pi;
-  shards.push(h); html.classList.add("chipped");
-  spray(c, h.dir); chipT = performance.now(); glass(pi);
-  W.tv += (c[0] < 50 ? .35 : -.35); W.rip = Math.min(1.1, W.rip + .4);
-  wake();
-}
-var uid = 0;
-function makeShard(poly, c, proj, pi) {
-  var L = rowLayout(), slot = L.p[pi];
-  var xs = poly.map(function (p) { return p[0]; }), ys = poly.map(function (p) { return p[1]; });
-  var bx = Math.min.apply(0, xs), by = Math.min.apply(0, ys), bw = Math.max.apply(0, xs) - bx, bh = Math.max.apply(0, ys) - by;
-  var pts = poly.map(function (p) { return p[0].toFixed(2) + "," + p[1].toFixed(2); }).join(" ");
-  var mir = poly.map(function (p) { return (2 * bx + bw - p[0]).toFixed(2) + "," + p[1].toFixed(2); }).join(" ");
-  var gx = 0, gy = 0; poly.forEach(function (p) { gx += p[0] / poly.length; gy += p[1] / poly.length; });
-  var id = "sh" + (++uid), vb = bx + " " + by + " " + bw + " " + bh;
-  var inA = TH.a.map(function (v, i) { return v * .72 + TH.b[i] * .28 + .05; }), inB = TH.b.map(function (v) { return v + .03; });
-  var a = document.createElement("a");
-  a.className = "shard"; a.href = proj.u; a.tabIndex = -1; a.setAttribute("aria-hidden", "true");
-  a.style.cssText = "left:" + bx * K + "px;top:" + by * K + "px;width:" + bw * K + "px;height:" + bh * K + "px";
-  var w = bw * K, hgt = bh * K, sc = Math.max(1.2, Math.min(3.4, L.sz / Math.max(w, hgt)));
-  var isz = Math.min(bw, bh) * K * .5;
-  a.innerHTML = '<span class="sh"></span><div class="spin"><div class="face front"><svg viewBox="' + vb + '" aria-hidden="true"><defs><linearGradient id="' + id + 'f" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="75" y2="116"><stop offset="0" stop-color="' + hex(TH.a) + '"/><stop offset="1" stop-color="' + hex(TH.b) + '"/></linearGradient></defs><polygon points="' + pts + '" fill="url(#' + id + 'f)"/></svg></div>' +
-    '<div class="face back" style="clip-path:polygon(' + poly.map(function (p) { return ((bx + bw - p[0]) / bw * 100).toFixed(2) + '% ' + ((p[1] - by) / bh * 100).toFixed(2) + '%'; }).join(",") + ')"><svg viewBox="' + vb + '" aria-hidden="true"><defs><linearGradient id="' + id + 'b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + hex(inA) + '"/><stop offset="1" stop-color="' + hex(inB) + '"/></linearGradient></defs><polygon points="' + mir + '" fill="url(#' + id + 'b)" stroke="rgba(238,234,224,.22)" stroke-width=".3" stroke-linejoin="round"/></svg>' +
-    '<img alt="" src="' + proj.i + '" style="width:' + isz + 'px;height:' + isz + 'px;left:' + ((2 * bx + bw - gx - bx) * K - isz / 2) + 'px;top:' + ((gy - by) * K - isz / 2) + 'px"></div></div>' +
-    '<span class="cap"><span class="n"></span><span class="d"></span><span class="st"></span></span>';
-  a.querySelector(".n").textContent = proj.n; a.querySelector(".d").textContent = proj.d; a.querySelector(".st").textContent = proj.s;
-  a.setAttribute("aria-label", proj.n + ": " + proj.d + " " + proj.s + ".");
-  layer.appendChild(a);
-  var spin = a.querySelector(".spin"), cap = a.querySelector(".cap"), shEl = a.querySelector(".sh");
-  var ccx = bx * K + w / 2 - K * 50, ccy = by * K + hgt / 2 - K * 50;
-  var dx = slot[0] - ccx, dy = slot[1] - ccy, S = K * 100;
-  var capW = Math.min(L.col - 16, 212);
-  cap.style.width = capW + "px"; cap.style.left = (w / 2 + dx) + "px"; cap.style.top = (hgt / 2 + dy + L.sz / 2 + 14) + "px";
-  var shw = L.sz * 1.15; shEl.style.cssText = "width:" + shw + "px;height:" + shw * .7 + "px;left:" + (w / 2 + dx - shw / 2 + 3) + "px;top:" + (hgt / 2 + dy - shw * .35 + 5) + "px";
-  /* the flight: sprung out of the stone along the line from its heart, an arc over the wordmark, turning
-     over as it goes, then down onto the paper with a breath of a settle */
-  var l = Math.hypot(ccx, ccy) || 1, ux = ccx / l, uy = ccy / l;
-  var P1 = [ux * S * .55 + (dx - 0) * .12, uy * S * .35 - S * .42];
-  var P2 = [dx, dy - S * .62];
-  var spinZ = (ux >= 0 ? 1 : -1) * (150 + rnd() * 110), rz = (rnd() - .5) * 12;
-  var frames = [], NF = 40, FL = .8;
-  for (var i = 0; i <= NF; i++) {
-    var tau = i / NF, x, y, r, ry, s;
-    if (tau <= FL) {
-      var q = tau / FL, uu = 1 - Math.pow(1 - q, 2.15), v = 1 - uu;
-      x = 3 * v * v * uu * P1[0] + 3 * v * uu * uu * P2[0] + uu * uu * uu * dx;
-      y = 3 * v * v * uu * P1[1] + 3 * v * uu * uu * P2[1] + uu * uu * uu * dy;
-      r = rz * uu + spinZ * Math.sin(Math.PI * uu) * v * 1.6;
-      ry = 180 * sm(uu / .72); s = 1 + (sc - 1) * sm(uu / .6);
-    } else {
-      var sg = (tau - FL) / (1 - FL), env = (1 - sg) * (1 - sg);
-      x = dx; y = dy + 2.4 * Math.sin(Math.PI * sg) * env; r = rz + 1.4 * Math.sin(2 * Math.PI * sg) * env; ry = 180; s = sc * (1 - .018 * Math.sin(Math.PI * sg));
-    }
-    frames.push({ transform: "translate3d(" + x.toFixed(2) + "px," + y.toFixed(2) + "px,0) rotateZ(" + r.toFixed(2) + "deg) rotateY(" + ry.toFixed(2) + "deg) scale(" + s.toFixed(4) + ")", offset: tau });
-  }
-  var D = reduced ? 1 : 1700, land = reduced ? 0 : D * FL;
-  var an = spin.animate(frames, { duration: D, easing: "linear", fill: "forwards" });
-  var shA = shEl.animate([{ opacity: 0, transform: "scale(.5)" }, { opacity: 0, transform: "scale(.5)", offset: .55 }, { opacity: 1, transform: "scale(1)", offset: .8 }, { opacity: 1, transform: "scale(1)" }], { duration: D, easing: "linear", fill: "forwards" });
-  var capA = [].map.call(cap.children, function (el, k) {
-    return el.animate([{ opacity: 0, transform: "translateY(4px)" }, { opacity: 1, transform: "translateY(0)" }], { duration: reduced ? 1 : 650, delay: reduced ? 0 : land - 60 + k * 110, easing: "cubic-bezier(.25,.6,.3,1)", fill: "forwards" });
-  });
-  var h = { el: a, spin: spin, cap: cap, an: an, shA: shA, capA: capA, dir: Math.atan2(P1[1], P1[0]) };
-  h.tm = setTimeout(function () { chord(pi); say.textContent = proj.n + ". " + proj.d + " " + proj.s + "."; }, land);
-  an.onfinish = function () { a.tabIndex = 0; a.removeAttribute("aria-hidden"); };
-  return h;
-}
-/* a tiny spray of dark grit from the break */
-function spray(c, dir) {
-  if (reduced) return;
-  var n = 4 + Math.floor(Math.random() * 4);
-  for (var i = 0; i < n; i++) {
-    var b = document.createElementNS("http://www.w3.org/2000/svg", "svg"), sz = 1.6 + Math.random() * 3;
-    b.setAttribute("class", "bit"); b.setAttribute("viewBox", "0 0 10 10");
-    b.innerHTML = '<polygon points="' + [0, 1, 2].map(function () { return (Math.random() * 10).toFixed(1) + "," + (Math.random() * 10).toFixed(1); }).join(" ") + '" fill="' + hex(TH.b, 1.6) + '"/>';
-    b.style.cssText = "left:" + (c[0] * K - sz / 2) + "px;top:" + (c[1] * K - sz / 2) + "px;width:" + sz + "px;height:" + sz + "px";
-    layer.appendChild(b);
-    var a = dir + (Math.random() - .5) * 2.4, dist = 12 + Math.random() * 24, fall = 22 + Math.random() * 26;
-    var an = b.animate([
-      { transform: "translate(0,0) rotate(0deg)", opacity: 1 },
-      { transform: "translate(" + (Math.cos(a) * dist * .7).toFixed(1) + "px," + (Math.sin(a) * dist * .7).toFixed(1) + "px) rotate(" + (Math.random() * 200 - 100).toFixed(0) + "deg)", opacity: 1, offset: .35 },
-      { transform: "translate(" + (Math.cos(a) * dist).toFixed(1) + "px," + (Math.sin(a) * dist + fall).toFixed(1) + "px) rotate(" + (Math.random() * 400 - 200).toFixed(0) + "deg)", opacity: 0 }
-    ], { duration: 700 + Math.random() * 400, easing: "cubic-bezier(.3,.2,.6,1)", fill: "forwards" });
-    an.onfinish = (function (el) { return function () { el.remove(); }; })(b);
-  }
-}
-/* the shards fly home along the way they came, and the stone heals along the break with a line of light */
-function heal() {
-  if (!shards || !shards.length) return;
-  var list = shards.slice().reverse(); shards = [];
-  html.classList.remove("chipped"); say.textContent = "";
-  list.forEach(function (h, k) {
-    clearTimeout(h.tm);
-    h.capA.forEach(function (x) { x.cancel(); });
-    h.el.tabIndex = -1; h.el.setAttribute("aria-hidden", "true");
-    if (h.el.contains(document.activeElement)) mark.focus();
-    healing++;
-    var go = function () {
-      h.an.onfinish = function () { h.el.remove(); HA[h.hi * 3] = 0; kintT[h.hi] = performance.now(); kintA[h.hi] = 1; healing--; wake(); };
-      h.an.playbackRate = reduced ? -1 : -1.35; h.an.play();
-      h.shA.playbackRate = reduced ? -1 : -1.35; h.shA.play();
-    };
-    if (reduced || !k) go(); else setTimeout(go, k * 110);
-  });
-}
-function overStone(cx, cy) { var u = toU(cx, cy), s = stoneSide(u); return s && !inHole(u) ? s : 0; }
-var CROSS = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='23' height='23'%3E%3Cpath d='M11.5 0V9M11.5 14V23M0 11.5H9M14 11.5H23' stroke='%230B0C0C' stroke-width='1'/%3E%3C/svg%3E\") 11 11, crosshair";
-var fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
 addEventListener("pointermove", function (e) {
   var now = performance.now();
   if (html.classList.contains("opening") || isOut) { ptr.x = e.clientX; ptr.y = e.clientY; ptr.t = now; ptr.in = true; return; }
@@ -1074,41 +835,21 @@ addEventListener("pointermove", function (e) {
     W.rip = Math.min(1.1, W.rip + .32 * (Math.abs(dx) + Math.abs(dy)) * g);
   }
   ptr.x = e.clientX; ptr.y = e.clientY; ptr.t = now; ptr.in = true;
-  if (fine) {
-    var s = overStone(e.clientX, e.clientY), u = toU(e.clientX, e.clientY);
-    mark.style.cursor = s && shards.length < 3 ? CROSS : "";
-    if (s && shards.length < 3) { if (!crAnchor || Math.hypot(u[0] - crAnchor[0], u[1] - crAnchor[1]) > 3.5) { crack(u, s); crAnchor = u; } crT = 1; }
-    else crT = 0;
-  }
   wake();
 }, { passive: true });
 document.addEventListener("pointerleave", function () { ptr.in = false; crT = 0; });
 addEventListener("pointerup", function (e) { if (e.pointerType !== "mouse") ptr.in = false; }, { passive: true });
 addEventListener("pointerdown", function (e) {
   if (html.classList.contains("opening") || isOut) return;
-  if (e.target.closest && e.target.closest(".shard .spin, .shard .cap, .nav, .ui")) return;
-  var u = toU(e.clientX, e.clientY), s = overStone(e.clientX, e.clientY);
+  if (e.target.closest && e.target.closest(".ui")) return;
+  var u = toU(e.clientX, e.clientY);
   askTilt();
-  if (s && shards.length < 3 && !healing) { if (!fine) crack(u, s); chip(u, s); return; }
-  if (shards.length) { heal(); return; }
   if (sdHalf(UG, 0, 6, u[0], u[1]) < 0) {
     var dx = (50 - u[0]) / 100;
     W.tv += Math.max(-1.1, Math.min(1.1, dx * 1.7)) + (Math.abs(dx) < .05 ? .6 : 0); W.rip = Math.min(1.1, W.rip + .35);
   }
   wake();
 }, { passive: true });
-var KEYPTS = [[20, 30, -1], [80, 72, 1], [82, 24, 1]];
-/* the tap that chips the stone must not also follow the shard it makes */
-document.addEventListener("click", function (e) { if (performance.now() - chipT < 800 && e.target.closest && e.target.closest(".shard")) { e.preventDefault(); e.stopPropagation(); } }, true);
-mark.addEventListener("keydown", function (e) {
-  if (html.classList.contains("opening")) return;
-  if (e.key === "Enter" || e.key === " ") {
-    e.preventDefault();
-    if (shards.length < 3 && !healing) { var p = KEYPTS[shards.length]; chip([p[0], p[1]], p[2]); } else heal();
-  }
-});
-addEventListener("keydown", function (e) { if (e.key === "Escape" && !html.classList.contains("opening")) heal(); });
-
 /* ---------- rest ---------- */
 var t0 = performance.now(), running = false, visible = true, last = 0, clockOff = 0;
 function restDraw(clock) { draw({ clock: clock, t: BIG, rest: true, off: SHUT, fl: NOFL, ds: ALLP }); }
@@ -1133,13 +874,8 @@ function startRest(clock) {
 var lastW = innerWidth;
 addEventListener("resize", function () {
   if (html.classList.contains("opening")) return;
-  heal(); measure(); frameMark(); if (!running) restDraw(30);
+  measure(); frameMark(); if (!running) restDraw(30);
 });
-if (DEBUG) {
-  window.__chip = function (x, y) { var u = toU(x, y), s = overStone(x, y); if (s) { crack(u, s); chip(u, s); } else heal(); };
-  window.__hover = function (x, y) { var u = toU(x, y), s = overStone(x, y); if (s) { crack(u, s); crT = 1; crA = 1; } };
-}
-
 fontsReady().then(begin, begin);
 
 function begin() {
@@ -1148,7 +884,7 @@ function begin() {
     remember();
     paintSun();
     startRest(30);
-    fadeIn([foot, nav, ui]);
+    fadeIn([foot, ui]);
     requestAnimationFrame(sunUp);
     return;
   }
@@ -1193,7 +929,7 @@ function begin() {
     grainEl.style.opacity = "";
     remember();
     ["pointerdown", "keydown", "wheel", "touchstart"].forEach(function (ev) { removeEventListener(ev, skip, true); });
-    if (skipped) { W.th = W.tv = W.z = W.rip = 0; fadeIn([mark, WMC, foot, nav, ui]); }
+    if (skipped) { W.th = W.tv = W.z = W.rip = 0; fadeIn([mark, WMC, foot, ui]); }
     sunUp();
     startRest(Math.max(t, T.e0));
   }
