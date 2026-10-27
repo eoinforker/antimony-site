@@ -1,0 +1,14 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "",
+	"Category": "",
+	"Description": "Antimony world: hero scene and the worlds after it",
+	"Plugins": [
+		{ "Name": "PythonScriptPlugin", "Enabled": true },
+		{ "Name": "EditorScriptingUtilities", "Enabled": true },
+		{ "Name": "MovieRenderPipeline", "Enabled": true },
+		{ "Name": "SequencerScripting", "Enabled": true },
+		{ "Name": "Interchange", "Enabled": true },
+		{ "Name": "PCG", "Enabled": true }
+	]
+}

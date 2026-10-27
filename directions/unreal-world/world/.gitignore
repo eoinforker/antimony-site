@@ -1,0 +1,10 @@
+Saved/
+Intermediate/
+DerivedDataCache/
+# Imported Fab assets: licensed for our renders, never redistributed
+Content/
+Config/DefaultInput.ini
+*.log
+gen/
+__pycache__/
+*.out
