@@ -1,27 +1,34 @@
 Hero Meadow: assets and licences
 
 All third-party assets are from Poly Haven (polyhaven.com) and ambientCG (ambientcg.com),
-and are CC0 (public domain).
-Nothing else is photographic. The stone's form, the crystal, the tall grass blades, the seed
-heads and the wildflowers (buttercups, a pale blue five-petal flower, daisies) are built in
-meadow_scene.py.
+and are CC0 (public domain). Nothing else is photographic.
 
-HDRI (lighting and sky)
-  drackenstein_quarry, 4k HDR          https://polyhaven.com/a/drackenstein_quarry
+Sky and light
+  Poly Haven kloppenheim_06_puresky: the 4k HDR lights the scene, and the 8k is what the camera sees
+                                       https://polyhaven.com/a/kloppenheim_06_puresky
 
-Textures
-  ambientCG Rock041, 2K (colour, normal, roughness): the stone, darkened and honed,
-  blended by noise with
-  Poly Haven seaside_rock, 2k (diffuse, normal, roughness)
+The stone (shared module, directions/stone/stone.py)
+  ambientCG Rock041 (honed faces), Rock035 (cut faces and chips), Moss002 (moss and lichen at the foot)
                                        https://ambientcg.com/view?id=Rock041
-                                       https://polyhaven.com/a/seaside_rock
-  ambientCG Ground037, 2K, blended with Poly Haven sparse_grass, 2k: the ground under the grass
+                                       https://ambientcg.com/view?id=Rock035
+                                       https://ambientcg.com/view?id=Moss002
+
+Ground and plants
+  ambientCG Grass004 (turf), blended with ambientCG Ground037 (soil)
+                                       https://ambientcg.com/view?id=Grass004
                                        https://ambientcg.com/view?id=Ground037
-                                       https://polyhaven.com/a/sparse_grass
+  Poly Haven grass_medium_01, 2k (clumps; its scanned atlas also colours the tall blades and the
+  seed heads)                          https://polyhaven.com/a/grass_medium_01
+  Poly Haven island_tree_01, island_tree_02, tree_small_02, shrub_01 (the hedgerow on the far ridge)
+                                       https://polyhaven.com/a/island_tree_01
+                                       https://polyhaven.com/a/island_tree_02
+                                       https://polyhaven.com/a/tree_small_02
+                                       https://polyhaven.com/a/shrub_01
 
-Models
-  grass_medium_01, 2k (LOD1 clumps): the lower layer of the meadow; its scanned atlas also
-  colours the procedural tall blades and supplies the seed-head cards
-                                       https://polyhaven.com/a/grass_medium_01
+Letter paper
+  ambientCG Paper002, 2K (colour, normal), lit to match the scene
+                                       https://ambientcg.com/view?id=Paper002
 
+Built in meadow_scene.py: the tall grass blades, the wildflowers (buttercups, a pale blue
+five-petal flower, daisies), the folded letter in the seam, the rolling field and the distant hills.
 The Break mark geometry is Antimony's own (break-geometry.json).

@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#E9D9C8">
+<meta name="description" content="Antimony: software, made on purpose.">
+<title>Antimony</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2722%27 fill=%27%23141311%27/%3E%3Cpath fill=%27%2394E6FF%27 d=%27M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z%27/%3E%3C/svg%3E">
+<link rel="preload" href="assets/fonts/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin>
+<!-- Copy. The line in use: "Software, made on purpose."
+     Alternatives Eóin may prefer: "Intentional software." / "Software for the people who make the work." -->
+<script>
+/* Before first paint: whether the opening plays, and which framing of the render to use. */
+(function () {
+  var h = document.documentElement, q = location.search, seen = false;
+  try { seen = sessionStorage.getItem("antimony.meadow") === "1"; } catch (e) {}
+  if (/[?&]again\b/.test(q)) seen = false;
+  if (/[?&](rest|t=\d)/.test(q)) seen = true;
+  if (!seen && !matchMedia("(prefers-reduced-motion: reduce)").matches) h.classList.add("opening");
+  h.classList.add(innerWidth / innerHeight < .8 ? "portrait" : "landscape");
+})();
+</script>
+<style>
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
+:root { --ink: #0B0C0C; --paper: #EEEAE0; --sky: #94E6FF; --type: #0B0C0C; --type-soft: rgba(11, 12, 12, .62); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: #d9cbbb; color: var(--paper); overflow: hidden; }
+body { font: 400 15px/1.5 "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* the photographed meadow: a still, then the loop over it once it plays */
+#frame { position: fixed; inset: 0; background: #d9cbbb; }
+#frame img, #frame video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 61% 66%; display: block; }
+html.portrait #frame img, html.portrait #frame video { object-position: 50% 69%; }
+#loop { opacity: 0; transition: opacity 1.2s ease; }
+#loop.on { opacity: 1; }
+#veil { position: fixed; inset: 0; background: var(--ink); pointer-events: none; opacity: 0; transition: opacity 2.4s cubic-bezier(.3, .1, .2, 1); }
+html.opening #veil { opacity: 1; }
+html.opening.lift #veil { opacity: 0; }
+/* type: small and quiet, in the calm sky */
+.sign { position: fixed; left: max(28px, env(safe-area-inset-left)); top: max(26px, env(safe-area-inset-top)); color: var(--type); }
+.sign svg { display: block; width: 148px; height: auto; }
+.sign svg .cA { fill: #1F3F7A; stroke: none; }
+.sign p { margin-top: 10px; font-size: 13.5px; letter-spacing: .02em; color: var(--type-soft); }
+#snd { position: fixed; right: max(18px, env(safe-area-inset-right)); top: max(16px, env(safe-area-inset-top)); width: 36px; height: 36px; border: 0; background: none; color: var(--type-soft); cursor: pointer; display: grid; place-items: center; border-radius: 50%; transition: color .3s; }
+#snd:hover, #snd:focus-visible { color: var(--type); outline: none; }
+#snd:focus-visible { box-shadow: 0 0 0 1px var(--type-soft); }
+#snd svg { width: 20px; height: 20px; }
+#snd .w { opacity: 0; transition: opacity .4s; }
+#snd[aria-pressed="true"] .w { opacity: 1; }
+#snd[aria-pressed="true"] .x { opacity: 0; }
+.sign, html.opening .sign, html.opening html.opening.done .sign, html.opening.done @media (max-width: 600px) {
+  .sign { left: 16px; top: max(20px, env(safe-area-inset-top)); }
+  .sign svg { width: 118px; }
+  .sign p { font-size: 12.5px; margin-top: 8px; }
+    #snd { right: 8px; top: max(12px, env(safe-area-inset-top)); }
+}
+
+/* the scene eases towards the paper when it is opened; a few pixels of parallax at rest */
+#frame { transform-origin: 50% 50%; will-change: transform; transition: transform 1.4s cubic-bezier(.45, 0, .2, 1), filter 1.4s ease; }
+html.reading #frame { filter: blur(3px) brightness(.94); }
+/* the paper in the scene: a quiet, focusable spot over the rendered letter */
+#paperhot { position: fixed; left: 0; top: 0; width: 44px; height: 44px; border: 0; padding: 0; background: none; cursor: pointer; border-radius: 6px; -webkit-tap-highlight-color: transparent; }
+#paperhot:focus-visible { outline: none; box-shadow: 0 0 0 1px var(--type-soft); }
+#paperhot::after { content: ""; position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 246, 225, .95) 0, rgba(255, 255, 255, 0) 62%); opacity: 0; transform: scale(.4); pointer-events: none; }
+#paperhot.hint::after { animation: glint 2.6s cubic-bezier(.3, .1, .3, 1) 2; }
+@keyframes glint { 0% { opacity: 0; transform: scale(.4); } 35% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.25); } }
+html.reading #paperhot { visibility: hidden; }
+/* the letter */
+#letter { position: fixed; inset: 0; display: none; place-items: center; z-index: 5; }
+#letter.show { display: grid; }
+#letter .shade { position: absolute; inset: 0; background: rgba(8, 10, 14, .12); opacity: 0; transition: opacity 1s ease; }
+#letter.open .shade { opacity: 1; }
+#card { position: relative; width: min(560px, 86vw, 62vh); aspect-ratio: 3 / 4; color: #1b1a17;
+  background: url("assets/paper-day.webp") center / cover no-repeat, #e8e1d2;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, .28), 0 2px 6px rgba(0, 0, 0, .18);
+  transform-origin: 0 0; outline: none; display: flex; flex-direction: column; justify-content: center; padding: 0 clamp(28px, 7.5vh, 68px); }
+#card .wm { width: 46%; margin-bottom: 9%; color: #1b1a17; opacity: .9; }
+#card .wm .cA { fill: #1F3F7A; }
+#card p { font-size: clamp(15px, 2.3vh, 19px); line-height: 1.62; letter-spacing: .01em; text-shadow: 0 .6px 0 rgba(255, 255, 255, .35), 0 -.4px 0 rgba(0, 0, 0, .12); }
+#card .line { font-style: italic; margin-bottom: 9%; color: #3a3832; }
+#card .sig { margin-top: 12%; font-size: clamp(13px, 1.9vh, 15px); letter-spacing: .03em; color: #4a473f; }
+#close { position: absolute; right: 14px; top: 12px; width: 36px; height: 36px; border: 0; background: none; color: #4a473f; cursor: pointer; border-radius: 50%; display: grid; place-items: center; }
+#close:focus-visible { outline: none; box-shadow: 0 0 0 1px #4a473f; }
+#close svg { width: 14px; height: 14px; }
+</style>
+</head>
+<body>
+<div id="frame" aria-hidden="true">
+  <picture>
+    <source type="image/avif" media="(max-aspect-ratio: 4/5)" srcset="assets/meadow-still-phone.avif">
+    <source type="image/webp" media="(max-aspect-ratio: 4/5)" srcset="assets/meadow-still-phone.webp">
+    <source type="image/avif" srcset="assets/meadow-still.avif">
+    <img id="still" src="assets/meadow-still.webp" alt="" decoding="async">
+  </picture>
+  <video id="loop" muted loop playsinline preload="none"></video>
+</div>
+<div id="veil"></div>
+<h1 class="vh">Antimony</h1>
+<p class="vh">A meadow in the low, warm light of late afternoon under a wide, soft sky. Tall grass with buttercups and small pale blue flowers runs to a low rise, where a dark carved stone stands: the Antimony mark, a rounded square split by a slanting seam, with a sky-blue crystal set in the break.</p>
+<div class="sign">
+  <svg role="img" aria-label="Antimony" viewBox="-10 -705 6338 715"><path class="cA" d="M444.5155 -286 336 -563 227.4845 -286 336 -374Z" stroke-width="14" stroke-linejoin="round"/><g fill="currentColor"><path d="M111 -95 351 -695H386L628 -95Q643 -57 663.5 -42.5Q684 -28 723 -23V0H460V-23Q497 -27 512.0 -35.5Q527 -44 527 -59Q527 -71 517 -96L463 -236L335.0 -324.0L207 -236L155 -96Q148 -75 148 -66Q148 -47 166.5 -37.0Q185 -27 228 -23V0H15V-23Q52 -27 73.5 -40.5Q95 -54 111 -95ZM444.515 -286.0 336 -563 227.484 -286.0 336.0 -374.0Z"/><path d="M989.58 -122V-573Q989.58 -612 979.08 -632.5Q968.58 -653 947.08 -661.0Q925.58 -669 888.58 -672V-695H1060.58L1463.58 -178V-575Q1463.58 -614 1453.08 -634.0Q1442.58 -654 1421.58 -661.5Q1400.58 -669 1362.58 -672V-695H1604.58V-672Q1566.58 -669 1545.58 -661.5Q1524.58 -654 1514.08 -633.5Q1503.58 -613 1503.58 -574L1504.58 0H1476.58L1029.58 -573V-123Q1029.58 -83 1040.08 -62.5Q1050.58 -42 1071.58 -34.0Q1092.58 -26 1130.58 -23V0H888.58V-23Q926.58 -26 947.58 -34.0Q968.58 -42 979.08 -62.5Q989.58 -83 989.58 -122Z"/><path d="M1984.16 -112V-657H1901.16Q1850.16 -657 1821.16 -647.5Q1792.16 -638 1773.66 -608.5Q1755.16 -579 1748.16 -519H1727.16L1737.16 -695H2325.16L2335.16 -519H2314.16Q2306.16 -580 2288.16 -609.5Q2270.16 -639 2241.16 -648.0Q2212.16 -657 2161.16 -657H2077.16V-112Q2078.16 -77 2088.66 -59.0Q2099.16 -41 2119.66 -33.5Q2140.16 -26 2177.16 -23V0H1888.16V-23Q1939.16 -27 1961.16 -45.0Q1983.16 -63 1984.16 -112Z"/><path d="M2580.740 -112V-583Q2579.740 -618 2569.240 -636.0Q2558.740 -654 2538.240 -661.5Q2517.740 -669 2480.740 -672V-695H2770.740V-672Q2719.740 -668 2697.240 -650.0Q2674.740 -632 2673.740 -583V-112Q2674.740 -62 2696.740 -44.5Q2718.740 -27 2773.740 -23V0H2483.740V-23Q2534.740 -27 2557.240 -44.5Q2579.740 -62 2580.740 -112Z"/><path d="M3042.32 -101 3057.32 -582Q3058.32 -632 3041.82 -650.0Q3025.32 -668 2979.32 -672V-695H3157.32L3403.32 -146L3617.32 -695H3789.32V-672Q3750.32 -668 3734.82 -646.5Q3719.32 -625 3721.32 -588L3741.32 -94Q3742.32 -66 3749.82 -52.0Q3757.32 -38 3773.32 -32.0Q3789.32 -26 3821.32 -23V0H3569.32V-23Q3603.32 -26 3619.82 -32.0Q3636.32 -38 3642.32 -51.5Q3648.32 -65 3647.32 -94L3626.32 -616L3390.32 0H3365.32L3099.32 -595L3084.32 -101Q3083.32 -68 3091.82 -52.5Q3100.32 -37 3118.82 -31.5Q3137.32 -26 3175.32 -23V0H2951.32V-23Q2985.32 -26 3003.82 -32.0Q3022.32 -38 3031.82 -54.0Q3041.32 -70 3042.32 -101Z"/><path d="M3997.9 -349Q3997.9 -452 4043.9 -533.0Q4089.9 -614 4167.9 -659.0Q4245.9 -704 4337.9 -704Q4429.9 -704 4508.9 -659.0Q4587.9 -614 4634.9 -533.0Q4681.9 -452 4681.9 -349Q4681.9 -246 4634.9 -164.5Q4587.9 -83 4508.9 -37.5Q4429.9 8 4337.9 8Q4245.9 8 4167.9 -37.5Q4089.9 -83 4043.9 -164.5Q3997.9 -246 3997.9 -349ZM4567.9 -349Q4567.9 -444 4538.4 -516.0Q4508.9 -588 4456.4 -627.5Q4403.9 -667 4336.9 -667Q4270.9 -667 4219.4 -627.5Q4167.9 -588 4139.4 -515.5Q4110.9 -443 4110.9 -349Q4110.9 -254 4139.4 -181.0Q4167.9 -108 4219.4 -68.0Q4270.9 -28 4336.9 -28Q4403.9 -28 4456.4 -68.0Q4508.9 -108 4538.4 -181.0Q4567.9 -254 4567.9 -349Z"/><path d="M4979.480 -122V-573Q4979.480 -612 4968.980 -632.5Q4958.480 -653 4936.980 -661.0Q4915.480 -669 4878.480 -672V-695H5050.480L5453.480 -178V-575Q5453.480 -614 5442.980 -634.0Q5432.480 -654 5411.480 -661.5Q5390.480 -669 5352.480 -672V-695H5594.480V-672Q5556.480 -669 5535.480 -661.5Q5514.480 -654 5503.980 -633.5Q5493.480 -613 5493.480 -574L5494.480 0H5466.480L5019.480 -573V-123Q5019.480 -83 5029.980 -62.5Q5040.480 -42 5061.480 -34.0Q5082.480 -26 5120.480 -23V0H4878.480V-23Q4916.480 -26 4937.480 -34.0Q4958.480 -42 4968.980 -62.5Q4979.480 -83 4979.480 -122Z"/><path d="M5973.06 -112V-281L5771.06 -625Q5761.06 -643 5754.56 -651.0Q5748.06 -659 5736.56 -664.5Q5725.06 -670 5703.06 -672V-695H5951.06V-674Q5917.06 -671 5900.06 -662.5Q5883.06 -654 5883.06 -637Q5883.06 -627 5892.06 -610L6047.06 -340L6199.06 -617Q6208.06 -635 6208.06 -645Q6208.06 -660 6192.06 -665.5Q6176.06 -671 6137.06 -674V-695H6326.06V-674Q6301.06 -671 6290.56 -668.0Q6280.06 -665 6271.06 -654.5Q6262.06 -644 6249.06 -620L6066.06 -288V-112Q6067.06 -62 6089.06 -44.5Q6111.06 -27 6166.06 -23V0H5876.06V-23Q5927.06 -27 5949.56 -44.5Q5972.06 -62 5973.06 -112Z"/></g></svg>
+  <p>Software, made on purpose.</p>
+</div>
+
+<button id="paperhot" type="button" aria-label="Read the note" aria-haspopup="dialog"></button>
+<div id="letter" role="dialog" aria-modal="true" aria-label="A note from Antimony">
+  <div class="shade"></div>
+  <div id="card" tabindex="-1">
+    <button id="close" type="button" aria-label="Close the note"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" aria-hidden="true"><path d="M1.5 1.5l11 11M12.5 1.5l-11 11"/></svg></button>
+    <div class="wm"><svg role="img" aria-label="Antimony" viewBox="-10 -705 6338 715"><path class="cA" d="M444.5155 -286 336 -563 227.4845 -286 336 -374Z" stroke-width="14" stroke-linejoin="round"/><g fill="currentColor"><path d="M111 -95 351 -695H386L628 -95Q643 -57 663.5 -42.5Q684 -28 723 -23V0H460V-23Q497 -27 512.0 -35.5Q527 -44 527 -59Q527 -71 517 -96L463 -236L335.0 -324.0L207 -236L155 -96Q148 -75 148 -66Q148 -47 166.5 -37.0Q185 -27 228 -23V0H15V-23Q52 -27 73.5 -40.5Q95 -54 111 -95ZM444.515 -286.0 336 -563 227.484 -286.0 336.0 -374.0Z"/><path d="M989.58 -122V-573Q989.58 -612 979.08 -632.5Q968.58 -653 947.08 -661.0Q925.58 -669 888.58 -672V-695H1060.58L1463.58 -178V-575Q1463.58 -614 1453.08 -634.0Q1442.58 -654 1421.58 -661.5Q1400.58 -669 1362.58 -672V-695H1604.58V-672Q1566.58 -669 1545.58 -661.5Q1524.58 -654 1514.08 -633.5Q1503.58 -613 1503.58 -574L1504.58 0H1476.58L1029.58 -573V-123Q1029.58 -83 1040.08 -62.5Q1050.58 -42 1071.58 -34.0Q1092.58 -26 1130.58 -23V0H888.58V-23Q926.58 -26 947.58 -34.0Q968.58 -42 979.08 -62.5Q989.58 -83 989.58 -122Z"/><path d="M1984.16 -112V-657H1901.16Q1850.16 -657 1821.16 -647.5Q1792.16 -638 1773.66 -608.5Q1755.16 -579 1748.16 -519H1727.16L1737.16 -695H2325.16L2335.16 -519H2314.16Q2306.16 -580 2288.16 -609.5Q2270.16 -639 2241.16 -648.0Q2212.16 -657 2161.16 -657H2077.16V-112Q2078.16 -77 2088.66 -59.0Q2099.16 -41 2119.66 -33.5Q2140.16 -26 2177.16 -23V0H1888.16V-23Q1939.16 -27 1961.16 -45.0Q1983.16 -63 1984.16 -112Z"/><path d="M2580.740 -112V-583Q2579.740 -618 2569.240 -636.0Q2558.740 -654 2538.240 -661.5Q2517.740 -669 2480.740 -672V-695H2770.740V-672Q2719.740 -668 2697.240 -650.0Q2674.740 -632 2673.740 -583V-112Q2674.740 -62 2696.740 -44.5Q2718.740 -27 2773.740 -23V0H2483.740V-23Q2534.740 -27 2557.240 -44.5Q2579.740 -62 2580.740 -112Z"/><path d="M3042.32 -101 3057.32 -582Q3058.32 -632 3041.82 -650.0Q3025.32 -668 2979.32 -672V-695H3157.32L3403.32 -146L3617.32 -695H3789.32V-672Q3750.32 -668 3734.82 -646.5Q3719.32 -625 3721.32 -588L3741.32 -94Q3742.32 -66 3749.82 -52.0Q3757.32 -38 3773.32 -32.0Q3789.32 -26 3821.32 -23V0H3569.32V-23Q3603.32 -26 3619.82 -32.0Q3636.32 -38 3642.32 -51.5Q3648.32 -65 3647.32 -94L3626.32 -616L3390.32 0H3365.32L3099.32 -595L3084.32 -101Q3083.32 -68 3091.82 -52.5Q3100.32 -37 3118.82 -31.5Q3137.32 -26 3175.32 -23V0H2951.32V-23Q2985.32 -26 3003.82 -32.0Q3022.32 -38 3031.82 -54.0Q3041.32 -70 3042.32 -101Z"/><path d="M3997.9 -349Q3997.9 -452 4043.9 -533.0Q4089.9 -614 4167.9 -659.0Q4245.9 -704 4337.9 -704Q4429.9 -704 4508.9 -659.0Q4587.9 -614 4634.9 -533.0Q4681.9 -452 4681.9 -349Q4681.9 -246 4634.9 -164.5Q4587.9 -83 4508.9 -37.5Q4429.9 8 4337.9 8Q4245.9 8 4167.9 -37.5Q4089.9 -83 4043.9 -164.5Q3997.9 -246 3997.9 -349ZM4567.9 -349Q4567.9 -444 4538.4 -516.0Q4508.9 -588 4456.4 -627.5Q4403.9 -667 4336.9 -667Q4270.9 -667 4219.4 -627.5Q4167.9 -588 4139.4 -515.5Q4110.9 -443 4110.9 -349Q4110.9 -254 4139.4 -181.0Q4167.9 -108 4219.4 -68.0Q4270.9 -28 4336.9 -28Q4403.9 -28 4456.4 -68.0Q4508.9 -108 4538.4 -181.0Q4567.9 -254 4567.9 -349Z"/><path d="M4979.480 -122V-573Q4979.480 -612 4968.980 -632.5Q4958.480 -653 4936.980 -661.0Q4915.480 -669 4878.480 -672V-695H5050.480L5453.480 -178V-575Q5453.480 -614 5442.980 -634.0Q5432.480 -654 5411.480 -661.5Q5390.480 -669 5352.480 -672V-695H5594.480V-672Q5556.480 -669 5535.480 -661.5Q5514.480 -654 5503.980 -633.5Q5493.480 -613 5493.480 -574L5494.480 0H5466.480L5019.480 -573V-123Q5019.480 -83 5029.980 -62.5Q5040.480 -42 5061.480 -34.0Q5082.480 -26 5120.480 -23V0H4878.480V-23Q4916.480 -26 4937.480 -34.0Q4958.480 -42 4968.980 -62.5Q4979.480 -83 4979.480 -122Z"/><path d="M5973.06 -112V-281L5771.06 -625Q5761.06 -643 5754.56 -651.0Q5748.06 -659 5736.56 -664.5Q5725.06 -670 5703.06 -672V-695H5951.06V-674Q5917.06 -671 5900.06 -662.5Q5883.06 -654 5883.06 -637Q5883.06 -627 5892.06 -610L6047.06 -340L6199.06 -617Q6208.06 -635 6208.06 -645Q6208.06 -660 6192.06 -665.5Q6176.06 -671 6137.06 -674V-695H6326.06V-674Q6301.06 -671 6290.56 -668.0Q6280.06 -665 6271.06 -654.5Q6262.06 -644 6249.06 -620L6066.06 -288V-112Q6067.06 -62 6089.06 -44.5Q6111.06 -27 6166.06 -23V0H5876.06V-23Q5927.06 -27 5949.56 -44.5Q5972.06 -62 5973.06 -112Z"/></g></svg></div>
+    <p class="line">Software, made on purpose.</p>
+    <p>The moats are fading. Intention remains, and we give it everything.</p>
+    <p>We have only just begun.</p>
+    <p class="sig">Antimony, London</p>
+  </div>
+</div>
+<button id="snd" type="button" aria-pressed="false" aria-label="Sound">
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3.5 7.8h2.6L10 4.6v10.8L6.1 12.2H3.5z"/>
+    <path class="w" d="M12.6 7.4a3.6 3.6 0 0 1 0 5.2M14.8 5.4a6.4 6.4 0 0 1 0 9.2"/>
+    <path class="x" d="M13 8.2l3.6 3.6M16.6 8.2L13 11.8"/>
+  </svg>
+</button>
+<script>
+(function () {
+var html = document.documentElement, $ = function (id) { return document.getElementById(id); };
+var still = $("still"), video = $("loop"), snd = $("snd");
+var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+var FREEZE = /[?&]t=\d/.test(location.search);
+var KEY = "antimony.meadow", NAME = "meadow", NIGHT = false;
+function remember() { try { sessionStorage.setItem(KEY, "1"); } catch (e) {} }
+
+/* ---------- the loop: phones held upright get the portrait framing ---------- */
+var portrait = innerWidth / innerHeight < .8;
+function startLoop() {
+  if (reduced || FREEZE) return;
+  var c = document.createElement("video"), base = "assets/" + NAME + "-loop" + (portrait ? "-phone" : "");
+  var src = c.canPlayType('video/webm; codecs="vp9"') ? base + ".webm" : base + ".mp4";
+  video.src = src; video.preload = "auto";
+  video.addEventListener("playing", function () { video.classList.add("on"); }, { once: true });
+  var p = video.play(); if (p && p.catch) p.catch(function () {});
+}
+document.addEventListener("visibilitychange", function () {
+  if (!video.src) return;
+  if (document.hidden) video.pause(); else { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
+});
+
+
+/* ---------- the paper in the scene, mapped from the render's pixels to the screen (object-fit: cover) ---------- */
+var PAPER = {"desk": {"w": 2560, "h": 1600, "x0": 1614.7, "y0": 863.2, "x1": 1677.8, "y1": 912.0}, "phone": {"w": 1080, "h": 2340, "x0": 608.8, "y0": 1405.5, "x1": 672.3, "y1": 1455.2}};
+var hot = $("paperhot"), letter = $("letter"), card = $("card"), frame = $("frame");
+function fit() {
+  var p = PAPER[portrait ? "phone" : "desk"], vw = innerWidth, vh = innerHeight;
+  var pos = (portrait ? "50% 69%" : "61% 66%").split(" ").map(function (t) { return parseFloat(t) / 100; });
+  var s = Math.max(vw / p.w, vh / p.h), ox = (vw - p.w * s) * pos[0], oy = (vh - p.h * s) * pos[1];
+  var x0 = p.x0 * s + ox, y0 = p.y0 * s + oy, x1 = p.x1 * s + ox, y1 = p.y1 * s + oy;
+  var cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, w = Math.max(44, x1 - x0 + 16), h = Math.max(44, y1 - y0 + 16);
+  hot.style.left = (cx - w / 2) + "px"; hot.style.top = (cy - h / 2) + "px"; hot.style.width = w + "px"; hot.style.height = h + "px";
+  return { x: cx, y: cy, w: x1 - x0, h: y1 - y0 };
+}
+var spot = fit();
+addEventListener("resize", function () { var was = portrait; portrait = innerWidth / innerHeight < .8; spot = fit(); if (was !== portrait) location.reload(); });
+
+/* parallax: a few pixels against the pointer, eased; none under reduced motion or while reading */
+var tx = 0, ty = 0, cx_ = 0, cy_ = 0, reading = false, raf = 0;
+function tick() {
+  cx_ += (tx - cx_) * .06; cy_ += (ty - cy_) * .06;
+  if (!reading) frame.style.transform = "translate3d(" + cx_.toFixed(2) + "px," + cy_.toFixed(2) + "px,0) scale(1.012)";
+  raf = (Math.abs(tx - cx_) + Math.abs(ty - cy_) > .02) ? requestAnimationFrame(tick) : 0;
+}
+var lastMove = 0, speed = 0, lx = 0, ly = 0;
+addEventListener("pointermove", function (e) {
+  idle();
+  if (reduced || e.pointerType === "touch") return;
+  tx = -(e.clientX / innerWidth - .5) * 10; ty = -(e.clientY / innerHeight - .5) * 6;
+  var now = performance.now(), d = Math.hypot(e.clientX - lx, e.clientY - ly); lx = e.clientX; ly = e.clientY;
+  speed = Math.min(1, speed * .9 + d / 400); lastMove = now;
+  if (!raf) raf = requestAnimationFrame(tick);
+});
+if (!reduced) frame.style.transform = "scale(1.012)";
+
+/* a quiet hint after a while with nothing happening: the paper catches the light, twice */
+var idleT = 0;
+function idle() { clearTimeout(idleT); if (reduced || reading) return; idleT = setTimeout(function () { hot.classList.remove("hint"); void hot.offsetWidth; hot.classList.add("hint"); idle(); }, 9000); }
+idle(); addEventListener("keydown", idle); addEventListener("touchstart", idle, { passive: true });
+
+/* opening the note: the view eases in towards the paper, the paper lifts and settles flat */
+var opener = null;
+function openLetter() {
+  if (reading) return; reading = true; opener = document.activeElement; spot = fit();
+  html.classList.add("reading"); letter.classList.add("show");
+  var r = card.getBoundingClientRect();
+  if (!reduced) {
+    frame.style.transformOrigin = spot.x + "px " + spot.y + "px"; frame.style.transform = "scale(1.35)";
+    var k = Math.max(spot.w / r.width, .04);
+    card.animate([
+      { transform: "translate(" + (spot.x - spot.w / 2 - r.left) + "px," + (spot.y - spot.h / 2 - r.top) + "px) scale(" + k + ") rotate(-16deg)", opacity: .2 },
+      { transform: "translate(" + ((spot.x - r.left) * .35) + "px," + ((spot.y - r.top) * .25 - 30) + "px) scale(.55) rotate(-5deg)", opacity: 1, offset: .55 },
+      { transform: "none", opacity: 1 }
+    ], { duration: 1300, easing: "cubic-bezier(.45, 0, .2, 1)" });
+  } else card.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400 });
+  requestAnimationFrame(function () { letter.classList.add("open"); });
+  setTimeout(function () { $("close").focus({ preventScroll: true }); }, reduced ? 50 : 900);
+  swell(.6);
+}
+function closeLetter() {
+  if (!reading) return;
+  var r = card.getBoundingClientRect(), anim;
+  letter.classList.remove("open");
+  if (!reduced) {
+    anim = card.animate([{ transform: "none", opacity: 1 },
+      { transform: "translate(" + (spot.x - spot.w / 2 - r.left) + "px," + (spot.y - spot.h / 2 - r.top) + "px) scale(" + Math.max(spot.w / r.width, .04) + ") rotate(-16deg)", opacity: 0 }],
+      { duration: 900, easing: "cubic-bezier(.5, 0, .3, 1)", fill: "forwards" });
+    frame.style.transform = "translate3d(" + cx_.toFixed(2) + "px," + cy_.toFixed(2) + "px,0) scale(1.012)";
+  } else anim = card.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: "forwards" });
+  html.classList.remove("reading");
+  anim.onfinish = function () { letter.classList.remove("show"); anim.cancel(); reading = false; idle(); if (opener && opener.focus) opener.focus({ preventScroll: true }); };
+}
+hot.addEventListener("click", function (e) { e.stopPropagation(); openLetter(); });
+$("close").addEventListener("click", function (e) { e.stopPropagation(); closeLetter(); });
+letter.addEventListener("click", function (e) { if (!card.contains(e.target)) closeLetter(); });
+addEventListener("keydown", function (e) {
+  if (!reading) return;
+  if (e.key === "Escape") { e.preventDefault(); closeLetter(); }
+  if (e.key === "Tab") { e.preventDefault(); $("close").focus(); }
+});
+
+/* ---------- the opening: black, then the meadow comes up slowly; any gesture skips it ---------- */
+var opening = html.classList.contains("opening"), finished = !opening;
+function finish(now) {
+  if (finished) return; finished = true; remember();
+  if (now) { $("veil").style.transition = "opacity .5s ease"; }
+  html.classList.add("lift");
+  setTimeout(function () { html.classList.add("done"); }, now ? 150 : 1500);
+  ["pointerdown", "keydown", "wheel", "touchstart"].forEach(function (e) { removeEventListener(e, skip, true); });
+}
+function skip(e) { if (e.type === "keydown" && e.key === "Tab") return; finish(true); }
+function ready(fn) { if (still.complete && still.naturalWidth) fn(); else { still.addEventListener("load", fn, { once: true }); still.addEventListener("error", fn, { once: true }); } }
+if (opening) {
+  ["pointerdown", "keydown", "wheel", "touchstart"].forEach(function (e) { addEventListener(e, skip, true); });
+  ready(function () { setTimeout(function () { finish(false); }, 700); });
+  setTimeout(function () { finish(false); }, 5000);
+} else remember();
+ready(function () { setTimeout(startLoop, opening ? 1200 : 300); });
+
+/* ---------- sound: built here, nothing recorded; muted until asked for ---------- */
+var ctx = null, master = null, on = false, swellGain = null;
+function swell(v) {
+  if (!ctx || !swellGain || !on) return;
+  var t = ctx.currentTime; swellGain.gain.cancelScheduledValues(t); swellGain.gain.setValueAtTime(swellGain.gain.value, t);
+  swellGain.gain.linearRampToValueAtTime(1 + v * 1.4, t + .6); swellGain.gain.linearRampToValueAtTime(1, t + 3.2);
+}
+setInterval(function () { if (speed > .15) { swell(speed); } speed *= .5; }, 900);
+try { on = sessionStorage.getItem(KEY + ".sound") === "1"; } catch (e) {}
+function noiseBuffer(c, secs, brown) {
+  var n = c.sampleRate * secs, b = c.createBuffer(2, n, c.sampleRate);
+  for (var ch = 0; ch < 2; ch++) {
+    var d = b.getChannelData(ch), last = 0;
+    for (var i = 0; i < n; i++) { var w = Math.random() * 2 - 1; if (brown) { last = (last + .02 * w) / 1.02; d[i] = last * 3.2; } else d[i] = w; }
+    /* a seamless loop: fade the end into the start */
+    var f = c.sampleRate * .5; for (var j = 0; j < f; j++) { var k = j / f; d[n - f + j] = d[n - f + j] * (1 - k) + d[j] * k; }
+  }
+  return b;
+}
+function lfo(c, rate, depth, target, offset) {
+  var o = c.createOscillator(), g = c.createGain(); o.frequency.value = rate; g.gain.value = depth;
+  o.connect(g); g.connect(target); target.value = offset; o.start(); return o;
+}
+function build() {
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  master = ctx.createGain(); master.gain.value = 0;
+  var lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = NIGHT ? 5200 : 3800;
+  master.connect(lp); lp.connect(ctx.destination);
+  /* air: soft noise through a moving band, swelling like wind over grass (by night, the hiss of fine rain) */
+  var src = ctx.createBufferSource(); src.buffer = noiseBuffer(ctx, 6, !NIGHT); src.loop = true;
+  var bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = NIGHT ? .5 : .8;
+  var g = ctx.createGain();
+  if (NIGHT) { lfo(ctx, .05, 300, bp.frequency, 3400); lfo(ctx, .07, .012, g.gain, .05); }
+  else { lfo(ctx, .07, 260, bp.frequency, 620); lfo(ctx, .11, .07, g.gain, .16); }
+  var sw = ctx.createGain(); sw.gain.value = 1; swellGain = sw;
+  src.connect(bp); bp.connect(g); g.connect(sw); sw.connect(master); src.start();
+  /* a held chord, very low in the mix: warm by day, a little cooler by night */
+  var notes = NIGHT ? [146.83, 220.0, 277.18, 329.63] : [130.81, 196.0, 246.94, 329.63];
+  var pad = ctx.createGain(); pad.gain.value = 0; var plp = ctx.createBiquadFilter(); plp.type = "lowpass"; plp.frequency.value = 900;
+  pad.connect(plp); plp.connect(master); lfo(ctx, .045, .010, pad.gain, .022);
+  notes.forEach(function (f, i) {
+    [-3, 3].forEach(function (cents) {
+      var o = ctx.createOscillator(); o.type = i ? "sine" : "triangle"; o.frequency.value = f; o.detune.value = cents;
+      var og = ctx.createGain(); og.gain.value = i ? .5 : .7; o.connect(og); og.connect(pad); o.start();
+    });
+  });
+  if (NIGHT) {
+    /* drops: a few soft, close, pitched taps now and then */
+    (function drop() {
+      if (ctx.state === "running") {
+        var t = ctx.currentTime, o = ctx.createOscillator(), dg = ctx.createGain();
+        o.type = "sine"; o.frequency.setValueAtTime(1400 + Math.random() * 1600, t); o.frequency.exponentialRampToValueAtTime(500, t + .08);
+        dg.gain.setValueAtTime(.0001, t); dg.gain.exponentialRampToValueAtTime(.025 + Math.random() * .02, t + .004); dg.gain.exponentialRampToValueAtTime(.0001, t + .12);
+        o.connect(dg); dg.connect(master); o.start(t); o.stop(t + .14);
+      }
+      setTimeout(drop, 180 + Math.random() * 900);
+    })();
+  }
+}
+function setSound(v) {
+  on = v; snd.setAttribute("aria-pressed", v ? "true" : "false");
+  try { sessionStorage.setItem(KEY + ".sound", v ? "1" : "0"); } catch (e) {}
+  if (v && !ctx) build();
+  if (!ctx) return;
+  if (v && ctx.state !== "running") ctx.resume();
+  var t = ctx.currentTime; master.gain.cancelScheduledValues(t); master.gain.setValueAtTime(master.gain.value, t);
+  master.gain.linearRampToValueAtTime(v ? .55 : 0, t + (v ? 2.2 : .6));
+}
+snd.addEventListener("click", function (e) { e.stopPropagation(); setSound(!on); });
+/* the remembered choice is shown, but audio waits for a gesture on this page */
+snd.setAttribute("aria-pressed", "false"); on = false;
+document.addEventListener("visibilitychange", function () { if (!ctx) return; if (document.hidden) ctx.suspend(); else if (on) ctx.resume(); });
+})();
+</script>
+</body>
+</html>

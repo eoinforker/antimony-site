@@ -1,0 +1,66 @@
+Hero Meadow, path traced
+
+What this is
+  The Antimony stone (the shared module, directions/stone/stone.py: exact Break geometry, honed
+  basalt, softened and chipped arrises, moss at the foot, the crystal as sky glass) standing on a low
+  rise in a summer meadow in the low, warm light of late afternoon. Beyond it the field falls into a
+  shallow dip and rises to a far ridge with a hedgerow of scanned trees and shrubs; soft hills lie
+  kilometres off, and above is a wide sky of sculpted cumulus.
+  Camera: 45 mm on 36 mm, 1.9 m high, 12 m from the stone, pitched up 3.5 degrees, f/2.2,
+  focused on the stone. Sun about 19 degrees left of the view and 4.6 degrees up.
+  Blender 4.5.15 LTS, Cycles on CPU (4 threads), OpenImageDenoise, adaptive sampling, light tree,
+  AgX, with a soft bloom in the compositor.
+
+Assets: see credits.txt (Poly Haven and ambientCG, all CC0).
+
+Light
+  The puresky HDRI lights the scene (4k), and camera rays see its 8k version, so the clouds stay
+  sharp. Its sun is softened by haze, so a matched sun lamp (warm, 0.6 degrees) at the HDRI's sun
+  direction gives the raking light and long shadows. Refractive caustics from that sun go through
+  the crystal (MNEE, set up by the stone module).
+
+The paper
+  A folded letter is tucked into the seam near the top of the stone, its free edge lifting. It is
+  a real object in the render, with the same camera, light and shadow. Its frame position is
+  exported (<out>.paper.json) and placed over the picture as a focusable button ("Read the note").
+  Opening it eases the view in towards the paper; the note then lifts and settles flat, showing
+  the approved words on ambientCG Paper002, lit to match the scene. Escape, the close mark or a
+  click outside eases back. After a quiet spell the paper catches the light twice.
+  Other interaction: a few pixels of pointer parallax; with sound on, the wind swells as the
+  pointer moves and when the note is opened.
+
+Grade windows (meadow_post.py), as a colourist would
+  - The crystal's colour is pulled onto #94E6FF, keeping its light.
+  - The grey undersides of the clouds are warmed (peach, never amber).
+  - Aerial perspective: distance takes on the colour of the sky just above it, from the depth pass.
+  Then lens distortion, lateral colour, halation, a vignette and grain.
+
+Run (S is the scratchpad; see hm/work/common.sh for the full argument list)
+  blender -b -P meadow_scene.py -- --assets <grass, rock> --acg <assets/ambientcg> --ph <assets/polyhaven>
+    --stone directions/stone/stone.py --hdri <kloppenheim_06_puresky_4k.hdr> --sky <..._8k.hdr>
+    --sun-u 0.612 --sun-el 4.6 --sun-str 3 --sun-az 19 --lens 45 --pitch 3.5 --cam-h 1.9 --mound 0.75
+    --my 12 --thick 0.45 --yaw -9 --res 2560x1600 --samples 512 --time 1140 --out day.png --passes day_data.png
+  For the phone framing, add --crop phone --res 1080x2340.
+  python3 meadow_post.py still day.png hero-desktop.png day_data.png --crystal 0.6
+  python3 meadow_post.py loop day.png day_data.png <frames> --w 1920 --secs 8 --crystal 0.6 --grain 0.006
+  then ffmpeg: H.264 CRF 19 to 21, VP9 CRF 28 to 30.
+
+The loop (8 s, 24 fps, 192 frames, seamless), built from the one still and its data pass
+  The data pass is a 16-bit PNG: R log depth (ln(1 + d) / ln(4001)), G blade height fraction,
+  B mask (crystal 1, stone and paper 0.75, grass and flowers 0.5, sky 0).
+  - Grass sway: a displacement field from three travelling waves, scaled by blade height (tips
+    move most) and by nearness; the stone, crystal and paper are held still.
+  - Light breathing: about 3 percent, more in the highlights.
+  - Warm pollen on closed drifting paths.
+  Every motion repeats a whole number of times in 8 s, so the last frame runs into the first.
+
+Honest limits
+  - The meadow flowers are modelled in the script; Poly Haven's scanned flowers are dry-country
+    species that would not belong here.
+  - The sway is a warp of the still, not a re-render. The clouds do not move, and the far hedgerow
+    does not stir.
+  - The hedgerow trees are small scanned trees scaled up; at 300 m and in haze they read well,
+    closer they would not.
+
+Bloom (the night variant, night-desktop.png and night-phone.png) is shelved; its page and loops
+were removed.

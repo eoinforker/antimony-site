@@ -114,11 +114,33 @@ if NIGHT:
     cl_ = node(wn, 'ShaderNodeMath', (-150, 200), operation='MINIMUM'); cl_.inputs[1].default_value = 1.6
     link(wn, bw.outputs['Val'], cl_.inputs[0])
     tnt = node(wn, 'ShaderNodeMix', (-50, 200)); tnt.data_type = 'RGBA'; tnt.blend_type = 'MULTIPLY'; tnt.inputs['Factor'].default_value = 1
-    link(wn, cl_.outputs['Value'], tnt.inputs['A']); tnt.inputs['B'].default_value = (0.020, 0.034, 0.075, 1)
+    link(wn, cl_.outputs['Value'], tnt.inputs['A']); tnt.inputs['B'].default_value = (0.026, 0.044, 0.095, 1)
     link(wn, tnt.outputs['Result'], bg.inputs['Color'])
 else:
-    link(wn, env.outputs['Color'], bg.inputs['Color'])
+    SKY8 = arg('sky', '')
+    if SKY8:
+        # the camera sees the 8k sky (sharp clouds); everything else is lit by the 4k
+        env8 = node(wn, 'ShaderNodeTexEnvironment', (-400, -300)); env8.image = img(SKY8)
+        link(wn, mp.outputs['Vector'], env8.inputs['Vector'])
+        lpw = node(wn, 'ShaderNodeLightPath', (-400, 300))
+        mxw = node(wn, 'ShaderNodeMix', (-250, 0)); mxw.data_type = 'RGBA'
+        link(wn, lpw.outputs['Is Camera Ray'], mxw.inputs['Factor']); link(wn, env.outputs['Color'], mxw.inputs['A']); link(wn, env8.outputs['Color'], mxw.inputs['B'])
+        link(wn, mxw.outputs['Result'], bg.inputs['Color'])
+    else:
+        link(wn, env.outputs['Color'], bg.inputs['Color'])
 link(wn, bg.outputs['Background'], wo.inputs['Surface'])
+bg.inputs['Strength'].default_value = arg('sky-str', 1.0)
+SUN_STR = arg('sun-str', 0.0)
+SUN_OB = None
+if SUN_STR > 0 and not NIGHT:
+    # the low sun itself: the puresky's sun is softened by haze, so a matched lamp gives the raking light
+    el = math.radians(arg('sun-el', 4.6))
+    dsun = Vector((-math.sin(a) * math.cos(el), math.cos(a) * math.cos(el), math.sin(el)))
+    sl = bpy.data.lights.new('sun', 'SUN'); sl.energy = SUN_STR; sl.angle = math.radians(0.6)
+    sl.color = (1.0, 0.72, 0.46)
+    so = bpy.data.objects.new('sun', sl); sc.collection.objects.link(so)
+    so.rotation_euler = dsun.to_track_quat('Z', 'Y').to_euler()
+    SUN_OB = so
 wld.cycles.sampling_method = 'MANUAL'; wld.cycles.sample_map_resolution = 2048
 
 # ---------------------------------------------------------------- the Break: geometry from break-geometry.json
@@ -127,9 +149,17 @@ T = arg('thick', 0.5)   # slab thickness: a real block of stone
 MARK_X, MARK_Y = arg('mx', 1.05), arg('my', 13.0)
 MARK_YAW = math.radians(arg('yaw', -14.0))
 MOUND_H, MOUND_R = arg('mound', 0.35), 3.6
+FIELD = arg('field', 1)
+def _sm(e0, e1, x):
+    t = np.clip((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t)
 def ground_h(x, y):
-    return MOUND_H * np.exp(-((x - MARK_X) ** 2 + (y - MARK_Y) ** 2) / (2 * MOUND_R ** 2))
-MARK_Z0 = float(ground_h(MARK_X, MARK_Y)) - arg('sink', 0.06)
+    h = MOUND_H * np.exp(-((x - MARK_X) ** 2 + (y - MARK_Y) ** 2) / (2 * MOUND_R ** 2))
+    if FIELD:
+        # beyond the stone the field falls into a shallow dip and rises to a far ridge, gently rolling
+        h = h - 2.4 * _sm(18, 115, y) + 6.0 * _sm(150, 330, y)
+        h = h + _sm(22, 70, y) * (0.9 * np.sin(x / 47 + y / 63 + 0.7) + 0.5 * np.sin(x / 23 - y / 41 + 2.1) + 0.25 * np.sin(x / 11 + y / 17))
+    return h
+MARK_Z0 = float(ground_h(MARK_X, MARK_Y)) - arg('sink', 0.03)
 
 def svg_poly(d):
     nums = [float(v) for v in re.findall(r'-?\d+\.?\d*', d)]
@@ -194,6 +224,81 @@ mark = bpy.data.objects.new('mark', None); sc.collection.objects.link(mark)
 mark.location = (MARK_X, MARK_Y, MARK_Z0); mark.rotation_euler = (0, 0, MARK_YAW)
 for o in (tile, crystal, cut_seam, cut_cav): o.parent = mark
 if arg('no-crystal', 0): crystal.hide_render = True
+Z_OFF = 0.0
+STONE = arg('stone', '')
+if STONE:
+    # the shared stone (directions/stone/stone.py): the same exact geometry, carved as an old monolith
+    sys.path.insert(0, os.path.dirname(STONE)); import stone as stone_mod
+    for o in (tile, crystal):
+        o.hide_render = True; o.hide_viewport = True      # the simple stone stays built but unseen
+    parts = stone_mod.build_stone(sc.collection, scale_m=100 * S, location=(MARK_X, MARK_Y, float(ground_h(np.array(MARK_X), np.array(MARK_Y)))),
+                                  rotation=(0.012, -0.006, MARK_YAW), wetness=0.0, moss=arg('moss', 0.35), glow=0.15,
+                                  thickness=T / (100 * S), detail=arg('detail', 380))
+    mark = parts['root']; Z_OFF = parts['info']['sink']
+    # the grade reads these: stone and crystal held still in the loop, the crystal's colour held to sky
+    def tag(ob, cr):
+        if ob is None: return
+        for ms_ in ob.material_slots:
+            mt = ms_.material
+            if mt is None or not mt.use_nodes: continue
+            nt_ = mt.node_tree
+            if any(n_.bl_idname == 'ShaderNodeOutputAOV' for n_ in nt_.nodes): continue
+            aov(nt_, 'st', 1.0)
+            if cr: aov(nt_, 'cr', 1.0, (600, -500))
+    tag(parts['stone'], False); tag(parts['crystal'], True); tag(parts.get('veil'), True)
+    if SUN_OB is not None:
+        cy.caustics_refractive = True
+        stone_mod.mark_caustic_lights([SUN_OB])
+
+# ---------------------------------------------------------------- the paper: a letter tucked into the seam (by night, low, by the crystal)
+PAPER = arg('paper', 1)
+paper_ob = None
+if PAPER:
+    m_pp, nt = mat('paper')
+    pb = node(nt, 'ShaderNodeBsdfPrincipled', (0, 200)); pb.inputs['Base Color'].default_value = (0.84, 0.81, 0.74, 1)
+    pb.inputs['Roughness'].default_value = 0.85; pb.inputs['Specular IOR Level'].default_value = 0.3
+    ptl = node(nt, 'ShaderNodeBsdfTranslucent', (0, -100)); ptl.inputs['Color'].default_value = (0.95, 0.9, 0.8, 1)
+    pms = node(nt, 'ShaderNodeMixShader', (250, 0)); pms.inputs['Fac'].default_value = 0.22
+    link(nt, pb.outputs['BSDF'], pms.inputs[1]); link(nt, ptl.outputs['BSDF'], pms.inputs[2])
+    psh = pms.outputs['Shader']
+    if NIGHT:
+        # faintly lit from within by the crystal's light, as paper glows by a lamp
+        pe = node(nt, 'ShaderNodeEmission', (250, -250)); pe.inputs['Color'].default_value = (0.55, 0.85, 1.0, 1); pe.inputs['Strength'].default_value = 0.12
+        pad_ = node(nt, 'ShaderNodeAddShader', (400, 0)); link(nt, psh, pad_.inputs[0]); link(nt, pe.outputs['Emission'], pad_.inputs[1]); psh = pad_.outputs['Shader']
+    po = node(nt, 'ShaderNodeOutputMaterial', (600, 0)); link(nt, psh, po.inputs['Surface'])
+    aov(nt, 'st', 1.0)
+    # a folded letter, 12 by 9 cm showing: its left edge slid into the seam, the rest lying on the face,
+    # its free edge lifting a little; turned to follow the seam
+    sy = 14.0 if not NIGHT else 90.0
+    tsl = math.tan(math.radians(16))
+    # the seam's right edge at that height (break-geometry: the seam leans 16 degrees from vertical)
+    right_edge = 64.6 - (sy - 12) * tsl if not NIGHT else 42.3 - (sy - 88) * tsl
+    PWd, PHd, NU, NV = 0.18, 0.13, 12, 8
+    bm = bmesh.new(); uvl = bm.loops.layers.uv.new('UVMap')
+    grid = []
+    for j in range(NV + 1):
+        row = []
+        for i in range(NU + 1):
+            u, v = i / NU, j / NV
+            x = -0.025 + u * (PWd + 0.025)            # the first 2.5 cm sits inside the seam
+            y = -T / 2 - 0.0025
+            if x < 0: y = -T / 2 + (-x) * 1.4          # turning into the slot
+            y -= (max(u - 0.55, 0) / 0.45) ** 2 * 0.018  # the free edge lifts
+            y -= 0.0025 * math.exp(-((v - 0.5) / 0.06) ** 2)  # the fold
+            z = (v - 0.5) * PHd
+            row.append(bm.verts.new((x, y, z)))
+        grid.append(row)
+    for j in range(NV):
+        for i in range(NU):
+            f = bm.faces.new((grid[j][i], grid[j][i + 1], grid[j + 1][i + 1], grid[j + 1][i]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    me = bpy.data.meshes.new('paper'); bm.to_mesh(me); bm.free()
+    for p_ in me.polygons: p_.use_smooth = True
+    paper_ob = bpy.data.objects.new('paper', me); sc.collection.objects.link(paper_ob); me.materials.append(m_pp)
+    sol = paper_ob.modifiers.new('sol', 'SOLIDIFY'); sol.thickness = 0.0006
+    paper_ob.parent = mark
+    paper_ob.location = ((right_edge - 50) * S, 0, (100 - sy) * S - Z_OFF)
+    paper_ob.rotation_euler = (0, math.radians(16), 0)
 
 # stone: scanned seaside rock, darkened and honed (fine grain, soft sheen)
 m_st, nt = mat('stone')
@@ -270,8 +375,8 @@ b.inputs['Base Color'].default_value = (*[v ** 1.6 for v in SKY], 1)
 b.inputs['Subsurface Weight'].default_value = 1.0
 b.inputs['Subsurface Radius'].default_value = (0.35, 0.8, 1.0)
 b.inputs['Subsurface Scale'].default_value = 0.12
-b.inputs['Transmission Weight'].default_value = arg('cr-glass', 0.92)
-b.inputs['Roughness'].default_value = arg('cr-rough', 0.15)
+b.inputs['Transmission Weight'].default_value = arg('cr-glass', 0.97)
+b.inputs['Roughness'].default_value = arg('cr-rough', 0.05)
 b.inputs['IOR'].default_value = 1.52
 b.inputs['Coat Weight'].default_value = 1.0; b.inputs['Coat Roughness'].default_value = 0.02
 # one cheat, as on a film set: refractive caustics are off (too noisy on CPU), so the low sun that would
@@ -284,20 +389,29 @@ aov(nt, 'st', 1.0); aov(nt, 'cr', 1.0, (600, -500))
 crystal.data.materials.append(m_cr)
 
 # ---------------------------------------------------------------- ground
-bpy.ops.mesh.primitive_plane_add(size=1); gnd = bpy.context.object; gnd.name = 'ground'
-gnd.scale = (160, 160, 1); gnd.location = (0, 60, 0)
+# the field as a height field out to 600 m (the rise round the stone has its own finer mesh below)
+_gx, _gy = np.meshgrid(np.linspace(-520, 520, 209), np.linspace(-40, 640, 273))
+_gz = ground_h(_gx, _gy) - 0.004
+bm = bmesh.new()
+_vv = [[bm.verts.new((float(_gx[j, i]), float(_gy[j, i]), float(_gz[j, i]))) for i in range(_gx.shape[1])] for j in range(_gx.shape[0])]
+for j in range(_gx.shape[0] - 1):
+    for i in range(_gx.shape[1] - 1):
+        bm.faces.new((_vv[j][i], _vv[j][i + 1], _vv[j + 1][i + 1], _vv[j + 1][i]))
+_me = bpy.data.meshes.new('ground'); bm.to_mesh(_me); bm.free()
+for p_ in _me.polygons: p_.use_smooth = True
+gnd = bpy.data.objects.new('ground', _me); sc.collection.objects.link(gnd)
 m_g, nt = mat('ground')
 tco = node(nt, 'ShaderNodeTexCoord', (-1200, 0))
 mpp = node(nt, 'ShaderNodeMapping', (-1000, 0)); mpp.inputs['Scale'].default_value = (0.55, 0.55, 0.55)
 link(nt, tco.outputs['Object'], mpp.inputs['Vector'])
-gpath = os.path.join(ASSETS, 'sparse_grass'); g2 = os.path.join(ACG, 'Ground037')
+gpath = os.path.join(ACG, 'Grass004'); g2 = os.path.join(ACG, 'Ground037')
 # world position, so the plane and the rise share one scale (metres); two scans blended by noise
 gpos = node(nt, 'ShaderNodeNewGeometry', (-1400, 0))
 mpp2 = node(nt, 'ShaderNodeMapping', (-1200, 0)); mpp2.inputs['Scale'].default_value = (0.5, 0.5, 0.5)
 link(nt, gpos.outputs['Position'], mpp2.inputs['Vector'])
 gn_ = node(nt, 'ShaderNodeTexNoise', (-1000, 600)); gn_.inputs['Scale'].default_value = 0.35; gn_.inputs['Detail'].default_value = 3
 link(nt, gpos.outputs['Position'], gn_.inputs['Vector'])
-gnr = node(nt, 'ShaderNodeMapRange', (-850, 600)); gnr.inputs['From Min'].default_value = 0.4; gnr.inputs['From Max'].default_value = 0.6
+gnr = node(nt, 'ShaderNodeMapRange', (-850, 600)); gnr.inputs['From Min'].default_value = 0.62; gnr.inputs['From Max'].default_value = 0.8
 link(nt, gn_.outputs['Fac'], gnr.inputs['Value'])
 def gtex(path, nc, loc):
     t = node(nt, 'ShaderNodeTexImage', loc); t.image = img(path, nc); link(nt, mpp2.outputs['Vector'], t.inputs['Vector']); return t
@@ -305,12 +419,13 @@ def gmix(a, b, loc):
     mx_ = node(nt, 'ShaderNodeMix', loc); mx_.data_type = 'RGBA'
     link(nt, gnr.outputs['Result'], mx_.inputs['Factor']); link(nt, a.outputs['Color'], mx_.inputs['A']); link(nt, b.outputs['Color'], mx_.inputs['B'])
     return mx_.outputs['Result']
-gcol = gmix(gtex(os.path.join(gpath, 'sparse_grass_diff_2k.jpg'), False, (-700, 300)), gtex(os.path.join(g2, 'Ground037_2K-JPG_Color.jpg'), False, (-700, 100)), (-450, 200))
-grou = gmix(gtex(os.path.join(gpath, 'sparse_grass_rough_2k.jpg'), True, (-700, -100)), gtex(os.path.join(g2, 'Ground037_2K-JPG_Roughness.jpg'), True, (-700, -250)), (-450, -150))
-gnor = gmix(gtex(os.path.join(gpath, 'sparse_grass_nor_gl_2k.jpg'), True, (-700, -400)), gtex(os.path.join(g2, 'Ground037_2K-JPG_NormalGL.jpg'), True, (-700, -550)), (-450, -450))
+gcol = gmix(gtex(os.path.join(gpath, 'Grass004_2K-JPG_Color.jpg'), False, (-700, 300)), gtex(os.path.join(g2, 'Ground037_2K-JPG_Color.jpg'), False, (-700, 100)), (-450, 200))
+grou = gmix(gtex(os.path.join(gpath, 'Grass004_2K-JPG_Roughness.jpg'), True, (-700, -100)), gtex(os.path.join(g2, 'Ground037_2K-JPG_Roughness.jpg'), True, (-700, -250)), (-450, -150))
+gnor = gmix(gtex(os.path.join(gpath, 'Grass004_2K-JPG_NormalGL.jpg'), True, (-700, -400)), gtex(os.path.join(g2, 'Ground037_2K-JPG_NormalGL.jpg'), True, (-700, -550)), (-450, -450))
 nmg = node(nt, 'ShaderNodeNormalMap', (-300, -400)); link(nt, gnor, nmg.inputs['Color'])
 bg_ = node(nt, 'ShaderNodeBsdfPrincipled', (-100, 0))
-link(nt, gcol, bg_.inputs['Base Color']); link(nt, grou, bg_.inputs['Roughness'])
+link(nt, gcol, bg_.inputs['Base Color']); bg_.inputs['Roughness'].default_value = 0.95
+bg_.inputs['Specular IOR Level'].default_value = 0.12   # turf is matt: no sheen of sky at grazing angles
 link(nt, nmg.outputs['Normal'], bg_.inputs['Normal'])
 # far ground hands over to the photographed meadow: camera rays beyond ~40 m see the HDRI itself
 lp = node(nt, 'ShaderNodeLightPath', (-400, 500))
@@ -322,7 +437,7 @@ link(nt, geo.outputs['Incoming'], neg.inputs[0]); link(nt, neg.outputs['Vector']
 link(nt, mpw.outputs['Vector'], ce.inputs['Vector'])
 em = node(nt, 'ShaderNodeEmission', (-100, 300)); link(nt, ce.outputs['Color'], em.inputs['Color'])
 if NIGHT: em.inputs['Strength'].default_value = 0.03
-dist = node(nt, 'ShaderNodeMapRange', (-200, 600)); dist.inputs['From Min'].default_value = 30; dist.inputs['From Max'].default_value = 55
+dist = node(nt, 'ShaderNodeMapRange', (-200, 600)); dist.inputs['From Min'].default_value = 1e6; dist.inputs['From Max'].default_value = 2e6
 link(nt, lp.outputs['Ray Length'], dist.inputs['Value'])
 fac = node(nt, 'ShaderNodeMath', (0, 600), operation='MULTIPLY')
 link(nt, dist.outputs['Result'], fac.inputs[0]); link(nt, lp.outputs['Is Camera Ray'], fac.inputs[1])
@@ -541,14 +656,14 @@ def petal_mat(name, col, tcol, mix=0.45, glow=None):
     return m
 # yellow buttercups and a pale sky-blue flower (a flax-like five-petal), with the odd white daisy
 m_yel = petal_mat('yellow', (0.85, 0.62, 0.02), (1.0, 0.75, 0.08))
-m_blu = petal_mat('paleblue', (0.42, 0.66, 0.95), (0.55, 0.8, 1.0), glow=((SKY), arg('flower-glow', 6.0)) if NIGHT else None)
+m_blu = petal_mat('paleblue', (0.42, 0.66, 0.95), (0.55, 0.8, 1.0), glow=((0.09, 0.42, 1.0), arg('flower-glow', 2.2)) if NIGHT else None)
 if NIGHT:
-    m_pet = petal_mat('whiteglow', (0.85, 0.9, 0.95), (0.9, 0.95, 1.0), glow=((0.75, 0.92, 1.0), arg('flower-glow', 1.6) * 0.6))
+    m_pet = petal_mat('whiteglow', (0.85, 0.9, 0.95), (0.9, 0.95, 1.0), glow=((0.55, 0.8, 1.0), arg('flower-glow', 2.2) * 0.45))
 m_eye = petal_mat('eye', (0.6, 0.55, 0.12), (0.6, 0.55, 0.12), 0.1)
 
 flib = bpy.data.collections.new('flower_lib'); sc.collection.children.link(flib)
 for i in range(4):
-    flib.objects.link(flower(f'butter{i}', rng.uniform(0.5, 0.85), 5, rng.uniform(0.015, 0.019), 0.009, m_yel, m_eye, 0.003, cup=0.004))
+    flib.objects.link(flower(f'butter{i}', rng.uniform(0.5, 0.85), 5, rng.uniform(0.022, 0.028), 0.013, m_yel, m_eye, 0.003, cup=0.004))
 for i in range(4):
     flib.objects.link(flower(f'flax{i}', rng.uniform(0.5, 0.9), 5, rng.uniform(0.017, 0.021), 0.01, m_blu, m_eye, 0.002, cup=0.002))
 for i in range(2):
@@ -566,6 +681,59 @@ if NIGHT and arg('spires', 0):
         sb = sp.modifiers.new('sub', 'SUBSURF'); sb.levels = 4; sb.render_levels = 4; sb.subdivision_type = 'SIMPLE'
         tx = bpy.data.textures.new(f'rock{k}', 'CLOUDS'); tx.noise_scale = 0.35; tx.noise_depth = 4
         dsp = sp.modifiers.new('disp', 'DISPLACE'); dsp.texture = tx; dsp.texture_coords = 'LOCAL'; dsp.strength = sr * 0.5; dsp.mid_level = 0.5
+
+# ---------------------------------------------------------------- behind the stone: a hedgerow of scanned trees on the far ridge, a lone tree, distant hills
+PH = arg('ph', '')
+TREES = arg('trees', 1) and PH and not NIGHT
+def ph_object(name, pick):
+    path = os.path.join(PH, name, name + '_1k.blend')
+    with bpy.data.libraries.load(path, link=False) as (src, dst):
+        dst.objects = [n for n in src.objects if pick(n)]
+    coll = bpy.data.collections.new('lib_' + name)
+    for ob in dst.objects:
+        ob.location = (0, 0, 0); coll.objects.link(ob)
+    return coll
+def place(coll, loc, rotz, scale):
+    e = bpy.data.objects.new('i_' + coll.name, None); e.instance_type = 'COLLECTION'; e.instance_collection = coll
+    e.location = loc; e.rotation_euler = (0, 0, rotz); e.scale = (scale, scale, scale * rng.uniform(0.9, 1.15))
+    sc.collection.objects.link(e); return e
+if TREES:
+    t_lib = [ph_object(n, lambda k: k.endswith('geometry_nodes')) for n in ('island_tree_01', 'island_tree_02', 'tree_small_02')]
+    s_lib = [ph_object('shrub_01', lambda k: k.endswith('_LOD1'))]
+    # the hedgerow: trees in loose groups with gaps, shrubs between, along a curve on the ridge
+    xh = -260.0
+    while xh < 280:
+        yh = 285 + 35 * math.sin(xh / 95) + rng.normal(0, 6)
+        zh = float(ground_h(np.array(xh), np.array(yh)))
+        if rng.uniform() < 0.8:
+            k = rng.integers(3); sc_ = (rng.uniform(2.0, 2.9) if k < 2 else rng.uniform(1.7, 2.3)) * arg('tree-scale', 1.0)
+            place(t_lib[k], (xh, yh, zh - 0.3), rng.uniform(0, 6.28), sc_)
+        for _ in range(rng.integers(3, 7)):
+            xs = xh + rng.uniform(-6, 6); ys = yh + rng.uniform(-4, 4)
+            place(s_lib[0], (xs, ys, float(ground_h(np.array(xs), np.array(ys))) - 0.3), rng.uniform(0, 6.28), rng.uniform(11, 19))
+        xh += rng.uniform(4, 9) if rng.uniform() < 0.88 else rng.uniform(20, 35)
+    # one lone tree in the field, left of the stone, for depth
+    for (lx, ly, ls) in ():
+        place(t_lib[0], (lx, ly, float(ground_h(np.array(lx), np.array(ly))) - 0.3), 1.3, ls)
+    # distant hills, low and soft, kilometres off (the grade gives them their air)
+    m_h, nt = mat('hills')
+    hb = node(nt, 'ShaderNodeBsdfPrincipled', (0, 0)); hb.inputs['Base Color'].default_value = (0.05, 0.075, 0.035, 1); hb.inputs['Roughness'].default_value = 0.95
+    o = node(nt, 'ShaderNodeOutputMaterial', (300, 0)); link(nt, hb.outputs['BSDF'], o.inputs['Surface'])
+    angs = np.linspace(-1.25, 1.25, 241); rads = np.linspace(900, 3600, 41)
+    bm = bmesh.new(); rows = []
+    for r_ in rads:
+        row = []
+        for a_ in angs:
+            x_ = r_ * math.sin(a_); y_ = r_ * math.cos(a_)
+            h_ = (40 + 38 * math.sin(a_ * 5.1 + 0.4) + 22 * math.sin(a_ * 11.3 + 1.7) + 9 * math.sin(a_ * 27 + 0.3)) * float(_sm(900, 1700, r_)) * (0.55 + 0.45 * math.sin(r_ / 700 + a_ * 3))
+            row.append(bm.verts.new((x_, y_, max(h_, 0) - 1.5)))
+        rows.append(row)
+    for j in range(len(rads) - 1):
+        for i in range(len(angs) - 1):
+            bm.faces.new((rows[j][i], rows[j][i + 1], rows[j + 1][i + 1], rows[j + 1][i]))
+    me = bpy.data.meshes.new('hills'); bm.to_mesh(me); bm.free()
+    for p_ in me.polygons: p_.use_smooth = True
+    hills = bpy.data.objects.new('hills', me); sc.collection.objects.link(hills); me.materials.append(m_h)
 
 # ---------------------------------------------------------------- camera
 CAM_H = arg('cam-h', 1.0)
@@ -605,7 +773,12 @@ def outside_mark(x, y):
     return ~((np.abs(lx) < 0.95 + 0.03) & (np.abs(ly) < T / 2 + 0.03))
 
 FRONT_THIN = arg('front-thin', 0.7)
-NEAR_MIN = arg('near-min', 0.38)
+_ph = rng.uniform(0, 6.28, (2, 4)); _fq = rng.uniform(0.12, 0.45, (2, 4, 2))
+def patch(x, y, k):
+    # a soft 0..1 field of clumps and thinner ground, a few metres across
+    v = sum(np.sin(x * _fq[k, i, 0] + y * _fq[k, i, 1] + _ph[k, i]) for i in range(4)) / 4
+    return np.clip(0.5 + 0.9 * v, 0, 1)
+NEAR_MIN = arg('near-min', 0.7)
 def scatter(name, coll, n, rmin, rmax, dens, nvar, scale_rng, seed_off=0, pick_bias=None, around=None):
     if around:
         cx_, cy_, r0_, r1_ = around
@@ -616,6 +789,7 @@ def scatter(name, coll, n, rmin, rmax, dens, nvar, scale_rng, seed_off=0, pick_b
     ok = outside_mark(x, y)
     front = (np.abs(x - MARK_X) < 1.2 + 0.12 * (MARK_Y - y)) & (y < MARK_Y) & (y > MARK_Y - 7.0)
     if not around: ok &= ~(front & (rng.uniform(0, 1, len(x)) < FRONT_THIN))
+    ok &= rng.uniform(0, 1, len(x)) < 0.45 + 0.55 * patch(x, y, 1)
     x, y = x[ok], y[ok]
     m = len(x)
     verts = np.zeros((m, 3), np.float32); verts[:, 0] = x; verts[:, 1] = y; verts[:, 2] = ground_h(x, y) - 0.01
@@ -624,8 +798,10 @@ def scatter(name, coll, n, rmin, rmax, dens, nvar, scale_rng, seed_off=0, pick_b
     rot[:, 0] = rng.normal(0, 0.04, m); rot[:, 1] = rng.normal(0, 0.04, m)
     dm = np.hypot(x - MARK_X, y - MARK_Y)
     fr_ = (np.abs(x - MARK_X) < 1.2 + 0.12 * (MARK_Y - y)) & (y < MARK_Y) & (y > MARK_Y - 7.0)
-    near = NEAR_MIN + (1 - NEAR_MIN) * np.clip((dm - 1.6) / 3.4, 0, 1)    # short turf round the stone, as round a standing stone
-    sc_ = (rng.uniform(*scale_rng, m) * near * np.where(fr_, 0.8, 1.0)).astype(np.float32)
+    near = NEAR_MIN + (1 - NEAR_MIN) * np.clip((dm - 1.2) / 3.0, 0, 1)
+    # a trodden way up to the stone: short in front of it, full height at its sides and back
+    lane = np.where(fr_, (0.45 if around else 0.22) + (0.55 if around else 0.78) * np.clip((MARK_Y - y - 0.6) / 5.0, 0, 1), 1.0)
+    sc_ = (rng.uniform(*scale_rng, m) * near * lane * (0.7 + 0.55 * patch(x, y, 0))).astype(np.float32)
     scl = np.stack([sc_, sc_, sc_ * rng.uniform(0.85, 1.2, m)], 1).astype(np.float32)
     pick = (pick_bias(m) if pick_bias else rng.integers(0, nvar, m)).astype(np.int32)
     for an, data, tp in (('rot', rot, 'FLOAT_VECTOR'), ('scl', scl, 'FLOAT_VECTOR'), ('pick', pick, 'INT')):
@@ -656,18 +832,19 @@ def scatter(name, coll, n, rmin, rmax, dens, nvar, scale_rng, seed_off=0, pick_b
 
 D = DENSITY
 # children are picked in name order: butter0 to 3 (yellow), daisy0 to 1 (white), flax0 to 3 (pale blue)
-FLOWER_P = ([0, 0, 0, 0, .12, .12, .19, .19, .19, .19] if NIGHT else [.09, .09, .09, .09, .1, .1, .11, .11, .11, .11])
+FLOWER_P = ([0, 0, 0, 0, .05, .05, .225, .225, .225, .225] if NIGHT else [.14, .14, .14, .14, .06, .06, .08, .08, .08, .08])
 nvar_all = len(variants)
 def pick_mix(m):
     tall = rng.integers(0, NV_TALL, m); ph = rng.integers(NV_TALL, nvar_all, m)
     return np.where(rng.uniform(0, 1, m) < 0.55, tall, ph)
 def dens_near(r): return np.clip(1.0 - (r - 14) / 40, 0.25, 1.0)
 scatter('meadow', lib, int(60000 * D), 1.2, 60, dens_near, nvar_all, (0.9, 1.35), pick_bias=pick_mix)
+scatter('meadow_far', lib, int(70000 * D), 55, 190, lambda r: np.clip(1.1 - (r - 55) / 160, 0.15, 1), nvar_all, (2.0, 3.0), pick_bias=lambda m: rng.integers(NV_TALL, nvar_all, m))
 scatter('meadow_ph', lib, int(30000 * D), 1.2, 30, lambda r: np.ones_like(r), nvar_all, (1.6, 2.3),
         pick_bias=lambda m: rng.integers(NV_TALL, nvar_all, m))
-scatter('turf', lib, int(14000 * D), 0.0, 60, lambda r: np.ones_like(r), nvar_all, (1.1, 1.6),
+scatter('turf', lib, int(22000 * D), 0.0, 60, lambda r: np.ones_like(r), nvar_all, (1.1, 1.6),
         pick_bias=lambda m: rng.integers(NV_TALL, nvar_all, m), around=(MARK_X, MARK_Y, 0.35, 4.0))
-scatter('flowers', flib, int((48000 if NIGHT else 16000) * D), 1.2, 45, lambda r: np.clip(1.2 - r / 45, 0.2, 1) * (np.clip(1.3 - r / 30, 0.3, 1) if NIGHT else 1), 10, (0.9, 1.3),
+scatter('flowers', flib, int((26000 if NIGHT else 16000) * D), 1.2, 45, (lambda r: np.clip(1.5 - r / 9, 0.1, 1)) if NIGHT else (lambda r: np.clip(1.2 - r / 45, 0.2, 1)), 10, (0.55, 1.35) if NIGHT else (0.9, 1.3),
         pick_bias=lambda m: rng.choice(10, m, p=FLOWER_P))
 for c in (lib, flib):
     c.hide_render = True        # the library objects themselves are not rendered at the origin
@@ -713,7 +890,12 @@ if PASSES:
         n_.inputs['From Min'].default_value = 0; n_.inputs['From Max'].default_value = hi
         n_.inputs['To Min'].default_value = 0; n_.inputs['To Max'].default_value = 1
         ct.links.new(sock, n_.inputs['Value']); return n_.outputs['Value']
-    ct.links.new(mr(rl.outputs['Depth'], 80.0), cc.inputs['Red'])
+    # depth, log encoded (R = ln(1 + d) / ln(4001)) so the grade can reach the distant hills
+    a1 = ct.nodes.new('CompositorNodeMath'); a1.operation = 'ADD'; a1.inputs[1].default_value = 1.0
+    ct.links.new(rl.outputs['Depth'], a1.inputs[0])
+    lg = ct.nodes.new('CompositorNodeMath'); lg.operation = 'LOGARITHM'; lg.inputs[1].default_value = 4001.0
+    ct.links.new(a1.outputs[0], lg.inputs[0])
+    ct.links.new(mr(lg.outputs[0], 1.0), cc.inputs['Red'])
     ct.links.new(mr(rl.outputs['hf'], 1.2), cc.inputs['Green'])
     half_ = ct.nodes.new('CompositorNodeMath'); half_.operation = 'MULTIPLY'; half_.inputs[1].default_value = 0.5
     ct.links.new(cl(rl.outputs['gm']), half_.inputs[0])
@@ -732,6 +914,15 @@ if BORDER:
     x0, y0, x1, y1 = (float(v) for v in BORDER.split(','))
     sc.render.use_border = True; sc.render.use_crop_to_border = True
     sc.render.border_min_x, sc.render.border_min_y, sc.render.border_max_x, sc.render.border_max_y = x0, y0, x1, y1
+if paper_ob is not None:
+    # where the paper lands in the frame, for the page's hotspot
+    from bpy_extras.object_utils import world_to_camera_view
+    bpy.context.view_layer.update()
+    dg = bpy.context.evaluated_depsgraph_get(); pe_ = paper_ob.evaluated_get(dg)
+    pts = [world_to_camera_view(sc, cam, pe_.matrix_world @ v.co) for v in pe_.data.vertices]
+    xs = [p_.x * W for p_ in pts]; ys = [(1 - p_.y) * H for p_ in pts]
+    json.dump({'w': W, 'h': H, 'x0': min(xs), 'y0': min(ys), 'x1': max(xs), 'y1': max(ys)}, open(OUT + '.paper.json', 'w'))
+    print('PAPER', min(xs), min(ys), max(xs), max(ys))
 import time
 if '--dry' in argv:
     print('DRY_OK'); sys.exit(0)

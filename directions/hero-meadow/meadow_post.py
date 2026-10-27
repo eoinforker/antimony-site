@@ -89,9 +89,11 @@ def finish(img, seed=0, grain=0.012, halation=1.0, gain=1.0):
 def read_data(path, W, H):
     d = resize(read16(path), W, H)
     d = np.where(d <= 0.04045, d / 12.92, ((d + 0.055) / 1.055) ** 2.4)   # stored through the Standard view
-    return np.clip(d[..., 0] * 80.0, 0.3, 80.0), np.clip(d[..., 1] * 1.2, 0, 1.2), d[..., 2]
+    depth = 4001.0 ** d[..., 0] - 1 if LOGDEPTH else d[..., 0] * 80.0
+    return np.clip(depth, 0.3, 4000.0), np.clip(d[..., 1] * 1.2, 0, 1.2), d[..., 2]
 
 SKY = np.array([0x94, 0xE6, 0xFF], np.float32) / 255
+LOGDEPTH = '--lindepth' not in sys.argv     # data passes now carry log depth
 
 def crystal_true(img, m, k=0.45):
     # a power window on the crystal, as a colourist would: pull its chroma onto sky #94E6FF, keep its light
@@ -104,12 +106,14 @@ def crystal_true(img, m, k=0.45):
     return img * (1 - cm) + tinted * cm
 
 def haze(img, depth, m, k=1.0):
-    # aerial perspective: distance takes on the warm sky near the sun side
+    # aerial perspective: distance takes on the colour of the sky just above it (warm towards the sun)
     h, w = img.shape[:2]
-    f = (1 - np.exp(-np.maximum(depth - 8, 0) / 90)) * 0.28 * k * (1 - smooth(0.02, 0.2, m) * 0)
-    f = np.where(m < 0.02, 0, f)[..., None]
-    xx = np.linspace(1, 0, w, dtype=np.float32)[None, :, None]
-    col = np.array([1.0, 0.86, 0.78], np.float32) * (0.78 + 0.2 * xx)
+    sky = (m < 0.02).astype(np.float32) * (depth > 3990)
+    r = 0.03 * w
+    col = blur(img * sky[..., None], r) / (blur(sky, r)[..., None] + 1e-4)
+    # fill columns with no sky nearby from the mean of the lowest sky
+    f = ((1 - np.exp(-np.maximum(depth - 20, 0) / 260)) * 0.16 + (1 - np.exp(-np.maximum(depth - 500, 0) / 900)) * 0.5) * k
+    f = np.where(sky > 0, 0, np.clip(f, 0, 0.82))[..., None]
     return img * (1 - f) + col * f
 
 def warm_sky(img, m, k=1.0):
@@ -122,7 +126,7 @@ def warm_sky(img, m, k=1.0):
     warm = img * np.array([1.08, 1.0, 0.92], np.float32) + np.array([0.03, 0.02, 0.01], np.float32)
     return img * (1 - w) + warm * w
 
-def motes_and_rain(img, depth, seed=3, motes=160, rain=900, col=(0.58, 0.9, 1.0)):
+def motes_and_rain(img, depth, seed=3, motes=140, rain=2600, col=(0.58, 0.9, 1.0)):
     # night: soft blue motes of light drifting in the meadow, and fine rain caught in the glow
     h, w = img.shape[:2]; s = w / 1920; rng = np.random.default_rng(seed)
     acc = np.zeros((h, w), np.float32)
@@ -143,14 +147,24 @@ def motes_and_rain(img, depth, seed=3, motes=160, rain=900, col=(0.58, 0.9, 1.0)
         n = int(L)
         xs = (cx + np.linspace(0, L * 0.12, n)).astype(int); ys = (cy + np.linspace(0, L, n)).astype(int)
         ok = (xs >= 0) & (xs < w) & (ys >= 0) & (ys < h)
-        rn[ys[ok], xs[ok]] += rng.uniform(0.02, 0.06)
+        rn[ys[ok], xs[ok]] += rng.uniform(0.05, 0.12)
     rn = blur(rn, 0.7 * s)
     lit = blur(lum(img), 25 * s)                 # rain shows where there is light behind it
     out = img + acc[..., None] * np.array(col, np.float32) * 0.9 + (rn * (0.4 + 2.5 * lit))[..., None] * np.array([0.8, 0.9, 1.0], np.float32)
     return out
 
+def night_stone(img, m, k=1.0):
+    # by night the dark stone would sink into the dark grass: a power window lifts it a little, cool,
+    # as the light of the flowers round it would, so the whole mark reads
+    st = smooth(0.68, 0.74, m) * (1 - smooth(0.85, 0.95, m))
+    st = blur(st, 0.8 * img.shape[1] / 1920)[..., None]
+    lifted = img * (1 + 0.2 * k) + np.array([0.036, 0.044, 0.058], np.float32) * k
+    return img * (1 - st) + lifted * st
+
 def save8(a, path):
-    Image.fromarray((np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8)).save(path)
+    im = Image.fromarray((np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8))
+    if path.endswith('.jpg'): im.save(path, quality=96, subsampling=0)
+    else: im.save(path)
 
 def sample_bilinear(img, x, y):
     h, w = img.shape[:2]
@@ -170,6 +184,7 @@ if mode == 'still':
         _, _, m = read_data(sys.argv[4], img.shape[1], img.shape[0])
         img = crystal_true(img, m, opt('crystal', 0.45))
         if '--night' in sys.argv:
+            img = night_stone(img, m, opt('lift', 1.0))
             img = motes_and_rain(img, None)
         else:
             dep, _, _ = read_data(sys.argv[4], img.shape[1], img.shape[0])
@@ -184,9 +199,12 @@ elif mode == 'loop':
     img = read16(src); H = int(round(img.shape[0] * W / img.shape[1]))
     img = resize(img, W, H)
     depth, hf, m = read_data(data, W, H)
+    NIGHT = '--night' in sys.argv
     img = crystal_true(img, m, opt('crystal', 0.45))
-    img = haze(img, depth, m, opt('haze', 1.0))
-    img = warm_sky(img, m, opt('warm', 1.0))
+    if NIGHT: img = night_stone(img, m, opt('lift', 1.0))
+    if not NIGHT:
+        img = haze(img, depth, m, opt('haze', 1.0))
+        img = warm_sky(img, m, opt('warm', 1.0))
     grass = smooth(0.3, 0.45, m) * (1 - smooth(0.6, 0.7, m))
     stone = smooth(0.6, 0.72, m)
     s = W / 1920
@@ -201,7 +219,7 @@ elif mode == 'loop':
     TAU = 2 * math.pi
     rng = np.random.default_rng(11)
     # pollen: points of light on closed drifting paths; some near and unfocused, most small
-    P = 70
+    P = 150 if NIGHT else 70
     px0 = rng.uniform(0, W, P); py0 = rng.uniform(0.08 * H, 0.85 * H, P)
     prx = rng.uniform(30, 160, P) * s; pry = rng.uniform(10, 50, P) * s
     pph = rng.uniform(0, TAU, P); pk = rng.choice([1, 1, 1, 2], P)
@@ -210,6 +228,17 @@ elif mode == 'loop':
     ptw = rng.integers(1, 4, P)
     sunside = np.clip(1.2 - px0 / W, 0.35, 1.1)
     hi = smooth(0.6, 1.0, lum(img))[..., None] * img
+    if NIGHT:
+        psz = psz * 0.8; pbr = pbr * 0.8
+        def rain_layer(n, Lmin, Lmax, amp, seed):
+            r_ = np.random.default_rng(seed); out = np.zeros((H, W), np.float32)
+            for _ in range(n):
+                cx, cy = r_.uniform(0, W), r_.uniform(0, H); L = r_.uniform(Lmin, Lmax) * s; k_ = int(L)
+                xs = (cx + np.linspace(0, L * 0.1, k_)).astype(int) % W; ys = (cy + np.linspace(0, L, k_)).astype(int) % H
+                out[ys, xs] += r_.uniform(0.4, 1.0) * amp
+            return blur(out, 0.6 * s)
+        rain_a = rain_layer(1400, 30, 60, 0.07, 5); rain_b = rain_layer(900, 50, 90, 0.05, 6)
+        rain_lit = 0.25 + 2.2 * blur(lum(img), 25 * s)
     for f in range(N):
         t = f / N
         ph = TAU * t
@@ -240,7 +269,15 @@ elif mode == 'loop':
             else:
                 spot = np.exp(-(dd / r) ** 2)
             acc[y0:y1, x0:x1] += spot * pbr[i] * tw[i] * sunside[i]
-        fr = fr + (acc * (1 - stone * 0.6))[..., None] * np.array([1.0, 0.92, 0.72], np.float32)
+        mcol = np.array([0.55, 0.88, 1.0] if NIGHT else [1.0, 0.92, 0.72], np.float32)
+        fr = fr + (acc * (1 - stone * 0.6))[..., None] * mcol
+        if NIGHT:
+            # rain: two layers of streaks scrolled down a whole number of frame heights per loop
+            rsum = 0
+            for lay, kk in ((rain_a, 9), (rain_b, 13)):
+                sh = int(round(kk * H * t)) % H
+                rsum = rsum + np.roll(lay, sh, axis=0)
+            fr = fr + (rsum * rain_lit)[..., None] * np.array([0.8, 0.9, 1.0], np.float32)
         out = finish(fr, seed=1000 + f, grain=opt('grain', 0.008), halation=1.0)
-        save8(out, os.path.join(outdir, f'f{f:04d}.png'))
+        save8(out, os.path.join(outdir, f'f{f:04d}.jpg'))
         if f % 24 == 0: print('frame', f, flush=True)
