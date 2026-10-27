@@ -1,0 +1,112 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Antimony</title><meta name="claude:viewport-fit-sides" content="cover"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<style>
+/* Arasaka's corporate black, Edgerunners' signal red and decoding type, First of Kind's word mosaic, Anysphere's restraint. */
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
+@font-face { font-family: "Commit Mono"; src: url("assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
+:root { --bg: #0A0A0B; --fg: #ECE7DC; --red: #E0262D; --dim: #6F6B64; --rule: rgba(236,231,220,.13); --lit: #E0262D; color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--fg); }
+body { font: 400 13px/1.6 "Commit Mono", ui-monospace, monospace; -webkit-font-smoothing: antialiased; }
+a { color: var(--fg); text-decoration: none; border-bottom: 1px solid var(--red); } a:hover { color: var(--red); }
+:focus-visible { outline: 1px solid var(--red); outline-offset: 3px; }
+::selection { background: var(--red); color: var(--bg); }
+.g { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-block: 14px; background: rgba(10,10,11,.86); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule); text-transform: uppercase; letter-spacing: .12em; font-size: 11px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--bg); z-index: 10; }
+.bar .l { display: flex; align-items: center; gap: 12px; } .bar svg.m { width: 18px; height: 18px; display: block; } .bar .r { display: flex; gap: 22px; color: var(--dim); } .bar .r a { border: 0; color: var(--fg); }
+.red { color: var(--red); }
+.hero { position: relative; height: min(100svh, 980px); min-height: 560px; }
+#mosaic { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hero .t { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: 48px; max-width: 30em; display: grid; gap: 12px; }
+.hero .t b { font: 400 clamp(30px, 4vw, 56px)/1.04 "Timeless Serif", Georgia, serif; letter-spacing: -.015em; }
+.hero .t span { color: var(--dim); text-transform: uppercase; letter-spacing: .12em; font-size: 11px; }
+.hero .corner { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: 48px; text-align: right; color: var(--dim); text-transform: uppercase; letter-spacing: .12em; font-size: 11px; line-height: 1.9; }
+.grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); border-top: 1px solid var(--rule); }
+.cell { grid-column: span 4; border-right: 1px solid var(--rule); padding: 22px 22px 40px 0; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.cell:last-child { border-right: 0; } .cell + .cell { padding-left: 22px; }
+.cell h3 { font: 500 11px "Commit Mono", monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--red); }
+.cell p { max-width: 36ch; color: #CFC9BC; }
+.line { font: 400 clamp(26px, 3.4vw, 46px)/1.15 "Timeless Serif", Georgia, serif; letter-spacing: -.012em; padding-block: 96px; max-width: 22em; text-wrap: balance; }
+.spec { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.spec div { padding: 18px 18px 22px 0; border-right: 1px solid var(--rule); display: grid; gap: 6px; } .spec div + div { padding-left: 18px; } .spec div:last-child { border-right: 0; }
+.spec b { font-weight: 400; color: var(--dim); text-transform: uppercase; letter-spacing: .1em; font-size: 11px; } .spec span { font-size: 15px; }
+.orbe { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 28px; padding-block: 80px; align-items: center; max-width: 900px; }
+.orbe img { width: 120px; height: 120px; display: block; filter: invert(1); }
+.orbe p { font: 400 clamp(19px, 2vw, 24px)/1.4 "Timeless Serif", Georgia, serif; }
+footer { padding-block: 64px 22px; }
+.big { display: block; width: 100%; height: auto; color: var(--fg); }
+.fine { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 22px; color: var(--dim); text-transform: uppercase; letter-spacing: .12em; font-size: 11px; border-top: 1px solid var(--rule); padding-top: 14px; }
+@media (max-width: 820px) { .cell { grid-column: span 12; border-right: 0; border-bottom: 1px solid var(--rule); padding: 20px 0 28px; } .cell + .cell { padding-left: 0; } .spec { grid-template-columns: 1fr 1fr; } .spec div:nth-child(2) { border-right: 0; } .spec div:nth-child(3) { padding-left: 0; } .bar .r span { display: none; } .hero .corner { display: none; } .orbe { grid-template-columns: 72px minmax(0, 1fr); } .orbe img { width: 72px; height: 72px; } }
+</style></head><body>
+<div class="bar g"><div class="l"><svg class="m" viewBox="0 0 100 100" style="" aria-hidden="true"><defs><clipPath id="bc18"><rect width="100" height="100" rx="22"/></clipPath><mask id="bm18"><rect width="100" height="100" fill="#fff"/><path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z" fill="#000"/><path d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" fill="#000"/></mask></defs><g clip-path="url(#bc18)"><rect width="100" height="100" fill="#0A0A0B"/><rect width="100" height="100" fill="#ECE7DC" mask="url(#bm18)"/><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z" fill="#E0262D"/></g></svg><span>Antimony</span><span class="red" style="margin-left:6px">//</span><span style="color:var(--dim)">Software for the people who make the work</span></div>
+  <div class="r"><a href="https://eoinforker.github.io/orbe-site/">Orbe</a><span>Letters soon</span><span>London</span></div></div>
+<section class="hero"><canvas id="mosaic" aria-label="The Antimony mark, drawn in our own words"></canvas>
+  <div class="t g" style="padding:0"><span>001 / The break</span><b>Take away everything that is not the work.</b></div>
+  <div class="corner">51 Sb<br>stibium<br>found in the break</div></section>
+<main class="g">
+  <div class="grid">
+    <div class="cell"><h3>01 / The work</h3><p>Creators do the work. Then they do the work around the work: the briefs, the contracts, the invoices, the chasing. We build software that takes the second part away.</p></div>
+    <div class="cell"><h3>02 / Orbe</h3><p>Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator's side of every sponsorship deal. It holds the money until the work is delivered.</p></div>
+    <div class="cell"><h3>03 / The name</h3><p>Antimony is a metal. It was used to refine gold: melted with it, it took up everything that was not gold. Alchemists called it the wolf of metals.</p></div>
+  </div>
+  <p class="line">What is left, once the work around the work is gone, is <span class="red">yours</span>.</p>
+  <div class="spec"><div><b>Element</b><span>51, Sb</span></div><div><b>Found as</b><span>Stibnite, in the cracks of rock</span></div><div><b>Used for</b><span>Refining gold</span></div><div><b>Rarely</b><span>Found alone</span></div></div>
+  <div class="orbe"><img src="assets/orbe-mark.png" alt="The Orbe mark"><p>Orbe is the creator's side of every sponsorship deal: the brief, the contract and the payment in one place. <a href="https://eoinforker.github.io/orbe-site/">Visit Orbe</a></p></div>
+</main>
+<footer class="g"><svg class="big" viewBox="-20 -830 4186 1070" style="" role="img" aria-label="Antimony"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg><div class="fine"><span>© 2026 Antimony</span><span>Made in London</span></div></footer>
+<script>
+(() => { "use strict";
+const Q = {"seam": "M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z", "cav": "M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z", "gem": "M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z"}, BONE = "#ECE7DC", RED = "#E0262D", DIM = "#2A2826", DIM2 = "#3A3733";
+const WORDS = "ANTIMONY SOFTWARE FOR THE PEOPLE WHO MAKE THE WORK ORBE BRIEF CONTRACT PAID ON TIME NEVER ALONE STIBIUM 51 SB REFINE GOLD THE BREAK MAKERS YOURS ", GLYPH = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/\\<>[]{}=+*#%&$";
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const c = document.getElementById("mosaic"), x = c.getContext("2d");
+let W, H, cw, ch, cols, rows, grid = [], T0 = performance.now(), mx = -1e9, my = -1e9;
+function regions(n, m) {
+  const S = 600, o = document.createElement("canvas"); o.width = o.height = S; const g = o.getContext("2d"), k = S / 100; g.scale(k, k);
+  const rr = new Path2D(); rr.roundRect ? rr.roundRect(0, 0, 100, 100, 22) : rr.rect(0, 0, 100, 100);
+  g.fillStyle = "#fff"; g.fill(rr); g.globalCompositeOperation = "destination-out"; g.fill(new Path2D(Q.seam)); g.fill(new Path2D(Q.cav));
+  g.globalCompositeOperation = "source-over"; g.fillStyle = "#f00"; g.fill(new Path2D(Q.gem));
+  return (u, v) => { if (u < 0 || v < 0 || u >= 1 || v >= 1) return 0; const q = (Math.floor(v * S) * S + Math.floor(u * S)) * 4, d = g.getImageData(0, 0, 1, 1); return 0; };
+}
+function layout() {
+  const d = Math.min(2, devicePixelRatio || 1), r = c.getBoundingClientRect(); W = r.width; H = r.height; c.width = W * d; c.height = H * d; x.setTransform(d, 0, 0, d, 0, 0);
+  const fs = W < 600 ? 10 : 12.5; cw = fs * .62; ch = fs * 1.08; cols = Math.ceil(W / cw); rows = Math.ceil(H / ch);
+  x.font = `500 ${fs}px "Commit Mono", monospace`; x.textBaseline = "top";
+  // where the mark sits: a square on the right two thirds, centred vertically
+  const s = Math.min(H * .78, W * (W < 700 ? .9 : .5)), ox = W < 700 ? (W - s) / 2 : W * .66 - s / 2, oy = (H - s) / 2 - (W < 700 ? 40 : 0);
+  const S = 400, o = document.createElement("canvas"); o.width = o.height = S; const g = o.getContext("2d"), k = S / 100; g.scale(k, k);
+  const rr = new Path2D(); rr.roundRect ? rr.roundRect(0, 0, 100, 100, 22) : rr.rect(0, 0, 100, 100);
+  g.fillStyle = "#fff"; g.fill(rr); g.globalCompositeOperation = "destination-out"; g.fill(new Path2D(Q.seam)); g.fill(new Path2D(Q.cav));
+  g.globalCompositeOperation = "source-over"; g.fillStyle = "#f00"; g.fill(new Path2D(Q.gem));
+  const D = g.getImageData(0, 0, S, S).data;
+  grid = [];
+  let wi = Math.floor(Math.random() * WORDS.length);
+  for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+    const px = i * cw + cw / 2, py = j * ch + ch / 2, u = (px - ox) / s, v = (py - oy) / s;
+    let kind = 0;
+    if (u >= 0 && v >= 0 && u < 1 && v < 1) { const q = (Math.floor(v * S) * S + Math.floor(u * S)) * 4; if (D[q + 3] > 128) kind = D[q + 1] > 200 ? 1 : 2; }
+    const chr = WORDS[wi % WORDS.length]; wi++;
+    grid.push({ i, j, chr, kind, d: Math.random() * 1.4 + (kind ? .2 : 1.2) + Math.hypot(u - .5, v - .5) * .6, n: Math.random() * 99 });
+  }
+}
+function frame(now) {
+  const t = still ? 99 : (now - T0) / 1000; x.fillStyle = "#0A0A0B"; x.fillRect(0, 0, W, H);
+  for (const p of grid) {
+    const a = t - p.d; if (a < 0) continue;
+    const px = p.i * cw, py = p.j * ch, near = Math.hypot(px - mx, py - my) < 70;
+    let chr = p.chr;
+    const decoding = a < .55 || (near && Math.sin(t * 20 + p.n) > .2) || (!still && t > 4 && Math.sin(t * 1.3 + p.n * 4.1) > .9993);
+    if (decoding) chr = GLYPH[(Math.floor(t * 30 + p.n * 7)) % GLYPH.length];
+    if (chr === " ") continue;
+    x.fillStyle = p.kind === 1 ? (decoding ? RED : BONE) : p.kind === 2 ? (decoding ? BONE : RED) : (near ? DIM2 : DIM);
+    x.fillText(chr, px, py);
+  }
+  requestAnimationFrame(frame);
+}
+c.addEventListener("pointermove", e => { const r = c.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; });
+c.addEventListener("pointerleave", () => mx = my = -1e9);
+new ResizeObserver(layout).observe(c);
+(document.fonts ? document.fonts.load('500 12px "Commit Mono"') : Promise.resolve()).catch(() => {}).finally(() => { layout(); T0 = performance.now(); requestAnimationFrame(frame); });
+})();
+</script></body></html>

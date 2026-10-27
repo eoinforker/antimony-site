@@ -1,0 +1,5 @@
+{
+  "note": "The lightbox poster's face in each render, in render pixels, corners clockwise from top left. Optional crop: [x0, y0, x1, y1] as fractions of the frame. Optional mark: the mark's box as fractions of the face (default: the Grow poster layout, 186 units at 228 down a 600 by 900 poster).",
+  "desktop": { "w": 2560, "h": 1440, "corners": [[1053.9, 391.39], [1506.1, 391.39], [1506.1, 1069.67], [1053.9, 1069.67]], "crop": [0.31, 0.2, 0.98, 0.93] },
+  "phone": { "w": 810, "h": 1440, "corners": [[178.9, 391.39], [631.1, 391.39], [631.1, 1069.67], [178.9, 1069.67]], "crop": [0, 0.16, 1, 0.96] }
+}

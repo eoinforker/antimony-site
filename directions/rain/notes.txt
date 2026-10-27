@@ -78,3 +78,34 @@ The paper, the beauty pass and the breathing layer (October 27)
   Honest limits, new: the thicker haze fills the cafe room too, so its lamps bloom into a large warm glow on the
   window; it reads as light in the mist, but it is heavier than it should be. The handbill is lit only by the blue
   hour sky (it sits behind the face's plane, out of the poster's light), so it is quiet rather than glowing.
+
+The push: a city beyond the corner (October 27, afternoon; first frames only, the loop and page not yet rebuilt)
+  What changed (all behind flags; without them rain_scene.py rebuilds the published render exactly):
+  - --vista 1: the wall now ends at a stone pier left of the bench and carries on as a low parapet. Past it the
+    street is a terrace high on the city's edge: the ground falls away and towers stand in the rain, their bases lost
+    below, emerging from a deep blue rain haze. Two scanned ambientCG facades, Facade006 (pale stone piers, tall
+    windows) and Facade019A (a darker banded grid), mapped at true scale (bays about 1.8 m, floors 3.6 m), in one to
+    three set-back tiers, 28 towers between 300 m and 1.5 km. Windows lit from each scan's own glass map: a scattered
+    few, nearly all high up. One long bridge crosses the gap far off with a line of lamps. Above the coping the city
+    shows behind the poster; the garden trees behind the wall are cut to one (--gtrees -1.9). The camera's far clip
+    is raised (it was 400 m and cut the city short), and the sky the camera sees is held to a deep blue, so the
+    HDRI's low sun never shows. The street haze stops at the wall line (--haze-y1 0.5).
+    The aerial perspective is done in the compose, from depth: rain_compose.py --fog-depth 350 --fog-l 0.55
+    --fogk 0.92 --fog-col 0.30,0.40,0.62 --far-glow 0.5 (nothing nearer than 150 m is touched; the depth is median filtered first, since the EXR's half
+    floats leave stray samples). A scattering volume was tried first (--air, still in the script, off by default):
+    hard to steer, it either washed the towers out or hid them, and the Volume Scatter colour only thins it (the
+    absorption term, --air-abs, was needed to darken it at all).
+  - --glass 1: a real pane over the print with rain beads and short runs. It is visible to the camera and in
+    reflections only, so the print still lights the street. From 7 m the drops are a pixel or two: honest, subtle.
+  - --wet-r 0.06 --pud 0.1: glossier paving and more standing water.
+  - --room-haze 0: the street haze no longer fills the cafe room (its lamps had bloomed into a heavy glow).
+  - rain_compose.py: --fog-col, --fog-l, --fog-depth and --fog-near added (defaults keep the old behaviour).
+  - The poster's foot line now reads SOFTWARE, MADE ON PURPOSE. (the render's print texture, and FOOT in
+    index.html, which had been blank). The handbill carries no copy (grey lines only); its letter already uses
+    "Software, made on purpose."
+    The corrected print is the rest frame with only its foot line replaced (Timeless Serif 400, tracked .32 em,
+    the grass behind it patched from just above): scratchpad rain-push/poster_face_v2.png, passed as --poster.
+  The lightbox corners are unchanged, so the live layer still lines up.
+  Frames: shots/push-first-frame.png (first pass: towers too near in scale, square windows, a sun leak) and
+  shots/push-second-frame.png (this pass: 2560x1440, 1213 s of rendering, about 50 of 400 samples at the time
+  cap, then denoised), each with a -phone crop (x 875, 810 wide). rain/assets is untouched.

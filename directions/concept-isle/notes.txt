@@ -1,0 +1,55 @@
+Crystal Isle, path traced
+
+What this is
+  Dawn over still water in a pink and violet mist. A quiet island of terraced gardens, scanned trees
+  and a few warm-windowed stone houses rises from the water; on its crown, on a low dark plinth, stands
+  the Antimony mark as a monument: a dark stone tile (100 by 100 with corners of radius 22, 76 m square,
+  about 9 m deep) split top to bottom by the seam at 16 degrees, with the sky crystal set in its
+  cavity. Every outline is the mark's exact geometry from break-geometry.json: the tile, the cavity
+  (cut as a recess, so dark stone stays behind the crystal), the seam (cut clean through, so the sky
+  shows in it) and the gem, whose two front facets meet on the seam. The crystal is clear glass tinted
+  #94E6FF with a smaller gem of sky light inside it. The low sun sits behind a ridge of trees on an
+  islet beyond, and the mist hugs the water.
+  Camera: 28 mm on 36 mm, 326 m from the mark, 6 m above the water, 2.5 degrees of tilt, f/8. The
+  mark is at the exact horizontal centre of the frame, so the tall phone crop keeps it whole.
+
+  Blender 4.5.15 LTS, Cycles on CPU (4 threads), OpenImageDenoise, adaptive sampling, AgX Base
+  Contrast. Sky: Poly Haven kloppenheim_06_puresky, desaturated and held under a dawn gradient with
+  a broad glow about the sun. Scans: Poly Haven trees, rocks, grass and cliff; ambientCG stone and
+  grass (see credits.txt).
+
+How the crystal is held to sky blue
+  - Light linking: the light inside the crystal lights the stone, island, trees and water but never
+    the mist, so it cannot veil itself in white.
+  - A blue absorption volume inside the glass, so backlight turns blue as it passes through.
+  - An object-masked grade in the compositor (object index pass): the crystal's pixels are pulled
+    to #94E6FF before the bloom.
+
+Run
+  blender -b -P crystal_isle.py -- --out beauty.png --masks masks.png --w 2560 --h 1440 --samples 256 --tl 1080
+    (always under the shared lock). One run writes the graded still and, after it, a flat mask render
+    from the same camera: R the crystal and its reflection, G the grass, B the water.
+  python3 isle_compose.py --still beauty.png --masks masks.png --out assets
+    grades the still (violet shadows, a darker lower frame, a soft vignette), writes the stills
+    (PNG, WebP, AVIF, wide and phone) and composes the loop.
+
+The loop (6 s, 24 fps, 144 frames, seamless), composed from the one still and its masks
+  - the crystal's light breathes, about 7 percent, through a soft blur of its mask (one cycle)
+  - the water: reflections waver by a pixel or two, more near the camera (two and three cycles)
+  - the grass sways a little (two cycles)
+  - the mist breathes: two soft noise fields crossfade over the loop, low about the waterline
+  - fine grain, new on every frame
+  Every motion divides 144 frames, so frame 144 runs straight into frame 1.
+
+Page (index.html)
+  The still (AVIF, WebP), then the loop over it (WebM or H.264; a tall cut on phones). A short
+  opening, once a session: the frame rises out of ink while the mist lifts off the mark, then the
+  type arrives; a touch, key or scroll skips it. The wordmark and "Software, made on purpose."
+  bottom left, Orbe, immiscible and Idyll bottom right, one sound toggle top right. Sound is made
+  in the browser and silent until asked: a low warm air, a slow lap of water at the stones, wind in
+  the grass, and now and then a far glass chime. Reduced motion: no opening, no loop, the still.
+
+Honest limits
+  - The loop is made from one still: the water's motion is an image warp, not rendered ripples, and
+    the mist does not truly drift.
+  - The light shafts are faint; a final pass would add a stronger break-up close behind the island.

@@ -35,32 +35,27 @@ a:hover { text-decoration-color: currentColor; }
 .wm { position: absolute; left: max(32px, env(safe-area-inset-left, 0px)); top: max(30px, env(safe-area-inset-top, 0px)); height: 20px; width: auto; color: var(--paper); --lit: var(--sky); opacity: 0; transition: opacity .8s ease, color .3s ease; z-index: 5; }
 .wm.on { opacity: 1; } .wm.dark { color: var(--text); --lit: var(--pru); }
 
-/* the work: a row of plates that the scroll carries sideways */
-.work { position: relative; }
-.work .pin2 { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; display: grid; grid-template-rows: auto 1fr; padding-top: 12vh; }
-.work header { padding: 0 max(32px, 6vw); display: flex; justify-content: space-between; align-items: end; gap: 24px; }
-.work h2 { font-weight: 400; font-size: clamp(44px, 6vw, 92px); line-height: .95; letter-spacing: -.03em; }
-.work header p { max-width: 21em; color: var(--dim); font-size: 16px; }
-.track { display: flex; gap: 22px; padding: 6vh max(32px, 6vw) 0; will-change: transform; align-items: start; }
-.card { flex: none; width: min(560px, 82vw); position: relative; border: 1px solid rgba(38,41,42,.14); background: #F6F3EB; }
-.card .art { position: relative; aspect-ratio: 16 / 10; overflow: hidden; border-bottom: 1px solid rgba(38,41,42,.14); }
-.card .art > img:not(.badge) { width: 100%; height: 100%; object-fit: cover; object-position: 0 0; display: block; transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
-.card:hover .art > img:not(.badge), .card:hover .icon { transform: scale(1.025); }
-.field { position: absolute; inset: 0; display: grid; place-items: center; }
-.field.dark { background: #0B0D15; } .field.print { background: url(assets/prints/81248.webp) 60% 40% / cover; }
-.icon { width: 30%; height: auto; display: block; border-radius: 22%; transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
-.badge { position: absolute; left: 14px; top: 14px; width: 30px; height: 30px; border-radius: 7px; box-shadow: 0 0 0 3px #F6F3EB; }
-.card .meta { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 22px 24px 0; }
-.card h3 { font-weight: 400; font-size: 40px; line-height: 1; letter-spacing: -.02em; }
-.card h3 a { text-decoration: none; }
-.tag { font-size: 14px; padding: 3px 10px; border-radius: 3px; white-space: nowrap; }
-.tag.sky { background: #CFF1FC; color: #134E66; } .tag.paper { background: #E7E2D6; color: #4A463E; } .tag.rose { background: #F7DCE6; color: #7A2348; }
-.card p { padding: 14px 24px 0; font-size: 16.5px; line-height: 1.5; color: #45464A; max-width: 30em; min-height: 5.6em; }
-.card .more { display: inline-block; margin: 14px 24px 22px; font-size: 15px; }
-.card .no { position: absolute; right: 18px; top: 14px; font-size: 13px; color: rgba(255,255,255,.8); mix-blend-mode: difference; }
-/* the row ends with a hairline of dots, the way an unfinished line is drawn */
-.track .end { flex: none; width: min(380px, 70vw); align-self: stretch; border: 1px dashed rgba(38,41,42,.28); display: grid; place-items: center; color: var(--dim); font-size: 16px; text-align: center; padding: 24px; min-height: 360px; }
-
+/* what we make: named plainly, the marks drained of colour until you point at them */
+.made { padding: 18vh 24px 22vh; display: grid; place-items: center; }
+.made .in { width: min(620px, 100%); }
+.made h2 { font-weight: 400; font-size: 15px; color: var(--dim); margin-bottom: 18px; }
+.made ul { list-style: none; border-top: 1px solid rgba(38,41,42,.14); }
+.made li a { display: grid; grid-template-columns: 30px 7.5em minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(38,41,42,.14); text-decoration: none; }
+.made img { width: 30px; height: 30px; border-radius: 7px; filter: grayscale(1) contrast(.85) brightness(1.05); opacity: .6; transition: filter .5s ease, opacity .5s ease; }
+.made li a:hover img, .made li a:focus-visible img { filter: none; opacity: 1; }
+.made b { font-weight: 400; font-size: 21px; } .made span { color: #55555A; font-size: 16px; } .made i { font-style: normal; font-size: 14px; color: var(--dim); }
+@media (max-width: 600px) { .made li a { grid-template-columns: 30px minmax(0, 1fr) auto; } .made span { grid-column: 2 / -1; grid-row: 2; } }
+/* the word behind the mark: thin capitals, assembled from slices */
+.word { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); display: flex; justify-content: center; gap: .04em; font-weight: 200; font-size: min(19.5vw, 36vh); line-height: .8; letter-spacing: 0; color: var(--paper); pointer-events: none; user-select: none; }
+.ch { position: relative; display: inline-block; }
+.sl { display: block; will-change: transform, opacity; }
+.sl + .sl { position: absolute; inset: 0; }
+.s0 { clip-path: inset(0 0 72% 0); } .s1 { clip-path: inset(28% 0 48% 0); } .s2 { clip-path: inset(52% 0 22% 0); } .s3 { clip-path: inset(78% 0 0 0); }
+.tagline { position: absolute; left: 0; right: 0; top: max(34px, env(safe-area-inset-top, 0px)); text-align: center; font-size: 12.5px; letter-spacing: .42em; color: rgba(238,234,224,.6); opacity: 0; transition: opacity 1.2s ease; z-index: 5; padding: 0 70px; }
+.vert { position: absolute; right: max(30px, env(safe-area-inset-right, 0px)); top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; font: 400 13px/1 "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif; letter-spacing: .5em; color: rgba(238,234,224,.5); opacity: 0; transition: opacity 1.2s ease; z-index: 5; }
+.vert small { font: 400 11px "Timeless Serif", serif; letter-spacing: .2em; margin-top: 1.4em; display: block; }
+.on .tagline, .on .vert { opacity: 1; }
+@media (max-width: 600px) { .tagline { letter-spacing: .26em; font-size: 11px; top: 74px; padding: 0 24px; } .vert { right: 14px; } }
 /* the imprint */
 footer { background: var(--ink); color: rgba(238,234,224,.62); position: relative; padding: 120px max(32px, 6vw) max(40px, env(safe-area-inset-bottom, 0px)); font-size: 15px; }
 footer .edge { position: absolute; left: 0; right: 0; top: -23px; height: 24px; display: block; width: 100%; }
@@ -70,7 +65,6 @@ footer h4 { font-weight: 400; font-size: 13px; color: rgba(238,234,224,.38); mar
 footer ul { list-style: none; display: grid; gap: 6px; }
 footer .base { margin-top: 90px; padding-top: 22px; border-top: 1px solid rgba(238,234,224,.12); display: flex; justify-content: space-between; gap: 24px; font-size: 13px; color: rgba(238,234,224,.38); flex-wrap: wrap; }
 @media (max-width: 760px) {
-  .work header { flex-direction: column; align-items: start; } .work .pin2 { padding-top: 9vh; }
   footer .row { grid-template-columns: 1fr 1fr; } footer .row > :first-child { grid-column: 1 / -1; }
   .seal { width: 56px; height: 56px; margin-bottom: 30px; }
 }
@@ -85,7 +79,7 @@ footer .base { margin-top: 90px; padding-top: 22px; border-top: 1px solid rgba(2
 <g class="sgem" clip-path="url(#sg)"><image href="assets/prints/19006.webp" x="14" y="14" width="80" height="70" preserveAspectRatio="xMidYMid slice"/><path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" fill-opacity=".12"/></g></g></svg></div>
       <p><em>Antimony</em> builds software for the people who make the work. Our first product is <a href="https://eoinforker.github.io/orbe-site/">Orbe</a>, the creator&#39;s side of every sponsorship deal.</p>
       <p>We sit on their side of the table, and we mean to stay there for a long time.</p></div></div>
-    <div class="half l"><svg class="big" viewBox="0 0 100 100" aria-hidden="true"><defs>
+    <div class="half l"><div class="word" aria-hidden="true"><span class="ch"><span class="sl s0">A</span><span class="sl s1">A</span><span class="sl s2">A</span><span class="sl s3">A</span></span><span class="ch"><span class="sl s0">N</span><span class="sl s1">N</span><span class="sl s2">N</span><span class="sl s3">N</span></span><span class="ch"><span class="sl s0">T</span><span class="sl s1">T</span><span class="sl s2">T</span><span class="sl s3">T</span></span><span class="ch"><span class="sl s0">I</span><span class="sl s1">I</span><span class="sl s2">I</span><span class="sl s3">I</span></span><span class="ch"><span class="sl s0">M</span><span class="sl s1">M</span><span class="sl s2">M</span><span class="sl s3">M</span></span><span class="ch"><span class="sl s0">O</span><span class="sl s1">O</span><span class="sl s2">O</span><span class="sl s3">O</span></span><span class="ch"><span class="sl s0">N</span><span class="sl s1">N</span><span class="sl s2">N</span><span class="sl s3">N</span></span><span class="ch"><span class="sl s0">Y</span><span class="sl s1">Y</span><span class="sl s2">Y</span><span class="sl s3">Y</span></span></div><svg class="big" viewBox="0 0 100 100" aria-hidden="true"><defs>
 <clipPath id="tl"><rect width="100" height="100" rx="22"/></clipPath>
 <mask id="ml"><rect width="100" height="100" fill="#fff"/><path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z" fill="#000"/><path d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" fill="#000"/></mask>
 <filter id="gl" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .06 0"/></filter>
@@ -93,7 +87,7 @@ footer .base { margin-top: 90px; padding-top: 22px; border-top: 1px solid rgba(2
 <g clip-path="url(#tl)"><g mask="url(#ml)"><rect width="100" height="100" fill="url(#fl)"/><rect width="100" height="100" filter="url(#gl)"/></g>
 <rect class="solid" width="100" height="100" fill="url(#fl)"/></g>
 <rect class="line" x=".3" y=".3" width="99.4" height="99.4" rx="21.7" fill="none" stroke="#EEEAE0" stroke-opacity=".5" stroke-width=".35" pathLength="1"/></svg></div>
-    <div class="half r"><svg class="big" viewBox="0 0 100 100" aria-hidden="true"><defs>
+    <div class="half r"><div class="word" aria-hidden="true"><span class="ch"><span class="sl s0">A</span><span class="sl s1">A</span><span class="sl s2">A</span><span class="sl s3">A</span></span><span class="ch"><span class="sl s0">N</span><span class="sl s1">N</span><span class="sl s2">N</span><span class="sl s3">N</span></span><span class="ch"><span class="sl s0">T</span><span class="sl s1">T</span><span class="sl s2">T</span><span class="sl s3">T</span></span><span class="ch"><span class="sl s0">I</span><span class="sl s1">I</span><span class="sl s2">I</span><span class="sl s3">I</span></span><span class="ch"><span class="sl s0">M</span><span class="sl s1">M</span><span class="sl s2">M</span><span class="sl s3">M</span></span><span class="ch"><span class="sl s0">O</span><span class="sl s1">O</span><span class="sl s2">O</span><span class="sl s3">O</span></span><span class="ch"><span class="sl s0">N</span><span class="sl s1">N</span><span class="sl s2">N</span><span class="sl s3">N</span></span><span class="ch"><span class="sl s0">Y</span><span class="sl s1">Y</span><span class="sl s2">Y</span><span class="sl s3">Y</span></span></div><svg class="big" viewBox="0 0 100 100" aria-hidden="true"><defs>
 <clipPath id="tr"><rect width="100" height="100" rx="22"/></clipPath>
 <mask id="mr"><rect width="100" height="100" fill="#fff"/><path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z" fill="#000"/><path d="M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" fill="#000"/></mask>
 <filter id="gr" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="1.6" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .06 0"/></filter>
@@ -108,33 +102,18 @@ footer .base { margin-top: 90px; padding-top: 22px; border-top: 1px solid rgba(2
 <path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" fill-opacity=".12"/></g></svg>
     <canvas id="px" aria-hidden="true"></canvas>
     <svg class="wm" viewBox="-20 -830 4186 1070" role="img" aria-label="Antimony"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg>
+    <p class="tagline">Software for the people who make the work.</p>
+    <p class="vert" lang="ja">アンチモン<small lang="en">Sb 51</small></p>
   </div>
 </section>
-<section class="work" aria-labelledby="wk">
-  <div class="pin2">
-    <header><h2 id="wk">The work</h2><p>What we have made, and what we are making.</p></header>
-    <div class="track"><article class="card">
-  <div class="art"><img src="assets/work/orbe-console.webp" alt="The Orbe console" loading="lazy"><img class="badge" src="assets/work/orbe.svg" alt=""></div>
-  <div class="meta"><h3><a href="https://eoinforker.github.io/orbe-site/">Orbe</a></h3><span class="tag sky">Live</span></div>
-  <p>Brands are getting agents; creators get Orbe. It negotiates every sponsorship inside the creator's rules and holds the brand's money until delivery is proven.</p><a class="more" href="https://eoinforker.github.io/orbe-site/demo/">See the demo</a><span class="no">01</span>
-</article><article class="card">
-  <div class="art"><div class="field dark"><img class="icon" src="assets/work/immiscible.svg" alt="The immiscible mark" loading="lazy"></div><img class="badge" src="assets/work/immiscible.svg" alt=""></div>
-  <div class="meta"><h3><a href="https://immiscible.ai">immiscible</a></h3><span class="tag paper">Alpha</span></div>
-  <p>Rules, approvals and a signed record for what AI agents spend and do.</p><a class="more" href="https://immiscible.ai">immiscible.ai</a><span class="no">02</span>
-</article><article class="card">
-  <div class="art"><div class="field print"><img class="icon" src="assets/work/idyll.svg" alt="The Idyll mark" loading="lazy"></div><img class="badge" src="assets/work/idyll.svg" alt=""></div>
-  <div class="meta"><h3><a href="https://idyll.day">Idyll</a></h3><span class="tag rose">Soon</span></div>
-  <p>Social without the scroll.</p><a class="more" href="https://idyll.day">idyll.day</a><span class="no">03</span>
-</article><div class="end">More, slowly.</div></div>
-  </div>
-</section>
+<section class="made" aria-labelledby="mk"><div class="in"><h2 id="mk">What we make</h2><ul><li><a href="https://eoinforker.github.io/orbe-site/"><img src="assets/work/orbe.svg" alt=""><b>Orbe</b><span>The creator's side of every sponsorship deal.</span><i>Live</i></a></li><li><a href="https://immiscible.ai"><img src="assets/work/immiscible.svg" alt=""><b>immiscible</b><span>Rules, approvals and a signed record for what AI agents spend and do.</span><i>Alpha</i></a></li><li><a href="https://idyll.day"><img src="assets/work/idyll.svg" alt=""><b>Idyll</b><span>Social without the scroll.</span><i>Soon</i></a></li></ul></div></section>
 <footer>
   <svg class="edge" viewBox="0 0 1920 24" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="12" width="12" height="12" fill="#0B0C0C"/><rect x="12" y="18" width="6" height="6" fill="#0B0C0C"/><rect x="30" y="12" width="6" height="6" fill="#0B0C0C"/><rect x="48" y="6" width="6" height="6" fill="#0B0C0C"/><rect x="60" y="18" width="6" height="6" fill="#0B0C0C"/><rect x="84" y="12" width="6" height="6" fill="#0B0C0C"/><rect x="102" y="18" width="6" height="6" fill="#0B0C0C"/><rect x="1830" y="12" width="6" height="6" fill="#0B0C0C"/><rect x="1848" y="6" width="6" height="6" fill="#0B0C0C"/><rect x="1866" y="18" width="6" height="6" fill="#0B0C0C"/><rect x="1878" y="12" width="12" height="12" fill="#0B0C0C"/><rect x="1896" y="0" width="24" height="24" fill="#0B0C0C"/></svg>
   <div class="row">
     <div><svg class="fwm" viewBox="-20 -830 4186 1070" role="img" aria-label="Antimony"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg><p>Software for the people who make the work.<br>London.</p></div>
     <div><h4>Work</h4><ul><li><a href="https://eoinforker.github.io/orbe-site/">Orbe</a></li><li><a href="https://immiscible.ai">immiscible</a></li><li><a href="https://idyll.day">Idyll</a></li></ul></div>
     <div><h4>Elsewhere</h4><ul><li><a href="https://github.com/eoinforker">GitHub</a></li></ul></div>
-    <div><h4>Prints</h4><ul><li>Utagawa Hiroshige, <i>Satta Peak in Suruga Province</i>, 1852</li><li>Katsushika Hokusai, <i>Mount Fuji with Cherry Trees in Bloom</i>, about 1801 to 1805</li><li>Art Institute of Chicago, CC0</li></ul></div>
+    <div><h4>Print</h4><ul><li>Utagawa Hiroshige, <i>Satta Peak in Suruga Province</i>, 1852</li><li>Art Institute of Chicago, CC0</li></ul></div>
   </div>
   <div class="base"><span>Imprint: Antimony, London.</span><span>Set in Timeless Serif.</span></div>
 </footer>
@@ -198,20 +177,21 @@ function frame(now) {
     b.vx *= .965; b.vy = b.vy * .965 + 30 * dt; b.x += b.vx * dt; b.y += b.vy * dt;
     cx.globalAlpha = (1 - b.age / b.life) * (1 - P); cx.fillStyle = b.c; cx.fillRect(Math.round(b.x / 3), Math.round(b.y / 3), b.sz, b.sz); }
   cx.globalAlpha = 1;
-  work();
+  letters(t);
+  tag.parentElement.classList.toggle("on", t > 1.2 && P < .3);
   requestAnimationFrame(frame);
 }
 // hovering the crack lets a little light out
 addEventListener("pointermove", e => { if (still || P > .05 || !struck) return; const q = [e.clientX - M[0], e.clientY - M[1]];
   if (Math.abs(q[0] * N[0] + q[1] * N[1]) < 16 && Math.random() < .5) { const along = q[0] * D[0] + q[1] * D[1]; const n0 = bits.length; burst(2, 0);
     for (let i = n0; i < bits.length; i++) { bits[i].x = M[0] + D[0] * along; bits[i].y = M[1] + D[1] * along; bits[i].life *= .6; } } }, { passive: true });
-// the work: vertical scroll carried sideways
-const ws = $(".work"), tr = $(".track");
-function sizeWork() { const extra = Math.max(0, tr.scrollWidth - innerWidth); ws.style.height = (innerHeight + extra * 1.1) + "px"; }
-function work() { const r = ws.getBoundingClientRect(), extra = Math.max(0, tr.scrollWidth - innerWidth), p = cl(-r.top / Math.max(1, ws.offsetHeight - innerHeight));
-  tr.style.transform = `translateX(${(-extra * p).toFixed(1)}px)`; }
-addEventListener("resize", () => { layout(); sizeWork(); });
-layout(); sizeWork(); requestAnimationFrame(frame);
+// the word: each letter in four slices, thrown out of register, coming in one after another; brightened by the strike, then left faint
+const sl = $$(".word .sl"), tag = $(".tagline"), off = sl.map(() => (Math.random() - .5) * 120), dl = sl.map((_, i) => .08 + (i >> 2) % 8 * .045 + Math.random() * .12);
+function letters(t) { const glow = t < .78 ? 0 : 1 - eo(seg(t, .78, 1.6));
+  sl.forEach((e, i) => { const k = eo(seg(t, dl[i], dl[i] + .55)), jit = k < 1 && Math.random() < .12 ? (Math.random() - .5) * 18 : 0;
+    e.style.transform = `translateX(${(off[i] * (1 - k) + jit).toFixed(1)}px)`; e.style.opacity = (k * (.07 + glow * .3) * (Math.random() < .04 && k < 1 ? .3 : 1)).toFixed(3); }); }
+addEventListener("resize", layout);
+layout(); requestAnimationFrame(frame);
 })();
 </script>
 </body></html>

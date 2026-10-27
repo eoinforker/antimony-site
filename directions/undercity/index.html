@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Antimony, Undercity</title>
+<meta name="description" content="Antimony: software for the people who make the work.">
+<meta name="theme-color" content="#05070b">
+<link rel="preload" href="assets/fonts/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
+@font-face { font-family: "Commit Mono"; src: url("assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
+:root { --ink: #05070b; --paper: #EEEAE0; --sky: #94E6FF; --dim: rgba(238, 234, 224, .58); }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--ink); color: var(--paper); overflow: hidden; overscroll-behavior: none; }
+body { font-family: "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; }
+#stage { position: fixed; inset: 0; overflow: hidden; background: var(--ink); }
+#stage img, #stage video, #gl { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+#gl { opacity: 0; }
+body.gl #gl { opacity: 1; }
+body.gl #stage img, body.gl #stage video { visibility: hidden; }
+#mark { position: absolute; border: 0; padding: 0; margin: 0; background: none; cursor: pointer; border-radius: 22%; -webkit-tap-highlight-color: transparent; }
+#mark:focus-visible { outline: 1px solid var(--sky); outline-offset: 6px; }
+.shop { position: absolute; left: -999px; top: 0; width: 1px; height: 1px; color: transparent; font-size: 0; border-radius: 6px; -webkit-tap-highlight-color: transparent; }
+.shop:focus-visible { outline: 1px solid var(--sky); outline-offset: 4px; }
+.ui { position: fixed; left: max(32px, env(safe-area-inset-left)); bottom: max(30px, env(safe-area-inset-bottom)); opacity: 0; transition: opacity 1.4s ease; pointer-events: none; }
+.ui.on { opacity: 1; }
+.ui .wm { display: block; width: 150px; color: var(--paper); }
+.ui .wm .sys { display: block; margin-top: 7px; font-size: 9.5px; letter-spacing: .62em; padding-left: .62em; text-align: center; color: rgba(238, 234, 224, .72); }
+.ui .wm svg { display: block; width: 100%; height: auto; overflow: visible; }
+.ui p { margin: 11px 0 0; font-size: 13.5px; line-height: 1.35; color: var(--dim); letter-spacing: .01em; }
+#work { position: fixed; right: max(32px, env(safe-area-inset-right)); bottom: max(32px, env(safe-area-inset-bottom)); font: 400 11px/1 "Commit Mono", ui-monospace, monospace; letter-spacing: .12em; opacity: 0; transition: opacity 1.4s ease; pointer-events: none; }
+#work.on { opacity: 1; pointer-events: auto; }
+#work a { color: rgba(238, 234, 224, .5); text-decoration: none; margin-left: 22px; transition: color .35s; }
+#work a:hover, #work a:focus-visible { color: var(--sky); }
+#work a:focus-visible { outline: 1px solid var(--sky); outline-offset: 4px; }
+#hint { position: fixed; left: 0; right: 0; bottom: max(32px, env(safe-area-inset-bottom)); text-align: center; font-size: 13px; font-style: italic; color: rgba(238, 234, 224, .55); opacity: 0; transition: opacity 1.6s ease; pointer-events: none; margin: 0; }
+#hint.on { opacity: 1; }
+#snd { position: fixed; top: max(18px, env(safe-area-inset-top)); right: max(18px, env(safe-area-inset-right)); width: 40px; height: 40px; border: 0; background: none; padding: 0; color: var(--paper); opacity: 0; cursor: pointer; transition: opacity 1s; border-radius: 50%; pointer-events: none; }
+#snd.on { opacity: .55; pointer-events: auto; }
+#snd.on:hover, #snd:focus-visible { opacity: 1; }
+#snd:focus-visible { outline: 1px solid var(--sky); outline-offset: 2px; }
+#snd svg { width: 20px; height: 20px; display: block; margin: auto; overflow: visible; }
+#snd .w { opacity: 0; transition: opacity .4s; }
+#snd[aria-pressed="true"] .w { opacity: 1; }
+#snd[aria-pressed="true"] .x { opacity: 0; }
+#snd .x { transition: opacity .4s; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+#stage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22%; background: linear-gradient(to top, rgba(5, 7, 11, .5), rgba(5, 7, 11, 0)); pointer-events: none; }
+@media (max-width: 640px) {
+  .ui { left: 16px; bottom: max(64px, calc(env(safe-area-inset-bottom) + 48px)); }
+  .ui .wm { width: 128px; }
+  .ui p { font-size: 12.5px; }
+  #work { left: 16px; right: auto; bottom: max(26px, env(safe-area-inset-bottom)); }
+  #work a { margin: 0 20px 0 0; }
+  #hint { left: 16px; right: 16px; text-align: left; bottom: auto; top: max(22px, env(safe-area-inset-top)); max-width: 70%; font-size: 12.5px; }
+  #snd { top: max(8px, env(safe-area-inset-top)); right: 8px; }
+  #stage::after { height: 30%; background: linear-gradient(to top, rgba(5, 7, 11, .72), rgba(5, 7, 11, 0)); }
+}
+</style>
+</head>
+<body>
+<h1 class="vh">Antimony</h1>
+<p class="vh" id="desc">Beneath the plate, in the dark of the undercity, the house of Antimony Systems stands over a still pond: warm windows, a tall window cut to the shape of a crystal, a timber jetty with two small lanterns, lamp posts and path lights round the banks. Lilies, white flowers and softly glowing sky-blue ones fill the near bank, motes of blue light drift over the water, and a beam of daylight falls through a gap in the plate onto the garden. The plate and one of its pillars stand overhead like a dark sky.</p>
+<div id="stage" aria-describedby="desc">
+  <img id="still" src="assets/rest.webp" alt="">
+  <canvas id="gl" aria-hidden="true"></canvas>
+  <button id="mark" type="button" aria-label="Put out the plate's lamps" style="left:-999px;top:0;width:1px;height:1px"></button>
+</div>
+<div class="ui" id="ui">
+  <span class="wm" role="img" aria-label="Antimony Systems"><svg viewBox="-10 -705 6338.06 715" aria-hidden="true" fill="currentColor"><path d="M111 -95 351 -695H386L628 -95Q643 -57 663.5 -42.5Q684 -28 723 -23V0H460V-23Q497 -27 512.0 -35.5Q527 -44 527 -59Q527 -71 517 -96L463 -236L335.0 -324.0L207 -236L155 -96Q148 -75 148 -66Q148 -47 166.5 -37.0Q185 -27 228 -23V0H15V-23Q52 -27 73.5 -40.5Q95 -54 111 -95ZM444.5154639175258 -286.0 336 -563 227.48453608247422 -286.0 336.0 -374.0Z" /><path d="M989.58 -122V-573Q989.58 -612 979.08 -632.5Q968.58 -653 947.08 -661.0Q925.58 -669 888.58 -672V-695H1060.58L1463.58 -178V-575Q1463.58 -614 1453.08 -634.0Q1442.58 -654 1421.58 -661.5Q1400.58 -669 1362.58 -672V-695H1604.58V-672Q1566.58 -669 1545.58 -661.5Q1524.58 -654 1514.08 -633.5Q1503.58 -613 1503.58 -574L1504.58 0H1476.58L1029.58 -573V-123Q1029.58 -83 1040.08 -62.5Q1050.58 -42 1071.58 -34.0Q1092.58 -26 1130.58 -23V0H888.58V-23Q926.58 -26 947.58 -34.0Q968.58 -42 979.08 -62.5Q989.58 -83 989.58 -122Z" /><path d="M1984.16 -112V-657H1901.16Q1850.16 -657 1821.16 -647.5Q1792.16 -638 1773.66 -608.5Q1755.16 -579 1748.16 -519H1727.16L1737.16 -695H2325.16L2335.16 -519H2314.16Q2306.16 -580 2288.16 -609.5Q2270.16 -639 2241.16 -648.0Q2212.16 -657 2161.16 -657H2077.16V-112Q2078.16 -77 2088.66 -59.0Q2099.16 -41 2119.66 -33.5Q2140.16 -26 2177.16 -23V0H1888.16V-23Q1939.16 -27 1961.16 -45.0Q1983.16 -63 1984.16 -112Z" /><path d="M2580.7400000000002 -112V-583Q2579.7400000000002 -618 2569.2400000000002 -636.0Q2558.7400000000002 -654 2538.2400000000002 -661.5Q2517.7400000000002 -669 2480.7400000000002 -672V-695H2770.7400000000002V-672Q2719.7400000000002 -668 2697.2400000000002 -650.0Q2674.7400000000002 -632 2673.7400000000002 -583V-112Q2674.7400000000002 -62 2696.7400000000002 -44.5Q2718.7400000000002 -27 2773.7400000000002 -23V0H2483.7400000000002V-23Q2534.7400000000002 -27 2557.2400000000002 -44.5Q2579.7400000000002 -62 2580.7400000000002 -112Z" /><path d="M3042.32 -101 3057.32 -582Q3058.32 -632 3041.82 -650.0Q3025.32 -668 2979.32 -672V-695H3157.32L3403.32 -146L3617.32 -695H3789.32V-672Q3750.32 -668 3734.82 -646.5Q3719.32 -625 3721.32 -588L3741.32 -94Q3742.32 -66 3749.82 -52.0Q3757.32 -38 3773.32 -32.0Q3789.32 -26 3821.32 -23V0H3569.32V-23Q3603.32 -26 3619.82 -32.0Q3636.32 -38 3642.32 -51.5Q3648.32 -65 3647.32 -94L3626.32 -616L3390.32 0H3365.32L3099.32 -595L3084.32 -101Q3083.32 -68 3091.82 -52.5Q3100.32 -37 3118.82 -31.5Q3137.32 -26 3175.32 -23V0H2951.32V-23Q2985.32 -26 3003.82 -32.0Q3022.32 -38 3031.82 -54.0Q3041.32 -70 3042.32 -101Z" /><path d="M3997.9 -349Q3997.9 -452 4043.9 -533.0Q4089.9 -614 4167.9 -659.0Q4245.9 -704 4337.9 -704Q4429.9 -704 4508.9 -659.0Q4587.9 -614 4634.9 -533.0Q4681.9 -452 4681.9 -349Q4681.9 -246 4634.9 -164.5Q4587.9 -83 4508.9 -37.5Q4429.9 8 4337.9 8Q4245.9 8 4167.9 -37.5Q4089.9 -83 4043.9 -164.5Q3997.9 -246 3997.9 -349ZM4567.9 -349Q4567.9 -444 4538.4 -516.0Q4508.9 -588 4456.4 -627.5Q4403.9 -667 4336.9 -667Q4270.9 -667 4219.4 -627.5Q4167.9 -588 4139.4 -515.5Q4110.9 -443 4110.9 -349Q4110.9 -254 4139.4 -181.0Q4167.9 -108 4219.4 -68.0Q4270.9 -28 4336.9 -28Q4403.9 -28 4456.4 -68.0Q4508.9 -108 4538.4 -181.0Q4567.9 -254 4567.9 -349Z" /><path d="M4979.4800000000005 -122V-573Q4979.4800000000005 -612 4968.9800000000005 -632.5Q4958.4800000000005 -653 4936.9800000000005 -661.0Q4915.4800000000005 -669 4878.4800000000005 -672V-695H5050.4800000000005L5453.4800000000005 -178V-575Q5453.4800000000005 -614 5442.9800000000005 -634.0Q5432.4800000000005 -654 5411.4800000000005 -661.5Q5390.4800000000005 -669 5352.4800000000005 -672V-695H5594.4800000000005V-672Q5556.4800000000005 -669 5535.4800000000005 -661.5Q5514.4800000000005 -654 5503.9800000000005 -633.5Q5493.4800000000005 -613 5493.4800000000005 -574L5494.4800000000005 0H5466.4800000000005L5019.4800000000005 -573V-123Q5019.4800000000005 -83 5029.9800000000005 -62.5Q5040.4800000000005 -42 5061.4800000000005 -34.0Q5082.4800000000005 -26 5120.4800000000005 -23V0H4878.4800000000005V-23Q4916.4800000000005 -26 4937.4800000000005 -34.0Q4958.4800000000005 -42 4968.9800000000005 -62.5Q4979.4800000000005 -83 4979.4800000000005 -122Z" /><path d="M5973.06 -112V-281L5771.06 -625Q5761.06 -643 5754.56 -651.0Q5748.06 -659 5736.56 -664.5Q5725.06 -670 5703.06 -672V-695H5951.06V-674Q5917.06 -671 5900.06 -662.5Q5883.06 -654 5883.06 -637Q5883.06 -627 5892.06 -610L6047.06 -340L6199.06 -617Q6208.06 -635 6208.06 -645Q6208.06 -660 6192.06 -665.5Q6176.06 -671 6137.06 -674V-695H6326.06V-674Q6301.06 -671 6290.56 -668.0Q6280.06 -665 6271.06 -654.5Q6262.06 -644 6249.06 -620L6066.06 -288V-112Q6067.06 -62 6089.06 -44.5Q6111.06 -27 6166.06 -23V0H5876.06V-23Q5927.06 -27 5949.56 -44.5Q5972.06 -62 5973.06 -112Z" /></svg><span class="sys" aria-hidden="true">SYSTEMS</span></span>
+  <!-- The line, swappable. Default: "The moats are drying up. The makers are still here."
+       Alternatives: "Built below. Made to last."  /  "Software for the people who make the work." -->
+  <p>The moats are drying up. The makers are still here.</p>
+</div>
+<p id="hint" aria-live="polite"></p>
+<nav id="work" aria-label="Made by Antimony"><a href="https://eoinforker.github.io/orbe-site/">Orbe</a><a href="https://immiscible.ai">immiscible</a><a href="https://idyll.day">Idyll</a></nav>
+<button id="snd" type="button" aria-pressed="false" aria-label="Sound">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z"/><g class="w"><path d="M15.2 9.2a4 4 0 0 1 0 5.6"/><path d="M17.6 6.8a7.4 7.4 0 0 1 0 10.4"/></g><g class="x"><path d="M16 10l4 4M20 10l-4 4"/></g></svg>
+</button>
+<script>
+"use strict";
+(function () {
+const KEY = "antimony.undercity";
+const Q = new URLSearchParams(location.search);
+const FREEZE = Q.has("t") ? parseFloat(Q.get("t")) / 1000 : null;          // ?t=ms freezes the clock
+const SHUT_AT = Q.has("shut") ? parseFloat(Q.get("shut")) / 1000 : null;   // ?shut=ms: seconds into the shutdown
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const coarse = matchMedia("(pointer: coarse)").matches;
+const phone = coarse || Math.min(innerWidth, innerHeight) < 600;
+let store = {};
+try { store = JSON.parse(sessionStorage.getItem(KEY) || "{}") || {}; } catch (e) { store = {}; }
+function save() { try { sessionStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+const $ = (id) => document.getElementById(id);
+const ui = $("ui"), work = $("work"), hint = $("hint"), snd = $("snd"), markBtn = $("mark"), canvas = $("gl"), still = $("still");
+
+// ------------------------------------------------------------------ timing
+const t0 = performance.now();
+function now() { return FREEZE !== null ? FREEZE : (performance.now() - t0) / 1000; }
+const OPEN = 4.4;
+let opened = !!store.seen || reduced || FREEZE !== null;
+let openAt = opened ? -OPEN : 0;
+let mode = "rest", modeAt = 0, snap = null;
+if (SHUT_AT !== null) { mode = "shut"; modeAt = now() - SHUT_AT; }
+
+// ------------------------------------------------------------------ weights
+const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const hash = (n) => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+function stutter(t, seed, rate) { if (reduced) return 1; const k = Math.floor(t * rate); return hash(k * 1.37 + seed) < 0.42 ? 0.15 + 0.3 * hash(k + seed * 3.1) : 1; }
+function pulse(x) { x = ((x % 1) + 1) % 1; return Math.pow(Math.min(1, x / 0.05), 2) * Math.exp(-x * 5); }
+
+const REST = { plateL: 0.6, plateC: 0.6, plateR: 0.6, warm: 1, bulbs: 1, sign: 1, sun: 1, amb: 0.1, green: 1, flies: 0.55 };
+// the quiet moment: the old order's lamps go out overhead, section by section; the people's light stays on;
+// the daylight through the gap swells and a few seeds of light rise over the garden
+function shutW(t) {
+  const w = Object.assign({}, REST);
+  for (const [n, T] of [["plateC", 1.2], ["plateL", 1.9], ["plateR", 2.6]]) {
+    const f = (t > T - 0.4 && t < T) ? stutter(t, T * 5, 17) : 1;
+    w[n] = REST[n] * (t < T ? 1 : Math.max(0, 1 - (t - T) / 0.35)) * f;
+  }
+  w.sign = 1 + 0.35 * Math.exp(-t * 2.0);
+  w.sun = 1 + 0.6 * sm(3.0, 9.0, t);
+  w.amb = REST.amb * (1 + 0.35 * sm(3.0, 9.0, t));
+  w.green = 1 + 0.5 * sm(5.0, 11.0, t);
+  w.flies = 0.55 + 0.45 * sm(6.0, 12.0, t);
+  return w;
+}
+function upW(t, from) {
+  const w = {};
+  for (const k of Object.keys(REST)) w[k] = from[k] + (REST[k] - from[k]) * sm(0.0, 2.6, t);
+  for (const [n, T] of [["plateR", 1.0], ["plateL", 1.5], ["plateC", 2.0]]) {
+    const on = t > T ? (t < T + 0.4 ? stutter(t, T * 9, 21) : 1) : 0;
+    w[n] = Math.max(from[n] * (1 - sm(0, 0.3, t)), on * REST[n]);
+  }
+  return w;
+}
+let hover = 0, hoverT = 0;
+const shopHover = {}, shopT = {};
+function weights(T) {
+  let w;
+  if (mode === "shut") w = shutW(T - modeAt);
+  else if (mode === "up") { w = upW(T - modeAt, snap); if (T - modeAt > 3.5) mode = "rest"; }
+  else w = Object.assign({}, REST);
+  // the daylight breathes as cloud passes over the gap far above
+  w.sun *= 1 + 0.05 * Math.sin(T / 8 * 2 * Math.PI) * (reduced ? 0 : 1);
+  const bk = Math.floor(T * 9);
+  w.bulbs *= (hash(bk * 0.71) < 0.008 && !reduced) ? 0.86 : 1;
+  w.sign *= 1 + hover * 0.6;
+  for (const k in shopHover) w[k] *= 1 + shopHover[k] * 0.9;
+  if (!opened) {
+    const o = T - openAt;
+    w.fade = sm(0.2, 3.0, o);
+    // the opening: the lane rises out of the dark, then the lamp over the workshop's sign comes on
+    w.sign *= o < 3.1 ? 0.15 : (o < 3.6 ? 0.15 + 0.85 * stutter(o, 5, 14) * sm(3.1, 3.2, o) : 1);
+  } else w.fade = 1;
+  return w;
+}
+
+// ------------------------------------------------------------------ layout
+let META = null, fit = { s: 1, ox: 0, oy: 0 };
+function layout() {
+  if (!META) return;
+  const W = innerWidth, H = innerHeight, iw = META.w, ih = META.h;
+  const s = Math.max(W / iw, H / ih), vw = iw * s, vh = ih * s;
+  const fx = W / H < 1.2 ? META.info.focus_x : 0.5;
+  let ox = W / 2 - fx * vw; ox = Math.min(0, Math.max(W - vw, ox));
+  const oy = (H - vh) / 2;
+  fit = { s, ox, oy, vw, vh };
+  still.style.objectPosition = (vw > W ? (-ox / (vw - W) * 100) : 50) + "% 50%";
+  const I = META.info;
+  const l = ox + I.mark_left[0] * vw, r = ox + I.mark_right[0] * vw, tp = oy + I.mark_top[1] * vh, bt = oy + I.mark_bottom[1] * vh;
+  const pad = Math.max(12, (r - l) * 0.25);
+  Object.assign(markBtn.style, { left: (l - pad) + "px", top: (tp - pad) + "px", width: (r - l + 2 * pad) + "px", height: (bt - tp + 2 * pad) + "px" });
+
+  if (gl) resize();
+}
+
+// ------------------------------------------------------------------ WebGL
+let gl = null, prog = null, U = {}, glReady = false;
+const VS = `#version 300 es
+in vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`;
+const FS = `#version 300 es
+precision highp float;
+out vec4 o;
+uniform sampler2D tA, tB, tW, tU, tS, tN, tG;
+uniform vec3 mA0, mA1, mA2, mAmb, mW, mU, mS, mN, mG;
+uniform vec2 uRes, uImg, uOff; uniform float uScale;
+uniform float uT, uExp, uFlies, uFade, uRain, uMotion;
+uniform vec2 uPtr;
+float h12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(h12(i), h12(i + vec2(1, 0)), f.x), mix(h12(i + vec2(0, 1)), h12(i + vec2(1, 1)), f.x), f.y); }
+vec3 c3(vec3 x){ vec3 y = x * x; return y * y; }
+vec3 scene(vec2 uv, float lod){
+  vec3 a = c3(textureLod(tA, uv, lod).rgb), b = c3(textureLod(tB, uv, lod).rgb);
+  vec3 col = a.r * mA0 + a.g * mA1 + a.b * mA2 + b.r * mAmb;
+  col += c3(textureLod(tW, uv, lod).rgb) * mW + c3(textureLod(tU, uv, lod).rgb) * mU + c3(textureLod(tS, uv, lod).rgb) * mS + c3(textureLod(tN, uv, lod).rgb) * mN;
+  col += c3(textureLod(tG, uv, lod).rgb) * mG;
+  return col;
+}
+vec3 tonemap(vec3 x){
+  x = max(x, 0.0);
+  vec3 y = x * (1.0 + x / 9.0) / (1.0 + x);
+  float lum = dot(x, vec3(.2126, .7152, .0722));
+  float w = pow(clamp((lum - 1.2) / 6.0, 0.0, 1.0), 1.5);
+  float yl = dot(y, vec3(.2126, .7152, .0722));
+  y = y + (max(y, vec3(yl)) - y) * w;
+  y = clamp(y, 0.0, 1.0);
+  return mix(12.92 * y, 1.055 * pow(y, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, y));
+}
+float rain(vec2 p, float sc, float sp, float len, float seed, float dens){
+  p *= sc; p.x += p.y * 0.05;
+  float col = floor(p.x);
+  float r = h12(vec2(col, seed));
+  float y = p.y * 0.12 + uT * sp * (0.8 + 0.4 * r) + r * 10.0;
+  float cell = floor(y); float fy = fract(y);
+  float on = step(1.0 - dens, h12(vec2(col, cell + seed)));
+  float fx = abs(fract(p.x) - 0.5 - (h12(vec2(cell, col)) - 0.5) * 0.6);
+  return smoothstep(len, 0.0, fy) * smoothstep(0.0, 0.02, fy) * (1.0 - smoothstep(0.02, 0.09, fx)) * on;
+}
+void main(){
+  vec2 px = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
+  vec2 uv = (px - uOff) / (uImg * uScale);
+  vec2 buv = uv + uPtr * vec2(0.004, 0.0025) * uMotion;
+  // rings on the puddles: the near ground only, squashed by perspective
+  float gnd = smoothstep(0.76, 0.9, uv.y);
+  vec2 rq = vec2(uv.x * 1.6, (uv.y - 0.7) * 6.0 / max(uv.y - 0.7, 0.05)) * 7.0;
+  vec2 ri = floor(rq); vec2 rf = fract(rq) - 0.5;
+  float rt = fract(uT * 0.7 + h12(ri));
+  float rd = length(rf - (vec2(h12(ri + 1.0), h12(ri + 2.0)) - 0.5) * 0.4);
+  float ring = sin((rd - rt * 0.5) * 60.0) * smoothstep(0.08, 0.0, abs(rd - rt * 0.5)) * (1.0 - rt) * step(0.45, h12(ri + 3.0));
+  vec2 ruv = buv + vec2(0.0, ring * 0.004) * gnd * uMotion;
+  vec3 col = scene(ruv, 0.0);
+  vec3 b1 = scene(buv, 3.0), b2 = scene(buv, 5.0);
+  col += b1 * 0.07 + b2 * 0.1;
+  // drifting haze, thicker in the distance, lit by what is near it
+  float hz = vn(uv * vec2(3.0, 5.0) + vec2(uT * 0.015, uT * 0.006)) * 0.6 + vn(uv * vec2(8.0, 12.0) - vec2(uT * 0.025, 0.0)) * 0.4;
+  float band = smoothstep(0.2, 0.45, uv.y) * (1.0 - smoothstep(0.62, 0.8, uv.y));
+  col += b2 * hz * band * 0.25 * uMotion;
+  // rain: silver curtains, lit from above where the light comes through; heavy drops close by
+  float lit = dot(b2, vec3(0.33)) * 1.6 + dot(b1, vec3(0.33)) * 0.6 + 0.002;
+  vec2 rp = px / uRes.y;
+  // fine, soft rain: thin streaks only, never blobs
+  float r = rain(rp + uPtr * 0.003, 220.0, 7.5, 0.45, 1.0, 0.4) * 0.5 + rain(rp + uPtr * 0.007, 120.0, 5.5, 0.5, 2.0, 0.3) * 0.6
+          + rain(rp + uPtr * 0.014, 60.0, 4.0, 0.55, 3.0, 0.18) * 0.7;
+  col += vec3(0.84, 0.92, 1.0) * r * min(lit, 0.25) * 0.22 * uRain;
+  // seeds of light and a few fireflies drifting in the lane, after the reactor goes
+  vec2 fq = uv * vec2(8.0, 5.0);
+  for (int i = 0; i < 2; i++) {
+    vec2 fi = floor(fq + float(i) * 0.5); float fh = h12(fi + float(i) * 7.0);
+    vec2 fp = fi + 0.5 + 0.35 * vec2(sin(uT * (0.3 + fh) + fh * 9.0), cos(uT * (0.25 + fh * 0.5) + fh * 5.0)) - float(i) * 0.5;
+    float fd = length((fq - fp) * vec2(1.0, 1.6) * uImg.y * uScale / uRes.y * 60.0);
+    float blink = 0.5 + 0.5 * sin(uT * (0.8 + fh) + fh * 30.0);
+    col += vec3(0.58, 0.9, 1.0) * exp(-fd * fd * 0.8) * step(0.78, fh) * blink * smoothstep(0.5, 0.66, uv.y) * uFlies * 0.45;
+  }
+  col *= uExp;
+  vec3 g = tonemap(col);
+  float gr = h12(px + fract(uT * 13.0) * 100.0) - 0.5;
+  vec2 vq = uv - vec2(0.5, 0.5);
+  float vig = 1.0 - 0.36 * pow(clamp((vq.x * vq.x * 1.2 + vq.y * vq.y * 1.6) * 2.2, 0.0, 1.0), 1.6);
+  // a gentle lift: softer blacks with a little warmth in them, the way film holds a night interior
+  g = g * vec3(0.93, 0.92, 0.9) + vec3(0.022, 0.018, 0.016);
+  g = g * vig + gr * 0.022;
+  o = vec4(g * uFade, 1.0);
+}`;
+function compile(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+let q = 1, lastDraw = 0;
+function resize() {
+  const dpr = Math.min(devicePixelRatio || 1, phone ? 1.5 : 1.75);
+  const w = Math.round(innerWidth * dpr * q), h = Math.round(innerHeight * dpr * q);
+  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+  gl.viewport(0, 0, w, h);
+}
+function loadImg(src) { return new Promise((res, rej) => { const i = new Image(); i.decoding = "async"; i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
+async function initGL() {
+  gl = canvas.getContext("webgl2", { antialias: false, alpha: false, powerPreference: "high-performance", preserveDrawingBuffer: FREEZE !== null });
+  if (!gl) throw new Error("no webgl2");
+  prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS));
+  gl.bindAttribLocation(prog, 0, "p"); gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  gl.useProgram(prog);
+  const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  const n = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) { const u = gl.getActiveUniform(prog, i); U[u.name] = gl.getUniformLocation(prog, u.name); }
+  const names = ["tA", "tB", "tW", "tU", "tS", "tN", "tG"];
+  const imgs = await Promise.all(names.map((k) => loadImg("assets/tex/" + k + ".webp")));
+  gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+  names.forEach((k, i) => {
+    const t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB8, gl.RGB, gl.UNSIGNED_BYTE, imgs[i]);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.uniform1i(U[k], i);
+  });
+  resize(); glReady = true;
+}
+// a grade over the render: the reactor's light a touch greener, the night a touch bluer
+const GRADE = { amb: [0.92, 0.97, 1.08] };
+function groupM(name, w) {
+  const g = META.groups[name]; const k = w * g.s; const c = GRADE[name] || [1, 1, 1];
+  return [g.tint[0] * k * c[0], g.tint[1] * k * c[1], g.tint[2] * k * c[2]];
+}
+const EXP_REST = 0.75, EXP_AFTER = 0.75;
+let ptr = [0, 0], ptrS = [0, 0];
+function draw(T) {
+  const w = weights(T);
+  const set3 = (u, a) => gl.uniform3f(U[u], a[0], a[1], a[2]);
+  const P = META.pack;
+  for (const [u, n] of Object.entries(P)) set3(u, groupM(n, w[n] === undefined ? 1 : w[n]));
+  gl.uniform2f(U.uRes, canvas.width, canvas.height);
+  const k = canvas.width / innerWidth;
+  gl.uniform2f(U.uImg, META.w, META.h); gl.uniform1f(U.uScale, fit.s * k); gl.uniform2f(U.uOff, fit.ox * k, fit.oy * k);
+  gl.uniform1f(U.uT, T); gl.uniform1f(U.uExp, EXP_REST);
+  gl.uniform1f(U.uFlies, w.flies); gl.uniform1f(U.uFade, w.fade);
+  gl.uniform1f(U.uRain, reduced ? 0.55 : 1.0); gl.uniform1f(U.uMotion, reduced ? 0.0 : 1.0);
+  ptrS[0] += (ptr[0] - ptrS[0]) * 0.06; ptrS[1] += (ptr[1] - ptrS[1]) * 0.06;
+  gl.uniform2f(U.uPtr, ptrS[0], ptrS[1]);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+let raf = 0, slow = 0, fast = 0, prevF = 0;
+function frame(ms) {
+  raf = requestAnimationFrame(frame);
+  if (document.hidden) return;
+  if (phone && ms - lastDraw < 1000 / 31) return;
+  const dt = ms - prevF; prevF = ms; lastDraw = ms;
+  if (FREEZE === null && dt > 0 && dt < 200) {
+    if (dt > (phone ? 40 : 24)) { slow++; fast = 0; } else if (dt < (phone ? 34 : 17.5)) { fast++; slow = 0; }
+    if (slow > 40 && q > 0.5) { q = Math.max(0.5, q - 0.1); resize(); slow = 0; }
+    if (fast > 240 && q < 1) { q = Math.min(1, q + 0.1); resize(); fast = 0; }
+  }
+  const T = now();
+  hover += ((hoverT ? 1 : 0) - hover) * 0.12;
+  for (const k in shopHover) shopHover[k] += (shopT[k] - shopHover[k]) * 0.1;
+  draw(T); tick(T);
+  if (reduced && FREEZE === null && mode === "rest" && Math.abs(hover - hoverT) < 0.01 && Object.keys(shopT).every((k) => Math.abs(shopHover[k] - shopT[k]) < 0.01)) { cancelAnimationFrame(raf); raf = 0; }
+  if (FREEZE !== null) { cancelAnimationFrame(raf); raf = 0; document.documentElement.dataset.ready = "1"; }
+}
+function kick() { if (!raf && glReady) raf = requestAnimationFrame(frame); }
+
+let uiShown = false, uiAt = 0, hintState = "";
+function tick(T) {
+  const o = T - openAt;
+  if (!uiShown && (opened || o > 4.0)) { uiShown = true; uiAt = T; ui.classList.add("on"); work.classList.add("on"); snd.classList.add("on"); if (!opened) { opened = true; store.seen = true; save(); } }
+  const showHints = FREEZE === null || Q.has("hint");
+  let h = "";
+  if (showHints && mode === "rest" && uiShown && !store.used && T - uiAt > 2.6) h = "Press the name over the door to put out the old lamps above.";
+  if (showHints && mode === "shut" && T - modeAt > 12) h = coarse ? "Press the name again to bring them back." : "Escape brings them back.";
+  if (h !== hintState) { hintState = h; hint.classList.toggle("on", !!h); if (h) hint.textContent = h; }
+}
+function skipOpening() { if (opened) return false; opened = true; openAt = -OPEN; store.seen = true; save(); kick(); return true; }
+function shutdown() {
+  if (mode === "shut") return;
+  mode = "shut"; modeAt = now(); store.used = true; save();
+  markBtn.setAttribute("aria-label", "Bring the plate's lamps back");
+  audio && audio.shutdown(); kick();
+}
+function powerUp() {
+  if (mode !== "shut") return;
+  snap = Object.assign({}, shutW(now() - modeAt)); mode = "up"; modeAt = now();
+  markBtn.setAttribute("aria-label", "Put out the plate's lamps");
+  audio && audio.powerUp(); kick();
+}
+markBtn.addEventListener("click", (e) => { e.stopPropagation(); if (skipOpening()) return; if (mode === "shut") powerUp(); else if (mode === "rest") shutdown(); });
+markBtn.addEventListener("pointerenter", () => { hoverT = 1; kick(); });
+markBtn.addEventListener("pointerleave", () => { hoverT = 0; kick(); });
+markBtn.addEventListener("focus", () => { hoverT = 1; kick(); });
+markBtn.addEventListener("blur", () => { hoverT = 0; kick(); });
+addEventListener("keydown", (e) => { if (e.key === "Escape") { if (!skipOpening()) powerUp(); return; } skipOpening(); });
+["pointerdown", "wheel", "touchstart"].forEach((ev) => addEventListener(ev, (e) => { if (e.target !== markBtn && !(e.target.classList && e.target.classList.contains("shop"))) skipOpening(); }, { passive: true }));
+addEventListener("pointermove", (e) => { ptr = [(e.clientX / innerWidth - 0.5) * 2, (e.clientY / innerHeight - 0.5) * 2]; kick(); }, { passive: true });
+addEventListener("resize", layout);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) kick(); audio && audio.visible(!document.hidden); });
+
+// ------------------------------------------------------------------ sound: procedural, muted until asked
+let audio = null;
+function Sound() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const T = () => ctx.currentTime;
+  const out = ctx.createGain(); out.gain.value = 0;
+  const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 3; out.connect(comp); comp.connect(ctx.destination);
+  const ir = ctx.createBuffer(2, ctx.sampleRate * 3.2, ctx.sampleRate);
+  for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < d.length; i++) { const t = i / ctx.sampleRate; d[i] = (Math.random() * 2 - 1) * Math.exp(-t * 1.6) * Math.min(1, t / 0.015); } }
+  const verb = ctx.createConvolver(); verb.buffer = ir;
+  const vLP = ctx.createBiquadFilter(); vLP.type = "lowpass"; vLP.frequency.value = 3600; const wet = ctx.createGain(); wet.gain.value = 0.5;
+  verb.connect(vLP); vLP.connect(wet); wet.connect(out);
+  const nb = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate); { const d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+  const bb = ctx.createBuffer(1, ctx.sampleRate * 6, ctx.sampleRate); { const d = bb.getChannelData(0); let l = 0; for (let i = 0; i < d.length; i++) { l = (l + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = l * 3.5; } }
+  function loop(buf) { const s = ctx.createBufferSource(); s.buffer = buf; s.loop = true; s.start(); return s; }
+  function chain(...n) { for (let i = 0; i < n.length - 1; i++) n[i].connect(n[i + 1]); return n[n.length - 1]; }
+  function filt(type, f, qv) { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = f; if (qv) b.Q.value = qv; return b; }
+  function gain(v) { const g = ctx.createGain(); g.gain.value = v; return g; }
+  function pan(v) { const p = ctx.createStereoPanner(); p.pan.value = v; return p; }
+  // rain: a close wash, and the far hiss of the curtains through the plate
+  const rainG = chain(loop(nb), filt("highpass", 1200), filt("lowpass", 6500), gain(0.045)); rainG.connect(out);
+  const hissG = chain(loop(nb), filt("bandpass", 2600, 0.4), gain(0.02)); hissG.connect(verb);
+  // the gutter: a trickle that bubbles
+  const gut = chain(loop(nb), filt("bandpass", 900, 2.5), gain(0.0)); const gutP = pan(0.45); gut.connect(gutP); gutP.connect(out);
+  // the plate overhead: a constant deep rumble, and the reactor's slow breath in it
+  const rumble = chain(loop(bb), filt("lowpass", 70), gain(0.32)); rumble.connect(out);
+  const hum = ctx.createOscillator(); hum.frequency.value = 41.2; const humLP = filt("lowpass", 90); const humG = gain(0.07); chain(hum, humLP, humG); humG.connect(out); humG.connect(verb); hum.start();
+  // heavy drops from the plate onto tin: short resonant knocks
+  const dropBuf = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate); { const d = dropBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.006)); }
+  function drop(t, f, g, p, qv) { const s = ctx.createBufferSource(); s.buffer = dropBuf; const b = filt("bandpass", f, qv || 6); const gg = gain(g); const pp = pan(p); chain(s, b, gg, pp); pp.connect(out); gg.connect(verb); s.start(t); }
+  // the plate's machinery booming far overhead
+  function boom(t, g) {
+    const o = ctx.createOscillator(); o.type = "sine"; o.frequency.setValueAtTime(48 + Math.random() * 14, t); o.frequency.exponentialRampToValueAtTime(30, t + 1.4);
+    const gg = ctx.createGain(); gg.gain.setValueAtTime(0, t); gg.gain.linearRampToValueAtTime(g, t + 0.04); gg.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+    const s = ctx.createBufferSource(); s.buffer = nb; const b = filt("bandpass", 160 + Math.random() * 120, 3); const ng = ctx.createGain(); ng.gain.setValueAtTime(g * 0.4, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+    o.connect(gg); s.connect(b); b.connect(ng); gg.connect(verb); ng.connect(verb); gg.connect(out); o.start(t); o.stop(t + 2.5); s.start(t, Math.random() * 3, 0.7);
+  }
+  // wind chimes: inharmonic bells, a few at a time
+  function chime(t) {
+    const f = [880, 987.8, 1174.7, 1318.5, 1568][Math.floor(Math.random() * 5)];
+    [1, 2.76, 5.4].forEach((m, i) => {
+      const o = ctx.createOscillator(); o.frequency.value = f * m; const g = ctx.createGain();
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.012 / (i + 1), t + 0.005); g.gain.exponentialRampToValueAtTime(0.00001, t + 2.6 / (i + 1));
+      const p = pan(-0.55); o.connect(g); g.connect(p); p.connect(out); g.connect(verb); o.start(t); o.stop(t + 3);
+    });
+  }
+  // a door far off: a creak and its knock
+  function door(t) {
+    const o = ctx.createOscillator(); o.type = "sawtooth"; o.frequency.setValueAtTime(140, t); o.frequency.linearRampToValueAtTime(95, t + 0.7);
+    const b = filt("bandpass", 900, 9); const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.006, t + 0.15); g.gain.linearRampToValueAtTime(0, t + 0.75);
+    const p = pan(-0.7); chain(o, b, g, p); p.connect(verb); o.start(t); o.stop(t + 0.8);
+    drop(t + 0.85, 180, 0.12, -0.7, 2);
+  }
+  // the radio in the workshop: a soft tune on a small speaker, a little wow and hiss
+  const radioBP = filt("bandpass", 1300, 0.9); const radioG = gain(0.055); const radioP = pan(0.05);
+  chain(radioBP, radioG, radioP); radioP.connect(out); radioG.connect(verb);
+  const radioHiss = chain(loop(nb), filt("bandpass", 4000, 1.2), gain(0.006)); radioHiss.connect(radioBP);
+  const wow = ctx.createOscillator(); wow.frequency.value = 0.4; const wowG = gain(4); wow.connect(wowG); wow.start();
+  const TUNE = [[0, 76, 1], [1, 79, 1], [2, 81, 2], [4, 79, 1], [5, 76, 1], [6, 74, 2], [8, 72, 1], [9, 74, 1], [10, 76, 3], [13, 74, 1], [14, 72, 2],
+                [16, 76, 1], [17, 79, 1], [18, 83, 2], [20, 81, 1], [21, 79, 1], [22, 76, 2], [24, 74, 1], [25, 76, 1], [26, 72, 4]];
+  const CH = [[0, [60, 64, 67]], [8, [57, 60, 64]], [16, [53, 57, 60, 64]], [24, [55, 59, 62]]];
+  const BEAT = 0.42, BAR = 32;
+  const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  function note(t, m, d, g, type) {
+    const o = ctx.createOscillator(); o.type = type || "triangle"; o.frequency.value = mtof(m); wowG.connect(o.detune);
+    const gg = ctx.createGain(); gg.gain.setValueAtTime(0, t); gg.gain.linearRampToValueAtTime(g, t + 0.02); gg.gain.exponentialRampToValueAtTime(0.0001, t + d * BEAT * 1.6 + 0.3);
+    o.connect(gg); gg.connect(radioBP); o.start(t); o.stop(t + d * BEAT * 1.6 + 0.4);
+  }
+  let tuneAt = 0;
+  function scheduleTune(t) { TUNE.forEach(([b, m, d]) => note(t + b * BEAT, m, d, 0.5)); CH.forEach(([b, ms]) => ms.forEach((m) => note(t + b * BEAT, m, 8, 0.16, "sine"))); }
+  let alive = true, live = true, nextDrop = 0, nextBoom = 0, nextChime = 0, nextDoor = 0;
+  function sched() {
+    const t = T();
+    while (nextDrop < t + 0.3) { nextDrop = Math.max(nextDrop, t) + 0.05 + Math.random() * 0.3; const k = Math.random(); drop(nextDrop, k < 0.6 ? 700 + Math.random() * 900 : 2200 + Math.random() * 2000, 0.05 + Math.random() * 0.09, Math.random() * 1.6 - 0.8); }
+    if (live && t > nextBoom) { nextBoom = t + 5 + Math.random() * 7; boom(t + 0.05, 0.28 + Math.random() * 0.2); }
+    if (t > nextChime) { nextChime = t + 6 + Math.random() * 10; const n = 2 + Math.floor(Math.random() * 4); for (let i = 0; i < n; i++) chime(t + i * (0.18 + Math.random() * 0.3)); }
+    if (t > nextDoor) { nextDoor = t + 25 + Math.random() * 30; door(t + 0.1); }
+    if (t > tuneAt - 0.5) { if (!tuneAt) tuneAt = t + 0.3; scheduleTune(tuneAt); tuneAt += BAR * BEAT + 2 * BEAT; }
+    gut.gain.setTargetAtTime(0.012 + 0.012 * Math.random(), t, 0.3);
+  }
+  const iv = setInterval(sched, 150);
+  let pad = null;
+  function swell(t) {
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.05, t + 6); g.gain.linearRampToValueAtTime(0.032, t + 15);
+    const lp = filt("lowpass", 600); lp.frequency.setValueAtTime(600, t); lp.frequency.linearRampToValueAtTime(1700, t + 8);
+    lp.connect(g); g.connect(out); g.connect(verb);
+    const vs = [130.81, 196.0, 261.63, 329.63, 392.0, 493.88].map((f, i) => {
+      const o = ctx.createOscillator(); o.type = i % 2 ? "sine" : "triangle"; o.frequency.value = f; o.detune.value = (Math.random() - 0.5) * 8;
+      const og = ctx.createGain(); og.gain.value = [0.5, 0.4, 0.32, 0.24, 0.16, 0.1][i];
+      o.connect(og); og.connect(lp); o.start(t); return o;
+    });
+    pad = { g, vs };
+  }
+  function shutdown() {
+    const t = T(); live = false;
+    drop(t + 0.01, 1700, 0.25, 0.1, 3);
+    // the boom stops; the rumble overhead winds down to nothing; a hush
+    hum.frequency.cancelScheduledValues(t); hum.frequency.setValueAtTime(41.2, t + 1.4); hum.frequency.exponentialRampToValueAtTime(18, t + 6.5);
+    humG.gain.setValueAtTime(humG.gain.value, t); humG.gain.linearRampToValueAtTime(0.1, t + 1.4); humG.gain.linearRampToValueAtTime(0, t + 6.5);
+    rumble.gain.setValueAtTime(rumble.gain.value, t + 1.5); rumble.gain.linearRampToValueAtTime(0, t + 7);
+    [3.9, 4.6, 5.3].forEach((d) => drop(t + d, 140, 0.35, d === 3.9 ? 0 : d === 4.6 ? -0.5 : 0.5, 2));
+    rainG.gain.setValueAtTime(0.045, t + 6.5); rainG.gain.linearRampToValueAtTime(0.02, t + 7.2); rainG.gain.linearRampToValueAtTime(0.05, t + 10);
+    swell(t + 8.0);
+  }
+  function powerUp() {
+    const t = T();
+    if (pad) { const p = pad; p.g.gain.cancelScheduledValues(t); p.g.gain.setValueAtTime(p.g.gain.value, t); p.g.gain.linearRampToValueAtTime(0, t + 1.8); p.vs.forEach((o) => o.stop(t + 2)); pad = null; }
+    [1.2, 1.6, 2.0].forEach((d) => drop(t + d, 150, 0.3, 0, 2));
+    hum.frequency.cancelScheduledValues(t); hum.frequency.setValueAtTime(18, t + 2.2); hum.frequency.exponentialRampToValueAtTime(41.2, t + 5);
+    humG.gain.cancelScheduledValues(t); humG.gain.setValueAtTime(0, t + 2.2); humG.gain.linearRampToValueAtTime(0.07, t + 5);
+    rumble.gain.cancelScheduledValues(t); rumble.gain.setValueAtTime(0, t + 2.2); rumble.gain.linearRampToValueAtTime(0.32, t + 5);
+    setTimeout(() => { live = true; }, 5000);
+  }
+  function setOn(on) {
+    const t = T();
+    if (on) { ctx.resume(); out.gain.cancelScheduledValues(t); out.gain.setValueAtTime(out.gain.value, t); out.gain.linearRampToValueAtTime(0.9, t + 1.6); }
+    else { out.gain.cancelScheduledValues(t); out.gain.setValueAtTime(out.gain.value, t); out.gain.linearRampToValueAtTime(0, t + 0.5); setTimeout(() => { if (!store.sound) ctx.suspend(); }, 700); }
+  }
+  function syncShut(el) {
+    if (el < 7) { shutdown(); return; }
+    live = false; humG.gain.value = 0; rumble.gain.value = 0; swell(T() + 0.3);
+  }
+  return { setOn, shutdown, powerUp, syncShut, visible(v) { if (!store.sound) return; v ? ctx.resume() : ctx.suspend(); } };
+}
+function setSound(on) {
+  store.sound = on; save();
+  snd.setAttribute("aria-pressed", on ? "true" : "false");
+  if (on && !audio) { try { audio = Sound(); if (mode === "shut") audio.syncShut(now() - modeAt); } catch (e) { audio = null; } }
+  audio && audio.setOn(on);
+}
+snd.addEventListener("click", (e) => { e.stopPropagation(); skipOpening(); setSound(!store.sound); });
+if (store.sound) {
+  snd.setAttribute("aria-pressed", "true");
+  const resume = () => { removeEventListener("pointerdown", resume, true); removeEventListener("keydown", resume, true); if (store.sound && !audio) setSound(true); };
+  addEventListener("pointerdown", resume, true); addEventListener("keydown", resume, true);
+}
+
+// ------------------------------------------------------------------ start
+function fallback() {
+  if (!reduced) {
+    const vd = document.createElement("video"); vd.muted = true; vd.loop = true; vd.autoplay = true; vd.playsInline = true; vd.poster = "assets/rest.webp";
+    vd.setAttribute("aria-hidden", "true");
+    vd.innerHTML = '<source src="assets/loop.webm" type="video/webm"><source src="assets/loop.mp4" type="video/mp4">';
+    still.after(vd); vd.play().catch(() => {});
+    markBtn.addEventListener("click", () => { still.src = "assets/after.webp"; vd.remove(); });
+  }
+  ui.classList.add("on"); work.classList.add("on"); snd.classList.add("on"); store.seen = true; save();
+}
+fetch("assets/tex/scene.json").then((r) => r.json()).then((m) => { META = m; layout(); return initGL(); })
+  .then(() => { document.body.classList.add("gl"); layout(); raf = requestAnimationFrame(frame); })
+  .catch((e) => { console.warn("Undercity: falling back to the rendered loop.", e && e.message); if (META) layout(); fallback(); });
+})();
+</script>
+</body>
+</html>

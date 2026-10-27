@@ -82,46 +82,127 @@ def gem_mesh(name, scale, slope, rim):
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
     return link_obj(name, me)
 
-crystal = gem_mesh('crystal', SCALE, 0.38, 0.6)
-crystal.location = (0, 6, 70)
-crystal.rotation_euler = (0, 0, math.radians(-14))
-bev = crystal.modifiers.new('bev', 'BEVEL'); bev.width = 0.6; bev.segments = 3; crystal.visible_shadow = False
+# ---------------------------------------------------------------- the monument: the whole Break mark
+# A dark stone tile (100 by 100, corner radius 22) split top to bottom by the seam at 16 degrees,
+# with the sky crystal set in its cavity. Mark units map to metres by S; the tile stands on a
+# low plinth on the island's crown and faces the camera.
+S = 0.76                      # the tile is 76 m square
+BASE = 57.0                   # height of the tile's foot
+TH = 6.0                      # half thickness, mark units (the tile is about 9 m deep)
+TILE_ROT = math.radians(-5)
+
+mon = bpy.data.objects.new('monument', None); SC.collection.objects.link(mon)
+mon.location = (0, 6, BASE); mon.rotation_euler = (0, 0, TILE_ROT)
+
+def parse(path):
+    pts = []
+    for tok in path.replace('M', ' ').replace('Z', ' ').split('L'):
+        tok = tok.strip()
+        if tok:
+            x, y = tok.split(); pts.append((float(x), float(y)))
+    return pts
+
+def rounded_rect(r=22.0, n=10):
+    pts = []
+    for cx, cy, a0 in [(100 - r, r, -90), (100 - r, 100 - r, 0), (r, 100 - r, 90), (r, r, 180)]:
+        for k in range(n + 1):
+            t = math.radians(a0 + 90 * k / n)
+            pts.append((cx + r * math.cos(t), cy + r * math.sin(t)))
+    return pts
+
+def prism(name, pts, y0, y1):
+    bm = bmesh.new()
+    lo = [bm.verts.new(((x - 50) * S, y0, (100 - y) * S)) for (x, y) in pts]
+    hi = [bm.verts.new(((x - 50) * S, y1, (100 - y) * S)) for (x, y) in pts]
+    bm.faces.new(lo); bm.faces.new(list(reversed(hi)))
+    n = len(pts)
+    for i in range(n):
+        j = (i + 1) % n
+        bm.faces.new([lo[i], lo[j], hi[j], hi[i]])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4])
+    me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
+    return link_obj(name, me)
+
+import json
+GJ = json.load(open('/tmp/claude-0/-home-user/5a08d946-6e0e-5f87-9dad-cc05a4b0877f/scratchpad/break-geometry.json'))
+tile = prism('tile', rounded_rect(), -TH * S, TH * S)
+cav = prism('cav_cut', parse(GJ['cav']), -TH * S - 2, TH * S * 0.25)       # a recess: the stone stays behind the crystal
+seam = prism('seam_cut', parse(GJ['seam']), -TH * S - 3, TH * S + 3)        # the seam cuts clean through
+for cut in (cav, seam):
+    md = tile.modifiers.new(cut.name, 'BOOLEAN'); md.operation = 'DIFFERENCE'; md.solver = 'EXACT'; md.object = cut
+dg = bpy.context.evaluated_depsgraph_get()
+me = bpy.data.meshes.new_from_object(tile.evaluated_get(dg))
+for o in (tile, cav, seam): bpy.data.objects.remove(o)
+tile = link_obj('tile', me); tile.parent = mon
+bv = tile.modifiers.new('bev', 'BEVEL'); bv.width = 0.22; bv.segments = 3; bv.limit_method = 'ANGLE'
+bv.harden_normals = True
+for pgn in me.polygons: pgn.use_smooth = True
+try: me.set_sharp_from_angle(angle=math.radians(35))
+except Exception: pass
+tile.modifiers.new('wn', 'WEIGHTED_NORMAL')
+
+def dark_stone(name, metres, dim):
+    m, N, L = mat(name)
+    tc = N.new('ShaderNodeTexCoord'); mp = N.new('ShaderNodeMapping'); mp.inputs['Scale'].default_value = (1 / metres,) * 3
+    L.new(tc.outputs['Object'], mp.inputs[0])
+    def im(fn, nc):
+        t = N.new('ShaderNodeTexImage'); t.image = bpy.data.images.load(fn); t.projection = 'BOX'; t.projection_blend = 0.3
+        if nc: t.image.colorspace_settings.name = 'Non-Color'
+        L.new(mp.outputs[0], t.inputs[0]); return t
+    base = '/tmp/claude-0/-home-user/5a08d946-6e0e-5f87-9dad-cc05a4b0877f/scratchpad/assets/ambientcg/Rock030/Rock030_2K-JPG_'
+    c = im(base + 'Color.jpg', False); r = im(base + 'Roughness.jpg', True); n = im(base + 'NormalGL.jpg', True)
+    hs = N.new('ShaderNodeHueSaturation'); hs.inputs['Saturation'].default_value = 0.35; hs.inputs['Value'].default_value = dim
+    L.new(c.outputs[0], hs.inputs['Color']); L.new(hs.outputs[0], N['Principled BSDF'].inputs['Base Color'])
+    rr = N.new('ShaderNodeMapRange'); rr.inputs['To Min'].default_value = 0.45; rr.inputs['To Max'].default_value = 0.85
+    L.new(r.outputs[0], rr.inputs['Value']); L.new(rr.outputs[0], N['Principled BSDF'].inputs['Roughness'])
+    nm = N.new('ShaderNodeNormalMap'); nm.inputs['Strength'].default_value = 0.8
+    L.new(n.outputs[0], nm.inputs['Color']); L.new(nm.outputs[0], N['Principled BSDF'].inputs['Normal'])
+    return m
+STONE_DARK = dark_stone('tile_stone', 7.0, 0.16)
+tile.data.materials.append(STONE_DARK)
+
+# the plinth: two low dark steps under the tile
+for (w, d, z0, z1) in [(100 * S * 1.16, TH * S * 2 + 10, -9.0, -3.5), (100 * S * 1.06, TH * S * 2 + 5, -3.5, 0.02)]:
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    pb = bpy.context.active_object; pb.name = 'plinth'; pb.parent = mon
+    pb.location = (0, 0, (z0 + z1) / 2); pb.scale = (w, d, z1 - z0)
+    pbv = pb.modifiers.new('bev', 'BEVEL'); pbv.width = 0.3; pbv.segments = 3
+    pb.data.materials.append(STONE_DARK)
+
+# the crystal: the gem, set in the cavity, its facet ridge on the seam
+crystal = gem_mesh('crystal', S, 0.30, 0.6)
+crystal.parent = mon; crystal.location = (0, -1.2 * S, (100 - CY) * S)
+cbv = crystal.modifiers.new('bev', 'BEVEL'); cbv.width = 0.18; cbv.segments = 3
+crystal.visible_shadow = False; crystal.pass_index = 1
 m, N, L = mat('crystal_glass')
 bs = N['Principled BSDF']
 bs.inputs['Base Color'].default_value = SKY
 bs.inputs['Transmission Weight'].default_value = 1.0
-bs.inputs['Roughness'].default_value = 0.04
-bs.inputs['IOR'].default_value = 1.46
+bs.inputs['Roughness'].default_value = 0.03
+bs.inputs['IOR'].default_value = 1.5
 bs.inputs['Emission Color'].default_value = SKY
-bs.inputs['Emission Strength'].default_value = 0.06
-vol = N.new('ShaderNodeVolumePrincipled')
-vol.inputs['Color'].default_value = SKY
-vol.inputs['Density'].default_value = 0.012; vol.inputs['Absorption Color'].default_value = SKY
-vol.inputs['Emission Color'].default_value = SKY
-vol.inputs['Emission Strength'].default_value = 0.02
-# tint the light passing through the body so the backlit dawn turns sky blue inside the glass
-ab = N.new('ShaderNodeVolumeAbsorption'); ab.inputs['Color'].default_value = (0.12, 0.62, 1.0, 1)
-ab.inputs['Density'].default_value = 0.05
-addv = N.new('ShaderNodeAddShader'); L.new(vol.outputs[0], addv.inputs[0]); L.new(ab.outputs[0], addv.inputs[1])
-L.new(addv.outputs[0], N['Material Output'].inputs['Volume'])
+bs.inputs['Emission Strength'].default_value = 0.10
 crystal.data.materials.append(m)
 
-# light inside: a smaller inner gem of pale blue light, the same shape
-core = gem_mesh('core', SCALE * 0.42, 0.30, 0.2)
-core.location = (0, 6, 70); core.rotation_euler = crystal.rotation_euler
+# light inside: a smaller gem of sky light within the glass
+core = gem_mesh('core', S * 0.55, 0.22, 0.2)
+core.parent = mon; core.location = crystal.location; core.pass_index = 1
 m, N, L = mat('core_light')
 N.remove(N['Principled BSDF'])
-em = N.new('ShaderNodeEmission'); em.inputs['Color'].default_value = (0.18, 0.62, 1.0, 1)
-em.inputs['Strength'].default_value = 0.9
+em = N.new('ShaderNodeEmission'); em.inputs['Color'].default_value = (0.22, 0.70, 1.0, 1)
+em.inputs['Strength'].default_value = 1.6
 L.new(em.outputs[0], N['Material Output'].inputs['Surface'])
 core.data.materials.append(m)
 core.visible_shadow = False; core.visible_diffuse = False; core.visible_volume_scatter = False
-pl = bpy.data.lights.new("crystal_glow", "POINT"); pl.energy = 1.6e5; pl.color = SKY[:3]
-pl.shadow_soft_size = 14
-plo = link_obj("crystal_glow", pl); plo.location = (0, 6, 66); plo.visible_glossy = False; plo.visible_camera = False
+pl = bpy.data.lights.new("crystal_glow", "POINT"); pl.energy = 9.0e4; pl.color = (0.30, 0.74, 1.0)
+pl.shadow_soft_size = 3.0
+plo = link_obj("crystal_glow", pl); plo.parent = mon; plo.location = (0, -2.5 * S, (100 - CY) * S)
+plo.visible_glossy = False; plo.visible_camera = False
+bpy.context.view_layer.update()
 
 # ---------------------------------------------------------------- the island (terraced)
-R0 = 115.0; HMAX = 40.0; STEP = 4.2
+R0 = 118.0; HMAX = 50.0; STEP = 4.2
 def island_h(x, y):
     a = math.atan2(y, x)
     r = math.hypot(x * 0.85, y * 1.35)
@@ -232,8 +313,8 @@ def house(x, y, w, d, h, rot):
         px, py = x + c * u + s * (d / 2 + 0.05), y + s * u - c * (d / 2 + 0.05)
         wn = box('win', (px, py, z0 + h * 0.55), (1, 1, 1), rot, winm); wn.scale = (0.9, 0.05, 1.4)
 
-for (x, y, w, d, h, rot) in [(-46, -36, 9, 6, 6, 0.10), (34, -44, 10, 6, 7, -0.15),
-                             (-20, -54, 6, 5, 5, 0.05), (54, -20, 7, 6, 5, 0.25)]:
+for (x, y, w, d, h, rot) in [(-58, -40, 9, 6, 6, 0.10), (56, -46, 10, 6, 7, -0.15),
+                             (-80, -20, 6, 5, 5, 0.05), (78, -14, 7, 6, 5, 0.25)]:
     house(x, y, w, d, h, rot)
 
 # ---------------------------------------------------------------- scanned trees and shore rock (Poly Haven)
@@ -258,20 +339,18 @@ placed = 0
 while placed < 140:
     a = rng.uniform(0, 2 * math.pi); r = rng.uniform(18, 108)
     x, y = math.cos(a) * r, math.sin(a) * r * 0.72
-    if abs(x) < 20 and abs(y - 6) < 20: continue          # keep the crystal's foot clear
-    tree(x, y, rng.uniform(2.0, 3.0)); placed += 1
+    rr = math.hypot(x, y - 6)
+    if rr < 50: continue                                  # keep the monument's foot clear
+    if abs(x) < 46 and y < 6: continue                    # and the view of it from the water
+    tree(x, y, rng.uniform(2.0, 3.0) * min(1.0, 0.45 + rr / 120)); placed += 1
 
 CLIFF = load_obj(f'{PH}/coastal_cliff_01/coastal_cliff_01_1k.blend', 'coastal_cliff_01_LOD2')
 def cliff(x, y, rot, sc, z=-2.5):
     ob = bpy.data.objects.new('cliff', CLIFF.data); SC.collection.objects.link(ob)
     ob.location = (x, y, z); ob.rotation_euler = (0, 0, rot); ob.scale = (sc, sc, sc)
 # a ring of scanned sea cliff along the island's waterline
-for k in range(10):
-    a = 2 * math.pi * k / 10 + 0.2
-    rx, ry = 128 * math.cos(a), 84 * math.sin(a)
-    cliff(rx, ry, a + math.pi / 2, rng.uniform(0.75, 1.0))
-# far shores in the mist, from the same scan
-pass
+# (the waterline ring of cliff read as flat bars from the water; the terrain meets the water alone)
+# (a ridge of trees beyond the island was tried for shafts; it read as a white blob in the sun's glow, so it is gone)
 
 
 # ---------------------------------------------------------------- water
@@ -287,21 +366,32 @@ mp = N.new('ShaderNodeMapping'); mp.inputs['Scale'].default_value = (0.08, 2.2, 
 tc = N.new('ShaderNodeTexCoord'); L.new(tc.outputs['Object'], mp.inputs[0]); L.new(mp.outputs[0], wn.inputs['Vector'])
 bump = N.new('ShaderNodeBump'); bump.inputs['Strength'].default_value = 0.22
 L.new(wn.outputs['Fac'], bump.inputs['Height']); L.new(bump.outputs[0], bs.inputs['Normal'])
-water.data.materials.append(m)
+# far out, the water's reflection fades into the colour of the sky at the horizon, so the two
+# meet in the mist with no line
+cd = N.new('ShaderNodeCameraData')
+fd = N.new('ShaderNodeMapRange'); fd.inputs['From Min'].default_value = 700; fd.inputs['From Max'].default_value = 4500
+L.new(cd.outputs['View Distance'], fd.inputs['Value'])
+hzc = N.new('ShaderNodeEmission'); hzc.inputs['Color'].default_value = (0.64, 0.44, 0.58, 1)
+hzc.inputs['Strength'].default_value = 0.5
+mxw = N.new('ShaderNodeMixShader'); L.new(fd.outputs[0], mxw.inputs[0])
+L.new(bs.outputs[0], mxw.inputs[1]); L.new(hzc.outputs[0], mxw.inputs[2])
+L.new(mxw.outputs[0], N['Material Output'].inputs['Surface'])
+water.data.materials.append(m); water.pass_index = 3
 
 # ---------------------------------------------------------------- fog
 # One wide volume whose density falls with height and is broken by slow noise, so the low
 # sun behind the island cuts shafts through it. It runs far past the horizon, so the water
 # and the mist fade into each other with no seam.
+FOG = []
 def fog_near():
-    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, 199))
-    ob = bpy.context.active_object; ob.name = 'fog_near'; ob.scale = (16000, 16000, 400)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 0, 599))
+    ob = bpy.context.active_object; ob.name = 'fog_near'; ob.scale = (16000, 16000, 1200)
     m, N, L = mat('fog_near'); N.remove(N['Principled BSDF'])
     v = N.new('ShaderNodeVolumePrincipled')
-    v.inputs['Color'].default_value = (1.0, 0.74, 0.88, 1); v.inputs['Anisotropy'].default_value = 0.85
+    v.inputs['Color'].default_value = (0.94, 0.70, 1.0, 1); v.inputs['Anisotropy'].default_value = 0.70; FOG.append(ob)
     geo = N.new('ShaderNodeNewGeometry')
     sep = N.new('ShaderNodeSeparateXYZ'); L.new(geo.outputs['Position'], sep.inputs[0])
-    hz = N.new('ShaderNodeMath'); hz.operation = 'MULTIPLY'; hz.inputs[1].default_value = -1 / 45.0
+    hz = N.new('ShaderNodeMath'); hz.operation = 'MULTIPLY'; hz.inputs[1].default_value = -1 / 16.0
     L.new(sep.outputs['Z'], hz.inputs[0])
     ex = N.new('ShaderNodeMath'); ex.operation = 'EXPONENT'; L.new(hz.outputs[0], ex.inputs[0])
     nz = N.new('ShaderNodeTexNoise'); nz.inputs['Scale'].default_value = 1 / 70.0
@@ -312,7 +402,7 @@ def fog_near():
     L.new(nz.outputs['Fac'], rm.inputs['Value'])
     m1 = N.new('ShaderNodeMath'); m1.operation = 'MULTIPLY'; L.new(ex.outputs[0], m1.inputs[0]); L.new(rm.outputs[0], m1.inputs[1])
     m2 = N.new('ShaderNodeMath'); m2.operation = 'MULTIPLY_ADD'; L.new(m1.outputs[0], m2.inputs[0])
-    m2.inputs[1].default_value = 0.0034; m2.inputs[2].default_value = 0.0
+    m2.inputs[1].default_value = 0.0060; m2.inputs[2].default_value = 0.0
     L.new(m2.outputs[0], v.inputs['Density'])
     L.new(v.outputs[0], N['Material Output'].inputs['Volume'])
     ob.data.materials.append(m)
@@ -335,7 +425,7 @@ def haze_bank():
 sun = bpy.data.lights.new('sun', 'SUN'); sun.energy = 22.0; sun.angle = math.radians(1.0)
 sun.color = (1.0, 0.70, 0.62)
 so = link_obj('sun', sun); so.visible_glossy = False; so.visible_transmission = False
-el, az = math.radians(4.5), math.radians(11.0)        # low, behind the island's right shoulder
+el, az = math.radians(2.6), math.radians(11.0)        # very low, behind the island, a touch right
 to_sun = Vector((math.sin(az) * math.cos(el), math.cos(az) * math.cos(el), math.sin(el)))
 so.rotation_euler = to_sun.to_track_quat('Z', 'Y').to_euler()
 
@@ -356,8 +446,8 @@ cl = WN.new('ShaderNodeMath'); cl.operation = 'MAXIMUM'; cl.inputs[1].default_va
 pw = WN.new('ShaderNodeMath'); pw.operation = 'POWER'; pw.inputs[1].default_value = 9.0; WL.new(cl.outputs[0], pw.inputs[0])
 sepw = WN.new('ShaderNodeSeparateXYZ'); WL.new(wtc.outputs['Generated'], sepw.inputs[0])
 gr = WN.new('ShaderNodeValToRGB')                         # vertical gradient: bright pink horizon to violet zenith
-gr.color_ramp.elements[0].position = 0.0; gr.color_ramp.elements[0].color = (1.0, 0.62, 0.72, 1)
-gr.color_ramp.elements[1].position = 0.55; gr.color_ramp.elements[1].color = (0.22, 0.17, 0.36, 1)
+gr.color_ramp.elements[0].position = 0.0; gr.color_ramp.elements[0].color = (0.95, 0.56, 0.80, 1)
+gr.color_ramp.elements[1].position = 0.55; gr.color_ramp.elements[1].color = (0.13, 0.09, 0.27, 1)
 WL.new(sepw.outputs['Z'], gr.inputs[0])
 mixh = WN.new('ShaderNodeMix'); mixh.data_type = 'RGBA'; mixh.blend_type = 'MULTIPLY'
 mixh.clamp_result = True; mixh.inputs['Factor'].default_value = 0.35; WL.new(gr.outputs[0], mixh.inputs['A']); WL.new(sat.outputs[0], mixh.inputs['B'])
@@ -374,24 +464,29 @@ def place(src, loc, rot, sc):
     ob = bpy.data.objects.new(src.name, src.data); SC.collection.objects.link(ob)
     ob.location = loc; ob.rotation_euler = (0, 0, rot); ob.scale = sc
     return ob
-for (x, y, sc, k) in [(-38, -304, 3.2, 0), (-31, -299, 2.4, 1), (-43, -296, 2.0, 2), (-27, -306, 1.6, 3),
-                      (-4, -300, 1.8, 2), (2, -296, 1.3, 0)]:
-    r = place(ROCKS[k], (x, y, -0.25 * sc), rng.uniform(0, 6.28), (sc, sc, sc * 0.9))
-    for q in range(int(10 * sc)):
-        gx, gy = x + rng.uniform(-1.2, 1.2) * sc, y + rng.uniform(-1.0, 1.0) * sc
-        gs = rng.uniform(4.0, 7.0)
-        place(rng.choice(GRASS), (gx, gy, rng.uniform(0.3, 0.8) * sc), rng.uniform(0, 6.28), (gs, gs, gs * 1.4))
+# two low banks of rock and fine grass in the shallows, left and right, about 70 m out,
+# framing the water without touching the mark or its reflection
+for (x, y, sc, k) in [(-44, -252, 3.4, 0), (-35, -246, 2.6, 1), (-53, -242, 2.4, 2), (-27, -254, 1.8, 3),
+                      (-62, -250, 2.0, 1), (-20, -247, 1.4, 2),
+                      (40, -249, 3.0, 2), (31, -253, 2.0, 0), (50, -243, 2.6, 3), (59, -251, 1.8, 1)]:
+    r = place(ROCKS[k], (x, y, -0.3 * sc), rng.uniform(0, 6.28), (sc, sc, sc * 0.8))
+    for q in range(int(26 * sc)):
+        gx, gy = x + rng.gauss(0, 0.9) * sc, y + rng.gauss(0, 0.7) * sc
+        gs = rng.uniform(2.2, 3.4)
+        g = place(rng.choice(GRASS), (gx, gy, rng.uniform(0.0, 0.5) * sc), rng.uniform(0, 6.28), (gs, gs, gs * 1.9))
+        g.pass_index = 2
 
 # ---------------------------------------------------------------- camera
-cam = bpy.data.cameras.new('cam'); cam.lens = 35; cam.sensor_width = 36
-cam.dof.use_dof = True; cam.dof.focus_distance = 330; cam.dof.aperture_fstop = 5.6
+cam = bpy.data.cameras.new('cam'); cam.lens = 28; cam.sensor_width = 36
+cam.dof.use_dof = True; cam.dof.focus_distance = 326; cam.dof.aperture_fstop = 8.0
 co = link_obj('cam', cam); SC.camera = co
-co.location = (-24, -330, 3.0)
-tgt = Vector((-4, 0, 36))
+co.location = (0, -320, 6.0)
+tgt = Vector((0, 0, 6.0 + 326 * math.tan(math.radians(3.3))))
 co.rotation_euler = (tgt - co.location).to_track_quat('-Z', 'Y').to_euler()
 
 # ---------------------------------------------------------------- composite: depth haze, bloom, grade, grain
 SC.view_layers[0].use_pass_mist = True
+SC.render.engine = 'CYCLES'; SC.view_layers[0].use_pass_object_index = True
 SC.world.mist_settings.start = 60; SC.world.mist_settings.depth = 3000; SC.world.mist_settings.falloff = 'QUADRATIC'
 SC.use_nodes = True
 T = SC.node_tree; CN = T.nodes; CL = T.links
@@ -414,6 +509,25 @@ except Exception: pass
 CL.new(gl.outputs[0], lens.inputs[0])
 CL.new(lens.outputs[0], out.inputs[0])
 
+# ---------------------------------------------------------------- crystal held to sky blue
+# The crystal's inner light reaches the stone, island, trees and water but never the mist in
+# front of it (light linking), so it cannot veil itself in white; then an object-masked grade
+# holds the glass on #94E6FF.
+rc = bpy.data.collections.new('crystal_light_excludes')
+for f in FOG: rc.objects.link(f)
+plo.light_linking.receiver_collection = rc
+for item in rc.collection_objects: item.light_linking.link_state = 'EXCLUDE'
+idm = CN.new('CompositorNodeIDMask'); idm.index = 1; idm.use_antialiasing = True
+CL.new(rl.outputs['IndexOB'], idm.inputs[0])
+tint = CN.new('CompositorNodeMixRGB'); tint.blend_type = 'MULTIPLY'; tint.inputs[0].default_value = 1.0
+tint.inputs[2].default_value = (0.296 * 0.62, 0.791 * 0.62, 1.0 * 0.62, 1)      # #94E6FF, linear
+CL.new(haze.outputs[0], tint.inputs[1])
+fm = CN.new('CompositorNodeMath'); fm.operation = 'MULTIPLY'; fm.inputs[1].default_value = 0.8
+CL.new(idm.outputs[0], fm.inputs[0])
+held = CN.new('CompositorNodeMixRGB'); held.blend_type = 'MIX'
+CL.new(fm.outputs[0], held.inputs[0]); CL.new(haze.outputs[0], held.inputs[1]); CL.new(tint.outputs[0], held.inputs[2])
+CL.new(held.outputs[0], gl.inputs[0])
+
 # ---------------------------------------------------------------- render
 SC.render.engine = 'CYCLES'
 c = SC.cycles
@@ -433,3 +547,48 @@ vs = SC.view_settings; vs.view_transform = 'AgX'; vs.look = 'AgX - Base Contrast
 SC.render.filepath = OUT
 bpy.ops.render.render(write_still=True)
 print('wrote', OUT)
+
+# ---------------------------------------------------------------- masks for the loop (same camera)
+# R: the crystal and its light (and its reflection), G: the grass, B: the water. Flat emission,
+# no mist, a few samples; the page's loop is composed from the still and these masks.
+MASKS = arg('--masks', '')
+if MASKS:
+    for f in FOG: f.hide_render = True
+    world.node_tree.nodes['Background'].inputs['Strength'].default_value = 0.0
+    so.hide_render = True; plo.hide_render = True
+    def flat(name, col):
+        m, N, L = mat(name); N.remove(N['Principled BSDF'])
+        e = N.new('ShaderNodeEmission'); e.inputs['Color'].default_value = col
+        L.new(e.outputs[0], N['Material Output'].inputs['Surface']); return m
+    black, red = flat('m_black', (0, 0, 0, 1)), flat('m_red', (1, 0, 0, 1))
+    gm, N, L = mat('m_grass'); N.remove(N['Principled BSDF'])
+    at = N.new('ShaderNodeTexImage'); at.image = bpy.data.images.load(f'{PH}/grass_medium_02/textures/grass_medium_02_alpha_2k.png')
+    at.image.colorspace_settings.name = 'Non-Color'
+    e = N.new('ShaderNodeEmission'); e.inputs['Color'].default_value = (0, 1, 0, 1)
+    tr = N.new('ShaderNodeBsdfTransparent'); mx = N.new('ShaderNodeMixShader')
+    L.new(at.outputs['Color'], mx.inputs[0]); L.new(tr.outputs[0], mx.inputs[1]); L.new(e.outputs[0], mx.inputs[2])
+    L.new(mx.outputs[0], N['Material Output'].inputs['Surface'])
+    wm_, N, L = mat('m_water'); N.remove(N['Principled BSDF'])
+    e = N.new('ShaderNodeEmission'); e.inputs['Color'].default_value = (0, 0, 1, 1)
+    gls = N.new('ShaderNodeBsdfGlossy'); gls.inputs['Roughness'].default_value = 0.03
+    ad = N.new('ShaderNodeAddShader'); L.new(e.outputs[0], ad.inputs[0]); L.new(gls.outputs[0], ad.inputs[1])
+    L.new(ad.outputs[0], N['Material Output'].inputs['Surface'])
+    grass_meshes = {g.data.name for g in GRASS}
+    for me_ in bpy.data.meshes:
+        if me_.name in ('crystal', 'core'): new = red
+        elif me_.name in grass_meshes: new = gm
+        elif me_.name == water.data.name: new = wm_
+        else: new = black
+        for i in range(len(me_.materials)): me_.materials[i] = new
+        if len(me_.materials) == 0: me_.materials.append(new)
+    for ob in SC.objects:
+        for sl in ob.material_slots:
+            if sl.link == 'OBJECT': sl.material = black
+    SC.use_nodes = False
+    c.samples = 8; c.use_denoising = False; c.use_adaptive_sampling = False; c.time_limit = 0
+    c.max_bounces = 2; c.glossy_bounces = 1
+    vs.view_transform = 'Standard'; vs.look = 'None'; vs.exposure = 0.0
+    cam.dof.use_dof = True
+    SC.render.filepath = MASKS
+    bpy.ops.render.render(write_still=True)
+    print('wrote', MASKS)

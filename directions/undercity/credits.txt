@@ -1,0 +1,5 @@
+Undercity, close: scanned assets (all CC0, no attribution required; listed with thanks)
+Poly Haven (polyhaven.com): fern_02, periwinkle_plant, celandine_01, dandelion_01, flower_heliophila, grass_medium_02, shrub_01, potted_plant_01, planter_pot_clay, Lantern_01, kloppenheim_06_puresky (HDRI)
+ambientCG (ambientcg.com): PavingStones128, Bricks084, PaintedPlaster017, Rock041, WoodSiding008, Moss002
+Fonts: Timeless Serif (licensed to Antimony), Commit Mono (OFL)
+Everything else (the procedural light, rain, motes and sound) is made here.

@@ -40,13 +40,16 @@ if RES and RES != SRC_W:
     w = RES; h = int(round(spec.height * RES / SRC_W))
     P = {k: resize(v, w, h) for k, v in P.items()}; D = {k: resize(v, w, h) for k, v in D.items()}
 H, W = P['sky'].shape[:2]
-S = W / 2560.0                         # scale relative to the 2560 render
+FLN = arg('lens', 27.0) / 36.0          # focal length over the (horizontal) sensor width, as in rain_scene.py --lens
+S = W * FLN / (2560.0 * 0.75)           # pixels per metre relative to the 2560 landscape render (the phone frame is closer)
+AREA = W * H / (2560.0 * 1440.0)        # rain and rings are counted per frame area
 
 # ---------------------------------------------------------------- the camera, as in rain_scene.py (for drips and the chain)
-CX, CY, CZ, FL, SHIFT = 0.0, -7.4, 1.55, 27.0 / 36.0, 0.03
+CX, CY, CZ, FL, SHIFT = 0.0, -7.4, 1.55, FLN, arg('shift', 0.03)
+SREF = max(W, H)                       # Blender's lens shift is in units of the longer side
 def proj(x, y, z):
     d = y - CY
-    return np.array([W * (0.5 + (x - CX) / d * FL), H / 2 - ((z - CZ) / d * FL - SHIFT) * W]), W * FL / d   # pixel, px per metre
+    return np.array([W * (0.5 + (x - CX) / d * FL), H / 2 - ((z - CZ) / d * FL * W - SHIFT * SREF)]), W * FL / d   # pixel, px per metre
 
 # ---------------------------------------------------------------- helpers
 def box1(a, r, axis):
@@ -94,8 +97,15 @@ def view(lin):
     CPU.applyRGB(a); return np.clip(a, 0, 1)
 
 # ---------------------------------------------------------------- static parts
-FOG = np.array([0.30, 0.38, 0.52], np.float32); FOG = np.where(FOG > 0.04045, ((FOG + 0.055) / 1.055) ** 2.4, FOG / 12.92) * 0.1
-fogk = np.clip(D['Mist'], 0, 1)[..., None] * 0.82
+FOG = np.array([float(v) for v in arg('fog-col', '0.30,0.38,0.52').split(',')], np.float32); FOG = np.where(FOG > 0.04045, ((FOG + 0.055) / 1.055) ** 2.4, FOG / 12.92) * arg('fog-l', 0.1)
+fogk = (1 - (1 - np.clip(D['Mist'], 0, 1)) ** arg('fog-g', 1.0))[..., None] * arg('fogk', 0.82)
+if arg('fog-depth', 0.0) > 0:
+    # aerial perspective from depth (for --vista renders): nothing nearer than --fog-near, then an exponential
+    # fall into the rain haze, so the far towers emerge from it rather than stand in front of it
+    # the EXR's half floats leave stray depth samples; a 5 by 5 median removes them before they can fog a pixel
+    zd = np.clip(np.nan_to_num(D['Depth'], posinf=1e9), 0, 1e9); zp = np.pad(zd, 2, mode='edge')
+    zd = np.median(np.stack([zp[j:j + zd.shape[0], i:i + zd.shape[1]] for j in range(5) for i in range(5)]), 0)
+    fogk = (1 - np.exp(-np.clip(zd - arg('fog-near', 150.0), 0, 1e9) / arg('fog-depth', 0.0)))[..., None] * arg('fogk', 0.82)    # 0 with --vista renders: the scene's own air does it
 PL = arg('poster-k', 1.0)
 SKYT = np.array([float(v) for v in arg('sky-tint', '1,1,1').split(',')], np.float32)
 KW = arg('kw', 1.0)
@@ -141,25 +151,27 @@ class Streaks:
         c = sample(Lf, np.clip(xs[:, K // 2], 0, W - 2), np.clip(ys[:, K // 2], 0, H - 2))
         col = (c * self.k + 0.0015)[:, None, :] * (self.wt[:, None] * prof)[..., None] * (self.L[:, None, None] / K) * 0.06
         splat(acc, xs.ravel(), ys.ravel(), col.reshape(-1, 3))
-RAIN = [Streaks(int(arg('near', 90)), 90, 150, 1.0, (9, 12), 1.0), Streaks(int(arg('mid', 420)), 40, 70, 0.8, (6, 8), 0.8),
-        Streaks(int(arg('far', 1100)), 14, 26, 0.6, (4, 5), 0.6)]
+RAIN = [Streaks(int(arg('near', 90) * AREA), 90, 150, 1.0, (9, 12), 1.0), Streaks(int(arg('mid', 420) * AREA), 40, 70, 0.8, (6, 8), 0.8),
+        Streaks(int(arg('far', 1100) * AREA), 14, 26, 0.6, (4, 5), 0.6)]
 
 # drips: from the canopy edge, the coping, the tree; each falls on its own period
 DRIPS = []
+# every drip period divides the loop, so the last frame runs into the first (6 s: 1.5, 2, 3, 6; 8 s: 1, 2, 4, 8)
+PERIODS = [T / 4, T / 3, T / 2, T] if abs(T - 6.0) < 1e-6 else [T / 8, T / 4, T / 2, T]
 def add_drip(x, y, z, zg, period, phase):
     p0, k = proj(x, y, z); p1, _ = proj(x, y, zg)
     DRIPS.append((p0, p1[1], k, period, phase))
 for i in range(9):
-    add_drip(rng.uniform(1.7, 4.8), -0.74, 2.76, 0.0, float(rng.choice([1.5, 2.0, 3.0])), rng.uniform(0, 1))
+    add_drip(rng.uniform(1.7, 4.8), -0.74, 2.76, 0.0, float(rng.choice(PERIODS[:3])), rng.uniform(0, 1))
 for i in range(10):
     x = rng.uniform(-4.5, 1.3)
     if -1.05 < x < 1.05: continue
-    add_drip(x, -0.07, 3.38, 0.17, float(rng.choice([2.0, 3.0, 6.0])), rng.uniform(0, 1))
+    add_drip(x, -0.07, 3.38, 0.17, float(rng.choice(PERIODS[1:])), rng.uniform(0, 1))
 # tree drips: emitters on bright-edged leaves in the upper left
 cand = np.argwhere((plant[: int(H * 0.45), : int(W * 0.35)] > 0.9))
 for i in range(min(10, len(cand))):
     yx = cand[rng.integers(len(cand))]
-    DRIPS.append((np.array([yx[1], yx[0]], np.float32), H * 0.98, W * FL / 5.0, float(rng.choice([1.5, 2.0, 3.0])), rng.uniform(0, 1)))
+    DRIPS.append((np.array([yx[1], yx[0]], np.float32), H * 0.98, W * FL / 5.0, float(rng.choice(PERIODS[:3])), rng.uniform(0, 1)))
 def draw_drips(acc, t, Lf):
     for p0, yground, k, per, ph in DRIPS:
         a = ((t / per + ph) % 1.0) * per
@@ -184,7 +196,7 @@ def draw_chain(acc, t, Lf):
 # rings in the puddles and the rill
 wy, wx = np.nonzero(water[int(H * 0.72):, :] > 0.6); wy = wy + int(H * 0.72)
 RINGS = []
-for i in range(int(arg('rings', 70))):
+for i in range(int(arg('rings', 70) * max(AREA, 0.5))):
     j = rng.integers(len(wy)) if len(wy) else 0
     if not len(wy): break
     y, x = float(wy[j]), float(wx[j]); d = max(1.0, float(D['Depth'][int(y), int(x)]))
@@ -206,8 +218,33 @@ def rings(t):
         hl[y0:y1, x0:x1] += band * (1 - u) * 0.6
     return dx, dy, hl
 
+# drops on the lightbox glass: a few run down it in short starts, each leaving a faint wet trail; seen against the
+# lit print they are slightly darker at the rim with a bright point where they catch the light
+GLASS = []
+if arg('corners', ''):
+    import json
+    cj = json.load(open(arg('corners', '')))
+    k_ = W / cj['res'][0]
+    fx0, fy0 = cj['tl'][0] * k_, cj['tl'][1] * k_; fx1, fy1 = cj['br'][0] * k_, cj['br'][1] * k_
+    for i in range(int(arg('glass-drops', 14))):
+        GLASS.append((rng.uniform(fx0 + 6 * S, fx1 - 6 * S), fy0, fy1, int(rng.integers(1, 3)), rng.uniform(0, 1), rng.uniform(0.6, 1.0) * S))
+def glass_drops(L, t):
+    for x, y0, y1, cyc, ph, sz in GLASS:
+        f = (ph + cyc * t / T) % 1.0
+        f = f + 0.02 * np.sin(2 * np.pi * f * 7)                   # stop and start, as a real drop does
+        y = y0 + (y1 - y0) * (0.05 + 0.9 * f); r = arg('drop-r', 4.5) * sz
+        xa, xb = int(max(0, x - 3 * r)), int(min(W, x + 3 * r + 1)); ya, yb = int(max(0, y0 + (y1 - y0) * 0.05)), int(min(H, y + 3 * r + 1))
+        if xb <= xa or yb <= ya: continue
+        gx = xx[ya:yb, xa:xb] - x; gy = yy[ya:yb, xa:xb] - y
+        trail = np.exp(-(gx / (0.6 * r)) ** 2) * (gy < 0) * np.exp(gy / (80 * S)) * 0.08
+        d = np.sqrt(gx * gx + gy * gy) / r
+        rim = np.exp(-((d - 0.85) / 0.25) ** 2) * 0.22; core = np.exp(-((gx + 0.3 * r) ** 2 + (gy + 0.35 * r) ** 2) / (0.12 * r * r)) * 0.5
+        L[ya:yb, xa:xb] *= (1 - trail - rim)[..., None]
+        L[ya:yb, xa:xb] += core[..., None] * 1.5
+    return L
+
 # ---------------------------------------------------------------- finishing: bloom with a warm halation, aberration, vignette, grain
-vig = 1 - 0.28 * np.clip(((xx / W - 0.5) ** 2 * 1.3 + (yy / H - 0.5) ** 2 * 1.0) * 2.4 - 0.15, 0, 1) ** 1.3
+vig = 1 - 0.28 * np.clip(((xx / W - 0.5) ** 2 * 1.3 * min(1.0, W / H) + (yy / H - 0.5) ** 2 * 1.0) * 2.4 - 0.15, 0, 1) ** 1.3
 def bloom(L):
     hi = np.maximum(L - arg('bloom-th', 0.6), 0)
     b = np.zeros_like(L); h = hi
@@ -225,8 +262,35 @@ def grade(img):
     img = img + (img ** 3) * np.array([1.0, 0.45, -0.5], np.float32) * HW
     img = LIFT + (1 - LIFT) * np.clip(img, 0, 1)
     return img
+# the crystal in the poster's mark, held to sky (#94E6FF) with its lit facet: AgX rightly desaturates a bright
+# emitter, so the crystal is laid in after the grade, exactly on the print's geometry mapped through the face corners
+GEM = None
+if arg('gem', '') and arg('corners', ''):
+    import json
+    mk = json.load(open(arg('gem', ''))); cj2 = json.load(open(arg('corners', ''))); k2 = W / cj2['res'][0]
+    tl, tr, bl = np.array(cj2['tl']) * k2, np.array(cj2['tr']) * k2, np.array(cj2['bl']) * k2
+    def to_frame(p): return tl + (tr - tl) * p[0] / mk['print'][0] + (bl - tl) * p[1] / mk['print'][1]
+    def mask(pts, ss=6):
+        # a convex polygon, anti-aliased: half-plane tests on a supersampled grid over its box
+        q = np.array([to_frame(p) for p in pts], np.float64)
+        if np.cross(q[1] - q[0], q[2] - q[1]) < 0: q = q[::-1]
+        x0_, y0_ = int(np.floor(q[:, 0].min())) - 1, int(np.floor(q[:, 1].min())) - 1
+        x1_, y1_ = int(np.ceil(q[:, 0].max())) + 2, int(np.ceil(q[:, 1].max())) + 2
+        sy, sx = np.mgrid[y0_:y1_:1.0 / ss, x0_:x1_:1.0 / ss]; sx = sx + 0.5 / ss; sy = sy + 0.5 / ss
+        inside = np.ones(sx.shape, bool)
+        for i in range(len(q)):
+            a_, b_ = q[i], q[(i + 1) % len(q)]
+            inside &= (b_[0] - a_[0]) * (sy - a_[1]) - (b_[1] - a_[1]) * (sx - a_[0]) >= 0
+        cov = inside.reshape(y1_ - y0_, ss, x1_ - x0_, ss).mean(axis=(1, 3)).astype(np.float32)
+        m = np.zeros((H, W), np.float32); m[y0_:y1_, x0_:x1_] = cov
+        return m
+    gm_ = mask(mk['gem']); fc_ = mask(mk['gem'][:4])
+    GEM = (gm_[..., None], fc_[..., None])
+SKYC = np.array([0x94, 0xE6, 0xFF], np.float32) / 255
 def finish(img, t=0.0, grain=0.0):
     out = grade(img) * vig[..., None]
+    if GEM is not None:
+        g_, f_ = GEM; out = out * (1 - g_) + SKYC * g_; out = out * (1 - f_ * 0.28) + f_ * 0.28
     ca = arg('ca', 0.6) * S                                  # lateral colour fringe, growing to the corners
     rx = (xx - W / 2) / (W / 2); ry_ = (yy - H / 2) / (W / 2)
     out[..., 0] = sample(out[..., :1], xx + rx * ca, yy + ry_ * ca)[..., 0]
@@ -251,12 +315,14 @@ def frame(t, rain=True, kp=PL, warm_breath=True):
         for r in RAIN: r.draw(acc, t, Lf)
         draw_drips(acc, t, Lf); draw_chain(acc, t, Lf)
         L = L + acc * arg('rain', 10.0)
+        if GLASS: L = glass_drops(L, t)
     return bloom(L)
 
 def save(path, img, bits=8):
     o = (img * 255 + rng.uniform(-0.5, 0.5, img.shape) if bits == 8 else img * 65535).round()
     o = np.clip(o, 0, 255 if bits == 8 else 65535).astype(np.uint8 if bits == 8 else np.uint16)
     out = oiio.ImageOutput.create(path); sp = oiio.ImageSpec(W, H, 3, oiio.UINT8 if bits == 8 else oiio.UINT16)
+    if path.lower().endswith('.jpg'): sp.attribute('Compression', 'jpeg:95')    # loop frames: small on disk, encoded straight after
     out.open(path, sp); out.write_image(o); out.close()
 
 if MODE == 'still':
@@ -276,7 +342,7 @@ elif MODE == 'aux':
     k = int(arg('aux-k', 4)); dsp = down(dsp, k)
     pd_ = np.pad(dsp, 2, mode='edge')
     dsp = np.median(np.stack([pd_[j:j + dsp.shape[0], i:i + dsp.shape[1]] for j in range(5) for i in range(5)]), 0)
-    gnd = ((z < piv - 0.05) & (yy > H * 0.81) & (blur(plant, 3) < 0.05)).astype(np.float32)
+    gnd = ((z < piv - 0.05) & (yy > H * arg('gnd-y', 0.81)) & (blur(plant, 3) < 0.05)).astype(np.float32)
     gnd = blur(down(gnd, k), 2)
     h_, w_ = dsp.shape
     o = np.stack([dsp * 0.5 + 0.5, gnd[:h_, :w_], np.zeros_like(dsp)], -1)

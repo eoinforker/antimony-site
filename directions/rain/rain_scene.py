@@ -57,7 +57,7 @@ for nm in ('plant', 'wet', 'rill', 'face', 'glass'):
 for g in ('sky', 'poster', 'warm'):
     vl.lightgroups.add(name=g)
 sc.world = bpy.data.worlds.new('world')
-mi = sc.world.mist_settings; mi.start = 6; mi.depth = 70; mi.falloff = 'QUADRATIC'
+mi = sc.world.mist_settings; mi.start = arg('mist-s', 6.0); mi.depth = arg('mist-d', 70.0); mi.falloff = arg('mist-f', 'QUADRATIC')
 
 # ---------------------------------------------------------------- helpers
 def mat(name):
@@ -100,7 +100,7 @@ def plane(name, x0, x1, z0, z1, y, m=None, facing=-1):
     return ob
 
 ACG = arg('acg', '')
-def pbr(name, folder, scale, tint=(1, 1, 1), val=1.0, sat=1.0, rough=(0.0, 1.0), nstr=1.0, wet=None, coords='Object', plant=0.0, extra=None, acg=None):
+def pbr(name, folder, scale, tint=(1, 1, 1), val=1.0, sat=1.0, rough=(0.0, 1.0), nstr=1.0, wet=None, coords='Object', plant=0.0, extra=None, acg=None, wet_r=0.12):
     """A scanned material, box-mapped in metres. wet: (amount node builder) darkens and glosses it."""
     m, nt = mat(name)
     tc = node(nt, 'ShaderNodeTexCoord', (-1400, 0))
@@ -129,7 +129,7 @@ def pbr(name, folder, scale, tint=(1, 1, 1), val=1.0, sat=1.0, rough=(0.0, 1.0),
         link(nt, w, dk.inputs['Factor']); link(nt, col, dk.inputs['A']); dk.inputs['B'].default_value = (0.74, 0.74, 0.75, 1)
         col = dk.outputs['Result']
         wr = node(nt, 'ShaderNodeMix', (-250, 0)); wr.data_type = 'FLOAT'
-        link(nt, w, wr.inputs['Factor']); link(nt, ro, wr.inputs['A']); wr.inputs['B'].default_value = 0.12
+        link(nt, w, wr.inputs['Factor']); link(nt, ro, wr.inputs['A']); wr.inputs['B'].default_value = wet_r
         ro = wr.outputs['Result']
         aov(nt, 'wet', w)
     link(nt, col, b.inputs['Base Color']); link(nt, ro, b.inputs['Roughness']); link(nt, nm.outputs['Normal'], b.inputs['Normal'])
@@ -171,7 +171,15 @@ link(wn, mpw.outputs['Vector'], env.inputs['Vector'])
 tint = node(wn, 'ShaderNodeMix', (-250, 0)); tint.data_type = 'RGBA'; tint.blend_type = 'MULTIPLY'; tint.inputs['Factor'].default_value = 1
 link(wn, env.outputs['Color'], tint.inputs['A']); tint.inputs['B'].default_value = (0.62, 0.78, 1.25, 1)
 bg = node(wn, 'ShaderNodeBackground', (0, 0)); bg.inputs['Strength'].default_value = SKY
-link(wn, tint.outputs['Result'], bg.inputs['Color'])
+if arg('vista', 0) == 1 or arg('sky-cam', '') != '':
+    # the sky as the camera sees it, past the city's air, is held to a deep blue: no sun breaks through the rain
+    lpw = node(wn, 'ShaderNodeLightPath', (-250, 250))
+    dkw = node(wn, 'ShaderNodeMix', (-100, 150)); dkw.data_type = 'RGBA'; dkw.blend_type = 'DARKEN'
+    link(wn, lpw.outputs['Is Camera Ray'], dkw.inputs['Factor']); link(wn, tint.outputs['Result'], dkw.inputs['A'])
+    dkw.inputs['B'].default_value = (*[float(v) for v in arg('sky-cam', '0.03,0.05,0.12').split(',')], 1)
+    link(wn, dkw.outputs['Result'], bg.inputs['Color'])
+else:
+    link(wn, tint.outputs['Result'], bg.inputs['Color'])
 wo = node(wn, 'ShaderNodeOutputWorld', (200, 0)); link(wn, bg.outputs['Background'], wo.inputs['Surface'])
 sc.world.lightgroup = 'sky'
 sc.world.cycles.sampling_method = 'MANUAL'; sc.world.cycles.sample_map_resolution = 1024
@@ -220,7 +228,7 @@ def puddles(nt, b, tc, hgt):
     out = [n for n in nt.nodes if n.bl_idname == 'ShaderNodeOutputMaterial'][0]
     link(nt, b.outputs['BSDF'], ms.inputs[1]); link(nt, w.outputs['BSDF'], ms.inputs[2]); link(nt, ms.outputs['Shader'], out.inputs['Surface'])
     aov(nt, 'rill', p)
-M_GROUND = pbr('paving', 'granite_tile', 0.5, tint=(1.0, 0.97, 0.93), val=0.62, sat=0.8, rough=(0.3, 0.8), nstr=1.2, wet=ground_wet, extra=puddles, acg='PavingStones128')
+M_GROUND = pbr('paving', 'granite_tile', 0.5, tint=(1.0, 0.97, 0.93), val=0.62, sat=0.8, rough=(0.3, 0.8), nstr=1.2, wet=ground_wet, extra=puddles, acg='PavingStones128', wet_r=arg('wet-r', 0.12))
 M_TIMBER = pbr('larch', 'wood_planks_grey', 0.5, tint=(1.0, 0.98, 0.95), val=1.05, sat=0.7, rough=(0.45, 0.85), nstr=1.0,
                wet=lambda nt, tc, h: noise_mask(nt, tc, 2.0, 0.3, 0.8, w=(4.0, 4.0, 0.3)))
 
@@ -235,8 +243,19 @@ M_FRAME = simple('frame', (0.035, 0.037, 0.04), 0.28, metal=0.6)
 M_SOIL = simple('soil', (0.02, 0.016, 0.012), 0.6)
 
 # ---------------------------------------------------------------- the wall, its coping, the planting bed, the rill
-wall = box('wall', WALL_X0, WALL_X1, 0.0, 0.45, 0.0, WALL_H, M_STONE)
-cop = box('coping', WALL_X0, WALL_X1 + 0.02, -0.06, 0.5, WALL_H, WALL_H + 0.1, M_STONE)
+# --vista 1: the wall ends at a stone pier left of the bench, and a low parapet carries on: over it, the city falls
+# away into the rain, its towers fading into the mist (see "the city beyond" below)
+VISTA = arg('vista', 0) == 1
+BEYOND = arg('beyond', 1) == 1 and not VISTA      # --beyond 0: nothing past the wall but the garden's trees and the sky
+VX = arg('vista-x', -2.9) if VISTA else WALL_X0      # where the full height wall begins
+PAR_H = arg('par-h', 1.05)
+wall = box('wall', VX, WALL_X1, 0.0, 0.45, 0.0, WALL_H, M_STONE)
+cop = box('coping', VX, WALL_X1 + 0.02, -0.06, 0.5, WALL_H, WALL_H + 0.1, M_STONE)
+if VISTA:
+    box('pier', VX - 0.34, VX + 0.02, -0.08, 0.53, 0.0, WALL_H + 0.18, M_STONE)
+    box('pier_cap', VX - 0.39, VX + 0.07, -0.13, 0.58, WALL_H + 0.18, WALL_H + 0.3, M_STONE)
+    box('parapet', WALL_X0 - 4.0, VX - 0.34, 0.0, 0.45, 0.0, PAR_H, M_STONE)
+    box('parapet_cop', WALL_X0 - 4.0, VX - 0.34, -0.06, 0.5, PAR_H, PAR_H + 0.09, M_STONE)
 # the lightbox is set into the wall: a recess, a slim dark bronze frame, the face
 rec = box('recess_cut', PX - PW / 2 - 0.05, PX + PW / 2 + 0.05, -0.1, 0.06, PZ0 - 0.05, PZ0 + PH + 0.05)
 md = wall.modifiers.new('cut', 'BOOLEAN'); md.operation = 'DIFFERENCE'; md.solver = 'EXACT'; md.object = rec; rec.hide_render = True; rec.hide_viewport = True
@@ -262,6 +281,50 @@ aov(nt, 'face', 1.0); aov(nt, 'plant', 0.0)
 FACE_Y = -0.012
 face = plane('poster_face', PX - PW / 2, PX + PW / 2, PZ0, PZ0 + PH, FACE_Y, m_face)
 face.lightgroup = 'poster'
+
+if arg('glass', 0) == 1:
+    # a real pane over the print, rain beaded and running on it. Seen by the camera and in reflections only, so the
+    # print's light still reaches the street (refractive caustics are off, and a pane would otherwise block it).
+    m_gl, nt = mat('lightbox_glass')
+    tcg = node(nt, 'ShaderNodeTexCoord', (-1600, 0))
+    sxz = node(nt, 'ShaderNodeSeparateXYZ', (-1450, 0)); link(nt, tcg.outputs['Object'], sxz.inputs['Vector'])
+    pxz = node(nt, 'ShaderNodeCombineXYZ', (-1300, 0)); link(nt, sxz.outputs['X'], pxz.inputs['X']); link(nt, sxz.outputs['Z'], pxz.inputs['Y'])
+    def beads(scale, rmin, rmax, keep, loc):
+        # domes: a round drop in some cells, its radius random per cell
+        v = node(nt, 'ShaderNodeTexVoronoi', (loc[0], loc[1])); v.voronoi_dimensions = '2D'; v.inputs['Scale'].default_value = scale
+        v.inputs['Randomness'].default_value = 0.9; link(nt, pxz.outputs['Vector'], v.inputs['Vector'])
+        sp = node(nt, 'ShaderNodeSeparateColor', (loc[0] + 150, loc[1] - 150)); link(nt, v.outputs['Color'], sp.inputs['Color'])
+        rr = node(nt, 'ShaderNodeMapRange', (loc[0] + 300, loc[1] - 150)); rr.inputs['To Min'].default_value = rmin; rr.inputs['To Max'].default_value = rmax
+        link(nt, sp.outputs['Red'], rr.inputs['Value'])
+        dv = node(nt, 'ShaderNodeMath', (loc[0] + 450, loc[1]), operation='DIVIDE'); link(nt, v.outputs['Distance'], dv.inputs[0]); link(nt, rr.outputs['Result'], dv.inputs[1])
+        om = node(nt, 'ShaderNodeMath', (loc[0] + 600, loc[1]), operation='SUBTRACT', use_clamp=True); om.inputs[0].default_value = 1.0; link(nt, dv.outputs[0], om.inputs[1])
+        sq = node(nt, 'ShaderNodeMath', (loc[0] + 750, loc[1]), operation='SQRT'); link(nt, om.outputs[0], sq.inputs[0])
+        kp = node(nt, 'ShaderNodeMath', (loc[0] + 600, loc[1] - 250), operation='LESS_THAN'); kp.inputs[1].default_value = keep; link(nt, sp.outputs['Green'], kp.inputs[0])
+        mu = node(nt, 'ShaderNodeMath', (loc[0] + 900, loc[1]), operation='MULTIPLY'); link(nt, sq.outputs[0], mu.inputs[0]); link(nt, kp.outputs[0], mu.inputs[1])
+        return mu.outputs[0]
+    b1 = beads(arg('bead-s', 70.0), 0.12, 0.45, 0.55, (-1100, 300))     # drops about a centimetre across
+    b2 = beads(210.0, 0.15, 0.45, 0.7, (-1100, -100))     # and a mist of small ones
+    # runs: a few drops have slid, leaving thin straight-ish trails down the glass
+    rm = node(nt, 'ShaderNodeMapping', (-1100, -500)); rm.inputs['Scale'].default_value = (38.0, 0.9, 1.0); link(nt, pxz.outputs['Vector'], rm.inputs['Vector'])
+    rn = node(nt, 'ShaderNodeTexNoise', (-950, -500)); rn.inputs['Scale'].default_value = 1.0; rn.inputs['Detail'].default_value = 1.0
+    link(nt, rm.outputs['Vector'], rn.inputs['Vector'])
+    rd = node(nt, 'ShaderNodeMath', (-800, -500), operation='SUBTRACT'); rd.inputs[1].default_value = 0.5; link(nt, rn.outputs['Fac'], rd.inputs[0])
+    ra = node(nt, 'ShaderNodeMath', (-650, -500), operation='ABSOLUTE'); link(nt, rd.outputs[0], ra.inputs[0])
+    rl_ = node(nt, 'ShaderNodeMapRange', (-500, -500)); rl_.inputs['From Min'].default_value = arg('run-w', 0.012); rl_.inputs['From Max'].default_value = 0.0
+    link(nt, ra.outputs[0], rl_.inputs['Value'])
+    rk = noise_mask(nt, tcg, 2.2, 0.55, 0.62, w=(1.0, 1.0, 0.12))       # only some runs, broken along their length
+    rmu = node(nt, 'ShaderNodeMath', (-350, -500), operation='MULTIPLY'); link(nt, rl_.outputs['Result'], rmu.inputs[0]); link(nt, rk, rmu.inputs[1])
+    h1 = node(nt, 'ShaderNodeMath', (-200, 100), operation='MAXIMUM'); link(nt, b1, h1.inputs[0]); link(nt, b2, h1.inputs[1])
+    h2 = node(nt, 'ShaderNodeMath', (-100, 0), operation='MAXIMUM'); link(nt, h1.outputs[0], h2.inputs[0]); link(nt, rmu.outputs[0], h2.inputs[1])
+    gb = node(nt, 'ShaderNodeBump', (0, -200)); gb.inputs['Strength'].default_value = 1.0; gb.inputs['Distance'].default_value = arg('bead-d', 0.0025)
+    link(nt, h2.outputs[0], gb.inputs['Height'])
+    gp = node(nt, 'ShaderNodeBsdfPrincipled', (200, 0)); gp.inputs['Base Color'].default_value = (1, 1, 1, 1)
+    gp.inputs['Transmission Weight'].default_value = 1.0; gp.inputs['Roughness'].default_value = 0.0; gp.inputs['IOR'].default_value = 1.5
+    link(nt, gb.outputs['Normal'], gp.inputs['Normal'])
+    o = node(nt, 'ShaderNodeOutputMaterial', (450, 0)); link(nt, gp.outputs['BSDF'], o.inputs['Surface'])
+    aov(nt, 'face', 1.0); aov(nt, 'plant', 0.0)
+    pane = plane('lightbox_glass', PX - PW / 2 - 0.01, PX + PW / 2 + 0.01, PZ0 - 0.01, PZ0 + PH + 0.01, -0.03, m_gl)
+    pane.visible_diffuse = False; pane.visible_shadow = False; pane.visible_volume_scatter = False
 
 # a handbill tucked under the frame's right rail: thin card, rain spotted, its free edge curling off the stone
 PAPER = arg('paper', '')
@@ -584,6 +647,9 @@ def moss_line(x0, x1, y0, y1, z, n, smin=2.0, smax=4.5):
         s_ = rng.uniform(smin, smax); scls.append((s_, s_, s_ * 0.6)); picks.append(int(rng.integers(0, len(MOSS))))
 moss_line(WALL_X0, CHAIN[0] + 0.25, BED_Y - 0.08, BED_Y - 0.03, 0.17, 1600)
 moss_line(WALL_X0, WALL_X1, -0.06, 0.0, WALL_H + 0.1, 1400)
+if VISTA:
+    for i_, p_ in enumerate(pts):
+        if p_[2] > WALL_H and p_[0] < VX: pts[i_] = (p_[0], p_[1], PAR_H + 0.09)
 moss_line(WALL_X0, CHAIN[0] + 0.1, RILL[0] - 0.06, RILL[0] - 0.04, 0.012, 900, 1.5, 3.0)
 moss_line(WALL_X0, CHAIN[0] + 0.1, RILL[1] + 0.04, RILL[1] + 0.06, 0.012, 900, 1.5, 3.0)
 moss_line(CHAIN[0] - 0.2, CHAIN[0] + 0.2, CHAIN[1] - 0.24, CHAIN[1] - 0.2, 0.12, 120)
@@ -633,6 +699,7 @@ def curtain(x0, x1, top, depth_fn, n, y=-0.03):
         z = top - abs(rng.normal(0, 1)) * hang * 0.55
         if PXL - 0.12 < x < PXR + 0.12 and z < PZ0 + PH + 0.1: continue
         if z < 0.2: continue
+        if VISTA and x < VX + 0.02: continue
         P.append((x, y - rng.uniform(0, 0.06), z))
         # leaf cards face the camera, hanging down
         R.append((math.pi / 2 + rng.normal(0, 0.35), rng.normal(0, 0.4), rng.uniform(-0.6, 0.6) + math.pi))
@@ -644,7 +711,7 @@ P2 = curtain(PXR + 0.2, WALL_X1, WALL_H + 0.08, lambda x: 0.6, 120)
 # along the coping top, spilling over
 P3 = ([], [], [], [])
 for i in range(700):
-    x = rng.uniform(WALL_X0, WALL_X1); P3[0].append((x, rng.uniform(-0.1, 0.45), WALL_H + 0.1 + rng.uniform(0, 0.05)))
+    x = rng.uniform(WALL_X0, WALL_X1); P3[0].append((x, rng.uniform(-0.1, 0.45), (WALL_H if not VISTA or x >= VX else PAR_H - 0.01) + 0.1 + rng.uniform(0, 0.05)))
     P3[1].append((rng.normal(0, 0.5), rng.normal(0, 0.5), rng.uniform(0, 6.28))); s = rng.uniform(0.9, 1.4); P3[2].append((s, s, s)); P3[3].append(int(rng.integers(0, 3)))
 # climbing the cafe corner and over the canopy
 P4 = curtain(CAFE_X0 + 0.02, CAFE_X0 + 0.5, 6.0, lambda x: 4.0, 420, y=-0.02)
@@ -663,7 +730,7 @@ pts = [(TREE[0] + rng.uniform(-0.6, 0.6), TREE[1] + rng.uniform(-0.6, 0.6), 0.02
 instance('tree_ferns', FERNS, pts, [(0, 0, rng.uniform(0, 6.28)) for _ in pts], [(0.9, 0.9, 1.0)] * len(pts), [int(rng.integers(0, 4)) for _ in pts])
 # behind the wall: the garden's trees, rising above the coping
 pts, rots, scls = [], [], []
-for x in (-6.8, -2.6, 0.9):
+for x in [float(v) for v in arg('gtrees', '-6.8,-2.6,0.9').split(',') if v]:
     pts.append((x, rng.uniform(2.5, 4.5), 0.0)); rots.append((0, 0, rng.uniform(0, 6.28))); s = rng.uniform(1.25, 1.55); scls.append((s, s, s))
 tcoll = bpy.data.collections.new('trees_c'); sc.collection.children.link(tcoll); tcoll.hide_render = True
 for p, r, s_ in zip(pts, rots, scls):
@@ -719,7 +786,7 @@ def facade_mat(name, seed, lit=0.4):
 FAC = [facade_mat('facade%d' % i, float(i) * 3.7, lit=0.38 + 0.08 * i + arg('lit-k', 0.0)) for i in range(3)]
 M_SLAB = simple('slab', (0.5, 0.5, 0.49), 0.6)
 terr_green = []
-for row, (y0, hmin, hmax, xs) in enumerate(((16.0, 8.0, 13.0, (-34, 30)), (30.0, 14.0, 22.0, (-50, 50)), (52.0, 22.0, 34.0, (-80, 80)))):
+for row, (y0, hmin, hmax, xs) in enumerate(() if not BEYOND else ((16.0, 8.0, 13.0, (-34, 30)), (30.0, 14.0, 22.0, (-50, 50)), (52.0, 22.0, 34.0, (-80, 80)))):
     x = xs[0]
     while x < xs[1]:
         w_ = rng.uniform(8, 15); h_ = rng.uniform(hmin, hmax)
@@ -740,11 +807,11 @@ for (x0, x1, y, z) in terr_green:
     for i in range(n):
         pts.append((rng.uniform(x0, x1), y + rng.uniform(-0.2, 0.3), z)); rots.append((0, 0, rng.uniform(0, 6.28)))
         s = rng.uniform(1.8, 3.2); scls.append((s, s, s)); picks.append(int(rng.integers(0, 4)))
-instance('terrace_green', FERNS, pts, rots, scls, picks)
+if pts: instance('terrace_green', FERNS, pts, rots, scls, picks)
 # street lamps along the lane beyond the wall: warm, low, soft in the mist
 M_LAMP, nt = mat('lamp'); e_ = node(nt, 'ShaderNodeEmission'); e_.inputs['Color'].default_value = (*srgb((1.0, 0.78, 0.55)), 1); e_.inputs['Strength'].default_value = 40
 o = node(nt, 'ShaderNodeOutputMaterial', (300, 0)); link(nt, e_.outputs['Emission'], o.inputs['Surface']); aov(nt, 'plant', 0.0)
-for lx in (-22, -11, 0.5, 12, 24):
+for lx in (() if not BEYOND else (-22, -11, 0.5, 12, 24)):
     bpy.ops.mesh.primitive_uv_sphere_add(radius=0.12, location=(lx, 11.0, 4.2), segments=12, ring_count=8)
     lo = bpy.context.object; lo.data.materials.append(M_LAMP); lo.lightgroup = 'warm'
     box('post', lx - 0.03, lx + 0.03, 10.97, 11.03, 0.0, 4.1, M_FRAME)
@@ -752,6 +819,124 @@ for lx in (-22, -11, 0.5, 12, 24):
         # each lamp lights the mist around it, a soft warm halo in the lane
         lpl = bpy.data.lights.new('lane', 'POINT'); lpl.energy = arg('lamp-w', 0.0); lpl.color = srgb((1.0, 0.74, 0.5)); lpl.shadow_soft_size = 0.3
         lpo = bpy.data.objects.new('lane', lpl); sc.collection.objects.link(lpo); lpo.location = (lx, 10.8, 4.0); lpo.lightgroup = 'warm'
+
+# ---------------------------------------------------------------- the city beyond (--vista 1)
+# The street is a terrace high on the city's edge. Past the parapet the ground falls away and the city stands in the
+# rain: tall towers stepping back into the mist, their bases lost below, a few windows lit high up, and one long
+# bridge crossing far off with a line of lamps. The facades are a scanned ambientCG set (Facade019A), its glass
+# found from the scan's own metalness map, so the windows sit exactly in the scan's openings.
+if VISTA:
+    crng = np.random.default_rng(arg('city-seed', 23))
+    CITY_Z = arg('city-z', -45.0)
+    # two scans: Facade006 (pale stone piers and spandrels, tall windows, 14 bays and 8 floors to a tile) and
+    # Facade019A (a darker banded grid, 6 by 6). Each is scaled to real bays of about 1.8 to 2 m and 3.6 m floors,
+    # so the towers read at their true size: vast, and far off.
+    SCANS = {'006': ('Facade006', (14, 14, 8), (0.0, 0.0, 0.0), (14 * arg('bay', 1.8), 14 * arg('bay', 1.8), 8 * 3.6)),
+             '019': ('Facade019A', (6, 6, 6), (0.5, 0.5, 0.45), (6 * arg('bay', 1.8) * 1.1, 6 * arg('bay', 1.8) * 1.1, 6 * 3.6))}
+    def tower_mat(name, lit, warm_share, seed, scan='019'):
+        fid, cells, coff, tile = SCANS[scan]
+        FB = os.path.join(ACG, fid, fid + '_2K-JPG')
+        m, nt = mat(name)
+        gm_ = node(nt, 'ShaderNodeNewGeometry', (-1600, 0))
+        sv = node(nt, 'ShaderNodeVectorMath', (-1450, 0), operation='DIVIDE'); sv.inputs[1].default_value = tile
+        link(nt, gm_.outputs['Position'], sv.inputs[0])
+        def t(sfx, nc, loc):
+            n = node(nt, 'ShaderNodeTexImage', loc); n.image = img(FB + sfx, nc); n.projection = 'BOX'; n.projection_blend = 0.0
+            link(nt, sv.outputs['Vector'], n.inputs['Vector']); return n
+        tcol = t('_Color.jpg', False, (-1200, 300)); tmet = t('_Metalness.jpg', True, (-1200, 0)); trou = t('_Roughness.jpg', True, (-1200, -300))
+        tnor = t('_NormalGL.jpg', True, (-1200, -600))
+        # each window bay is a cell: six to a tile each way, offset half a bay so a cell holds one whole window
+        cs = node(nt, 'ShaderNodeVectorMath', (-1250, 600), operation='MULTIPLY_ADD'); cs.inputs[1].default_value = cells; cs.inputs[2].default_value = coff
+        link(nt, sv.outputs['Vector'], cs.inputs[0])
+        cf = node(nt, 'ShaderNodeVectorMath', (-1100, 600), operation='FLOOR'); link(nt, cs.outputs['Vector'], cf.inputs[0])
+        oi = node(nt, 'ShaderNodeObjectInfo', (-1100, 800))
+        ca = node(nt, 'ShaderNodeVectorMath', (-950, 700), operation='ADD'); link(nt, cf.outputs['Vector'], ca.inputs[0]); link(nt, oi.outputs['Random'], ca.inputs[1])
+        wnz = node(nt, 'ShaderNodeTexWhiteNoise', (-800, 700)); wnz.noise_dimensions = '4D'; wnz.inputs['W'].default_value = seed
+        link(nt, ca.outputs['Vector'], wnz.inputs['Vector'])
+        # more windows lit high up, where the offices and the flats look out over the city
+        sz = node(nt, 'ShaderNodeSeparateXYZ', (-1100, 1000)); link(nt, gm_.outputs['Position'], sz.inputs['Vector'])
+        hz_ = node(nt, 'ShaderNodeMapRange', (-950, 1000)); hz_.inputs['From Min'].default_value = CITY_Z + arg('lit-lo', 30.0); hz_.inputs['From Max'].default_value = CITY_Z + arg('lit-hi', 150.0)
+        hz_.inputs['To Min'].default_value = lit * arg('lit-low-k', 0.35); hz_.inputs['To Max'].default_value = lit; link(nt, sz.outputs['Z'], hz_.inputs['Value'])
+        on = node(nt, 'ShaderNodeMath', (-650, 700), operation='LESS_THAN'); link(nt, wnz.outputs['Value'], on.inputs[0]); link(nt, hz_.outputs['Result'], on.inputs[1])
+        gl_m = node(nt, 'ShaderNodeMapRange', (-950, 100)); gl_m.inputs['From Min'].default_value = 0.4; gl_m.inputs['From Max'].default_value = 0.6
+        link(nt, tmet.outputs['Color'], gl_m.inputs['Value'])
+        lw_ = node(nt, 'ShaderNodeMath', (-500, 600), operation='MULTIPLY'); link(nt, on.outputs[0], lw_.inputs[0]); link(nt, gl_m.outputs['Result'], lw_.inputs[1])
+        sep_ = node(nt, 'ShaderNodeSeparateColor', (-650, 900)); link(nt, wnz.outputs['Color'], sep_.inputs['Color'])
+        brt = node(nt, 'ShaderNodeMapRange', (-500, 900)); brt.inputs['To Min'].default_value = 0.35; brt.inputs['To Max'].default_value = 1.2
+        link(nt, sep_.outputs['Red'], brt.inputs['Value'])
+        lws = node(nt, 'ShaderNodeMath', (-350, 700), operation='MULTIPLY'); link(nt, lw_.outputs[0], lws.inputs[0]); link(nt, brt.outputs['Result'], lws.inputs[1])
+        est = node(nt, 'ShaderNodeMath', (-200, 700), operation='MULTIPLY'); est.inputs[1].default_value = arg('city-win', 6.0); link(nt, lws.outputs[0], est.inputs[0])
+        wsel = node(nt, 'ShaderNodeMath', (-500, 1050), operation='LESS_THAN'); wsel.inputs[1].default_value = warm_share; link(nt, sep_.outputs['Green'], wsel.inputs[0])
+        wc_ = node(nt, 'ShaderNodeMix', (-350, 1050)); wc_.data_type = 'RGBA'; link(nt, wsel.outputs[0], wc_.inputs['Factor'])
+        wc_.inputs['A'].default_value = (*srgb((0.86, 0.92, 1.0)), 1); wc_.inputs['B'].default_value = (*srgb((1.0, 0.8, 0.6)), 1)
+        em_ = node(nt, 'ShaderNodeEmission', (0, 700)); link(nt, wc_.outputs['Result'], em_.inputs['Color']); link(nt, est.outputs[0], em_.inputs['Strength'])
+        # the stone and glass in the blue light: the scan, a little darker and cooler, wet
+        hs_ = node(nt, 'ShaderNodeHueSaturation', (-900, 300)); hs_.inputs['Saturation'].default_value = 0.5; hs_.inputs['Value'].default_value = arg('city-val', 0.8)
+        link(nt, tcol.outputs['Color'], hs_.inputs['Color'])
+        tv = node(nt, 'ShaderNodeMapRange', (-900, 450)); tv.inputs['To Min'].default_value = 0.55; tv.inputs['To Max'].default_value = 1.15
+        link(nt, oi.outputs['Random'], tv.inputs['Value'])
+        tm_ = node(nt, 'ShaderNodeMix', (-750, 300)); tm_.data_type = 'RGBA'; tm_.blend_type = 'MULTIPLY'; tm_.inputs['Factor'].default_value = 1.0
+        link(nt, hs_.outputs['Color'], tm_.inputs['A']); link(nt, tv.outputs['Result'], tm_.inputs['B'])
+        rr_ = node(nt, 'ShaderNodeMath', (-900, -300), operation='MULTIPLY'); rr_.inputs[1].default_value = 0.6; link(nt, trou.outputs['Color'], rr_.inputs[0])
+        nm_ = node(nt, 'ShaderNodeNormalMap', (-900, -600)); link(nt, tnor.outputs['Color'], nm_.inputs['Color'])
+        b_ = node(nt, 'ShaderNodeBsdfPrincipled', (0, 0)); link(nt, tm_.outputs['Result'], b_.inputs['Base Color']); link(nt, rr_.outputs[0], b_.inputs['Roughness'])
+        link(nt, tmet.outputs['Color'], b_.inputs['Metallic']); link(nt, nm_.outputs['Normal'], b_.inputs['Normal'])
+        ad_ = node(nt, 'ShaderNodeAddShader', (250, 300)); link(nt, em_.outputs['Emission'], ad_.inputs[0]); link(nt, b_.outputs['BSDF'], ad_.inputs[1])
+        o_ = node(nt, 'ShaderNodeOutputMaterial', (450, 300)); link(nt, ad_.outputs['Shader'], o_.inputs['Surface'])
+        aov(nt, 'plant', 0.0)
+        return m
+    M_TOW = [tower_mat('tower%d' % i, arg('city-lit', 0.16) * (0.8 + 0.2 * i), 0.7, 3.1 + i, sc_) for i, sc_ in enumerate(arg('scans', '019,019,019').split(','))]
+    def mbox(name, x0, x1, y0, y1, z0, z1, m):
+        # a box with its own vertices in metres, so the scan maps by world position
+        bm = bmesh.new()
+        vs = [bm.verts.new((x, y, z)) for z in (z0, z1) for y in (y0, y1) for x in (x0, x1)]
+        for f in ((0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1), (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3)): bm.faces.new([vs[i] for i in f])
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+        me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free(); me.materials.append(m)
+        ob = bpy.data.objects.new(name, me); sc.collection.objects.link(ob); ob.lightgroup = 'warm'; return ob
+    n_t = 0
+    for i in range(int(arg('towers', 70))):
+        y = float(np.exp(crng.uniform(np.log(arg('city-near', 260.0)), np.log(arg('city-far', 1600.0)))))
+        d = y - CAM[1] if 'CAM' in globals() else y + 7.4
+        x = crng.uniform(-0.78 * d - 20, 0.22 * d + 10)
+        w = crng.uniform(20, 55); dp = crng.uniform(20, 50)
+        top = CITY_Z + crng.uniform(arg('tow-min', 80.0), arg('tow-max', 260.0)) * (1.0 + 0.3 * min(1.0, y / 1000))
+        # gravity in the massing: one to three tiers, each set back from the one below
+        tiers = int(crng.integers(1, 4)); z0 = CITY_Z - 40; m_ = M_TOW[int(crng.integers(0, len(M_TOW)))]
+        for k in range(tiers):
+            z1 = top if k == tiers - 1 else z0 + (top - z0) * crng.uniform(0.45, 0.7)
+            inset = k * crng.uniform(2.5, 5.0)
+            mbox('tower', x + inset, x + w - inset, y + inset, y + dp - inset, z0, z1, m_)
+            z0 = z1
+        n_t += 1
+    # one long bridge far off, crossing the view: a slim deck, its lamps in a line
+    BY, BZ = arg('bridge-y', 160.0), CITY_Z + arg('bridge-h', 62.0)
+    if BY > 0:
+        M_DECK = simple('deck', (0.08, 0.085, 0.095), 0.5)
+        dk_ = box('deck', -260, 80, BY, BY + 9, BZ - 2.6, BZ, M_DECK); dk_.modifiers.clear()
+        box('deck_rail', -260, 80, BY - 0.1, BY + 0.1, BZ, BZ + 1.1, M_DECK).modifiers.clear()
+        for px_ in np.arange(-250, 80, 70.0):
+            box('deck_pier', px_ - 3.0, px_ + 3.0, BY + 2, BY + 7, CITY_Z - 40, BZ - 2.6, M_DECK).modifiers.clear()
+        M_BL, nt = mat('bridge_lamp'); e_ = node(nt, 'ShaderNodeEmission'); e_.inputs['Color'].default_value = (*srgb((1.0, 0.86, 0.7)), 1)
+        e_.inputs['Strength'].default_value = arg('bridge-lamp', 60.0)
+        o = node(nt, 'ShaderNodeOutputMaterial', (300, 0)); link(nt, e_.outputs['Emission'], o.inputs['Surface']); aov(nt, 'plant', 0.0)
+        for lx in np.arange(-258, 80, arg('bridge-gap', 12.0)):
+            lb = box('bridge_lamp', lx - 0.35, lx + 0.35, BY - 0.4, BY + 0.2, BZ + 1.1, BZ + 1.8, M_BL); lb.modifiers.clear(); lb.lightgroup = 'warm'
+    # the air over the city: a deep, even rain haze lit by the sky, so the towers step back into it
+    if arg('air', 0.0018) > 0:
+        M_AIR, nt = mat('city_air')
+        va = node(nt, 'ShaderNodeVolumeScatter', (0, 0)); va.inputs['Anisotropy'].default_value = arg('air-g', 0.35)
+        va.inputs['Color'].default_value = (*[float(v) for v in arg('air-col', '0.80,0.88,1.0').split(',')], 1)
+        lpa = node(nt, 'ShaderNodeLightPath', (-400, 0)); dna = node(nt, 'ShaderNodeMath', (-200, 0), operation='MULTIPLY'); dna.inputs[1].default_value = arg('air', 0.0018)
+        link(nt, lpa.outputs['Is Camera Ray'], dna.inputs[0]); link(nt, dna.outputs[0], va.inputs['Density'])
+        # absorption as well, so the air is dark as well as thick (the scatter colour alone only thins it)
+        vb = node(nt, 'ShaderNodeVolumeAbsorption', (0, -200)); vb.inputs['Color'].default_value = (0.0, 0.0, 0.0, 1)
+        dnb = node(nt, 'ShaderNodeMath', (-200, -200), operation='MULTIPLY'); dnb.inputs[1].default_value = arg('air-abs', 0.0)
+        link(nt, lpa.outputs['Is Camera Ray'], dnb.inputs[0]); link(nt, dnb.outputs[0], vb.inputs['Density'])
+        vad = node(nt, 'ShaderNodeAddShader', (150, 0)); link(nt, va.outputs['Volume'], vad.inputs[0]); link(nt, vb.outputs['Volume'], vad.inputs[1])
+        o = node(nt, 'ShaderNodeOutputMaterial', (300, 0)); link(nt, vad.outputs['Shader'], o.inputs['Volume'])
+        ab = box('city_air', -9000, 9000, arg('air-y0', 12.0), 9000, CITY_Z - 60, 3000, M_AIR); ab.modifiers.clear(); ab.visible_shadow = False
+    print('CITY towers', n_t)
 
 # ---------------------------------------------------------------- lights
 M_BOL, nt = mat('bollard_glow'); e_ = node(nt, 'ShaderNodeEmission'); e_.inputs['Color'].default_value = (*srgb((1.0, 0.8, 0.56)), 1); e_.inputs['Strength'].default_value = arg('bollard', 25.0)
@@ -774,15 +959,19 @@ lp = node(nt, 'ShaderNodeLightPath', (-400, 0)); dn = node(nt, 'ShaderNodeMath',
 link(nt, lp.outputs['Is Camera Ray'], dn.inputs[0]); link(nt, dn.outputs[0], vs.inputs['Density'])
 o = node(nt, 'ShaderNodeOutputMaterial', (300, 0)); link(nt, vs.outputs['Volume'], o.inputs['Volume'])
 if arg('haze', 0.006) > 0:
-    hz = box('haze', -12, 12, -7.2, 9.0, -0.3, 9.0, M_HAZE); hz.visible_shadow = False
-cy.volume_step_rate = arg('vstep', 4.0); cy.volume_max_steps = 256
+    if arg('room-haze', 1) == 1:
+        hz = box('haze', -12, 12, -7.2, 9.0, -0.3, 9.0, M_HAZE); hz.visible_shadow = False
+    else:
+        for hb_ in ((-12, CAFE_X0, -7.2, arg('haze-y1', 9.0)), (CAFE_X0, 12, -7.2, -0.02)):
+            hz = box('haze', hb_[0], hb_[1], hb_[2], hb_[3], -0.3, 9.0, M_HAZE); hz.visible_shadow = False; hz.modifiers.clear()
+cy.volume_step_rate = arg('vstep', 4.0); cy.volume_max_steps = 1024 if VISTA else 256
 # ---------------------------------------------------------------- camera: eye height, square on, verticals straight
 cam_d = bpy.data.cameras.new('cam'); cam = bpy.data.objects.new('cam', cam_d); sc.collection.objects.link(cam); sc.camera = cam
 cam_d.sensor_fit = 'HORIZONTAL'; cam_d.sensor_width = 36; cam_d.lens = arg('lens', 27.0)
 CAM = (arg('cam-x', 0.1), -arg('dist', 7.4), arg('cam-h', 1.55))
 cam.location = CAM; cam.rotation_euler = (math.pi / 2, 0, 0)
 cam_d.shift_y = arg('shift', 0.06); cam_d.shift_x = arg('shift-x', 0.0)
-cam_d.clip_start = 0.05; cam_d.clip_end = 400
+cam_d.clip_start = 0.05; cam_d.clip_end = 12000 if VISTA else 400
 cam_d.dof.use_dof = True; cam_d.dof.focus_distance = -CAM[1] - 0.02; cam_d.dof.aperture_fstop = arg('fstop', 4.0)
 
 # ---------------------------------------------------------------- compositor: mist, bloom; light groups and data to EXR

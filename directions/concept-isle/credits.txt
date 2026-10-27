@@ -1,0 +1,17 @@
+Crystal Isle: third-party assets (all CC0, no attribution required; listed anyway)
+
+Poly Haven (polyhaven.com, CC0)
+  kloppenheim_06_puresky (HDRI, 2k): the dawn sky, desaturated and pushed back under a graded gradient
+  island_tree_01, island_tree_02 (models, 1k): the island's trees and the ridge of trees beyond it
+  coastal_cliff_01 (model, 1k): the low islet under the ridge of trees
+  rock_moss_set_01 (models, 1k): the rocks in the shallows
+  grass_medium_02 (model, 2k): the fine grass on the rocks
+
+ambientCG (ambientcg.com, CC0)
+  Rock030 (2K): the monument's dark stone, the plinth and the terrace walls
+  Rock041 (2K): the houses' stone
+  Grass004 (2K): the terrace gardens
+
+Everything else is made here: the island terrain, the monument (the Break mark's exact geometry
+from break-geometry.json), the houses, the water, the mist, the grade, the loop and the sound.
+Fonts: Timeless Serif, licensed by Eóin Forker.
