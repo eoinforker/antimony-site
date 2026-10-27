@@ -44,8 +44,10 @@ listings need their licence read off their Fab page (some are CC BY and need a c
 | Folder | What | Format | Licence |
 | --- | --- | --- | --- |
 | `fir-tree-inside-circle-of-flowers` | Fir tree with a ring of flowers | FBX (from RAR) | check |
-
-More conifers are needed for the ridges (2-3 firs or spruces).
+| `christmass_trees_pack` | 9 plain firs, large/medium/small (no decorations); converted from `.blend` to FBX, LOD0 only, by `world/scripts/blend_to_fbx.py` | FBX + 4K maps | check |
+| `trees_60_fbx` | Trees60, 10 trees | FBX | check |
+| `mobile_trees_model` | Mobile tree pack (low poly, for the far ridges) | FBX + TGA | check |
+| `fbx_f11d5d` | Unnamed tree model (Corona export kept, V-Ray copy dropped); to identify | FBX | check |
 
 ## Cliffs and big rock
 
