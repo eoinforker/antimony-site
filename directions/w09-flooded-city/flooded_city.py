@@ -517,13 +517,13 @@ def hdri_rot_for(path, target_dir, band=(0.47, 0.53)):
 # Tall ruined towers standing in calm, shallow, glassy water at sunrise; mirror reflections; trees and ivy on their
 # ledges and crowns; birds; the stone on a small mossy islet in the foreground. The towers are big plain masses in
 # haze against the low sun: the light, the water and the green carry the frame.
-setup(expo=arg('expo', 0.0), look='AgX - Base Contrast', bounces=(6, 2, 2), clamp=8.0)
+setup(expo=arg('expo', -0.9), look='AgX - Base Contrast', bounces=(6, 2, 2), clamp=8.0)
 R = random.Random(31)
 SKYF = os.path.join(PH, 'qwantani_sunrise_puresky', 'qwantani_sunrise_puresky_2k.hdr')
 SUN_AZ, SUN_EL = math.radians(arg('sun-az', 16.0)), math.radians(arg('sun-el', 7.0))   # right of the view (+Y)
 SUNV = Vector((math.sin(SUN_AZ) * math.cos(SUN_EL), math.cos(SUN_AZ) * math.cos(SUN_EL), math.sin(SUN_EL)))
-world_hdri(SKYF, strength=arg('sky', 0.8), rot_z=hdri_rot_for(SKYF, SUNV, band=(0.5, 0.6)))
-sun(SUNV, arg('sun', 4.5), (1.0, 0.66, 0.44), angle=1.2)
+world_hdri(SKYF, strength=arg('sky', 0.6), tint=(1.0, 0.8, 0.66), rot_z=hdri_rot_for(SKYF, SUNV, band=(0.5, 0.6)))
+sun(SUNV, arg('sun', 6.0), (1.0, 0.6, 0.38), angle=1.2)
 
 # ---- water: still, glassy, shallow; the faintest breath on it
 m_w, nt = mat('water')
@@ -563,7 +563,7 @@ def ruin_mat(name, val):
     link(nt, g.outputs['Result'], d.inputs['A']); d.inputs['B'].default_value = (0.006, 0.006, 0.007, 1)
     link(nt, d.outputs['Result'], b.inputs['Base Color'])
     return m
-M_R = ruin_mat('ruin', arg('ruin-val', 0.55)); M_RF = ruin_mat('ruin_far', 0.5)
+M_R = ruin_mat('ruin', arg('ruin-val', 0.32)); M_RF = ruin_mat('ruin_far', 0.3)
 tree1 = ph('island_tree_01', ['island_tree_01_LOD1']); tree2 = ph('island_tree_02', ['island_tree_02_LOD1'])
 shr = ph('shrub_01', ['shrub_01_a_LOD2', 'shrub_01_b_LOD2', 'shrub_01_c_LOD2', 'shrub_01_d_LOD2', 'shrub_01_e_LOD2'])
 TREES = list(tree1.values()) + list(tree2.values()); SHR = list(shr.values())
@@ -618,7 +618,7 @@ for d_ in (rocks, moss, grass):
     for o in d_.values(): tint_mats(o, val=0.9, sat=0.95)
 print('islet', len(rocks), len(moss), len(grass))
 IX, IY = arg('ix', -1.6), 9.0
-M_MOSSG = acg('islet_ground', 'Moss002', scale=1.2, val=0.55, sat=0.85, rough=(0.6, 0.95))
+M_MOSSG = acg('islet_ground', 'Moss002', scale=1.2, val=0.4, sat=0.75, rough=(0.6, 0.95))
 bm = bmesh.new(); r_ = bmesh.ops.create_uvsphere(bm, u_segments=40, v_segments=20, radius=1.0)
 for v in bm.verts:
     v.co.x *= 3.6; v.co.y *= 2.6; v.co.z = v.co.z * 0.55 - 0.2
@@ -628,15 +628,15 @@ isl = add_mesh('islet', bm, M_MOSSG, smooth=True)
 RK = list(rocks.values())
 for k in range(14):
     a = R.uniform(0, 6.28); rr = R.uniform(0.75, 1.05)
-    inst(R.choice(RK), (IX + 3.4 * rr * math.cos(a), IY + 2.4 * rr * math.sin(a), R.uniform(-0.3, -0.12)), R.uniform(0, 6.28), R.uniform(0.3, 0.6))
-for src, n, s0, s1 in ((list(grass.values()), 140, 0.6, 1.0), (list(moss.values()), 80, 1.0, 1.6)):
+    inst(R.choice(RK), (IX + 3.4 * rr * math.cos(a), IY + 2.4 * rr * math.sin(a), R.uniform(-0.35, -0.15)), R.uniform(0, 6.28), R.uniform(0.7, 1.2))
+for src, n, s0, s1 in ((list(grass.values()), 220, 1.8, 3.0), (list(moss.values()), 140, 2.5, 4.0)):
     for _ in range(n):
         a = R.uniform(0, 6.28); rr = math.sqrt(R.random()) * 0.92
         x, y = IX + 3.5 * rr * math.cos(a), IY + 2.5 * rr * math.sin(a)
         z = 0.55 * math.sqrt(max(0, 1 - rr * rr)) - 0.2
         if math.hypot(x - IX - 0.3, (y - IY) * 1.4) < 0.55: continue
         inst(R.choice(src), (x, y, z - 0.02), R.uniform(0, 6.28), R.uniform(s0, s1))
-build_stone((IX + 0.3, IY, 0.33), yaw=math.radians(-14), S=0.0165, T=0.42, sink=0.07, wet=0.25, val=0.32, glow=0.9, moss=0.16)
+build_stone((IX + 0.3, IY, 0.33), yaw=math.radians(-6), S=0.0145, T=0.3, sink=0.07, wet=0.25, val=0.32, glow=0.9, moss=0.16)
 
 # ---- birds far off, small and dark, in a loose line over the water
 M_BIRD = acg('bird', 'Concrete031', scale=1, val=0.03, sat=0.0)
@@ -648,8 +648,8 @@ for k in range(9):
 add_mesh('birds', bm, M_BIRD)
 
 # ---- air: a warm morning haze with shape (shafts between the towers), a mist lying on the water
-volume_box('haze', (0, 1500, 150), (6000, 3200, 300), arg('haze', 0.00045), (1.0, 0.9, 0.82), 0.7, noise=(0, 260))
-volume_box('watermist', (0, 900, 4), (5000, 1900, 8), arg('mist', 0.0015), (1.0, 0.92, 0.88), 0.6, noise=(0, 8))
+volume_box('haze', (0, 1500, 150), (6000, 3200, 300), arg('haze', 0.00045), (1.0, 0.8, 0.66), 0.75, noise=(0, 260))
+volume_box('watermist', (0, 900, 4), (5000, 1900, 8), arg('mist', 0.0015), (1.0, 0.84, 0.74), 0.6, noise=(0, 8))
 
 cam = camera((1.2, -1.0, 1.05), (0.0, 600.0, 1.05 + 600 * 0.07), lens=arg('lens', 28.0), fstop=5.6,
              focus=(Vector((IX + 0.3, IY, 1.0)) - Vector((1.2, -1.0, 1.05))).length, shift=(0, -0.02))

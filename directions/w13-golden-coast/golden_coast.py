@@ -474,7 +474,7 @@ o = node(nt, 'ShaderNodeOutputMaterial'); link(nt, bs.outputs[0], o.inputs['Surf
 # scanned sea cliffs set into the faces, so the rock is real where it shows
 CL = load_objs(f'{PH}/coastal_cliff_01/coastal_cliff_01_1k.blend', ['coastal_cliff_01_LOD3']) + \
      load_objs(f'{PH}/coastal_cliff_02/coastal_cliff_02_1k.blend', ['coastal_cliff_02_LOD3'])
-for (y, k, s, rz) in ((150, 0, 1.0, -0.5), (235, 1, 2.0, 0.7), (300, 0, 1.2, -0.2), (330, 1, 2.0, 0.4)):
+for (y, k, s, rz) in ():   # (scans along the far edge read as a comb in draft 1; the headland is left bare)
     depth = CL[k].dimensions.y * s
     x = edge(y) - depth / 2 - 3
     ob = place(CL[k], (x, y, -1), (0, 0, math.radians(90) + rz), (s, s, (TOP - 6) / CL[k].dimensions.z))
@@ -506,7 +506,7 @@ link(nt, tex(nt, C + 'Roughness.jpg', True, mpc.outputs[0]).outputs[0], bsc.inpu
 o = node(nt, 'ShaderNodeOutputMaterial'); link(nt, bsc.outputs[0], o.inputs['Surface'])
 for o_ in FORT.values(): set_mat([o_], cm)
 HX, HY = 22.0, 278.0; HZ = gh(HX, HY)
-FS = 1.5         # the kit's thick walls stacked into a blunt, stepped concrete works (no towers: no castle)
+FS = 1.2         # the kit's thick walls stacked into a blunt, stepped concrete works (no towers: no castle)
 for (dx, dy, dz, k, rz, sx, sz) in ((0, 0, 0, 'wall_thick_straight_01', 0.0, 2.2, 2.6), (-16, 4, 0, 'wall_thick_straight_01', math.radians(90), 1.6, 1.8),
                                     (14, -6, 0, 'wall_thick_straight_01', math.radians(90), 2.0, 2.2), (2, 6, 18, 'wall_thick_straight_01', 0.0, 1.5, 1.4),
                                     (-6, 2, 18, 'wall_thick_corner_01', 0.0, 1.4, 1.6), (30, -2, 0, 'wall_thick_corner_01', 0.3, 1.8, 1.5)):
@@ -557,7 +557,7 @@ px = np.empty(iw * ih * 4, np.float32); im.pixels.foreach_get(px); px = px.resha
 lumi = px[:, :, :3].sum(2); vi, ui = np.unravel_index(np.argmax(lumi), lumi.shape)
 u_, v_ = (ui + 0.5) / iw, (vi + 0.5) / ih
 phi = (u_ - 0.5) * 2 * math.pi; az_h = math.atan2(math.sin(phi), -math.cos(phi)); el_h = (v_ - 0.5) * math.pi
-AZ = math.radians(arg('sunaz', 122.0)); EL = math.radians(arg('sunel', 8.0))
+AZ = math.radians(arg('sunaz', 122.0)); EL = math.radians(arg('sunel', 3.0))
 to_sun = Vector((math.cos(AZ) * math.cos(EL), math.sin(AZ) * math.cos(EL), math.sin(EL)))
 print('hdri sun', math.degrees(az_h), math.degrees(el_h))
 wld = bpy.data.worlds.new('sky'); sc.world = wld; wld.use_nodes = True; wn = wld.node_tree; wn.nodes.clear()
@@ -582,5 +582,5 @@ co.rotation_euler = (tgt - co.location).to_track_quat('-Z', 'Y').to_euler()
 cam.dof.focus_distance = (Vector((STONE_AT.x, STONE_AT.y, CAM_Z)) - co.location).length
 
 cycles(exposure=arg('exposure', 0.2), look='None')
-mist_comp((1.0, 0.74, 0.50), arg('mist', 0.55), 40, 900, sky_amount=0.0)
+mist_comp((1.0, 0.72, 0.46), arg('mist', 0.88), 30, 520, sky_amount=0.0)
 render_and_grade(bloom=0.30, bloom_thr=0.6, halation=0.14, grain=0.016, vignette=0.28, lift=0.02, tint=(1.06, 1.0, 0.90))
