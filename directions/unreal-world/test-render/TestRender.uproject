@@ -1,0 +1,12 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "",
+	"Category": "",
+	"Description": "Antimony world: headless GPU test render",
+	"Plugins": [
+		{ "Name": "PythonScriptPlugin", "Enabled": true },
+		{ "Name": "EditorScriptingUtilities", "Enabled": true },
+		{ "Name": "MovieRenderPipeline", "Enabled": true },
+		{ "Name": "SequencerScripting", "Enabled": true }
+	]
+}
