@@ -43,7 +43,9 @@ seq = assets.create_asset("TestSeq", "/Game", unreal.LevelSequence, unreal.Level
 seq.set_display_rate(unreal.FrameRate(24, 1))
 seq.set_playback_start(0)
 seq.set_playback_end(1)
-binding = seq.add_possessable(cam)
+# A spawnable camera lives inside the sequence, so nothing has to resolve back to the level at render time.
+binding = seq.add_spawnable_from_instance(cam)
+eas.destroy_actor(cam)
 cut = seq.add_track(unreal.MovieSceneCameraCutTrack).add_section()
 cut.set_range(0, 1)
 cut.set_camera_binding_id(seq.get_binding_id(binding))

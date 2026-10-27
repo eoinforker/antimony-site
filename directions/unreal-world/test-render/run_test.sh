@@ -9,6 +9,7 @@ PROJ="$DIR/TestRender.uproject"
 BIN="$UE/Engine/Binaries/Linux"
 COMMON=(-RenderOffscreen -unattended -nosplash -nop4 -nosound -stdout -FullStdOutLogOutput)
 
+rm -rf "$DIR/Content" "$DIR/Saved/MovieRenders"  # the build makes every asset fresh
 "$BIN/UnrealEditor-Cmd" "$PROJ" -ExecutePythonScript="$DIR/build_test.py" "${COMMON[@]}" 2>&1 | tee "$DIR/build.log"
 grep -q ANTIMONY_TEST_BUILD_OK "$DIR/build.log"
 
