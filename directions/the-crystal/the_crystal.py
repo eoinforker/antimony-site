@@ -60,12 +60,12 @@ def scan(N, L, name, metres, vec, colour_only=False):
 # ---------------------------------------------------------------- terrain
 # A grassy ridge under the camera, the long valley of forest and ruins, and the far upland with
 # the stone on its promontory, then hills fading into the haze.
-CAM_Y = -1458.0
+CAM_Y = -1475.0
 STONE_POS = Vector((260.0, 120.0, 0.0))
 def terrain_h(x, y):
     n = fractal(Vector((x / 900, y / 900, 0.4)), 0.6, 2.0, 5) * 55
-    if y < -1450:                                   # the near ridge
-        t = min(1.0, (-1450 - y) / 50); base = 150 * (t * t * (3 - 2 * t))
+    if y < -1442:                                   # the near ridge
+        t = min(1.0, (-1442 - y) / 12); base = 150 * (t * t * (3 - 2 * t))   # a level ridge top with a short steep lip
     elif y < 0:                                     # the valley
         t = (y + 1450) / 1450; base = 18 * math.sin(t * math.pi) * 0.3
     else:                                           # the upland, rising to far hills
@@ -73,6 +73,9 @@ def terrain_h(x, y):
     # the promontory under the stone
     d = math.hypot(x - STONE_POS.x, (y - STONE_POS.y) * 1.3)
     base += 140 * math.exp(-(d / 300) ** 2)
+    # the crest rises behind the stone, so its foot stands on the near shoulder in plain view
+    d2 = math.hypot(x - STONE_POS.x, (y - STONE_POS.y - 170) * 1.2)
+    base += 60 * math.exp(-(d2 / 260) ** 2)
     return base + n * (0.5 if y < -1450 else 1.0)
 
 NG, X0, X1, Y0, Y1 = 300, -3400.0, 3400.0, -1900.0, 3800.0
@@ -127,19 +130,20 @@ for f in FIRS:
     for i, sl in enumerate(f.data.materials):
         if sl and 'twig' not in sl.name: f.data.materials[i] = bark
 placed = 0; tries = 0
-while placed < 9000 and tries < 90000:
+while placed < 17000 and tries < 160000:
     tries += 1
-    x = rng.uniform(-1500, 1900); y = rng.uniform(-1250, 1400)
+    x = rng.uniform(-1300, 1800); y = rng.uniform(-1250, 1300)
     if y < -1250: continue
     dd = math.hypot(x - STONE_POS.x, (y - STONE_POS.y) * 1.3)
     if dd < 230: continue                                                         # the stone's open crown
+    if abs(x - STONE_POS.x) < 260 and STONE_POS.y - 420 < y < STONE_POS.y: continue  # the open slope below it
     if (x + 380) ** 2 / 260 ** 2 + (y + 700) ** 2 / 160 ** 2 < 1: continue        # clearings for the ruins
     if (x - 620) ** 2 / 200 ** 2 + (y + 420) ** 2 / 140 ** 2 < 1: continue
     if (x - 90) ** 2 / 120 ** 2 + (y - 40) ** 2 / 90 ** 2 < 1: continue
-    if fractal(Vector((x / 500, y / 500, 2.3)), 0.6, 2.0, 3) < -0.25: continue      # a few glades
+    if fractal(Vector((x / 500, y / 500, 2.3)), 0.6, 2.0, 3) < -0.42: continue      # a very few glades
     z = terrain_h(x, y)
     ob = link_obj('fir', rng.choice(FIRS).data)
-    sc = rng.uniform(1.4, 2.2)
+    sc = rng.uniform(1.7, 2.6)
     ob.location = (x, y, z - 0.5); ob.rotation_euler = (0, 0, rng.uniform(0, 6.28)); ob.scale = (sc, sc, sc * rng.uniform(0.9, 1.15))
     placed += 1
 # a ridge of tall firs on the promontory's shoulder, between the low sun and the valley haze: the
@@ -154,13 +158,37 @@ TREES = BROAD
 # grass on the near ridge, under the camera
 GRASS = [load_obj(f'{PH}/grass_medium_02/grass_medium_02_2k.blend', 'grass_medium_02_%s' % k) for k in 'cde']
 ROCKS = [load_obj(f'{PH}/rock_moss_set_01/rock_moss_set_01_1k.blend', 'rock_moss_set_01_rock0%d' % i) for i in (1, 2, 4, 5)]
-for k in range(900):
-    x = rng.uniform(-9, 11); y = rng.uniform(CAM_Y + 2.5, CAM_Y + 8.5)
-    ob = link_obj('grass', rng.choice(GRASS).data); gs = rng.uniform(3.2, 5.0)
-    ob.location = (x, y, terrain_h(x, y) - 0.1); ob.rotation_euler = (0, 0, rng.uniform(0, 6.28)); ob.scale = (gs, gs, gs * 1.5)
-for (x, y, sc) in [(-5.5, CAM_Y + 7.5, 1.6), (7.0, CAM_Y + 8.0, 2.0)]:
+LIP_Y = -1455.0
+for k in range(5200):
+    x = rng.uniform(-18, 20); y = rng.uniform(CAM_Y + 11, LIP_Y + 1)
+    if -5.4 < x < -2.2 and CAM_Y + 18.0 < y < CAM_Y + 21.0: continue          # leave the letter in the open
+    ob = link_obj('grass', rng.choice(GRASS).data); gs = rng.uniform(2.2, 3.6)
+    ob.location = (x, y, terrain_h(x, y) - 0.1); ob.rotation_euler = (0, 0, rng.uniform(0, 6.28)); ob.scale = (gs, gs, gs * 1.35)
+    ob.pass_index = 2
+for (x, y, sc) in [(-11.0, LIP_Y - 1.5, 1.8), (9.5, LIP_Y - 0.5, 2.4), (14.0, LIP_Y - 4, 1.4)]:
     ob = link_obj('rock', rng.choice(ROCKS).data)
-    ob.location = (x, y, terrain_h(x, y) - 0.4 * sc); ob.rotation_euler = (0, 0, rng.uniform(0, 6.28)); ob.scale = (sc, sc, sc)
+    ob.location = (x, y, terrain_h(x, y) - 0.35 * sc); ob.rotation_euler = (0, 0, rng.uniform(0, 6.28)); ob.scale = (sc, sc, sc)
+
+# the letter: a weathered sheet, folded once, pinned under a small stone on the lip
+LETTER = Vector((-3.8, CAM_Y + 19.5, 0.0)); LETTER.z = terrain_h(LETTER.x, LETTER.y) + 0.02
+bpy.ops.mesh.primitive_grid_add(x_subdivisions=24, y_subdivisions=32, size=1, location=LETTER)
+letter = bpy.context.active_object; letter.name = 'letter'; letter.scale = (0.40, 0.54, 1)
+letter.rotation_euler = (math.radians(-4), math.radians(3), math.radians(-14))
+for v in letter.data.vertices:                                                   # the fold, and a lifted corner
+    v.co.z = 0.035 * (1 - abs(v.co.y) * 2) ** 0 * (0.5 - abs(v.co.y)) * 0.8 + max(0.0, v.co.x + v.co.y - 0.55) ** 2 * 0.5
+letter.pass_index = 4
+lm, N, L = mat('letter_paper')
+tcl = N.new('ShaderNodeTexCoord'); pp = scan(N, L, 'Paper002', 0.6, tcl.outputs['Object'])
+tint = N.new('ShaderNodeMix'); tint.data_type = 'RGBA'; tint.blend_type = 'MULTIPLY'; tint.inputs['Factor'].default_value = 0.35
+L.new(pp[0].outputs[0], tint.inputs['A']); tint.inputs['B'].default_value = (0.92, 0.84, 0.70, 1)
+L.new(tint.outputs['Result'], N['Principled BSDF'].inputs['Base Color'])
+N['Principled BSDF'].inputs['Roughness'].default_value = 0.8; N['Principled BSDF'].inputs['Subsurface Weight'].default_value = 0.15
+nml = N.new('ShaderNodeNormalMap'); nml.inputs['Strength'].default_value = 0.6; L.new(pp[2].outputs[0], nml.inputs['Color']); L.new(nml.outputs[0], N['Principled BSDF'].inputs['Normal'])
+trl = N.new('ShaderNodeBsdfTranslucent'); trl.inputs['Color'].default_value = (1.0, 0.84, 0.62, 1)
+mxl = N.new('ShaderNodeMixShader'); mxl.inputs[0].default_value = 0.35
+L.new(N['Principled BSDF'].outputs[0], mxl.inputs[1]); L.new(trl.outputs[0], mxl.inputs[2])
+L.new(mxl.outputs[0], N['Material Output'].inputs['Surface'])
+letter.data.materials.append(lm)
 
 # ---------------------------------------------------------------- ruins (few, distant, scanned stone, in haze)
 ruin_m, N, L = mat('ruin_stone')
@@ -184,8 +212,9 @@ arcade(-380, -700, 9, 0.25, 38, 16)
 arcade(-300, -760, 5, 1.6, 30, 16)
 arcade(620, -420, 7, -0.35, 44, 18)
 # a ruined gatehouse and wall at the stone's foot, so its size reads
-arcade(STONE_POS.x - 240, STONE_POS.y - 120, 8, 0.2, 46, 18)
-block((STONE_POS.x - 330, STONE_POS.y - 140, terrain_h(STONE_POS.x - 330, STONE_POS.y - 140) + 34), (16, 16, 76), 0.2)
+arcade(STONE_POS.x - 150, STONE_POS.y - 210, 9, 0.12, 40, 17)
+block((STONE_POS.x - 240, STONE_POS.y - 230, terrain_h(STONE_POS.x - 240, STONE_POS.y - 230) + 30), (15, 15, 66), 0.12)
+block((STONE_POS.x - 60, STONE_POS.y - 195, terrain_h(STONE_POS.x - 60, STONE_POS.y - 195) + 22), (14, 14, 50), 0.12)
 for (x, y, hh, w) in [(-120, -980, 70, 12), (900, -150, 90, 16), (-900, 300, 110, 18)]:   # broken towers
     block((x, y, terrain_h(x, y) + hh / 2 - 3), (w, w, hh), rng.uniform(0, 1))
 
@@ -199,11 +228,7 @@ def bird(loc, sc, rot, flap):
     me = bpy.data.meshes.new('bird'); bm.to_mesh(me); bm.free()
     ob = link_obj('bird', me); ob.location = loc; ob.scale = (sc, sc, sc); ob.rotation_euler = (0, 0, rot)
     me.materials.append(bird_m)
-to_st = (Vector((STONE_POS.x, STONE_POS.y, 0)) - Vector((0, CAM_Y, 0))); to_st.z = 0; to_st.normalize()
-for k in range(9):
-    d0 = 520 + rng.uniform(-30, 30)
-    base_p = Vector((0, CAM_Y, 0)) + to_st * d0
-    bird((base_p.x - 70 + k * 9 + rng.uniform(-4, 4), base_p.y + k * 3, 230 + rng.uniform(-6, 6) - abs(k - 4) * 4), 1.4, 0.4, rng.uniform(-0.35, 0.55))
+# (the birds are drawn in the loop by crystal_compose.py, so they can wheel)
 
 # ---------------------------------------------------------------- air: valley mist and golden haze
 def fog():
@@ -276,12 +301,28 @@ WL.new(glow.outputs['Result'], WN['Background'].inputs['Color']); WN['Background
 # ---------------------------------------------------------------- camera
 cam = bpy.data.cameras.new('cam'); cam.lens = 35; cam.sensor_width = 36; cam.clip_start = 0.5; cam.clip_end = 20000
 co = link_obj('cam', cam); SC.camera = co
-cz = terrain_h(0, CAM_Y) + 3.0                    # standing at the lip of the ridge
+cz = terrain_h(0, CAM_Y) + 3.2                    # standing back from the lip of the ridge
 co.location = (0, CAM_Y, cz)
 dist = (STONE_POS - Vector((0, CAM_Y, 0))).length
 tgt = Vector((STONE_POS.x * 0.62, STONE_POS.y, cz + dist * math.tan(math.radians(3.5))))
 co.rotation_euler = (tgt - co.location).to_track_quat('-Z', 'Y').to_euler()
-cam.dof.use_dof = True; cam.dof.focus_distance = dist; cam.dof.aperture_fstop = 11
+
+# the letter: a weathered sheet resting on the grass of the lip, held by a small stone on its top
+# edge. The lip's ground itself falls below the frame, so the sheet is set where the grass tops
+# show in the lower left, on the line from the camera, and tilted up to the light.
+th = 18.0 / cam.lens
+rot = co.rotation_euler.to_matrix()
+dl = rot @ Vector(((0.60 - 0.5) * 2 * th, (0.075 - 0.5) * 2 * th * H / W, -1.0)); dl.normalize()
+LP = co.location + dl * 22.0
+letter.location = LP
+letter.rotation_euler = (math.radians(66), math.radians(4), math.radians(-12))
+for ob in [o for o in SC.objects if o.name.startswith('grass')]:
+    v = Vector((ob.location.x - LP.x, ob.location.y - LP.y))
+    if v.length < 0.55 or (v.y < 0 and abs(v.x) < 0.45 and v.length < 1.6): bpy.data.objects.remove(ob)
+pin = link_obj('pin_stone', ROCKS[3].data); pin.scale = (0.09, 0.09, 0.07); pin.rotation_euler = (0, 0, 1.1)
+pin.location = LP + rot @ Vector((0.06, 0.20, 0.03))
+lrock = pin
+cam.dof.use_dof = True; cam.dof.focus_distance = dist; cam.dof.aperture_fstop = 16
 
 # ---------------------------------------------------------------- composite: crystal held to sky blue, bloom
 SC.view_layers[0].use_pass_object_index = True
@@ -311,5 +352,83 @@ SC.render.resolution_x, SC.render.resolution_y = W, H; SC.render.resolution_perc
 SC.render.image_settings.file_format = 'PNG'
 vs = SC.view_settings; vs.view_transform = 'AgX'; vs.look = 'AgX - Medium High Contrast'; vs.exposure = -0.35
 SC.render.filepath = OUT
+# where things land in the frame, for the composer and the page
+from bpy_extras.object_utils import world_to_camera_view as w2c
+bpy.context.view_layer.update()
+dg = bpy.context.evaluated_depsgraph_get()
+def box(ob):
+    e = ob.evaluated_get(dg); P = [w2c(SC, co, e.matrix_world @ v.co) for v in e.data.vertices]
+    return [round(min(q.x for q in P) * W), round((1 - max(q.y for q in P)) * H), round(max(q.x for q in P) * W), round((1 - min(q.y for q in P)) * H)]
+info = {'stone': box(parts['stone']), 'crystal': box(crystal), 'letter': box(letter), 'w': W, 'h': H}
+print('FRAMEINFO', json.dumps(info))
+json.dump(info, open(os.path.splitext(OUT)[0] + '.json', 'w'))
+
+LETTERPASS = arg('--letter-pass', '')
+if LETTERPASS:
+    # the letter alone, lit by the same sun and sky, over a transparent film: the grass in front
+    # holds it out; the composer sets its colour in the evening light and adds a contact shadow
+    FOG.hide_render = True
+    for ob in SC.objects:
+        if ob.type != 'MESH' or ob in (letter, pin, lrock): continue
+        ob.is_holdout = True
+    SC.render.film_transparent = True; SC.use_nodes = False
+    lb = info['letter']; pad = 60
+    SC.render.use_border = True; SC.render.use_crop_to_border = False
+    SC.render.border_min_x = max(0, (lb[0] - pad) / W); SC.render.border_max_x = min(1, (lb[2] + pad) / W)
+    SC.render.border_min_y = max(0, 1 - (lb[3] + pad) / H); SC.render.border_max_y = min(1, 1 - (lb[1] - pad) / H)
+    SC.render.image_settings.color_mode = 'RGBA'
+    c.samples = 128; c.time_limit = 0
+    SC.render.filepath = LETTERPASS
+    bpy.ops.render.render(write_still=True)
+    print('wrote', LETTERPASS)
+    sys.exit(0)
+
 bpy.ops.render.render(write_still=True)
 print('wrote', OUT)
+
+# ---------------------------------------------------------------- masks for the loop (same camera)
+# R: the crystal, G: the near grass, B: distance (0 near, 1 at 3 km and beyond, the sky 1). Flat emission.
+MASKS = arg('--masks', '')
+if MASKS:
+    FOG.hide_render = True; deck.hide_render = True; so.hide_render = True; plo.hide_render = True
+    world.node_tree.nodes['Background'].inputs['Color'].default_value = (0, 0, 1, 1)
+    for l_ in list(world.node_tree.links):
+        if l_.to_node.name == 'Background' and l_.to_socket.name == 'Color': world.node_tree.links.remove(l_)
+    world.node_tree.nodes['Background'].inputs['Strength'].default_value = 1.0
+    def flat(name, col=None, depth=False):
+        m, N, L = mat(name); N.remove(N['Principled BSDF'])
+        e = N.new('ShaderNodeEmission')
+        if depth:
+            cdn = N.new('ShaderNodeCameraData'); mr = N.new('ShaderNodeMapRange')
+            mr.inputs['From Min'].default_value = 0; mr.inputs['From Max'].default_value = 3000
+            L.new(cdn.outputs['View Distance'], mr.inputs['Value'])
+            cmb = N.new('ShaderNodeCombineXYZ'); L.new(mr.outputs[0], cmb.inputs['Z']); L.new(cmb.outputs[0], e.inputs['Color'])
+        else: e.inputs['Color'].default_value = col
+        L.new(e.outputs[0], N['Material Output'].inputs['Surface']); return m
+    depthm, red = flat('m_depth', depth=True), flat('m_red', (1, 0, 0, 1))
+    gm, N, L = mat('m_grass'); N.remove(N['Principled BSDF'])
+    at = N.new('ShaderNodeTexImage'); at.image = bpy.data.images.load(f'{PH}/grass_medium_02/textures/grass_medium_02_alpha_2k.png')
+    at.image.colorspace_settings.name = 'Non-Color'
+    e = N.new('ShaderNodeEmission'); e.inputs['Color'].default_value = (0, 1, 0, 1)
+    tr = N.new('ShaderNodeBsdfTransparent'); mx = N.new('ShaderNodeMixShader')
+    L.new(at.outputs['Color'], mx.inputs[0]); L.new(tr.outputs[0], mx.inputs[1]); L.new(e.outputs[0], mx.inputs[2])
+    L.new(mx.outputs[0], N['Material Output'].inputs['Surface'])
+    grass_meshes = {g.data.name for g in GRASS}
+    keep_alpha = {}
+    for me_ in bpy.data.meshes:
+        if me_.name == crystal.data.name: new = red
+        elif me_.name in grass_meshes: new = gm
+        else: new = depthm
+        for i in range(len(me_.materials)): me_.materials[i] = new
+        if len(me_.materials) == 0: me_.materials.append(new)
+    for ob in SC.objects:
+        for sl in ob.material_slots:
+            if sl.link == 'OBJECT': sl.material = depthm
+    SC.use_nodes = False
+    c.samples = 8; c.use_denoising = False; c.use_adaptive_sampling = False; c.time_limit = 0
+    c.max_bounces = 1; c.transparent_max_bounces = 16
+    vs.view_transform = 'Standard'; vs.look = 'None'; vs.exposure = 0.0
+    SC.render.image_settings.color_depth = '8'
+    SC.render.filepath = MASKS
+    bpy.ops.render.render(write_still=True)
+    print('wrote', MASKS)

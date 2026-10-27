@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0C0C">
+<meta name="description" content="Antimony: software, made on purpose.">
+<title>Antimony</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2722%27 fill=%27%23141311%27/%3E%3Cpath fill=%27%2394E6FF%27 d=%27M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z%27/%3E%3C/svg%3E">
+<link rel="preload" href="assets/fonts/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin>
+<!-- Copy. The line in use: "Software, made on purpose."
+     Alternatives Eóin may prefer: "Intentional software." / "Software for the people who make the work." -->
+<script>
+/* Before first paint: whether the opening plays, and which frame (wide or tall) to use. */
+(function () {
+  var h = document.documentElement, q = location.search, seen = false;
+  try { seen = sessionStorage.getItem("antimony.crystal") === "1"; } catch (e) {}
+  if (/[?&]again\b/.test(q)) seen = false;
+  if (/[?&]rest\b/.test(q)) seen = true;
+  if (!seen && !matchMedia("(prefers-reduced-motion: reduce)").matches) h.classList.add("opening");
+  h.classList.add(innerWidth / innerHeight < .8 ? "tall" : "wide");
+})();
+</script>
+<style>
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
+:root { --ink: #0B0C0C; --paper: #EEEAE0; --sky: #94E6FF; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--ink); color: var(--paper); overflow: hidden; }
+body { font: 400 15px/1.5 "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* the stage: the picture and the letter move together (the breathing camera, parallax, the move to the letter) */
+#stage { position: fixed; inset: -2.5%; will-change: transform; transform-origin: 50% 50%; }
+#stage.travel { transition: transform 1.3s cubic-bezier(.45, .05, .2, 1); }
+#frame { position: absolute; inset: 0; background: #3a2a1c; transition: filter 3.8s cubic-bezier(.3, .1, .2, 1); }
+#frame img, #frame video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; display: block; }
+#loop { opacity: 0; transition: opacity 1.2s ease; }
+#loop.on { opacity: 1; }
+/* the opening: the morning mist lifts off the valley and the stone, then the type arrives */
+html.opening #frame { filter: blur(16px) brightness(1.35) saturate(.6); }
+html.lifting #frame { filter: none; }
+#veil { position: fixed; inset: 0; background: var(--ink); pointer-events: none; opacity: 0; transition: opacity 2.4s ease; }
+html.opening #veil { opacity: 1; }
+html.lifting #veil { opacity: 0; }
+#note { position: absolute; border: 0; padding: 0; background: none; cursor: pointer; border-radius: 30%; -webkit-tap-highlight-color: transparent; }
+#note:focus-visible { outline: none; box-shadow: 0 0 0 1px rgba(238, 234, 224, .7); }
+#glint { position: absolute; pointer-events: none; border-radius: 50%; opacity: 0; background: radial-gradient(closest-side, rgba(255, 246, 226, .9), rgba(255, 228, 190, .28) 45%, rgba(255, 228, 190, 0) 70%); mix-blend-mode: screen; }
+#glint.on { animation: glint 5.5s ease-in-out infinite; }
+@keyframes glint { 0%, 100% { opacity: 0; transform: scale(.7); } 40% { opacity: .85; transform: scale(1); } 60% { opacity: .5; } }
+.sign { position: fixed; left: max(28px, env(safe-area-inset-left)); bottom: max(24px, env(safe-area-inset-bottom)); }
+.sign .wm { display: block; width: 168px; height: auto; color: var(--paper); opacity: .94; }
+.sign p { margin-top: 10px; font-size: 13px; letter-spacing: .02em; color: rgba(238, 234, 224, .76); }
+#snd { position: fixed; right: max(18px, env(safe-area-inset-right)); top: max(16px, env(safe-area-inset-top)); width: 36px; height: 36px; border: 0; background: none; color: rgba(238, 234, 224, .64); cursor: pointer; display: grid; place-items: center; border-radius: 50%; transition: color .3s; }
+#snd:hover, #snd:focus-visible { color: var(--paper); outline: none; }
+#snd:focus-visible { box-shadow: 0 0 0 1px rgba(238, 234, 224, .5); }
+#snd svg { width: 20px; height: 20px; }
+#snd .w { opacity: 0; transition: opacity .4s; }
+#snd[aria-pressed="true"] .w { opacity: 1; }
+#snd[aria-pressed="true"] .x { opacity: 0; }
+.sign, #snd { transition: opacity 1.1s cubic-bezier(.25, .6, .3, 1) .2s; }
+html.opening .sign, html.opening #snd { opacity: 0; }
+html.opening.typed .sign, html.opening.typed #snd { opacity: 1; }
+/* the letter: the weathered sheet from the lip, lifted and laid flat */
+#card { position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 5; }
+#card[hidden] { display: none; }
+#card .dim { position: absolute; inset: 0; background: radial-gradient(120% 90% at 30% 25%, rgba(70, 44, 18, .38), rgba(11, 12, 12, .74)); opacity: 0; transition: opacity 1s ease; }
+#sheet { position: relative; width: min(500px, calc(100vw - 40px)); height: min(680px, calc(100vh - 80px)); color: #2b2620;
+  background: url("assets/paper.webp") center / cover, #ece4d6;
+  box-shadow: 0 30px 80px -20px rgba(30, 16, 4, .6), 0 2px 6px rgba(30, 16, 4, .25);
+  clip-path: polygon(0 50%, 50% 50%, 100% 50%, 100% 50%, 50% 50%, 0 50%);
+  transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(.07) rotateX(60deg) rotate(-14deg); opacity: 0;
+  transition: clip-path 1.15s cubic-bezier(.5, 0, .2, 1), transform 1.15s cubic-bezier(.5, 0, .2, 1), opacity .45s ease; }
+/* the light on it: warm from the low sun to the upper left, the fold across its middle, the weather on its edges */
+#sheet::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(0deg, transparent 49.6%, rgba(70, 50, 30, .08) 50%, rgba(255, 255, 255, .22) 50.35%, transparent 51%),
+    radial-gradient(90% 70% at 12% 6%, rgba(255, 208, 140, .34), transparent 60%),
+    radial-gradient(70% 60% at 95% 100%, rgba(60, 40, 20, .14), transparent 70%),
+    radial-gradient(120% 120% at 50% 50%, transparent 62%, rgba(120, 90, 50, .16) 100%),
+    linear-gradient(160deg, rgba(255, 255, 255, .08), rgba(0, 0, 0, .05)); }
+#sheet .in { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; padding: 16% 17%; }
+#sheet .wm { display: block; width: 50%; max-width: 200px; color: #231e19; }
+#sheet .line { margin-top: 1.2em; font-size: 15px; letter-spacing: .02em; color: #4a4237; }
+#sheet .body { margin-top: 4.2em; font-size: clamp(18px, 2.3vw, 21px); line-height: 1.6; color: #2b2620; text-shadow: 0 .5px 0 rgba(255, 255, 255, .5), 0 -.4px 0 rgba(50, 30, 10, .12); }
+#sheet .body p + p { margin-top: 1.5em; }
+#sheet .sig { margin-top: 4.4em; font-size: 14px; letter-spacing: .04em; color: #5a5146; }
+#close { position: absolute; top: 14px; right: 14px; width: 40px; height: 40px; border: 0; background: none; color: #5a5146; cursor: pointer; border-radius: 50%; display: grid; place-items: center; }
+#close:hover, #close:focus-visible { color: #231e19; outline: none; }
+#close:focus-visible { box-shadow: 0 0 0 1px rgba(35, 30, 25, .4); }
+#close svg { width: 16px; height: 16px; }
+html.reading #card { pointer-events: auto; }
+html.reading #card .dim { opacity: 1; }
+html.reading #sheet { clip-path: polygon(0 0, 50% 0, 100% 0, 100% 100%, 50% 100%, 0 100%); transform: none; opacity: 1; }
+html.reading .sign, html.reading #snd { opacity: 0; pointer-events: none; }
+@media (max-width: 600px) {
+  .sign { left: 16px; bottom: max(18px, env(safe-area-inset-bottom)); }
+  .sign .wm { width: 124px; }
+  .sign p { font-size: 12px; margin-top: 8px; }
+  #snd { right: 10px; top: max(10px, env(safe-area-inset-top)); }
+  #sheet .in { padding: 20% 14%; }
+  #sheet .line { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #frame, #veil, .sign, #snd, #stage, #card .dim { transition: none !important; }
+  #sheet, html.reading #sheet { clip-path: none; transform: none; transition: opacity .6s ease !important; }
+  #glint.on { animation: none; opacity: .45; }
+}
+</style>
+</head>
+<body>
+<div id="stage">
+<div id="frame" aria-hidden="true">
+  <picture>
+    <source media="(max-aspect-ratio: 4/5)" type="image/avif" srcset="assets/crystal-still-phone.avif">
+    <source media="(max-aspect-ratio: 4/5)" type="image/webp" srcset="assets/crystal-still-phone.webp">
+    <source type="image/avif" srcset="assets/crystal-still.avif">
+    <img id="still" src="assets/crystal-still.webp" alt="">
+  </picture>
+  <video id="loop" muted loop playsinline preload="auto"></video>
+</div>
+<span id="glint" aria-hidden="true"></span>
+<button id="note" type="button" aria-label="A weathered letter under a stone on the ridge. Read the note"></button>
+</div>
+<div id="veil"></div>
+<h1 class="vh">Antimony</h1>
+<p class="vh">Golden hour over a vast valley of fir forest and old ruins, filled with mist. On a far hill stands the Antimony mark as an ancient monolith, a dark stone split by a seam with a sky blue crystal in its heart, the height of a mountain. Birds wheel beside it. On the grassy ridge in the foreground a weathered letter lies pinned under a small stone.</p>
+<div class="sign">
+  <svg class="wm" role="img" aria-label="Antimony" viewBox="-10 -705 6338 715"><path class="cA" fill="var(--sky)" stroke="var(--sky)" d="M444.5155 -286 336 -563 227.4845 -286 336 -374Z" stroke-width="14" stroke-linejoin="round"/><g fill="currentColor"><path d="M111 -95 351 -695H386L628 -95Q643 -57 663.5 -42.5Q684 -28 723 -23V0H460V-23Q497 -27 512.0 -35.5Q527 -44 527 -59Q527 -71 517 -96L463 -236L335.0 -324.0L207 -236L155 -96Q148 -75 148 -66Q148 -47 166.5 -37.0Q185 -27 228 -23V0H15V-23Q52 -27 73.5 -40.5Q95 -54 111 -95ZM444.515 -286.0 336 -563 227.484 -286.0 336.0 -374.0Z"/><path d="M989.58 -122V-573Q989.58 -612 979.08 -632.5Q968.58 -653 947.08 -661.0Q925.58 -669 888.58 -672V-695H1060.58L1463.58 -178V-575Q1463.58 -614 1453.08 -634.0Q1442.58 -654 1421.58 -661.5Q1400.58 -669 1362.58 -672V-695H1604.58V-672Q1566.58 -669 1545.58 -661.5Q1524.58 -654 1514.08 -633.5Q1503.58 -613 1503.58 -574L1504.58 0H1476.58L1029.58 -573V-123Q1029.58 -83 1040.08 -62.5Q1050.58 -42 1071.58 -34.0Q1092.58 -26 1130.58 -23V0H888.58V-23Q926.58 -26 947.58 -34.0Q968.58 -42 979.08 -62.5Q989.58 -83 989.58 -122Z"/><path d="M1984.16 -112V-657H1901.16Q1850.16 -657 1821.16 -647.5Q1792.16 -638 1773.66 -608.5Q1755.16 -579 1748.16 -519H1727.16L1737.16 -695H2325.16L2335.16 -519H2314.16Q2306.16 -580 2288.16 -609.5Q2270.16 -639 2241.16 -648.0Q2212.16 -657 2161.16 -657H2077.16V-112Q2078.16 -77 2088.66 -59.0Q2099.16 -41 2119.66 -33.5Q2140.16 -26 2177.16 -23V0H1888.16V-23Q1939.16 -27 1961.16 -45.0Q1983.16 -63 1984.16 -112Z"/><path d="M2580.740 -112V-583Q2579.740 -618 2569.240 -636.0Q2558.740 -654 2538.240 -661.5Q2517.740 -669 2480.740 -672V-695H2770.740V-672Q2719.740 -668 2697.240 -650.0Q2674.740 -632 2673.740 -583V-112Q2674.740 -62 2696.740 -44.5Q2718.740 -27 2773.740 -23V0H2483.740V-23Q2534.740 -27 2557.240 -44.5Q2579.740 -62 2580.740 -112Z"/><path d="M3042.32 -101 3057.32 -582Q3058.32 -632 3041.82 -650.0Q3025.32 -668 2979.32 -672V-695H3157.32L3403.32 -146L3617.32 -695H3789.32V-672Q3750.32 -668 3734.82 -646.5Q3719.32 -625 3721.32 -588L3741.32 -94Q3742.32 -66 3749.82 -52.0Q3757.32 -38 3773.32 -32.0Q3789.32 -26 3821.32 -23V0H3569.32V-23Q3603.32 -26 3619.82 -32.0Q3636.32 -38 3642.32 -51.5Q3648.32 -65 3647.32 -94L3626.32 -616L3390.32 0H3365.32L3099.32 -595L3084.32 -101Q3083.32 -68 3091.82 -52.5Q3100.32 -37 3118.82 -31.5Q3137.32 -26 3175.32 -23V0H2951.32V-23Q2985.32 -26 3003.82 -32.0Q3022.32 -38 3031.82 -54.0Q3041.32 -70 3042.32 -101Z"/><path d="M3997.9 -349Q3997.9 -452 4043.9 -533.0Q4089.9 -614 4167.9 -659.0Q4245.9 -704 4337.9 -704Q4429.9 -704 4508.9 -659.0Q4587.9 -614 4634.9 -533.0Q4681.9 -452 4681.9 -349Q4681.9 -246 4634.9 -164.5Q4587.9 -83 4508.9 -37.5Q4429.9 8 4337.9 8Q4245.9 8 4167.9 -37.5Q4089.9 -83 4043.9 -164.5Q3997.9 -246 3997.9 -349ZM4567.9 -349Q4567.9 -444 4538.4 -516.0Q4508.9 -588 4456.4 -627.5Q4403.9 -667 4336.9 -667Q4270.9 -667 4219.4 -627.5Q4167.9 -588 4139.4 -515.5Q4110.9 -443 4110.9 -349Q4110.9 -254 4139.4 -181.0Q4167.9 -108 4219.4 -68.0Q4270.9 -28 4336.9 -28Q4403.9 -28 4456.4 -68.0Q4508.9 -108 4538.4 -181.0Q4567.9 -254 4567.9 -349Z"/><path d="M4979.480 -122V-573Q4979.480 -612 4968.980 -632.5Q4958.480 -653 4936.980 -661.0Q4915.480 -669 4878.480 -672V-695H5050.480L5453.480 -178V-575Q5453.480 -614 5442.980 -634.0Q5432.480 -654 5411.480 -661.5Q5390.480 -669 5352.480 -672V-695H5594.480V-672Q5556.480 -669 5535.480 -661.5Q5514.480 -654 5503.980 -633.5Q5493.480 -613 5493.480 -574L5494.480 0H5466.480L5019.480 -573V-123Q5019.480 -83 5029.980 -62.5Q5040.480 -42 5061.480 -34.0Q5082.480 -26 5120.480 -23V0H4878.480V-23Q4916.480 -26 4937.480 -34.0Q4958.480 -42 4968.980 -62.5Q4979.480 -83 4979.480 -122Z"/><path d="M5973.06 -112V-281L5771.06 -625Q5761.06 -643 5754.56 -651.0Q5748.06 -659 5736.56 -664.5Q5725.06 -670 5703.06 -672V-695H5951.06V-674Q5917.06 -671 5900.06 -662.5Q5883.06 -654 5883.06 -637Q5883.06 -627 5892.06 -610L6047.06 -340L6199.06 -617Q6208.06 -635 6208.06 -645Q6208.06 -660 6192.06 -665.5Q6176.06 -671 6137.06 -674V-695H6326.06V-674Q6301.06 -671 6290.56 -668.0Q6280.06 -665 6271.06 -654.5Q6262.06 -644 6249.06 -620L6066.06 -288V-112Q6067.06 -62 6089.06 -44.5Q6111.06 -27 6166.06 -23V0H5876.06V-23Q5927.06 -27 5949.56 -44.5Q5972.06 -62 5973.06 -112Z"/></g></svg>
+  <p>Software, made on purpose.</p>
+</div>
+<button id="snd" type="button" aria-pressed="false" aria-label="Sound">
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3.5 7.8h2.6L10 4.6v10.8L6.1 12.2H3.5z"/>
+    <path class="w" d="M12.6 7.4a3.6 3.6 0 0 1 0 5.2M14.8 5.4a6.4 6.4 0 0 1 0 9.2"/>
+    <path class="x" d="M13 8.2l3.6 3.6M16.6 8.2L13 11.8"/>
+  </svg>
+</button>
+<div id="card" role="dialog" aria-modal="true" aria-labelledby="card-t" hidden>
+  <div class="dim"></div>
+  <article id="sheet">
+    <div class="in">
+      <h2 id="card-t" class="vh">ANTIMONY</h2>
+      <svg class="wm" aria-hidden="true" viewBox="-10 -705 6338 715"><path class="cA" fill="var(--sky)" stroke="var(--sky)" d="M444.5155 -286 336 -563 227.4845 -286 336 -374Z" stroke-width="14" stroke-linejoin="round"/><g fill="currentColor"><path d="M111 -95 351 -695H386L628 -95Q643 -57 663.5 -42.5Q684 -28 723 -23V0H460V-23Q497 -27 512.0 -35.5Q527 -44 527 -59Q527 -71 517 -96L463 -236L335.0 -324.0L207 -236L155 -96Q148 -75 148 -66Q148 -47 166.5 -37.0Q185 -27 228 -23V0H15V-23Q52 -27 73.5 -40.5Q95 -54 111 -95ZM444.515 -286.0 336 -563 227.484 -286.0 336.0 -374.0Z"/><path d="M989.58 -122V-573Q989.58 -612 979.08 -632.5Q968.58 -653 947.08 -661.0Q925.58 -669 888.58 -672V-695H1060.58L1463.58 -178V-575Q1463.58 -614 1453.08 -634.0Q1442.58 -654 1421.58 -661.5Q1400.58 -669 1362.58 -672V-695H1604.58V-672Q1566.58 -669 1545.58 -661.5Q1524.58 -654 1514.08 -633.5Q1503.58 -613 1503.58 -574L1504.58 0H1476.58L1029.58 -573V-123Q1029.58 -83 1040.08 -62.5Q1050.58 -42 1071.58 -34.0Q1092.58 -26 1130.58 -23V0H888.58V-23Q926.58 -26 947.58 -34.0Q968.58 -42 979.08 -62.5Q989.58 -83 989.58 -122Z"/><path d="M1984.16 -112V-657H1901.16Q1850.16 -657 1821.16 -647.5Q1792.16 -638 1773.66 -608.5Q1755.16 -579 1748.16 -519H1727.16L1737.16 -695H2325.16L2335.16 -519H2314.16Q2306.16 -580 2288.16 -609.5Q2270.16 -639 2241.16 -648.0Q2212.16 -657 2161.16 -657H2077.16V-112Q2078.16 -77 2088.66 -59.0Q2099.16 -41 2119.66 -33.5Q2140.16 -26 2177.16 -23V0H1888.16V-23Q1939.16 -27 1961.16 -45.0Q1983.16 -63 1984.16 -112Z"/><path d="M2580.740 -112V-583Q2579.740 -618 2569.240 -636.0Q2558.740 -654 2538.240 -661.5Q2517.740 -669 2480.740 -672V-695H2770.740V-672Q2719.740 -668 2697.240 -650.0Q2674.740 -632 2673.740 -583V-112Q2674.740 -62 2696.740 -44.5Q2718.740 -27 2773.740 -23V0H2483.740V-23Q2534.740 -27 2557.240 -44.5Q2579.740 -62 2580.740 -112Z"/><path d="M3042.32 -101 3057.32 -582Q3058.32 -632 3041.82 -650.0Q3025.32 -668 2979.32 -672V-695H3157.32L3403.32 -146L3617.32 -695H3789.32V-672Q3750.32 -668 3734.82 -646.5Q3719.32 -625 3721.32 -588L3741.32 -94Q3742.32 -66 3749.82 -52.0Q3757.32 -38 3773.32 -32.0Q3789.32 -26 3821.32 -23V0H3569.32V-23Q3603.32 -26 3619.82 -32.0Q3636.32 -38 3642.32 -51.5Q3648.32 -65 3647.32 -94L3626.32 -616L3390.32 0H3365.32L3099.32 -595L3084.32 -101Q3083.32 -68 3091.82 -52.5Q3100.32 -37 3118.82 -31.5Q3137.32 -26 3175.32 -23V0H2951.32V-23Q2985.32 -26 3003.82 -32.0Q3022.32 -38 3031.82 -54.0Q3041.32 -70 3042.32 -101Z"/><path d="M3997.9 -349Q3997.9 -452 4043.9 -533.0Q4089.9 -614 4167.9 -659.0Q4245.9 -704 4337.9 -704Q4429.9 -704 4508.9 -659.0Q4587.9 -614 4634.9 -533.0Q4681.9 -452 4681.9 -349Q4681.9 -246 4634.9 -164.5Q4587.9 -83 4508.9 -37.5Q4429.9 8 4337.9 8Q4245.9 8 4167.9 -37.5Q4089.9 -83 4043.9 -164.5Q3997.9 -246 3997.9 -349ZM4567.9 -349Q4567.9 -444 4538.4 -516.0Q4508.9 -588 4456.4 -627.5Q4403.9 -667 4336.9 -667Q4270.9 -667 4219.4 -627.5Q4167.9 -588 4139.4 -515.5Q4110.9 -443 4110.9 -349Q4110.9 -254 4139.4 -181.0Q4167.9 -108 4219.4 -68.0Q4270.9 -28 4336.9 -28Q4403.9 -28 4456.4 -68.0Q4508.9 -108 4538.4 -181.0Q4567.9 -254 4567.9 -349Z"/><path d="M4979.480 -122V-573Q4979.480 -612 4968.980 -632.5Q4958.480 -653 4936.980 -661.0Q4915.480 -669 4878.480 -672V-695H5050.480L5453.480 -178V-575Q5453.480 -614 5442.980 -634.0Q5432.480 -654 5411.480 -661.5Q5390.480 -669 5352.480 -672V-695H5594.480V-672Q5556.480 -669 5535.480 -661.5Q5514.480 -654 5503.980 -633.5Q5493.480 -613 5493.480 -574L5494.480 0H5466.480L5019.480 -573V-123Q5019.480 -83 5029.980 -62.5Q5040.480 -42 5061.480 -34.0Q5082.480 -26 5120.480 -23V0H4878.480V-23Q4916.480 -26 4937.480 -34.0Q4958.480 -42 4968.980 -62.5Q4979.480 -83 4979.480 -122Z"/><path d="M5973.06 -112V-281L5771.06 -625Q5761.06 -643 5754.56 -651.0Q5748.06 -659 5736.56 -664.5Q5725.06 -670 5703.06 -672V-695H5951.06V-674Q5917.06 -671 5900.06 -662.5Q5883.06 -654 5883.06 -637Q5883.06 -627 5892.06 -610L6047.06 -340L6199.06 -617Q6208.06 -635 6208.06 -645Q6208.06 -660 6192.06 -665.5Q6176.06 -671 6137.06 -674V-695H6326.06V-674Q6301.06 -671 6290.56 -668.0Q6280.06 -665 6271.06 -654.5Q6262.06 -644 6249.06 -620L6066.06 -288V-112Q6067.06 -62 6089.06 -44.5Q6111.06 -27 6166.06 -23V0H5876.06V-23Q5927.06 -27 5949.56 -44.5Q5972.06 -62 5973.06 -112Z"/></g></svg>
+      <p class="line">Software, made on purpose.</p>
+      <div class="body">
+        <p>The moats are fading. Intention remains, and we give it everything.</p>
+        <p>We have only just begun.</p>
+      </div>
+      <p class="sig">Antimony, London</p>
+    </div>
+    <button id="close" type="button" aria-label="Close the letter and return to the valley">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
+    </button>
+  </article>
+</div>
+<script>
+(function () {
+var html = document.documentElement;
+var $ = function (id) { return document.getElementById(id); };
+var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+var KEY = "antimony.crystal";
+var FRAME = {"w": 2560, "h": 1440, "letter": [1510, 1299, 1562, 1366], "stone": [1196, 291, 1669, 766], "phone_x0": 1100, "phone_w": 664};
+function remember() { try { sessionStorage.setItem(KEY, "1"); } catch (e) {} }
+var tall = innerWidth / innerHeight < .8;
+
+/* ---------- the loop: wide or tall, never under reduced motion, paused when hidden ---------- */
+var video = $("loop");
+if (!reduced) {
+  var sfx = tall ? "-phone" : "";
+  video.innerHTML = '<source src="assets/crystal-loop' + sfx + '.webm" type="video/webm"><source src="assets/crystal-loop' + sfx + '.mp4" type="video/mp4">';
+  video.poster = "assets/crystal-still" + sfx + ".webp";
+  video.addEventListener("playing", function () { video.classList.add("on"); });
+  var tryPlay = function () { var p = video.play(); if (p && p.catch) p.catch(function () {}); };
+  video.load(); tryPlay();
+  document.addEventListener("visibilitychange", function () { if (document.hidden) video.pause(); else tryPlay(); });
+}
+
+/* ---------- where the letter lies on screen (object-fit: cover inside the stage) ---------- */
+var stage = $("stage"), note = $("note"), glint = $("glint");
+function place() {
+  tall = innerWidth / innerHeight < .8;
+  var sw = stage.offsetWidth, sh = stage.offsetHeight;
+  var iw = tall ? FRAME.phone_w : FRAME.w, ih = FRAME.h, x0 = tall ? FRAME.phone_x0 : 0;
+  var s = Math.max(sw / iw, sh / ih), ox = (sw - iw * s) / 2, oy = (sh - ih * s) / 2;
+  var L = FRAME.letter, pad = 14;
+  var l = ox + (L[0] - x0) * s, t = oy + L[1] * s, w = (L[2] - L[0]) * s, h = (L[3] - L[1]) * s;
+  var bw = Math.max(44, w + pad * 2), bh = Math.max(44, h + pad * 2);
+  note.style.left = (l + w / 2 - bw / 2) + "px"; note.style.top = (t + h / 2 - bh / 2) + "px";
+  note.style.width = bw + "px"; note.style.height = bh + "px";
+  var g = Math.max(36, w * 2.2);
+  glint.style.left = (l + w / 2 - g / 2) + "px"; glint.style.top = (t + h / 2 - g / 2) + "px";
+  glint.style.width = g + "px"; glint.style.height = g + "px";
+  return { x: l + w / 2, y: t + h / 2, sw: sw, sh: sh };
+}
+var spot = place();
+addEventListener("resize", function () { spot = place(); });
+
+/* ---------- the breathing camera: a slow push and settle, and a little parallax with the pointer ---------- */
+var px = 0, py = 0, tx = 0, ty = 0, reading = false, t0 = performance.now();
+function onMove(cx, cy) { tx = (cx / innerWidth - .5) * -14; ty = (cy / innerHeight - .5) * -9; }
+addEventListener("pointermove", function (e) { onMove(e.clientX, e.clientY); SND.stir(Math.abs(e.movementX || 0) + Math.abs(e.movementY || 0)); }, { passive: true });
+function tick(now) {
+  if (!reading && !reduced && !document.hidden) {
+    px += (tx - px) * .04; py += (ty - py) * .04;
+    var b = 1 + .012 * (.5 - .5 * Math.cos((now - t0) / 16000 * 2 * Math.PI));
+    stage.style.transform = "translate(" + px.toFixed(2) + "px," + py.toFixed(2) + "px) scale(" + b.toFixed(4) + ")";
+  }
+  requestAnimationFrame(tick);
+}
+if (!reduced) requestAnimationFrame(tick);
+
+/* ---------- the opening: the mist lifts off the valley; any touch, key or scroll skips it ---------- */
+if (html.classList.contains("opening")) {
+  var done = false, timers = [];
+  var finish = function (skip) {
+    if (done) return; done = true; timers.forEach(clearTimeout); remember();
+    ["pointerdown", "keydown", "wheel", "touchstart"].forEach(function (ev) { removeEventListener(ev, onSkip, true); });
+    if (skip) {
+      $("frame").style.transition = "filter .6s ease"; $("veil").style.transition = "opacity .5s ease";
+      html.classList.add("lifting", "typed");
+      setTimeout(function () { html.classList.remove("opening", "lifting", "typed"); $("frame").style.transition = ""; }, 700);
+    } else html.classList.remove("opening", "lifting", "typed");
+  };
+  var onSkip = function () { finish(true); };
+  ["pointerdown", "keydown", "wheel", "touchstart"].forEach(function (ev) { addEventListener(ev, onSkip, { capture: true, passive: true }); });
+  requestAnimationFrame(function () { requestAnimationFrame(function () {
+    html.classList.add("lifting");
+    timers.push(setTimeout(function () { html.classList.add("typed"); }, 2800));
+    timers.push(setTimeout(function () { finish(false); }, 4400));
+  }); });
+} else remember();
+
+/* ---------- a quiet hint: after a while with no input, the letter catches the light ---------- */
+var idle = null;
+function wake() { glint.classList.remove("on"); clearTimeout(idle); if (!reading) idle = setTimeout(function () { glint.classList.add("on"); }, 7000); }
+["pointermove", "pointerdown", "keydown", "wheel", "touchstart"].forEach(function (ev) { addEventListener(ev, wake, { passive: true }); });
+wake();
+
+/* ---------- the letter: the view eases to it, the sheet lifts and lies flat ---------- */
+var card = $("card"), sheet = $("sheet"), closeBtn = $("close");
+function open() {
+  if (reading) return; reading = true; glint.classList.remove("on"); clearTimeout(idle);
+  spot = place();
+  card.hidden = false;
+  var cx = innerWidth / 2, cy = innerHeight / 2;
+  var nx = spot.x - innerWidth * .025 + px, ny = spot.y - innerHeight * .025 + py;   /* the stage is inset by 2.5 percent */
+  sheet.style.setProperty("--tx", ((nx - cx) / .07).toFixed(1) + "px"); sheet.style.setProperty("--ty", ((ny - cy) / .07).toFixed(1) + "px");
+  if (!reduced) {
+    stage.classList.add("travel");
+    stage.style.transformOrigin = spot.x + "px " + spot.y + "px";
+    stage.style.transform = "translate(" + px.toFixed(2) + "px," + py.toFixed(2) + "px) scale(1.22)";
+  }
+  void sheet.offsetWidth;
+  requestAnimationFrame(function () { html.classList.add("reading"); });
+  SND.page(true);
+  setTimeout(function () { closeBtn.focus({ preventScroll: true }); }, 400);
+}
+function shut() {
+  if (!reading) return;
+  html.classList.remove("reading"); SND.page(false);
+  if (!reduced) stage.style.transform = "translate(" + px.toFixed(2) + "px," + py.toFixed(2) + "px) scale(1)";
+  setTimeout(function () {
+    card.hidden = true; stage.classList.remove("travel"); stage.style.transformOrigin = "50% 50%";
+    reading = false; note.focus({ preventScroll: true }); wake();
+  }, reduced ? 650 : 1250);
+}
+note.addEventListener("click", function (e) { e.stopPropagation(); open(); });
+closeBtn.addEventListener("click", function (e) { e.stopPropagation(); shut(); });
+card.addEventListener("click", function (e) { if (!sheet.contains(e.target)) shut(); });
+addEventListener("keydown", function (e) {
+  if (!reading) return;
+  if (e.key === "Escape") { e.preventDefault(); shut(); }
+  else if (e.key === "Tab") { e.preventDefault(); closeBtn.focus(); }
+});
+
+/* ================= sound: made here, in the browser; silent until asked =================
+   A high ridge at golden hour: wind over the grass, far birds over the valley, a low warm tone.
+   The wind answers the pointer. Quiet, spacious, filtered. */
+var SND = (function () {
+  var AC = null, out = null, dry = null, revIn = null, on = false, wind = null, gust = 0;
+  var SKEY = "antimony.crystal.sound", btn = $("snd");
+  function noise(sec, kind) {
+    var n = Math.round(AC.sampleRate * sec), b = AC.createBuffer(2, n, AC.sampleRate);
+    for (var c = 0; c < 2; c++) {
+      var d = b.getChannelData(c), b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, br = 0;
+      for (var i = 0; i < n; i++) {
+        var w = Math.random() * 2 - 1;
+        if (kind === "pink") { b0 = .99886 * b0 + w * .0555179; b1 = .99332 * b1 + w * .0750759; b2 = .969 * b2 + w * .153852; b3 = .8665 * b3 + w * .3104856; b4 = .55 * b4 + w * .5329522; b5 = -.7616 * b5 - w * .016898; d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * .5362) * .11; b6 = w * .115926; }
+        else if (kind === "brown") { br = (br + .02 * w) / 1.02; d[i] = br * 3.5; }
+        else d[i] = w;
+      }
+      for (var k = 0; k < 2048; k++) { var f = k / 2048; d[k] *= f; d[n - 1 - k] *= f; }
+    }
+    return b;
+  }
+  function loopSrc(buf, rate) { var s = AC.createBufferSource(); s.buffer = buf; s.loop = true; s.playbackRate.value = rate || 1; s.start(AC.currentTime + Math.random() * .1, Math.random() * buf.duration); return s; }
+  function filt(type, f, q) { var x = AC.createBiquadFilter(); x.type = type; x.frequency.value = f; x.Q.value = q || .7; return x; }
+  function gain(v) { var g = AC.createGain(); g.gain.value = v; return g; }
+  function chain() { for (var i = 0; i < arguments.length - 1; i++) arguments[i].connect(arguments[i + 1]); return arguments[arguments.length - 1]; }
+  function lfo(rate, depth, param) { var o = AC.createOscillator(); o.frequency.value = rate; chain(o, gain(depth), param); o.start(); }
+  var windBand = null;
+  function build() {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    out = gain(0); out.connect(AC.destination);
+    var comp = AC.createDynamicsCompressor(); comp.threshold.value = -22; comp.ratio.value = 3; comp.connect(out);
+    dry = gain(1); dry.connect(comp);
+    /* a vast open space: a long, dark reverb */
+    var rev = AC.createConvolver(), L = Math.round(AC.sampleRate * 6), ib = AC.createBuffer(2, L, AC.sampleRate);
+    for (var c = 0; c < 2; c++) { var d = ib.getChannelData(c); for (var i = 0; i < L; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / L, 2.4) * (i < 800 ? i / 800 : 1); }
+    rev.buffer = ib; revIn = gain(1); chain(revIn, filt("lowpass", 2600), rev, gain(.6), comp);
+    var WN = noise(4, "white"), PN = noise(6, "pink"), BN = noise(7, "brown");
+    /* the low warm tone: two soft sines a fifth apart, slowly breathing, under the air */
+    [[98, -.2, .014], [146.8, .2, .010], [196, 0, .004]].forEach(function (p, i) {
+      var o = AC.createOscillator(), g = gain(p[2]), pan = AC.createStereoPanner ? AC.createStereoPanner() : gain(1);
+      o.frequency.value = p[0]; if (pan.pan) pan.pan.value = p[1];
+      lfo(.04 + i * .013, p[2] * .35, g.gain); lfo(.025 + i * .01, .5, o.detune);
+      chain(o, g, filt("lowpass", 600), pan); pan.connect(dry); var w = gain(.9); pan.connect(w); w.connect(revIn); o.start();
+    });
+    /* the wind over the ridge: a low body and a moving whistle through the grass, in slow gusts */
+    wind = gain(.05); chain(loopSrc(BN, .9), filt("lowpass", 380), wind, dry);
+    windBand = filt("bandpass", 900, .8); var hiss = gain(.022);
+    chain(loopSrc(PN, 1.0), windBand, hiss, dry); hiss.connect(revIn);
+    var grassHiss = gain(.006); chain(loopSrc(WN, .97), filt("bandpass", 5200, .6), grassHiss, dry);
+    (function gusts() {
+      if (!AC) return; var t = AC.currentTime, d = 4 + Math.random() * 6, peak = .05 + Math.random() * .05 + gust;
+      wind.gain.setTargetAtTime(peak, t, d * .3); wind.gain.setTargetAtTime(.035, t + d * .55, d * .35);
+      windBand.frequency.setTargetAtTime(600 + Math.random() * 900, t, d * .4);
+      grassHiss.gain.setTargetAtTime(.004 + Math.random() * .008, t, d * .3);
+      gust *= .5; setTimeout(gusts, d * 1000);
+    })();
+    setTimeout(birds, 4000 + Math.random() * 4000);
+  }
+  /* far birds: a few small calls from across the valley, mostly reverb */
+  function call(f0, f1, dur, g, pan, t0) {
+    var o = AC.createOscillator(), e = gain(0), p = AC.createStereoPanner ? AC.createStereoPanner() : gain(1); if (p.pan) p.pan.value = pan;
+    var t = AC.currentTime + t0; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(g, t + .02); e.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    chain(o, e, filt("lowpass", 3800), p); var dr = gain(.3); p.connect(dr); dr.connect(dry); var w = gain(1.4); p.connect(w); w.connect(revIn);
+    o.start(t); o.stop(t + dur + .05);
+  }
+  function birds() {
+    if (!AC) return;
+    var pan = Math.random() * 1.2 - .6, n = 1 + Math.floor(Math.random() * 3), base = 1700 + Math.random() * 900;
+    for (var i = 0; i < n; i++) call(base * (1 + Math.random() * .1), base * (1.25 + Math.random() * .2), .22 + Math.random() * .15, .006, pan, i * (.35 + Math.random() * .3));
+    if (Math.random() < .3) call(900, 640, .9, .004, -pan, 1.2);                 /* a far, longer cry */
+    setTimeout(birds, 7000 + Math.random() * 11000);
+  }
+  function set(v, store) {
+    on = v; btn.setAttribute("aria-pressed", v ? "true" : "false");
+    if (store !== false) { try { sessionStorage.setItem(SKEY, v ? "1" : "0"); } catch (e) {} }
+    if (v) { if (!AC) build(); if (AC.state === "suspended") AC.resume(); out.gain.setTargetAtTime(.9, AC.currentTime, .8); }
+    else if (AC) out.gain.setTargetAtTime(0, AC.currentTime, .25);
+  }
+  btn.addEventListener("click", function (e) { e.stopPropagation(); set(!on); });
+  var want = false; try { want = sessionStorage.getItem(SKEY) === "1"; } catch (e) {}
+  if (want) {
+    btn.setAttribute("aria-pressed", "true");
+    var go = function (e) { if (e && e.target && e.target.closest && e.target.closest("#snd")) return; ["pointerdown", "keydown"].forEach(function (ev) { removeEventListener(ev, go, true); }); if (!AC) set(true, false); };
+    ["pointerdown", "keydown"].forEach(function (ev) { addEventListener(ev, go, true); });
+  }
+  document.addEventListener("visibilitychange", function () { if (!AC) return; if (document.hidden) AC.suspend(); else if (on) AC.resume(); });
+  return {
+    stir: function (v) { if (!AC || !on) return; gust = Math.min(.05, gust + v * .00015); wind.gain.setTargetAtTime(Math.min(.12, wind.gain.value + v * .0002), AC.currentTime, .3); },
+    page: function (opened) { if (!AC || !on) return; out.gain.setTargetAtTime(opened ? .55 : .9, AC.currentTime, .6); }
+  };
+})();
+})();
+</script>
+</body>
+</html>

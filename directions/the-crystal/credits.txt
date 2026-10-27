@@ -1,0 +1,20 @@
+The Crystal: third-party assets (all CC0, no attribution required; listed anyway)
+
+Poly Haven (polyhaven.com, CC0)
+  kloppenheim_06_puresky (HDRI, 2k): the sky, under a golden gradient
+  fir_tree_01 (model, 1k, lightest LOD only): the forest and the ridge of firs
+  island_tree_01 (model, 1k): kept for a few broadleaves (not placed in this frame)
+  grass_medium_02 (model, 2k): the grass on the lip
+  rock_moss_set_01 (models, 1k): the small stone holding the letter
+  grass_medium_01 (model): used by the shared stone module's helpers (not in this frame)
+
+ambientCG (ambientcg.com, CC0)
+  Grass004, Rock030 (2K): the ground
+  Rock041 (2K): the ruins
+  Paper002 (2K): the letter
+  Rock035, Rock041, Moss002 (2K): the stone, through the shared stone module
+
+Everything else is made here: the terrain, the stone's geometry (the Break mark from
+break-geometry.json, through directions/stone/stone.py), the ruins, the mist, the grade, the loop,
+the birds and the sound.
+Fonts: Timeless Serif, licensed by Eóin Forker.

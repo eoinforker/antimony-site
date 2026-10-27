@@ -1,0 +1,63 @@
+The Crystal, path traced
+
+What this is
+  Golden hour over a vast valley of fir forest, filled with mist. On a far hill, about 1.6 km off,
+  stands the Antimony stone at the scale of a landmark: the shared stone module's monolith (exact
+  Break geometry: the tile with corners of radius 22 on 100, the seam at 16 degrees cut through, the
+  sky crystal set in its cavity), 300 m square, of scanned basalt with softened, chipped arrises and
+  moss at its foot. The low sun stands behind a ridge of firs to the left; a broken cloud deck,
+  seen only as shadow, cuts its light into shafts through the haze. A small ruined gatehouse and two
+  broken towers stand far off in the mist. In the foreground, the grass of the ridge's lip, and in it
+  a weathered letter held by a small stone.
+  Camera: 35 mm on 36 mm, on the ridge 3 m above the grass, about 23 m back from the lip, tilted up
+  3.5 degrees, f/16.
+
+  Blender 4.5.15 LTS, Cycles on CPU (4 threads), OpenImageDenoise, adaptive sampling, AgX Medium High
+  Contrast. Sky: Poly Haven kloppenheim_06_puresky, held under a golden gradient with a broad glow
+  about the sun. Scans: Poly Haven fir_tree_01 (its lightest LOD only), island_tree_01,
+  grass_medium_02, rock_moss_set_01; ambientCG Grass004, Rock030, Rock041, Paper002 (and the
+  stone module's own Rock035, Rock041, Moss002). See credits.txt.
+
+How the crystal is held to sky blue
+  The stone module's sky glass, plus an object-masked grade in the compositor (object index pass)
+  that holds the crystal's pixels on #94E6FF before the bloom; its inner light reaches the stone and
+  the land but never the mist (light linking), so it cannot veil itself.
+
+Run (always under the shared lock)
+  blender -b -P the_crystal.py -- --out beauty.png --masks masks.png --w 2560 --h 1440 --samples 200 --tl 1150
+    writes the still, a flat mask render from the same camera (R the crystal, G the near grass,
+    B distance) and beauty.json (where the stone, the crystal and the letter land, in pixels).
+  blender -b -P the_crystal.py -- --out letterinfo.png --letter-pass letter.png --w 2560 --h 1440 --samples 200
+    the letter alone over a transparent film, the grass in front holding it out (about 15 s).
+  python3 crystal_compose.py --still beauty.png --masks masks.png --letter letter.png --info letterinfo.json --out assets --shots shots
+    lays the letter in, grades the still (gold against dark, the crystal kept blue, a soft
+    vignette), writes the stills (PNG, WebP, AVIF, wide and phone) and composes the loop.
+
+The loop (6 s, 24 fps, 144 frames, seamless), composed from the one still and its masks
+  - mist drifts through the valley: two soft layers sway along it at different speeds, weighted to
+    the middle distance and kept off the stone and the lip
+  - the light breathes: the sun's side of the sky swells and settles, and the crystal glows and settles
+  - seven birds wheel beside the stone, far off; their size gives the stone its scale
+  - the grass on the lip sways
+  - fine grain, new on every frame
+  Every motion divides 144 frames, so frame 144 runs straight into frame 1.
+
+Page (index.html)
+  The still (AVIF, WebP), then the loop over it (WebM or H.264; a tall cut centred on the stone on
+  phones). The camera breathes: a very slow push and settle, and a little parallax with the pointer.
+  A short opening, once a session: the frame rises out of ink while the mist lifts off the valley,
+  then the type arrives; a touch, key or scroll skips it. The wordmark and "Software, made on
+  purpose." bottom left; one sound toggle top right; nothing else. The letter in the grass is a
+  button ("Read the note"): the view eases towards it and the sheet lifts and lies flat as the
+  letter, with the approved words; Escape, the close mark or a click outside eases back. After a
+  while without input the letter catches the light, once in a while. Sound is made in the browser
+  and silent until asked: wind over the ridge in slow gusts (it swells as the pointer moves), far
+  birds over the valley, and a low warm tone. Reduced motion: no opening, no loop, no parallax, the
+  letter crossfades.
+
+Honest limits
+  - The loop is made from one still: the mist and grass move by image layers and warps, the birds
+    are drawn, and the light breathes as a grade; nothing is re-rendered per frame.
+  - The letter is its own object pass, coloured to the evening light in the composer; up close it
+    reads a little clean against the grass.
+  - The stone's foot meets the hill just behind the crest line, so its moss shows only faintly.
