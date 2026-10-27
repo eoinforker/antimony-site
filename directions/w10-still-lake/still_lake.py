@@ -517,13 +517,13 @@ def hdri_rot_for(path, target_dir, band=(0.47, 0.53)):
 # A perfectly still lake in soft pink and violet dawn mist; a silhouetted island town far off with a few warm
 # windows; in the foreground the stone on a short old stone jetty, its crystal catching the dawn. Almost everything
 # is mist and water: the light carries the frame.
-setup(expo=arg('expo', 0.2), look='AgX - Base Contrast', bounces=(4, 2, 2), clamp=6.0)
+setup(expo=arg('expo', -0.45), look='AgX - Base Contrast', bounces=(4, 2, 2), clamp=6.0)
 R = random.Random(41)
 SKYF = os.path.join(PH, 'qwantani_dawn_puresky', 'qwantani_dawn_puresky_2k.hdr')
 SUN_AZ, SUN_EL = math.radians(arg('sun-az', -8.0)), math.radians(arg('sun-el', 3.0))   # just behind the island
 SUNV = Vector((math.sin(SUN_AZ) * math.cos(SUN_EL), math.cos(SUN_AZ) * math.cos(SUN_EL), math.sin(SUN_EL)))
-world_hdri(SKYF, strength=arg('sky', 0.7), rot_z=hdri_rot_for(SKYF, SUNV, band=(0.5, 0.56)), tint=(1.0, 0.72, 0.92))
-sun(SUNV, arg('sun', 3.0), (1.0, 0.6, 0.66), angle=3.0)
+world_hdri(SKYF, strength=arg('sky', 0.7), rot_z=hdri_rot_for(SKYF, SUNV, band=(0.5, 0.56)), tint=(0.95, 0.58, 0.9))
+sun(SUNV, arg('sun', 5.0), (1.0, 0.55, 0.6), angle=3.0)
 
 # ---- the lake: a mirror
 m_w, nt = mat('water')
@@ -560,7 +560,7 @@ def land_z(x, y):
             best = z if best is None else max(best, z)
     return best
 M_HOUSE = acg('houses', 'PaintedPlaster017', scale=0.2, val=0.35, sat=0.2, tint=(0.75, 0.72, 0.9))
-M_WIN = emit_mat('windows', (1.0, 0.55, 0.28), arg('win', 9.0))
+M_WIN = emit_mat('windows', (1.0, 0.55, 0.28), arg('win', 45.0))
 bm = bmesh.new(); bw = bmesh.new(); placed = 0; tops = []
 for _ in range(500):
     x = ISL.x + R.uniform(-150, 230); y = ISL.y + R.uniform(-40, 80)
@@ -573,9 +573,9 @@ for _ in range(500):
     bmesh.ops.rotate(bm, verts=rr['verts'], cent=Vector((0, 0, 0)), matrix=Matrix.Rotation(math.pi / 4, 3, 'Z'))
     bmesh.ops.translate(bm, vec=Vector((x, y, z + h_ - 1 + h_ * 0.22)), verts=rr['verts'])
     tops.append((x, y, z + h_))
-    if R.random() < 0.06:    # a lit window facing the lake
+    if R.random() < 0.1:    # a lit window facing the lake
         bmesh.ops.translate(bw, vec=Vector((x + R.uniform(-w_ / 3, w_ / 3), y - d_ / 2 - 0.3, z + R.uniform(2, h_ - 2))),
-                            verts=bmesh.ops.create_cube(bw, size=1.0)['verts'])
+                            verts=bmesh.ops.create_cube(bw, size=1.6)['verts'])
     placed += 1
     if placed > 70: break
 # one tall slender tower with a spire: the town's silhouette
@@ -599,7 +599,7 @@ for _ in range(160):
 M_JET = acg('jetty', 'PavingStones128', scale=0.9, val=0.38, sat=0.45, rough=(0.35, 0.8), stain=0.5, wet=0.3, wet_scale=0.5, tint=(0.95, 0.9, 0.95))
 M_JS = acg('jetty_side', 'Rock030', scale=0.6, val=0.35, sat=0.4, rough=(0.4, 0.9), wet=0.4)
 bm = bmesh.new()
-JW, JL, JZ = 2.2, 9.0, 0.55
+JW, JL, JZ = 1.5, 9.0, 0.5
 box(bm, (0, JL / 2 - 1.5, JZ - 0.15), (JW, JL, 0.3))
 jt = add_mesh('jetty_top', bm, M_JET); bevel(jt, 0.03, 2)
 bm = bmesh.new()
@@ -616,15 +616,15 @@ for _ in range(60):
 
 # ---- the stone at the end of the jetty, turned a little to the dawn
 SY = JL - 2.6
-build_stone((0.45, SY, JZ), yaw=math.radians(-12), S=0.015, T=0.42, sink=0.04, wet=0.35, val=0.36, glow=1.3, moss=0.14)
+build_stone((0.1, SY, JZ), yaw=math.radians(-12), S=0.015, T=0.42, sink=0.04, wet=0.35, val=0.36, glow=1.3, moss=0.14)
 
 # ---- mist: a thick bank on the water, a thinner veil up to the sky, both lit pink from behind
-volume_box('mist', (0, 700, 20), (6000, 1500, 40), arg('mist', 0.0022), (1.0, 0.76, 0.92), 0.75, noise=(0, 40))
-volume_box('veil', (0, 1200, 150), (7000, 2600, 300), arg('veil', 0.0005), (1.0, 0.8, 0.95), 0.7, noise=(0, 300))
-volume_box('near', (0, 60, 4), (300, 110, 8), arg('near', 0.004), (1.0, 0.82, 0.95), 0.6, noise=(0, 6))
+volume_box('mist', (0, 700, 20), (6000, 1500, 40), arg('mist', 0.0022), (1.0, 0.6, 0.85), 0.75, noise=(0, 40))
+volume_box('veil', (0, 1200, 150), (7000, 2600, 300), arg('veil', 0.0005), (0.95, 0.62, 0.92), 0.7, noise=(0, 300))
+volume_box('near', (0, 60, 4), (300, 110, 8), arg('near', 0.004), (1.0, 0.66, 0.88), 0.6, noise=(0, 6))
 
-cam = camera((-0.35, -3.6, 1.15), (-20.0, 500.0, 1.15 + 500 * 0.03), lens=arg('lens', 32.0), fstop=4.0,
-             focus=(Vector((0.45, SY, 1.3)) - Vector((-0.35, -3.6, 1.15))).length, shift=(0.0, 0.0))
+cam = camera((-2.6, -2.4, 0.95), (-12.0, 500.0, 0.95 + 500 * 0.03), lens=arg('lens', 32.0), fstop=4.0,
+             focus=(Vector((0.1, SY, 1.2)) - Vector((-2.6, -2.4, 0.95))).length, shift=(0.0, 0.0))
 render()
 grade(OUT, os.path.join(HERE, 'first-frame-draft.png'), bloom=0.26, halation=0.12, grain=0.028, vignette=0.28,
       lift=(0.02, 0.016, 0.026), thresh=0.6)

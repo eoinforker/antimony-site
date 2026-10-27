@@ -537,7 +537,7 @@ par = add_mesh('parapet', bm, M_PAR); bevel(par, 0.015, 2)
 bm = bmesh.new(); box(bm, (0, PY - 0.95, 0.22), (30, 1.9, 0.44)); bed = add_mesh('bed_wall', bm, M_PAR); bevel(bed, 0.012, 2)
 bm = bmesh.new(); box(bm, (0, PY - 0.95, 0.42), (29.8, 1.75, 0.06)); add_mesh('soil', bm, M_SOIL)
 # the building falls away below the parapet (seen only at the edges)
-bm = bmesh.new(); box(bm, (0, PY + 8, CITY_Z / 2), (30, 16, -CITY_Z)); add_mesh('building', bm, M_PAR)
+bm = bmesh.new(); box(bm, (0, PY + 0.2, CITY_Z / 2), (30, 0.4, -CITY_Z)); add_mesh('building', bm, M_PAR)
 
 # ---- planting (scanned): grasses, ferns, shrubs, periwinkle and small blue flowers, dense, with variation
 grass = ph('grass_medium_01', [f'grass_medium_01_{c}_LOD1' for c in 'abcdef'] + [f'grass_medium_01_tiny_{c}_LOD1' for c in 'abc'])
@@ -582,13 +582,13 @@ def window_mat(name, warm=True):
     tc = node(nt, 'ShaderNodeTexCoord', (-1400, 0)); sp = node(nt, 'ShaderNodeSeparateXYZ', (-1200, 0))
     link(nt, tc.outputs['Object'], sp.inputs['Vector'])
     hx = node(nt, 'ShaderNodeMath', (-1000, 100), operation='ADD'); link(nt, sp.outputs['X'], hx.inputs[0]); link(nt, sp.outputs['Y'], hx.inputs[1])
-    cx = node(nt, 'ShaderNodeMath', (-850, 100), operation='DIVIDE'); cx.inputs[1].default_value = 3.2; link(nt, hx.outputs['Value'], cx.inputs[0])
-    cz = node(nt, 'ShaderNodeMath', (-850, -100), operation='DIVIDE'); cz.inputs[1].default_value = 3.6; link(nt, sp.outputs['Z'], cz.inputs[0])
+    cx = node(nt, 'ShaderNodeMath', (-850, 100), operation='DIVIDE'); cx.inputs[1].default_value = 2.0; link(nt, hx.outputs['Value'], cx.inputs[0])
+    cz = node(nt, 'ShaderNodeMath', (-850, -100), operation='DIVIDE'); cz.inputs[1].default_value = 2.4; link(nt, sp.outputs['Z'], cz.inputs[0])
     cc = node(nt, 'ShaderNodeCombineXYZ', (-650, 0)); link(nt, cx.outputs['Value'], cc.inputs['X']); link(nt, cz.outputs['Value'], cc.inputs['Y'])
     oi = node(nt, 'ShaderNodeObjectInfo', (-850, -300)); link(nt, oi.outputs['Random'], cc.inputs['Z'])
     fl = node(nt, 'ShaderNodeVectorMath', (-500, 0), operation='FLOOR'); link(nt, cc.outputs['Vector'], fl.inputs[0])
     wn = node(nt, 'ShaderNodeTexWhiteNoise', (-350, 0)); wn.noise_dimensions = '3D'; link(nt, fl.outputs['Vector'], wn.inputs['Vector'])
-    on = node(nt, 'ShaderNodeMath', (-150, 0), operation='GREATER_THAN'); on.inputs[1].default_value = 0.86
+    on = node(nt, 'ShaderNodeMath', (-150, 0), operation='GREATER_THAN'); on.inputs[1].default_value = 0.8
     link(nt, wn.outputs['Value'], on.inputs[0])
     fr = node(nt, 'ShaderNodeVectorMath', (-500, -200), operation='FRACTION'); link(nt, cc.outputs['Vector'], fr.inputs[0])
     fs = node(nt, 'ShaderNodeSeparateXYZ', (-350, -200)); link(nt, fr.outputs['Vector'], fs.inputs['Vector'])
@@ -651,10 +651,10 @@ else:
     bm = bmesh.new(); box(bm, (2.6, PY - 0.5, 1.4), (2.6, 0.5, 2.8)); wl = add_mesh('stairhead', bm, M_PAR); bevel(wl, 0.015, 2)
     CORNERS = build_lightbox((2.3, PY - 0.78, 1.55), math.radians(-14), w=0.95, h=1.48, strength=arg('lb', 3.2), spill=60.0)
 
-cam = camera((-0.35, -2.2, 2.7), (0.3, 60.0, 2.7 - 60 * 0.12), lens=arg('lens', 30.0), fstop=4.0,
-             focus=(Vector((SX, SY, 1.0)) - Vector((-0.35, -2.2, 2.7))).length, shift=(0, 0.12))
+cam = camera((-0.35, -2.4, 2.6), (0.3, 60.0, 2.6 - 60 * 0.15), lens=arg('lens', 30.0), fstop=4.0,
+             focus=(Vector((SX, SY, 1.0)) - Vector((-0.35, -2.4, 2.6))).length, shift=(0, 0.06))
 render()
 FINAL = os.path.join(HERE, 'first-frame-draft.png' if HERO == 'stone' else 'first-frame-poster.png')
 if HERO != 'stone': export_corners(CORNERS, FINAL.replace('.png', '-corners.json'))
-grade(OUT, FINAL, bloom=0.22, halation=0.14, grain=0.03, vignette=0.34, lift=(0.012, 0.014, 0.024), thresh=0.6,
-      rain=arg('rain', 1200), rain_angle=0.1, rain_gain=0.18)
+grade(OUT, FINAL, bloom=0.22, halation=0.14, grain=0.016, vignette=0.34, lift=(0.012, 0.014, 0.024), thresh=0.6,
+      rain=arg('rain', 1000), rain_angle=0.1, rain_gain=0.08)

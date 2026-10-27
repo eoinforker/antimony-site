@@ -1,0 +1,24 @@
+{
+ "image": "first-frame-poster.png",
+ "width": 1600,
+ "height": 900,
+ "order": "top-left, top-right, bottom-right, bottom-left (pixels, origin top left)",
+ "corners": [
+  [
+   1195.7,
+   412.4
+  ],
+  [
+   1386.8,
+   414.2
+  ],
+  [
+   1369.3,
+   692.9
+  ],
+  [
+   1184.3,
+   682.8
+  ]
+ ]
+}
