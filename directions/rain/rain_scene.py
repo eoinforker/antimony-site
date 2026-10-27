@@ -213,7 +213,7 @@ def ground_wet(nt, tc, hgt):
     link(nt, p, f.inputs['Value']); return f.outputs['Result']
 def puddles(nt, b, tc, hgt):
     # standing water: a mirror in the joints and where the slabs dip, the rest wet stone
-    p = low(nt, tc, hgt, 0.3, 0.36)
+    p = low(nt, tc, hgt, 0.3 - arg('pud', 0.0), 0.36 - arg('pud', 0.0))
     w = node(nt, 'ShaderNodeBsdfPrincipled', (0, -400)); w.inputs['Base Color'].default_value = (0.02, 0.022, 0.025, 1)
     w.inputs['Roughness'].default_value = 0.02; w.inputs['IOR'].default_value = 1.33
     ms = node(nt, 'ShaderNodeMixShader', (250, -200)); link(nt, p, ms.inputs['Fac'])
@@ -262,6 +262,68 @@ aov(nt, 'face', 1.0); aov(nt, 'plant', 0.0)
 FACE_Y = -0.012
 face = plane('poster_face', PX - PW / 2, PX + PW / 2, PZ0, PZ0 + PH, FACE_Y, m_face)
 face.lightgroup = 'poster'
+
+# a handbill tucked under the frame's right rail: thin card, rain spotted, its free edge curling off the stone
+PAPER = arg('paper', '')
+RAIL_X = PX + PW / 2 + 0.05                  # the rail's outer edge
+CW, CH, CANG = 0.24, 0.33, math.radians(arg('paper-ang', -7.0))
+CX0, CZ0 = RAIL_X - 0.012, arg('paper-z', 0.66)   # the card's top left corner, tucked under the rail
+def card_pt(u, v):
+    # u across from the tucked edge, v down from the top; in the wall plane, turned a little about its corner
+    lx, lz = u * CW, -v * CH
+    x = CX0 + lx * math.cos(CANG) - lz * math.sin(CANG); z = CZ0 + CH + lx * math.sin(CANG) + lz * math.cos(CANG)
+    d = max(0.0, x - RAIL_X) / (CW - 0.012)
+    y = -0.0025 - 0.008 * d - arg('curl', 0.055) * d * d - 0.022 * d * v * v
+    return (x, y, z)
+if PAPER:
+    m_pap, nt = mat('handbill')
+    tcp = node(nt, 'ShaderNodeTexCoord', (-1200, 0))
+    tip = node(nt, 'ShaderNodeTexImage', (-900, 200)); tip.image = img(PAPER); tip.extension = 'EXTEND'
+    link(nt, tcp.outputs['UV'], tip.inputs['Vector'])
+    # rain spots: round cells soaked darker and glossier, and the foot wicking water up from where it drips
+    vo = node(nt, 'ShaderNodeTexVoronoi', (-900, -200)); vo.inputs['Scale'].default_value = 8.0; vo.voronoi_dimensions = '2D'
+    link(nt, tcp.outputs['UV'], vo.inputs['Vector'])
+    rr = node(nt, 'ShaderNodeMath', (-700, -350), operation='MULTIPLY_ADD'); rr.inputs[1].default_value = 0.26; rr.inputs[2].default_value = 0.06
+    sepc = node(nt, 'ShaderNodeSeparateColor', (-700, -500)); link(nt, vo.outputs['Color'], sepc.inputs['Color'])
+    keep = node(nt, 'ShaderNodeMath', (-550, -500), operation='GREATER_THAN'); keep.inputs[1].default_value = 0.55; link(nt, sepc.outputs['Green'], keep.inputs[0])
+    link(nt, sepc.outputs['Red'], rr.inputs[0])
+    sp = node(nt, 'ShaderNodeMath', (-550, -250), operation='LESS_THAN'); link(nt, vo.outputs['Distance'], sp.inputs[0]); link(nt, rr.outputs[0], sp.inputs[1])
+    spm = node(nt, 'ShaderNodeMath', (-400, -300), operation='MULTIPLY'); link(nt, sp.outputs[0], spm.inputs[0]); link(nt, keep.outputs[0], spm.inputs[1])
+    sepuv = node(nt, 'ShaderNodeSeparateXYZ', (-900, -650)); link(nt, tcp.outputs['UV'], sepuv.inputs['Vector'])
+    foot = node(nt, 'ShaderNodeMapRange', (-700, -650)); foot.inputs['From Min'].default_value = 0.16; foot.inputs['From Max'].default_value = 0.0
+    link(nt, sepuv.outputs['Y'], foot.inputs['Value'])
+    wetp = node(nt, 'ShaderNodeMath', (-250, -400), operation='MAXIMUM'); link(nt, spm.outputs[0], wetp.inputs[0]); link(nt, foot.outputs['Result'], wetp.inputs[1])
+    wk = node(nt, 'ShaderNodeMath', (-120, -400), operation='MULTIPLY'); wk.inputs[1].default_value = 0.85; link(nt, wetp.outputs[0], wk.inputs[0])
+    dk = node(nt, 'ShaderNodeMix', (-250, 150)); dk.data_type = 'RGBA'; dk.blend_type = 'MULTIPLY'; link(nt, wk.outputs[0], dk.inputs['Factor'])
+    link(nt, tip.outputs['Color'], dk.inputs['A']); dk.inputs['B'].default_value = (0.56, 0.58, 0.62, 1)
+    ro = node(nt, 'ShaderNodeMapRange', (-80, -200)); ro.inputs['To Min'].default_value = 0.62; ro.inputs['To Max'].default_value = 0.12
+    link(nt, wk.outputs[0], ro.inputs['Value'])
+    # cockle: the card is not flat where it got wet
+    cn = node(nt, 'ShaderNodeTexNoise', (-500, -800)); cn.inputs['Scale'].default_value = 7.0; cn.inputs['Detail'].default_value = 3
+    link(nt, tcp.outputs['UV'], cn.inputs['Vector'])
+    bpp = node(nt, 'ShaderNodeBump', (-150, -700)); bpp.inputs['Strength'].default_value = 0.12; bpp.inputs['Distance'].default_value = 0.002
+    link(nt, cn.outputs['Fac'], bpp.inputs['Height'])
+    bp = node(nt, 'ShaderNodeBsdfPrincipled', (100, 0)); link(nt, dk.outputs['Result'], bp.inputs['Base Color'])
+    link(nt, ro.outputs['Result'], bp.inputs['Roughness']); link(nt, bpp.outputs['Normal'], bp.inputs['Normal'])
+    bp.inputs['Specular IOR Level'].default_value = 0.4
+    tl = node(nt, 'ShaderNodeBsdfTranslucent', (100, -300)); link(nt, dk.outputs['Result'], tl.inputs['Color'])
+    mxp = node(nt, 'ShaderNodeMixShader', (350, 0)); mxp.inputs['Fac'].default_value = 0.12
+    link(nt, bp.outputs['BSDF'], mxp.inputs[1]); link(nt, tl.outputs['BSDF'], mxp.inputs[2])
+    o = node(nt, 'ShaderNodeOutputMaterial', (550, 0)); link(nt, mxp.outputs['Shader'], o.inputs['Surface'])
+    aov(nt, 'plant', 0.0)
+    NU, NV = 24, 32
+    bm = bmesh.new(); uvl = bm.loops.layers.uv.new('UV')
+    vs_ = [[bm.verts.new(card_pt(i / NU, j / NV)) for i in range(NU + 1)] for j in range(NV + 1)]
+    for j in range(NV):
+        for i in range(NU):
+            f = bm.faces.new((vs_[j][i], vs_[j + 1][i], vs_[j + 1][i + 1], vs_[j][i + 1]))
+            for lp, (a, b) in zip(f.loops, ((i, j), (i, j + 1), (i + 1, j + 1), (i + 1, j))):
+                lp[uvl].uv = (a / NU, 1 - b / NV)
+    me = bpy.data.meshes.new('handbill'); bm.to_mesh(me); bm.free()
+    for p_ in me.polygons: p_.use_smooth = True
+    hb = bpy.data.objects.new('handbill', me); sc.collection.objects.link(hb); me.materials.append(m_pap)
+    # a little thickness, so its edge catches the light
+    so = hb.modifiers.new('thick', 'SOLIDIFY'); so.thickness = 0.0007; so.offset = 1.0
 
 # planting bed along the wall foot (stone kerb), and the rill: a narrow open runnel in the paving
 BED_Y = -0.56
@@ -636,7 +698,7 @@ def facade_mat(name, seed, lit=0.4):
     br = node(nt, 'ShaderNodeMapRange', (-550, 400)); br.inputs['To Min'].default_value = 0.4; br.inputs['To Max'].default_value = 1.3
     link(nt, wn_.outputs['Color'], br.inputs['Value'])
     ls = node(nt, 'ShaderNodeMath', (-400, 100), operation='MULTIPLY'); link(nt, lv.outputs[0], ls.inputs[0]); link(nt, br.outputs['Result'], ls.inputs[1])
-    est = node(nt, 'ShaderNodeMath', (-250, 100), operation='MULTIPLY'); est.inputs[1].default_value = W_STR * 0.9; link(nt, ls.outputs[0], est.inputs[0])
+    est = node(nt, 'ShaderNodeMath', (-250, 100), operation='MULTIPLY'); est.inputs[1].default_value = W_STR * 0.9 * arg('fac-k', 1.0); link(nt, ls.outputs[0], est.inputs[0])
     em = node(nt, 'ShaderNodeEmission', (-100, 250)); em.inputs['Color'].default_value = (*srgb((1.0, 0.72, 0.46)), 1); link(nt, est.outputs[0], em.inputs['Strength'])
     # planted facade: green hangs over pale render in bands, thicker on the terraces
     gn = node(nt, 'ShaderNodeTexNoise', (-850, -400)); gn.inputs['Scale'].default_value = 0.6; gn.inputs['Detail'].default_value = 5; gn.noise_dimensions = '4D'; gn.inputs['W'].default_value = seed
@@ -654,7 +716,7 @@ def facade_mat(name, seed, lit=0.4):
     o = node(nt, 'ShaderNodeOutputMaterial', (400, 0)); link(nt, ad.outputs['Shader'], o.inputs['Surface'])
     aov(nt, 'plant', 0.0)
     return m
-FAC = [facade_mat('facade%d' % i, float(i) * 3.7, lit=0.38 + 0.08 * i) for i in range(3)]
+FAC = [facade_mat('facade%d' % i, float(i) * 3.7, lit=0.38 + 0.08 * i + arg('lit-k', 0.0)) for i in range(3)]
 M_SLAB = simple('slab', (0.5, 0.5, 0.49), 0.6)
 terr_green = []
 for row, (y0, hmin, hmax, xs) in enumerate(((16.0, 8.0, 13.0, (-34, 30)), (30.0, 14.0, 22.0, (-50, 50)), (52.0, 22.0, 34.0, (-80, 80)))):
@@ -686,6 +748,10 @@ for lx in (-22, -11, 0.5, 12, 24):
     bpy.ops.mesh.primitive_uv_sphere_add(radius=0.12, location=(lx, 11.0, 4.2), segments=12, ring_count=8)
     lo = bpy.context.object; lo.data.materials.append(M_LAMP); lo.lightgroup = 'warm'
     box('post', lx - 0.03, lx + 0.03, 10.97, 11.03, 0.0, 4.1, M_FRAME)
+    if arg('lamp-w', 0.0) > 0:
+        # each lamp lights the mist around it, a soft warm halo in the lane
+        lpl = bpy.data.lights.new('lane', 'POINT'); lpl.energy = arg('lamp-w', 0.0); lpl.color = srgb((1.0, 0.74, 0.5)); lpl.shadow_soft_size = 0.3
+        lpo = bpy.data.objects.new('lane', lpl); sc.collection.objects.link(lpo); lpo.location = (lx, 10.8, 4.0); lpo.lightgroup = 'warm'
 
 # ---------------------------------------------------------------- lights
 M_BOL, nt = mat('bollard_glow'); e_ = node(nt, 'ShaderNodeEmission'); e_.inputs['Color'].default_value = (*srgb((1.0, 0.8, 0.56)), 1); e_.inputs['Strength'].default_value = arg('bollard', 25.0)
@@ -757,12 +823,24 @@ def corners():
     for k, (x, z) in (('tl', (PX - PW / 2, PZ0 + PH)), ('tr', (PX + PW / 2, PZ0 + PH)), ('br', (PX + PW / 2, PZ0)), ('bl', (PX - PW / 2, PZ0))):
         v = world_to_camera_view(sc, cam, Vector((x, FACE_Y, z)))
         out[k] = [v.x * W, (1 - v.y) * H]
+    if PAPER:
+        # the handbill's outline where it shows (beyond the rail), for the page's button and hint
+        ring = [(i / 12, 0.0) for i in range(13)] + [(1.0, j / 12) for j in range(1, 13)] + [(1 - i / 12, 1.0) for i in range(1, 13)] + [(0.0, 1 - j / 12) for j in range(1, 12)]
+        pts = []
+        for u, v in ring:
+            q = card_pt(u, v); q = (max(q[0], RAIL_X), q[1], q[2])
+            c_ = world_to_camera_view(sc, cam, Vector(q)); pts.append([round(c_.x * W, 1), round((1 - c_.y) * H, 1)])
+        out['paper'] = pts
     out['res'] = [W, H]
     return out
 if CORNERS:
     json.dump(corners(), open(CORNERS, 'w'), indent=1)
 if '--dry' in argv:
     print('DRY_OK', corners()); sys.exit(0)
+if arg('border', ''):
+    b_ = [float(v) for v in arg('border', '').split(',')]
+    sc.render.use_border = True; sc.render.use_crop_to_border = True
+    sc.render.border_min_x, sc.render.border_max_x, sc.render.border_min_y, sc.render.border_max_y = b_
 t0 = time.time()
 sc.render.filepath = OUT
 bpy.ops.render.render(write_still=True)

@@ -302,11 +302,25 @@ for yw in (MOAT0 + 0.2, MOAT1 - 0.2):
 add_mesh('lip', bm, M_LIP)
 
 # ------------------------------------------------------------------ haze: aerial depth and a low mist in the moat
-def volume_box(name, c, s, dens, col, aniso):
+def volume_box(name, c, s, dens, col, aniso, soft=0.0):
     bm = bmesh.new(); box(bm, c, s)
     m, nt = mat(name)
     pv = node(nt, 'ShaderNodeVolumePrincipled', (0, 0))
     pv.inputs['Density'].default_value = dens; pv.inputs['Color'].default_value = (*col, 1)
+    if soft > 0:
+        # density fades to nothing towards every face, so the volume has no edges to see
+        tcv = node(nt, 'ShaderNodeTexCoord', (-1200, 0)); sp_ = node(nt, 'ShaderNodeSeparateXYZ', (-1000, 0)); link(nt, tcv.outputs['Generated'], sp_.inputs['Vector'])
+        acc = None
+        for k_, e_ in (('X', soft), ('Y', soft), ('Z', soft * 0.7)):
+            inv = node(nt, 'ShaderNodeMath', (-800, 0), operation='SUBTRACT'); inv.inputs[0].default_value = 1.0; link(nt, sp_.outputs[k_], inv.inputs[1])
+            mn = node(nt, 'ShaderNodeMath', (-650, 0), operation='MINIMUM'); link(nt, sp_.outputs[k_], mn.inputs[0]); link(nt, inv.outputs[0], mn.inputs[1])
+            mr = node(nt, 'ShaderNodeMapRange', (-500, 0)); mr.interpolation_type = 'SMOOTHERSTEP'; mr.inputs['From Min'].default_value = 0.0; mr.inputs['From Max'].default_value = e_
+            link(nt, mn.outputs[0], mr.inputs['Value'])
+            if acc is None: acc = mr.outputs['Result']
+            else:
+                ml = node(nt, 'ShaderNodeMath', (-350, 0), operation='MULTIPLY'); link(nt, acc, ml.inputs[0]); link(nt, mr.outputs['Result'], ml.inputs[1]); acc = ml.outputs[0]
+        dm_ = node(nt, 'ShaderNodeMath', (-200, 0), operation='MULTIPLY'); dm_.inputs[1].default_value = dens; link(nt, acc, dm_.inputs[0])
+        link(nt, dm_.outputs[0], pv.inputs['Density'])
     pv.inputs['Anisotropy'].default_value = aniso
     o = node(nt, 'ShaderNodeOutputMaterial', (300, 0)); link(nt, pv.outputs['Volume'], o.inputs['Volume'])
     ob = add_mesh(name, bm, m)
@@ -314,7 +328,7 @@ def volume_box(name, c, s, dens, col, aniso):
     return ob
 volume_box('haze', (0, 1700, 140), (12000, 3600, 320), arg('haze', 0.00011), (1.0, 0.86, 0.82), 0.75)
 volume_box('mist', (0, (MOAT0 + MOAT1) / 2, -4.5), (9000, MOAT1 - MOAT0 - 2, 12), arg('mist', 0.008), (1.0, 0.9, 0.9), 0.6)
-volume_box('shafts', (-420, 760, 110), (900, 900, 230), arg('shafts', 0.0005), (1.0, 0.86, 0.8), 0.8)
+volume_box('shafts', (-420, 760, 110), (1300, 1100, 260), arg('shafts', 0.0005), (1.0, 0.86, 0.8), 0.8, soft=arg('shaft-soft', 0.4))
 volume_box('lowmist', (0, 800, 0), (9000, 1300, 6), arg('lowmist', 0.0004), (1.0, 0.9, 0.9), 0.6)
 
 # ------------------------------------------------------------------ the Break: exact geometry, dark honed stone, sky crystal
@@ -402,6 +416,21 @@ emc.inputs['Strength'].default_value = arg('cr-glow', 1.4)
 ad = node(nt, 'ShaderNodeAddShader', (200, 0)); link(nt, b.outputs['BSDF'], ad.inputs[0]); link(nt, emc.outputs['Emission'], ad.inputs[1])
 o = node(nt, 'ShaderNodeOutputMaterial', (400, 0)); link(nt, ad.outputs['Shader'], o.inputs['Surface'])
 crystal.data.materials.append(m_cr)
+
+# the shared stone (directions/stone/stone.py): the same exact Break, carved from scanned basalt with softened, chipped
+# arrises, faint drove marks, dew on it at first light and moss at its foot; the crystal true sky glass
+NEW_MATS = []
+if arg('stone-module', 1):
+    sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'stone'))
+    import stone
+    parts = stone.build_stone(sc.collection, scale_m=100 * S, location=(MX, MY, float(ground_h(MX, MY))),
+                              rotation=(0.012, -0.006, math.radians(arg('yaw', -5.4))), wetness=arg('st-wet', 0.2),
+                              moss=arg('st-moss', 0.45), glow=arg('st-glow', 0.2), caustics=False, detail=arg('st-detail', 340))
+    for o_ in (tile, crystal): o_.hide_render = True
+    for ob_ in (parts['stone'], parts['crystal'], parts.get('veil')):
+        if ob_ is not None:
+            for m in ob_.data.materials:
+                if m and m not in NEW_MATS: NEW_MATS.append(m)
 
 # ------------------------------------------------------------------ flowers and grass
 def blade_points(L, tilt, az, droop):
@@ -493,9 +522,17 @@ def tinted(ob, rgb, tag_):
     return b_
 YEL = [tinted(o, (0xF2, 0xC4, 0x1A), 'yellow') for o in WHT] * 2 + EMP
 BLU = [tinted(o, (0x4F, 0xAE, 0xFF), 'sky') for o in WHT]
-for ob in list(dict.fromkeys(YEL)) + BLU + WHT: flib.objects.link(ob)
+PNK = [tinted(o, (0xF6, 0xB3, 0xC2), 'blush') for o in WHT]
+for ob in list(dict.fromkeys(YEL)) + BLU + WHT + PNK: flib.objects.link(ob)
 YEL = list(dict.fromkeys(YEL))
-NY, NB, NW = len(YEL), len(BLU), len(WHT)
+NY, NB, NW, NP = len(YEL), len(BLU), len(WHT), len(PNK)
+# Collection Info picks children in name order: index each colour by name, not by the order they were linked
+FN = sorted(o_.name for o_ in flib.objects)
+def _ix(test): return np.array([i for i, n in enumerate(FN) if test(n)], np.int64)
+IXY = _ix(lambda n: n.endswith('_yellow') or 'empodium' in n); IXB = _ix(lambda n: n.endswith('_sky'))
+IXP = _ix(lambda n: n.endswith('_blush')); IXW = _ix(lambda n: not n.endswith(('_yellow', '_sky', '_blush')) and 'empodium' not in n)
+def pick_of(arr, m): return arr[rng.integers(0, len(arr), m)]
+print('flower name order', len(IXY), len(IXB), len(IXW), len(IXP))
 print('flower lib', NY, NB, NW)
 
 # scanned grass clumps (Poly Haven grass_medium_01)
@@ -539,6 +576,77 @@ cam_d.dof.use_dof = True; cam_d.dof.focus_distance = math.hypot(MX, MY); cam_d.d
 cam_d.clip_start = 0.05; cam_d.clip_end = 12000
 HALF = math.atan(18 / cam_d.lens) + math.radians(6)
 
+# ------------------------------------------------------------------ the note: folded once, held on a low mossy rock by a pebble,
+# its upper leaf lifted by the morning air so the low sun shines through it
+PAPER = arg('paper', '')
+NOTE = None
+if PAPER:
+    az = math.radians(arg('note-az', 1.5)); nd = arg('note-d', 3.8)
+    NX, NY = -nd * math.sin(az), nd * math.cos(az)
+    RP = os.path.join(arg('ph', '/tmp/claude-0/-home-user/5a08d946-6e0e-5f87-9dad-cc05a4b0877f/scratchpad/assets/polyhaven'), 'rock_moss_set_01')
+    with bpy.data.libraries.load(os.path.join(RP, 'rock_moss_set_01_1k.blend'), link=False) as (src, dst):
+        dst.objects = [n for n in src.objects if n in ('rock_moss_set_01_rock03', 'rock_moss_set_01_rock01')]
+    for im_ in bpy.data.images:
+        if im_.filepath.startswith('//'):
+            q_ = os.path.join(RP, im_.filepath[2:])
+            if os.path.exists(q_): im_.filepath = q_
+    rocks = {o_.name: o_ for o_ in dst.objects if o_}
+    rk = rocks['rock_moss_set_01_rock03']; link_ob(rk)
+    rk.scale = (arg('rock-s', 0.36),) * 2 + (arg('rock-sz', 0.36),); rk.rotation_euler = (0, 0, math.radians(arg('rock-rot', 30.0)))
+    gz = float(ground_h(NX, NY)); rk.location = (NX, NY, gz - 0.07)
+    bpy.context.view_layer.update()
+    # where the rock's top is under the note
+    hit, loc_, nrm_, *_ = sc.ray_cast(bpy.context.view_layer.depsgraph, Vector((NX, NY, gz + 3)), Vector((0, 0, -1)))
+    TZ = loc_.z if hit else gz + 0.2
+    # the note: 15 by 21 cm folded to 15 by 10.5; one sheet, the fold across it, turned to face the lens a little
+    NWID, NLEAF, OPEN = 0.18, 0.125, math.radians(arg('note-open', 115.0))
+    face_yaw = math.atan2(-NX, NY) + math.radians(arg('note-turn', -8.0))   # local +y points away from the lens, turned a touch
+    cyw, syw = math.cos(face_yaw), math.sin(face_yaw)
+    def note_pt(u, v):
+        x = (u - 0.5) * NWID
+        if v <= 0:                                                 # the lower leaf, lying on the rock, corners lifting
+            y = v * NLEAF; z = 0.004 + 0.012 * (abs(u - 0.5) * 2) ** 3 * (-v) ** 2
+        else:                                                      # the upper leaf, lifted, with a soft bow
+            # opened from closed (lying back over the lower leaf, towards the lens) by OPEN about the fold
+            d = v * NLEAF; y = -math.cos(OPEN) * d; z = math.sin(OPEN) * d
+            bow = 0.008 * math.sin(math.pi * v) * (1 - 0.6 * abs(u - 0.5) * 2)
+            y += bow * 0.9; z += 0.004 + (0.006 * (abs(u - 0.5) * 2) ** 2) * v
+        return (NX + x * cyw - y * syw, NY + x * syw + y * cyw, TZ + 0.006 + z)
+    m_note, nt = mat('note')
+    tcn = node(nt, 'ShaderNodeTexCoord', (-1200, 0))
+    tin = node(nt, 'ShaderNodeTexImage', (-900, 200)); tin.image = img(PAPER); tin.extension = 'EXTEND'
+    link(nt, tcn.outputs['UV'], tin.inputs['Vector'])
+    PG = arg('paper-grain', '/tmp/claude-0/-home-user/5a08d946-6e0e-5f87-9dad-cc05a4b0877f/scratchpad/assets/ambientcg/Paper002')
+    mpn = node(nt, 'ShaderNodeMapping', (-1000, -300)); mpn.inputs['Scale'].default_value = (2.0, 2.0, 1.0); link(nt, tcn.outputs['UV'], mpn.inputs['Vector'])
+    tnr = node(nt, 'ShaderNodeTexImage', (-800, -300)); tnr.image = img(os.path.join(PG, 'Paper002_2K-JPG_NormalGL.jpg'), True); link(nt, mpn.outputs['Vector'], tnr.inputs['Vector'])
+    nmp = node(nt, 'ShaderNodeNormalMap', (-500, -300)); nmp.inputs['Strength'].default_value = 0.6; link(nt, tnr.outputs['Color'], nmp.inputs['Color'])
+    bn = node(nt, 'ShaderNodeBsdfPrincipled', (-200, 100)); link(nt, tin.outputs['Color'], bn.inputs['Base Color'])
+    bn.inputs['Roughness'].default_value = 0.7; bn.inputs['Specular IOR Level'].default_value = 0.35; link(nt, nmp.outputs['Normal'], bn.inputs['Normal'])
+    # thin paper: the sun comes through it warm, the print a faint shadow inside the glow
+    tcol = node(nt, 'ShaderNodeMix', (-450, 0)); tcol.data_type = 'RGBA'; tcol.blend_type = 'MULTIPLY'; tcol.inputs['Factor'].default_value = 1.0
+    link(nt, tin.outputs['Color'], tcol.inputs['A']); tcol.inputs['B'].default_value = (1.0, 0.86, 0.7, 1)
+    tln = node(nt, 'ShaderNodeBsdfTranslucent', (-200, -150)); link(nt, tcol.outputs['Result'], tln.inputs['Color'])
+    mxn = node(nt, 'ShaderNodeMixShader', (100, 0)); mxn.inputs['Fac'].default_value = arg('note-tl', 0.32)
+    link(nt, bn.outputs['BSDF'], mxn.inputs[1]); link(nt, tln.outputs['BSDF'], mxn.inputs[2])
+    o = node(nt, 'ShaderNodeOutputMaterial', (300, 0)); link(nt, mxn.outputs['Shader'], o.inputs['Surface'])
+    NU, NV = 20, 28
+    bm = bmesh.new(); uvl = bm.loops.layers.uv.new('UV')
+    vs_ = [[bm.verts.new(note_pt(i / NU, -1 + 2 * j / NV)) for i in range(NU + 1)] for j in range(NV + 1)]
+    for j in range(NV):
+        for i in range(NU):
+            f = bm.faces.new((vs_[j][i], vs_[j][i + 1], vs_[j + 1][i + 1], vs_[j + 1][i]))
+            for lp, (a, b_) in zip(f.loops, ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1))):
+                lp[uvl].uv = (a / NU, b_ / NV)
+    me = bpy.data.meshes.new('note'); bm.to_mesh(me); bm.free()
+    for p_ in me.polygons: p_.use_smooth = True
+    NOTE = link_ob(bpy.data.objects.new('note', me)); me.materials.append(m_note)
+    so = NOTE.modifiers.new('thick', 'SOLIDIFY'); so.thickness = 0.0006; so.offset = -1.0
+    # the pebble on the lower leaf, near the fold
+    pb_ = rocks['rock_moss_set_01_rock01']; link_ob(pb_)
+    pb_.scale = (0.03, 0.026, 0.024); pb_.rotation_euler = (0.2, 0.1, 1.1)
+    px_, py_, pz_ = note_pt(0.42, -0.42); pb_.location = (px_, py_, pz_ + 0.006)
+    NOTE_PTS = [(i / 10, -1.0) for i in range(11)] + [(1.0, -1 + j / 10) for j in range(1, 21)] + [(1 - i / 10, 1.0) for i in range(1, 11)] + [(0.0, 1 - j / 10) for j in range(1, 20)]
+
 def scatter(name, coll, n, rmin, rmax, keep, pick, scl_fn, clump=True):
     th = rng.uniform(-HALF, HALF, n) - cam.rotation_euler.z; r = np.sqrt(rng.uniform(rmin ** 2, rmax ** 2, n))
     xx = r * np.sin(th); yy = r * np.cos(th)
@@ -549,6 +657,7 @@ def scatter(name, coll, n, rmin, rmax, keep, pick, scl_fn, clump=True):
     c, s_ = math.cos(-mark.rotation_euler.z), math.sin(-mark.rotation_euler.z)
     lx = (x - MX) * c - (y - MY) * s_; ly = (x - MX) * s_ + (y - MY) * c
     ok = ~((np.abs(lx) < 1.08) & (np.abs(ly) < 0.42))          # never on the stone
+    if PAPER: ok &= np.hypot(x - NX, y - NY) > arg('rock-clear', 0.36)   # nor inside the rock
     x, y, r = x[ok], y[ok], r[ok]; m = len(x)
     v = np.zeros((m, 3), np.float32); v[:, 0] = x; v[:, 1] = y; v[:, 2] = ground_h(x, y) - 0.01
     me = bpy.data.meshes.new(name); me.vertices.add(m); me.vertices.foreach_set('co', v.ravel())
@@ -559,6 +668,10 @@ def scatter(name, coll, n, rmin, rmax, keep, pick, scl_fn, clump=True):
     lat = np.abs(x - MX * y / MY)
     s1 *= np.where(dmk < 3.0, 0.35 + 0.65 * np.clip((dmk - 1.3) / 1.7, 0, 1), 1.0)
     s1 *= np.where((y < MY) & (y > 4) & (lat < 2.2), 0.45 + 0.55 * np.clip((lat - 1.0) / 1.2, 0, 1), 1.0)
+    if PAPER:
+        # short where they stand between the lens and the note, so it is seen over them
+        tn = (x * NX + y * NY) / (NX * NX + NY * NY); latn = np.abs(x * NY - y * NX) / math.hypot(NX, NY)
+        s1 *= np.where((tn > 0) & (tn < 1.02) & (latn < 0.45), 0.35 + 0.65 * np.clip((latn - 0.22) / 0.23, 0, 1), 1.0)
     s1 = s1.astype(np.float32)
     scl = np.stack([s1, s1, s1 * rng.uniform(0.85, 1.2, m)], 1).astype(np.float32)
     pk = pick(m, x, y).astype(np.int32)
@@ -589,9 +702,26 @@ def fpick(m, x, y):
     band = smooth(13, 19, r) * (1 - smooth(38, 50, r)) * (0.8 + 0.2 * np.sin(x * 0.4 + 1.0))
     band = np.maximum(band, 0.85 * (1 - smooth(1.2, 3.5, np.hypot(x - MX, y - MY))))
     u = rng.uniform(0, 1, m); pb = 0.04 + 0.86 * band
-    return np.where(u < pb, NY + rng.integers(0, NB, m), np.where(u < pb + 0.06, NY + NB + rng.integers(0, NW, m), np.where(rng.uniform(0, 1, m) < 0.7, 0, rng.integers(1, NY, m))))
+    return np.where(u < pb, pick_of(IXB, m), np.where(u < pb + 0.06, pick_of(IXW, m), np.where(u < pb + 0.06 + arg('near-blush', 0.08), pick_of(IXP, m), pick_of(IXY, m))))
 scatter('flowers', flib, int(1400000 * DENS), 0.7, 70, lambda r: np.clip((6 / r) ** 1.15, 0.02, 1.0), fpick,
         lambda r, m: rng.uniform(0.8, 1.15, m) * (1 + r / 60))
+if arg('far-flowers', 0) > 0:
+    # the far field, out to the moat, is flowers too: fewer, larger cushions so they read through the haze as drifts of colour
+    def fpick_far(m, x, y):
+        u = rng.uniform(0, 1, m); wv = 0.5 + 0.5 * np.sin(x * 0.05 + 1.7) * np.sin(y * 0.031 + 0.4)
+        # gold first, drifts of blush and white through it, a thread of sky blue
+        pk = pick_of(IXY, m)
+        pk = np.where(u < 0.06, pick_of(IXB, m), pk)
+        pk = np.where((u >= 0.06) & (u < 0.2 + 0.25 * wv), pick_of(IXP, m), pk)
+        pk = np.where((u >= 0.45 + 0.25 * wv) & (u < 0.6 + 0.25 * wv), pick_of(IXW, m), pk)
+        return pk
+    scatter('flowers_far', flib, int(arg('far-flowers', 0) * DENS), arg('far-r0', 25.0), MOAT0 - 2,
+            lambda r: np.clip((r / 60.0) ** 0.6, 0.35, 1.0), fpick_far,
+            lambda r, m: rng.uniform(0.8, 1.2, m) * (1 + r / arg('far-scale', 22.0)))
+    if arg('beyond-flowers', 0) > 0:
+        # and on past the moat, up the long rise to the old structures
+        scatter('flowers_beyond', flib, int(arg('beyond-flowers', 0) * DENS), MOAT1 + 3, arg('beyond-r1', 650.0), lambda r: np.ones_like(r), fpick_far,
+                lambda r, m: rng.uniform(0.8, 1.2, m) * (1 + r / arg('beyond-scale', 16.0)))
 scatter('grass', glib, int(500000 * DENS), 0.7, 50, lambda r: np.clip((5 / r) ** 1.3, 0.02, 1.0),
         lambda m, x, y: rng.integers(0, NG, m), lambda r, m: rng.uniform(0.5, 0.85, m) * (1 + r / 60), clump=False)
 flib.hide_render = True; glib.hide_render = True
@@ -611,6 +741,12 @@ for c in (flib, glib):
             if m: plant_mats.add(m)
 for m in plant_mats: tag(m, 'gm')
 for m in (m_st, m_in, m_cr): tag(m, 'mk')
+for m in NEW_MATS: tag(m, 'mk')
+if PAPER:
+    o_ = m_note.node_tree.nodes.new('ShaderNodeOutputAOV'); o_.aov_name = 'mk'; o_.inputs['Value'].default_value = 0.45
+    for ob_ in (rk, pb_):
+        for m in ob_.data.materials:
+            if m: o_ = m.node_tree.nodes.new('ShaderNodeOutputAOV'); o_.aov_name = 'mk'; o_.inputs['Value'].default_value = 0.3
 PASSES = arg('passes', '')
 
 # ------------------------------------------------------------------ compositor: soft bloom
@@ -641,6 +777,17 @@ if PASSES:
 
 if '--dry' in argv:
     exec(open(arg('chk', '/dev/null')).read()); print('DRY_OK'); sys.exit(0)
+if PAPER and arg('paper-json', ''):
+    from bpy_extras.object_utils import world_to_camera_view
+    bpy.context.view_layer.update()
+    pts = []
+    for u, v in NOTE_PTS:
+        c_ = world_to_camera_view(sc, cam, Vector(note_pt(u, v))); pts.append([round(c_.x * W, 1), round((1 - c_.y) * H, 1)])
+    json.dump({'paper': pts, 'res': [W, H]}, open(arg('paper-json', ''), 'w'))
+if arg('border', ''):
+    b_ = [float(v) for v in arg('border', '').split(',')]
+    sc.render.use_border = True; sc.render.use_crop_to_border = True
+    sc.render.border_min_x, sc.render.border_max_x, sc.render.border_min_y, sc.render.border_max_y = b_
 t0 = time.time()
 sc.render.filepath = OUT
 bpy.ops.render.render(write_still=True)

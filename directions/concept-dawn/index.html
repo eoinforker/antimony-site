@@ -30,18 +30,20 @@ body { font: 400 15px/1.5 "Timeless Serif", Georgia, serif; -webkit-font-smoothi
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 /* the field at sunrise: the still, then the loop over it, both framed so the stone is always whole */
 #frame { position: fixed; inset: 0; background: #1b1820; }
-#frame img, #frame video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--mx) 50%; display: block; }
+#frame img, #frame video, #frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--mx) 50%; display: block; }
 #frame video { opacity: 0; transition: opacity 1.2s ease; }
 #frame video.on { opacity: 1; }
+#frame canvas#bg { opacity: 0; transition: opacity .8s ease; }
+html.breath #frame canvas#bg { opacity: 1; }
+#birds { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+/* the letter at sunrise: warm light low from the left, the shadow side a cool rose */
+.letter { --lt-scrim: radial-gradient(120% 90% at 30% 60%, rgba(40, 22, 30, .42), rgba(14, 10, 18, .74)); --lt-ratio: .714; }
 #veil { position: fixed; inset: 0; background: var(--ink); pointer-events: none; opacity: 0; }
 html.opening #veil { opacity: 1; }
 #veil.lift { opacity: 0; transition: opacity 3.2s cubic-bezier(.3, .1, .3, 1); }
 .sign { position: fixed; left: max(28px, env(safe-area-inset-left)); bottom: max(26px, env(safe-area-inset-bottom)); }
 .sign svg { display: block; width: 120px; height: auto; color: var(--paper); --lit: var(--sky); opacity: .94; }
 .sign p { margin-top: 8px; font-size: 13px; letter-spacing: .02em; color: rgba(238, 234, 224, .76); }
-.made { position: fixed; right: max(28px, env(safe-area-inset-right)); bottom: max(26px, env(safe-area-inset-bottom)); list-style: none; display: flex; gap: 20px; font-size: 13px; letter-spacing: .02em; }
-.made a { color: rgba(238, 234, 224, .7); text-decoration: none; transition: color .3s; }
-.made a:hover, .made a:focus-visible { color: var(--paper); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; outline: none; }
 #snd { position: fixed; right: max(18px, env(safe-area-inset-right)); top: max(16px, env(safe-area-inset-top)); width: 36px; height: 36px; border: 0; background: none; color: rgba(238, 234, 224, .62); cursor: pointer; display: grid; place-items: center; border-radius: 50%; transition: color .3s; }
 #snd:hover, #snd:focus-visible { color: var(--paper); outline: none; }
 #snd:focus-visible { box-shadow: 0 0 0 1px rgba(238, 234, 224, .5); }
@@ -49,20 +51,65 @@ html.opening #veil { opacity: 1; }
 #snd .w { opacity: 0; transition: opacity .4s; }
 #snd[aria-pressed="true"] .w { opacity: 1; }
 #snd[aria-pressed="true"] .x { opacity: 0; }
-.sign, .made, #snd { transition: opacity 1.2s cubic-bezier(.25, .6, .3, 1); }
-html.opening .sign, html.opening .made, html.opening #snd { opacity: 0; }
+.sign, #snd { transition: opacity 1.2s cubic-bezier(.25, .6, .3, 1); }
+html.opening .sign, html.opening #snd { opacity: 0; }
 /* a soft shade under the type so it reads on the bright flowers */
 #shade { position: fixed; left: 0; right: 0; bottom: 0; height: 30vh; pointer-events: none; background: linear-gradient(to top, rgba(11, 12, 12, .42), rgba(11, 12, 12, 0)); }
 @media (max-width: 600px) {
   .sign { left: 16px; bottom: max(18px, env(safe-area-inset-bottom)); }
   .sign svg { width: 94px; }
   .sign p { font-size: 12px; }
-  .made { right: 16px; bottom: max(18px, env(safe-area-inset-bottom)); flex-direction: column; gap: 4px; text-align: right; font-size: 12.5px; }
   #snd { right: 10px; top: max(10px, env(safe-area-inset-top)); }
 }
+/*@CSS@*/
+/* the paper in the scene: a quiet button over it, and the letter it opens into */
+.paper { position: fixed; left: 0; top: 0; width: 44px; height: 44px; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 4px; -webkit-tap-highlight-color: transparent; z-index: 3; }
+.paper:focus { outline: none; }
+.paper:focus-visible { box-shadow: 0 0 0 1px rgba(238, 234, 224, .75); }
+.paper .glint { position: absolute; inset: 0; border-radius: 50%; opacity: 0; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 252, 244, .55), rgba(255, 252, 244, .14) 55%, rgba(255, 252, 244, 0)); mix-blend-mode: screen; }
+.paper.hint .glint { animation: glint 2.4s cubic-bezier(.3, .1, .3, 1) 1; }
+@keyframes glint { 0% { opacity: 0; transform: translate(-18%, -12%) scale(.7); } 45% { opacity: .9; } 100% { opacity: 0; transform: translate(16%, 14%) scale(1); } }
+html.opening .paper { visibility: hidden; }
+#world { position: fixed; inset: 0; transform-origin: 50% 50%; will-change: transform; }
+.letter { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: var(--lt-pad, 24px); }
+.letter[hidden] { display: none; }
+.lt-scrim { position: absolute; inset: 0; background: var(--lt-scrim, rgba(6, 10, 18, .62)); opacity: 0; }
+.sheet { position: relative; height: min(calc(100vh - 2 * var(--lt-pad, 24px)), 860px); height: min(calc(100dvh - 2 * var(--lt-pad, 24px)), 860px);
+  aspect-ratio: var(--lt-ratio, .72); max-width: calc(100vw - 2 * var(--lt-pad, 24px)); color: var(--lt-ink, #1C1C1B); outline: none;
+  transform-origin: 50% 50%; backface-visibility: hidden;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .18), 0 10px 24px -8px rgba(0, 0, 0, .35), 0 40px 80px -30px rgba(0, 0, 0, .55); }
+.sheet-tex { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.sheet-in { position: absolute; inset: 0; padding: 13% 12% 11%; display: flex; flex-direction: column; font-family: "Timeless Serif", Georgia, serif;
+  text-shadow: 0 .6px 0 rgba(255, 255, 255, .5), 0 -.35px 0 rgba(0, 0, 0, .14); }
+.lt-name { font-weight: 400; font-size: 12px; letter-spacing: .38em; margin-right: -.38em; line-height: 1; }
+.lt-line { margin-top: 14px; font-size: 15px; letter-spacing: .01em; color: var(--lt-soft, rgba(28, 28, 27, .62)); font-style: italic; }
+.lt-body { margin-top: 18%; max-width: 21em; font-size: 18px; line-height: 1.55; letter-spacing: .003em; }
+.lt-body p + p { margin-top: 1em; }
+.lt-sign { margin-top: auto; font-size: 13px; letter-spacing: .02em; color: var(--lt-soft, rgba(28, 28, 27, .62)); }
+.lt-close { position: absolute; right: 10px; top: 10px; width: 40px; height: 40px; border: 0; background: none; color: rgba(28, 28, 27, .5); cursor: pointer; display: grid; place-items: center; border-radius: 50%; transition: color .3s; }
+.lt-close svg { width: 16px; height: 16px; }
+.lt-close:hover, .lt-close:focus-visible { color: rgba(28, 28, 27, .9); outline: none; }
+.lt-close:focus-visible { box-shadow: 0 0 0 1px rgba(28, 28, 27, .4); }
+.letter .sheet-in, .letter .lt-close { opacity: 0; transition: opacity .25s ease; }
+.letter.open .sheet-in, .letter.open .lt-close { transition: opacity .7s ease; }
+.letter.open .sheet-in, .letter.open .lt-close { opacity: 1; }
+@media (max-width: 600px) {
+  .letter { --lt-pad: 12px; }
+  .sheet { aspect-ratio: auto; width: calc(100vw - 24px); height: calc(100vh - 24px); height: calc(100dvh - 24px); }
+  .sheet-in { padding: 64px 28px 36px; }
+  .lt-body { margin-top: 30%; font-size: 17px; }
+}
+@media (max-height: 520px) { .lt-body { margin-top: 8%; } }
+@media (prefers-reduced-motion: reduce) {
+  .paper.hint .glint { animation-name: glint-still; }
+  @keyframes glint-still { 0%, 100% { opacity: 0; } 50% { opacity: .6; } }
+}
+/*@/CSS@*/
 </style>
 </head>
 <body>
+<div id="world">
 <div id="frame" aria-hidden="true">
   <picture>
     <source media="(max-aspect-ratio: 4/5)" type="image/avif" srcset="assets/dawn-still-phone.avif">
@@ -71,20 +118,35 @@ html.opening .sign, html.opening .made, html.opening #snd { opacity: 0; }
     <img id="still" src="assets/dawn-still.webp" alt="">
   </picture>
   <video id="loop" muted loop playsinline preload="auto"></video>
+  <canvas id="bg"></canvas>
+</div>
+<canvas id="birds" aria-hidden="true"></canvas>
 </div>
 <div id="shade"></div>
 <div id="veil"></div>
 <h1 class="vh">Antimony</h1>
-<p class="vh">Sunrise over a field of yellow and sky-blue flowers. Beyond a dry moat, the old structures stand dark and quiet: a broken plate on its pillars and two cold stacks. In the field stands the Antimony mark, a dark stone split by a seam, with a sky-blue crystal in the break, catching the first light.</p>
+<p class="vh">Sunrise over a field of yellow and sky-blue flowers. Beyond a dry moat, the old structures stand dark and quiet: a broken plate on its pillars and two cold stacks. In the field stands the Antimony mark, a dark stone split by a seam, with a sky-blue crystal in the break, catching the first light. Near at hand, on a low mossy rock, a folded note is held down by a pebble.</p>
 <div class="sign">
   <svg viewBox="-20 -830 4186 1070" role="img" aria-label="Antimony"><defs></defs><g fill="currentColor" stroke="currentColor" stroke-width="10" stroke-linejoin="round"><path d="M48 -96Q48 -145 82.0 -179.5Q116 -214 182 -242L322 -300V-365Q322 -418 299.5 -443.5Q277 -469 236 -469Q204 -469 157 -451V-375Q157 -347 142.0 -331.5Q127 -316 102 -316Q81 -316 68.5 -327.0Q56 -338 56 -359Q56 -392 86.5 -426.5Q117 -461 166.0 -484.0Q215 -507 267 -507Q336 -507 371.5 -466.5Q407 -426 407 -357V-113Q407 -84 420.0 -70.5Q433 -57 453 -57Q467 -57 478.5 -63.5Q490 -70 495 -79H507Q502 -42 475.0 -17.0Q448 8 409 8Q366 8 344.5 -20.0Q323 -48 322 -87Q306 -50 265.0 -19.0Q224 12 166 12Q110 12 79.0 -18.5Q48 -49 48 -96ZM322 -112V-267L211 -220Q175 -205 155.5 -180.5Q136 -156 136 -126Q136 -93 156.0 -72.0Q176 -51 212 -51Q246 -51 271.5 -67.5Q297 -84 322 -112Z"/><path d="M609 -93V-353Q609 -389 606.0 -405.5Q603 -422 590.0 -431.5Q577 -441 548 -443V-462L682 -510H695V-407Q759 -510 860 -510Q922 -510 961.5 -472.0Q1001 -434 1001 -364V-93Q1001 -58 1016.5 -42.5Q1032 -27 1072 -23V0H843V-23Q883 -27 899.0 -43.0Q915 -59 915 -93V-333Q915 -386 890.0 -414.5Q865 -443 819 -443Q747 -443 695 -375V-93Q695 -58 710.5 -42.5Q726 -27 767 -23V0H537V-23Q578 -27 593.5 -42.5Q609 -58 609 -93Z"/><path d="M1171 -122V-456H1097V-477Q1155 -492 1184.5 -529.5Q1214 -567 1232 -631H1257V-500H1401V-456H1257V-137Q1257 -94 1276.0 -72.5Q1295 -51 1329 -51Q1349 -51 1364.5 -59.5Q1380 -68 1394 -81L1408 -75Q1396 -42 1367.0 -16.5Q1338 9 1288 9Q1234 9 1202.5 -24.0Q1171 -57 1171 -122Z"/><path d="M1504 -93V-361Q1504 -396 1501.0 -411.0Q1498 -426 1485.5 -434.5Q1473 -443 1443 -446V-465L1577 -513H1590V-93Q1590 -59 1606.0 -43.0Q1622 -27 1662 -23V0H1433V-23Q1473 -27 1488.5 -42.5Q1504 -58 1504 -93Z"/><path d="M1776 -353Q1776 -389 1773.0 -405.5Q1770 -422 1757.0 -431.5Q1744 -441 1715 -443V-462L1849 -510H1862V-413Q1896 -459 1936.0 -484.5Q1976 -510 2027 -510Q2074 -510 2108.0 -484.5Q2142 -459 2152 -418Q2185 -462 2224.0 -486.0Q2263 -510 2313 -510Q2376 -510 2412.0 -474.0Q2448 -438 2448 -368V-96Q2448 -62 2464.5 -44.5Q2481 -27 2520 -23V0H2293V-23Q2331 -27 2346.5 -44.0Q2362 -61 2362 -96V-352Q2362 -397 2337.5 -421.0Q2313 -445 2271 -445Q2241 -445 2210.0 -431.5Q2179 -418 2155 -391V-96Q2155 -61 2170.5 -44.0Q2186 -27 2224 -23V0H2000V-23Q2038 -27 2053.5 -44.0Q2069 -61 2069 -96V-344Q2069 -394 2047.0 -419.5Q2025 -445 1984 -445Q1953 -445 1920.5 -428.0Q1888 -411 1862 -379V-96Q1862 -61 1877.5 -44.0Q1893 -27 1931 -23V0H1705V-23Q1743 -27 1759.5 -44.5Q1776 -62 1776 -96Z"/><path d="M2563 -251Q2563 -330 2597.0 -388.0Q2631 -446 2687.0 -476.5Q2743 -507 2806 -507Q2869 -507 2925.0 -476.5Q2981 -446 3015.5 -388.0Q3050 -330 3050 -251Q3050 -173 3015.5 -114.5Q2981 -56 2925.0 -24.5Q2869 7 2806 7Q2743 7 2687.5 -24.5Q2632 -56 2597.5 -114.5Q2563 -173 2563 -251ZM2947 -251Q2947 -350 2911.5 -412.0Q2876 -474 2806 -474Q2737 -474 2701.5 -412.0Q2666 -350 2666 -251Q2666 -152 2701.5 -89.0Q2737 -26 2806 -26Q2875 -26 2911.0 -89.5Q2947 -153 2947 -251Z"/><path d="M3174 -93V-353Q3174 -389 3171.0 -405.5Q3168 -422 3155.0 -431.5Q3142 -441 3113 -443V-462L3247 -510H3260V-407Q3324 -510 3425 -510Q3487 -510 3526.5 -472.0Q3566 -434 3566 -364V-93Q3566 -58 3581.5 -42.5Q3597 -27 3637 -23V0H3408V-23Q3448 -27 3464.0 -43.0Q3480 -59 3480 -93V-333Q3480 -386 3455.0 -414.5Q3430 -443 3384 -443Q3312 -443 3260 -375V-93Q3260 -58 3275.5 -42.5Q3291 -27 3332 -23V0H3102V-23Q3143 -27 3158.5 -42.5Q3174 -58 3174 -93Z"/><path d="M3641 -478V-500H3870V-478Q3834 -476 3819.0 -469.5Q3804 -463 3804 -448Q3804 -439 3808 -428L3922 -115L4038 -418Q4044 -438 4044 -443Q4044 -458 4029.5 -466.5Q4015 -475 3980 -478V-500H4142V-478Q4118 -475 4107.5 -470.5Q4097 -466 4090.5 -456.0Q4084 -446 4075 -420L3878 93L3828.464 222.0L3789.762 195.0L3852 73L3877 7L3708 -425Q3699 -447 3694.0 -455.5Q3689 -464 3677.0 -470.0Q3665 -476 3641 -478Z"/><path d="M1257 -500 H1507 V-456 H1257 Z"/></g><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8 L1491.8 -616.2 L1491.8 -693.8Z" fill="currentColor"/><path d="M1547.0 -741.2 L1602.2 -693.8 L1602.2 -616.2 L1547.0 -568.8Z" fill="var(--lit)"/></svg>
   <p>Software, made on purpose.</p>
 </div>
-<ul class="made" aria-label="What we make">
-  <li><a href="https://eoinforker.github.io/orbe-site/">Orbe</a></li>
-  <li><a href="https://immiscible.ai">immiscible</a></li>
-  <li><a href="https://idyll.day">Idyll</a></li>
-</ul>
+<button id="paper" class="paper" type="button" aria-label="Read the note" aria-haspopup="dialog" aria-controls="letter"><span class="glint" aria-hidden="true"></span></button>
+<div id="letter" class="letter" role="dialog" aria-modal="true" aria-labelledby="lt-name" hidden>
+  <div class="lt-scrim"></div>
+  <div class="sheet" tabindex="-1">
+    <canvas class="sheet-tex" aria-hidden="true"></canvas>
+    <div class="sheet-in">
+      <h2 id="lt-name" class="lt-name">ANTIMONY</h2>
+      <p class="lt-line">Software, made on purpose.</p>
+      <div class="lt-body">
+        <p>The moats are fading. Intention remains, and we give it everything.</p>
+        <p>We have only just begun.</p>
+      </div>
+      <p class="lt-sign">Antimony, London</p>
+    </div>
+    <button class="lt-close" type="button" aria-label="Close the note"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+  </div>
+</div>
 <button id="snd" type="button" aria-pressed="false" aria-label="Sound">
   <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M3.5 7.8h2.6L10 4.6v10.8L6.1 12.2H3.5z"/>
@@ -153,7 +215,7 @@ if (html.classList.contains("opening")) {
 
 /* ================= sound: made here, in the browser; silent until asked ================= */
 var SND = (function () {
-  var AC = null, out = null, on = false, SKEY = "antimony.dawn.sound", btn = $("snd"), timers = [];
+  var AC = null, out = null, on = false, SKEY = "antimony.dawn.sound", btn = $("snd"), timers = [], mf = null, gust = null, gustT = 0;
   function gain(v) { var g = AC.createGain(); g.gain.value = v; return g; }
   function filt(type, f, qv) { var x = AC.createBiquadFilter(); x.type = type; x.frequency.value = f; x.Q.value = qv || .7; return x; }
   function chain() { for (var i = 0; i < arguments.length - 1; i++) arguments[i].connect(arguments[i + 1]); return arguments[arguments.length - 1]; }
@@ -174,7 +236,8 @@ var SND = (function () {
   function build() {
     AC = new (window.AudioContext || window.webkitAudioContext)();
     out = gain(0); out.connect(AC.destination);
-    var comp = AC.createDynamicsCompressor(); comp.threshold.value = -22; comp.ratio.value = 3; comp.connect(out);
+    mf = filt("lowpass", 18000, .5); mf.connect(out);
+    var comp = AC.createDynamicsCompressor(); comp.threshold.value = -22; comp.ratio.value = 3; comp.connect(mf);
     dry = gain(1); dry.connect(comp);
     /* open air: a long, soft reverb */
     var rev = AC.createConvolver(), L = Math.round(AC.sampleRate * 4), ib = AC.createBuffer(2, L, AC.sampleRate);
@@ -187,6 +250,12 @@ var SND = (function () {
     chain(s, filt("highpass", 90), bp, wg, dry); wg.connect(revIn);
     var l1 = AC.createOscillator(), l1g = gain(.055); l1.frequency.value = .045; chain(l1, l1g, wg.gain); l1.start();
     var l2 = AC.createOscillator(), l2g = gain(260); l2.frequency.value = .031; chain(l2, l2g, bp.frequency); l2.start();
+    /* a gust that rises when the hand moves through the field, through the flowers' rustle band */
+    var s2 = AC.createBufferSource(); s2.buffer = PN; s2.loop = true; s2.playbackRate.value = 1.13; s2.start(0, 2.5);
+    gust = gain(0); chain(s2, filt("bandpass", 900, .6), filt("highshelf", 4000), gust, dry); gust.connect(revIn);
+    /* the far hum of the old structures, very low, almost felt rather than heard */
+    var hb = AC.createBufferSource(); hb.buffer = PN; hb.loop = true; hb.playbackRate.value = .5; hb.start(0, 5);
+    chain(hb, filt("lowpass", 120, .8), gain(.05), dry);
     /* a warm, slow chord under it all, barely there */
     [[146.83, 0], [220.0, .4], [277.18, .8], [329.63, 1.2]].forEach(function (p, i) {
       var o = AC.createOscillator(); o.type = "sine"; o.frequency.value = p[0];
@@ -230,8 +299,381 @@ var SND = (function () {
     btn.setAttribute("aria-pressed", "true");
     addEventListener("pointerdown", resume, true); addEventListener("keydown", resume, true);
   }
-  return { set: set };
+  return {
+    set: set,
+    stir: function (v) { if (!AC || !on || !gust) return; var t = AC.currentTime; gust.gain.setTargetAtTime(Math.min(.07, v * .0012), t, .35); clearTimeout(gustT); gustT = setTimeout(function () { if (AC) gust.gain.setTargetAtTime(0, AC.currentTime, 1.4); }, 300); },
+    muffle: function (m) { if (!AC || !mf) return; mf.frequency.setTargetAtTime(m ? 1600 : 18000, AC.currentTime, m ? .5 : .7); },
+    flock: function (pan) { if (!AC || !on) return; var t = AC.currentTime + .1, base = 3000 + Math.random() * 900; for (var i = 0; i < 3; i++) chirp(t + i * .16, base, base * .78, .09, .009, pan); }
+  };
 })();
+
+/* ================= breathing: the field drawn through its depth, pivoted on the stone ================= */
+/*@LIB@*/
+/* ================= breathing: the loop drawn through its own depth, so the view drifts and answers the hand ================= */
+/* o: canvas, video, still, aux (url: R disparity about the focal plane, G water, B sunlit), crop() -> [x0,y0,w,h] of aux
+   in use, par (uv), dolly (uv), period (s), ripples, cloud {k, scale, speed}, swell, phone, onStart() */
+function Breath(o) {
+  var cv = o.canvas, gl = null;
+  try { gl = cv.getContext("webgl", { antialias: false, alpha: false, depth: false, stencil: false, premultipliedAlpha: false, preserveDrawingBuffer: false }); } catch (e) {}
+  if (!gl) return null;
+  var VS = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
+  var FS = [
+    "precision highp float;",
+    "uniform sampler2D uV;uniform sampler2D uA;uniform vec2 uRes;uniform vec4 uCrop;uniform vec4 uVC;uniform vec2 uO;uniform float uDol;uniform vec2 uC;",
+    "uniform float uT;uniform vec4 uR[8];uniform float uAsp;uniform float uFl;uniform vec3 uCl;uniform float uSw;",
+    "vec4 aux(vec2 q){return texture2D(uA,uCrop.xy+q*uCrop.zw);}",
+    "float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);",
+    " float a=fract(sin(dot(i,vec2(127.1,311.7)))*43758.5),b=fract(sin(dot(i+vec2(1.,0.),vec2(127.1,311.7)))*43758.5);",
+    " float c=fract(sin(dot(i+vec2(0.,1.),vec2(127.1,311.7)))*43758.5),d=fract(sin(dot(i+vec2(1.,1.),vec2(127.1,311.7)))*43758.5);",
+    " return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);}",
+    "void main(){",
+    " vec2 uv=gl_FragCoord.xy/uRes;",
+    " vec2 off=uO+(uv-uC)*uDol;",
+    " float d=aux(uv).r*2.-1.;vec2 q=uv-off*d;",
+    " d=aux(clamp(q,0.,1.)).r*2.-1.;q=uv-off*d;",
+    " q=clamp(q,.0008,.9992);",
+    " vec4 A=aux(q);float hl=0.;",
+    " if(A.g>.01){vec2 dq=vec2(0.);",
+    "  for(int i=0;i<8;i++){vec4 r=uR[i];if(r.z<0.||r.z>1.6)continue;",
+    "   vec2 g=(q-r.xy)*vec2(uAsp,1.);g.y/=uFl;float l=length(g)+1e-4;float R=.004+r.z*.05;float w=.006;",
+    "   float band=exp(-pow((l-R)/w,2.));float fade=pow(max(0.,1.-r.z/1.6),2.);",
+    "   dq+=g/l*vec2(1.,uFl)*sin((l-R)/w*3.1416)*band*fade*r.w*.0016;hl+=band*fade*r.w;}",
+    "  q+=dq*A.g;}",
+    " vec3 c=texture2D(uV,uVC.xy+q*uVC.zw).rgb;",
+    " c+=hl*A.g*.05*(c+.15);",
+    " if(uCl.x>0.){vec2 p=q*vec2(uAsp,1.)*uCl.y+vec2(uT*uCl.z,uT*uCl.z*.23);float s=n2(p)*.6+n2(p*2.1+7.3)*.3+n2(p*4.3+1.1)*.1;",
+    "  s=smoothstep(.42,.72,s);c*=1.-uCl.x*s*A.b;}",
+    " c*=1.+uSw;",
+    " gl_FragColor=vec4(c,1.);}"
+  ].join("\n");
+  function sh(t, s) { var x = gl.createShader(t); gl.shaderSource(x, s); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) { console.warn(gl.getShaderInfoLog(x)); return null; } return x; }
+  var pv = sh(gl.VERTEX_SHADER, VS), pf = sh(gl.FRAGMENT_SHADER, FS); if (!pv || !pf) return null;
+  var P = gl.createProgram(); gl.attachShader(P, pv); gl.attachShader(P, pf); gl.bindAttribLocation(P, 0, "p"); gl.linkProgram(P);
+  if (!gl.getProgramParameter(P, gl.LINK_STATUS)) return null;
+  gl.useProgram(P);
+  var U = {}; ["uV", "uA", "uRes", "uCrop", "uVC", "uO", "uDol", "uC", "uT", "uR", "uAsp", "uFl", "uCl", "uSw"].forEach(function (n) { U[n] = gl.getUniformLocation(P, n); });
+  var b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  function tex(unit) {
+    var t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([128, 0, 0, 255]));
+    return t;
+  }
+  var tV = tex(0), tA = tex(1), haveV = false, haveA = false, src = null, fresh = true;
+  gl.uniform1i(U.uV, 0); gl.uniform1i(U.uA, 1);
+  function upload(unit, t, el) {
+    gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    try { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, el); } catch (e) { return false; }
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); return true;
+  }
+  var ai = new Image(), AD = null;
+  ai.onload = function () {
+    haveA = upload(1, tA, ai);
+    try { var c = document.createElement("canvas"); c.width = ai.naturalWidth; c.height = ai.naturalHeight; var x = c.getContext("2d"); x.drawImage(ai, 0, 0); AD = { d: x.getImageData(0, 0, c.width, c.height).data, w: c.width, h: c.height }; } catch (e) {}
+    kick();
+  };
+  ai.src = o.aux;
+  /* the picture: the still until the loop has frames, then the loop */
+  function useStill() { var s = o.still; if (s && s.complete && s.naturalWidth) { haveV = upload(0, tV, s); src = "still"; kick(); } }
+  if (o.still) { if (o.still.complete) useStill(); else o.still.addEventListener("load", useStill); }
+  var v = o.video;
+  var lastVT = -1;
+  /* the hand and the tilt, eased like a held camera */
+  var tgt = [0, 0], cur = [0, 0], vel = [0, 0], tiltOn = false;
+  function aim(x, y) { tgt[0] = Math.max(-1, Math.min(1, x)); tgt[1] = Math.max(-1, Math.min(1, y)); }
+  addEventListener("pointermove", function (e) { if (e.pointerType === "touch" && !e.isPrimary) return; aim(e.clientX / innerWidth * 2 - 1, e.clientY / innerHeight * 2 - 1); }, { passive: true });
+  document.addEventListener("pointerleave", function () { aim(0, 0); });
+  addEventListener("deviceorientation", function (e) { if (e.gamma == null) return; tiltOn = true; aim(e.gamma / 22, (e.beta - 50) / 26); }, { passive: true });
+  /* rings in the water */
+  var R = new Float32Array(32), rn = 0, rT = [];
+  for (var i = 0; i < 8; i++) { R[i * 4 + 2] = -1; rT[i] = -1e9; }
+  function ring(u, vv, amp) { var i = rn++ % 8; R[i * 4] = u; R[i * 4 + 1] = 1 - vv; R[i * 4 + 3] = amp; rT[i] = performance.now(); kick(); }
+  var crop = [0, 0, 1, 1], vcrop = [0, 0, 1, 1], live = false, last = 0, t0 = performance.now(), minDt = o.phone ? 1000 / 31 : 0, lastDraw = 0, started = false;
+  function size() {
+    var r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, o.phone ? 1.5 : 1.75);
+    var w = Math.max(2, Math.round(r.width * dpr)), h = Math.max(2, Math.round(r.height * dpr));
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    crop = o.crop ? o.crop() : [0, 0, 1, 1]; vcrop = o.vcrop ? o.vcrop() : [0, 0, 1, 1];
+  }
+  function kick() { if (!live && !document.hidden) { live = true; requestAnimationFrame(frame); } }
+  function frame(now) {
+    if (document.hidden) { live = false; return; }
+    requestAnimationFrame(frame);
+    if (minDt && now - lastDraw < minDt) return; lastDraw = now;
+    var dt = Math.min(.1, (now - (last || now)) / 1000); last = now;
+    /* critically damped spring: about a second to settle */
+    for (var k = 0; k < 2; k++) { var w0 = 3.2, a = w0 * w0 * (tgt[k] - cur[k]) - 2 * w0 * vel[k]; vel[k] += a * dt; cur[k] += vel[k] * dt; }
+    var t = (now - t0) / 1000, ph = 2 * Math.PI * t / (o.period || 48);
+    /* the drift: a slow lissajous of the camera, and a breath of push in and out */
+    var ox = cur[0] * o.par + Math.sin(ph) * o.par * .35, oy = -cur[1] * o.par * .6 + Math.sin(ph * 2 + 1.3) * o.par * .18;
+    var dol = (.5 - .5 * Math.cos(ph)) * (o.dolly || 0);
+    if (v && v.readyState >= 2 && v.currentTime !== lastVT) { if (upload(0, tV, v)) { lastVT = v.currentTime; haveV = true; src = "video"; if (!started) { started = true; if (o.onStart) o.onStart(); } } }
+    if (!haveV || !haveA) return;
+    gl.viewport(0, 0, cv.width, cv.height); gl.useProgram(P);
+    gl.uniform2f(U.uRes, cv.width, cv.height); gl.uniform4f(U.uCrop, crop[0], 1 - crop[1] - crop[3], crop[2], crop[3]); gl.uniform4f(U.uVC, vcrop[0], 1 - vcrop[1] - vcrop[3], vcrop[2], vcrop[3]);
+    gl.uniform2f(U.uO, ox, oy); gl.uniform1f(U.uDol, dol); gl.uniform2f(U.uC, o.centre ? o.centre[0] : .5, o.centre ? 1 - o.centre[1] : .5); gl.uniform1f(U.uT, t);
+    for (var i = 0; i < 8; i++) R[i * 4 + 2] = rT[i] < 0 ? -1 : (now - rT[i]) / 1000;
+    gl.uniform4fv(U.uR, R); gl.uniform1f(U.uAsp, cv.width / cv.height); gl.uniform1f(U.uFl, o.fl || .2);
+    var cl = o.cloud || { k: 0, scale: 1, speed: 0 }; gl.uniform3f(U.uCl, cl.k, cl.scale, cl.speed);
+    gl.uniform1f(U.uSw, o.swell ? o.swell * Math.sin(2 * Math.PI * t / (o.swellPeriod || 23)) : 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    window.__breath = (window.__breath || 0) + 1;
+  }
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) { last = 0; kick(); } });
+  addEventListener("resize", function () { size(); kick(); });
+  size(); kick();
+  return {
+    ring: ring, size: size,
+    /* how far a point at disparity d (about the focal plane) is moved on screen right now, in canvas uv */
+    /* the aux map under a point of the canvas (uv from the top left): [disparity, water, sun] */
+    at: function (u, vv) {
+      if (!AD) return null; var x = Math.round((crop[0] + u * crop[2]) * (AD.w - 1)), y = Math.round((crop[1] + vv * crop[3]) * (AD.h - 1));
+      if (x < 0 || y < 0 || x >= AD.w || y >= AD.h) return null; var i = (y * AD.w + x) * 4;
+      return [AD.d[i] / 127.5 - 1, AD.d[i + 1] / 255, AD.d[i + 2] / 255];
+    },
+    tilt: function () { return tiltOn; }
+  };
+}
+
+/* ================= the paper: a button over it in the scene, and the letter it opens into ================= */
+function Letter(o) {
+  var btn = document.getElementById("paper"), box = document.getElementById("letter"), sheet = box.querySelector(".sheet"),
+    scrim = box.querySelector(".lt-scrim"), tex = box.querySelector(".sheet-tex"), closeB = box.querySelector(".lt-close");
+  var world = o.world, reduced = o.reduced, state = "shut", anims = [], painted = "", P = null, idleT = 0;
+  /* where the paper is on screen: its outline, its centre, its tilt */
+  function measure() {
+    var pts = o.outline(); if (!pts || !pts.length) return null;
+    var x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, cx = 0, cy = 0;
+    pts.forEach(function (p) { x0 = Math.min(x0, p[0]); y0 = Math.min(y0, p[1]); x1 = Math.max(x1, p[0]); y1 = Math.max(y1, p[1]); cx += p[0] / pts.length; cy += p[1] / pts.length; });
+    return { x0: x0, y0: y0, w: x1 - x0, h: y1 - y0, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, a: o.angle ? o.angle() : 0 };
+  }
+  function place() {
+    P = measure(); if (!P) return;
+    var w = Math.max(44, P.w + 12), h = Math.max(44, P.h + 12);
+    btn.style.width = w.toFixed(1) + "px"; btn.style.height = h.toFixed(1) + "px";
+    btn.style.transform = "translate(" + (P.cx - w / 2).toFixed(1) + "px," + (P.cy - h / 2).toFixed(1) + "px)";
+  }
+  /* ---------- the sheet's surface: fibre, the scene's light, and what this paper has lived through ---------- */
+  var grain = null;
+  function loadGrain() { if (grain || !o.grain) return; grain = new Image(); grain.onload = function () { painted = ""; if (state !== "shut") paint(); }; grain.src = o.grain; }
+  setTimeout(loadGrain, 2500);   /* after the scene has what it needs */
+  var rs = 1; function rnd() { rs = (rs * 16807) % 2147483647; return (rs - 1) / 2147483646; }
+  function paint() {
+    var r = sheet.getBoundingClientRect(), dpr = Math.min(1.5, devicePixelRatio || 1), W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
+    var key = W + "x" + H; if (key === painted || W < 8) return; painted = key;
+    tex.width = W; tex.height = H; var x = tex.getContext("2d"); rs = 20261026;
+    x.clearRect(0, 0, W, H);
+    x.save();
+    if (o.style === "nier") {                                   /* a corner torn away, and a fibrous foot */
+      x.beginPath(); x.moveTo(0, 0); x.lineTo(W, 0); x.lineTo(W, H * .8);
+      var px = W, py = H * .8, ex = W * .84;
+      while (py < H - 1) { py = Math.min(H, py + H * (.008 + rnd() * .014)); px = W - (W - ex) * (py - H * .8) / (H * .2) + (rnd() - .5) * W * .012; x.lineTo(px, py); }
+      for (var tx = ex; tx > 0; tx -= W * (.006 + rnd() * .01)) x.lineTo(tx, H - rnd() * H * .004);
+      x.lineTo(0, H); x.closePath(); x.clip();
+    }
+    x.fillStyle = o.paper || "#ECE7DA"; x.fillRect(0, 0, W, H);
+    /* the sheet itself: a scanned board's fibres and flecks (ambientCG Paper002, CC0), laid over the colour */
+    if (grain && grain.complete && grain.naturalWidth) {
+      x.globalCompositeOperation = "overlay"; x.drawImage(grain, 0, 0, W, H); x.drawImage(grain, 0, 0, W, H); x.globalCompositeOperation = "source-over";
+    }
+    /* cockle: broad soft unevenness */
+    for (var c = 0; c < 26; c++) {
+      var gx = rnd() * W, gy = rnd() * H, gr = (.12 + rnd() * .25) * Math.max(W, H), gd = x.createRadialGradient(gx, gy, 0, gx, gy, gr);
+      var dk = rnd() < .5; gd.addColorStop(0, dk ? "rgba(60,50,40,.016)" : "rgba(255,255,248,.05)"); gd.addColorStop(1, "rgba(0,0,0,0)");
+      x.fillStyle = gd; x.fillRect(0, 0, W, H);
+    }
+    (o.decorate || function () {})(x, W, H, dpr, rnd);
+    /* the scene's light across the sheet, and a slight curl: the far corner turning away */
+    (o.light || []).forEach(function (L) {
+      var g = L.r ? x.createRadialGradient(L.x * W, L.y * H, 0, L.x * W, L.y * H, L.r * Math.max(W, H)) : x.createLinearGradient(L.x0 * W, L.y0 * H, L.x1 * W, L.y1 * H);
+      L.stops.forEach(function (s) { g.addColorStop(s[0], s[1]); });
+      x.globalCompositeOperation = L.op || "source-over"; x.fillStyle = g; x.fillRect(0, 0, W, H);
+    });
+    x.globalCompositeOperation = "source-over";
+    var cg = x.createLinearGradient(W * .55, H * .6, W, H); cg.addColorStop(0, "rgba(0,0,0,0)"); cg.addColorStop(.75, "rgba(40,36,30,.05)"); cg.addColorStop(1, "rgba(40,36,30,.13)");
+    x.fillStyle = cg; x.fillRect(0, 0, W, H);
+    var eg = x.createLinearGradient(0, 0, W * .06, 0); eg.addColorStop(0, "rgba(255,255,255,.12)"); eg.addColorStop(1, "rgba(255,255,255,0)");
+    x.fillStyle = eg; x.fillRect(0, 0, W, H);
+    x.restore();
+  }
+  /* ---------- the move: the view eases in on the paper; the paper lifts, turns flat and fills the screen ---------- */
+  var EASE = "cubic-bezier(.3,.08,.12,1)", D = 1250;
+  function from() {
+    var r = sheet.getBoundingClientRect(), sx = P.w / r.width, sy = P.h / r.height;
+    var tx = P.cx - (r.left + r.width / 2), ty = P.cy - (r.top + r.height / 2);
+    return { tx: tx, ty: ty, sx: sx, sy: sy, a: P.a };
+  }
+  function tf(tx, ty, rx, rz, sx, sy) { return "perspective(1600px) translate(" + tx.toFixed(1) + "px," + ty.toFixed(1) + "px) rotateX(" + rx.toFixed(2) + "deg) rotate(" + rz.toFixed(2) + "deg) scale(" + sx.toFixed(4) + "," + sy.toFixed(4) + ")"; }
+  function open() {
+    if (state !== "shut" || (o.blocked && o.blocked())) return;
+    place(); if (!P) return;
+    state = "opening"; clearTimeout(idleT); loadGrain(); btn.classList.remove("hint");
+    box.hidden = false; box.classList.remove("open"); paint();
+    btn.setAttribute("aria-expanded", "true");
+    if (o.onOpen) o.onOpen();
+    anims.forEach(function (a) { a.cancel(); }); anims = [];
+    if (reduced) {
+      anims.push(sheet.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 450, easing: "ease", fill: "both" }));
+      anims.push(scrim.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 450, easing: "ease", fill: "both" }));
+    } else {
+      var f = from(), lift = Math.min(120, innerHeight * .1);
+      var mid = { s: .55, }; var ms = function (a, b) { return a + (b - a) * mid.s; };
+      anims.push(sheet.animate([
+        { transform: tf(f.tx, f.ty, 0, f.a, f.sx, f.sy), opacity: 0, offset: 0 },
+        { opacity: 1, offset: .1 },
+        { transform: tf(f.tx * .38, f.ty * .38 - lift, 16, f.a * .35, ms(f.sx, 1), ms(f.sy, 1)), offset: .52 },
+        { transform: tf(0, 0, 0, 0, 1, 1), opacity: 1, offset: 1 }
+      ], { duration: D, easing: EASE, fill: "both" }));
+      world.style.transformOrigin = P.cx.toFixed(1) + "px " + P.cy.toFixed(1) + "px";
+      anims.push(world.animate([{ transform: "scale(1)" }, { transform: "scale(" + (o.zoom || 1.28) + ")" }], { duration: D + 250, easing: "cubic-bezier(.45,0,.2,1)", fill: "both" }));
+      anims.push(scrim.animate([{ opacity: 0 }, { opacity: 1 }], { duration: D, easing: "ease-in-out", fill: "both" }));
+    }
+    anims[0].onfinish = function () { if (state !== "opening") return; state = "open"; box.classList.add("open"); };
+    setTimeout(function () { if (state === "opening" || state === "open") { box.classList.add("open"); sheet.focus({ preventScroll: true }); } }, reduced ? 200 : D * .7);
+  }
+  function close() {
+    if (state !== "open" && state !== "opening") return;
+    state = "closing"; box.classList.remove("open");
+    if (o.onClose) o.onClose();
+    var cur = { s: getComputedStyle(sheet).transform, w: getComputedStyle(world).transform, c: getComputedStyle(scrim).opacity };
+    anims.forEach(function (a) { a.cancel(); }); anims = [];
+    var fin = function () { anims.forEach(function (a) { a.cancel(); }); anims = []; box.hidden = true; state = "shut"; btn.setAttribute("aria-expanded", "false"); world.style.transformOrigin = ""; btn.focus({ preventScroll: true }); idle(); };
+    var DC = reduced ? 380 : 950, E2 = "cubic-bezier(.5,0,.2,1)";
+    if (reduced) {
+      anims.push(sheet.animate([{ opacity: 1 }, { opacity: 0 }], { duration: DC, easing: "ease", fill: "both" }));
+      anims.push(scrim.animate([{ opacity: +cur.c }, { opacity: 0 }], { duration: DC, easing: "ease", fill: "both" }));
+    } else {
+      place(); var f = from(), lift = Math.min(90, innerHeight * .07);
+      anims.push(sheet.animate([
+        { transform: cur.s === "none" ? tf(0, 0, 0, 0, 1, 1) : cur.s, opacity: 1, offset: 0 },
+        { transform: tf(f.tx * .5, f.ty * .5 - lift, 12, f.a * .5, (f.sx + 1) * .45, (f.sy + 1) * .45), opacity: 1, offset: .45 },
+        { opacity: 1, offset: .88 },
+        { transform: tf(f.tx, f.ty, 0, f.a, f.sx, f.sy), opacity: 0, offset: 1 }
+      ], { duration: DC, easing: E2, fill: "both" }));
+      anims.push(world.animate([{ transform: cur.w === "none" ? "none" : cur.w }, { transform: "scale(1)" }], { duration: DC + 150, easing: "cubic-bezier(.45,0,.25,1)", fill: "both" }));
+      anims.push(scrim.animate([{ opacity: +cur.c }, { opacity: 0 }], { duration: DC, easing: "ease-in-out", fill: "both" }));
+    }
+    var n = anims.length, done = 0; anims.forEach(function (a) { a.onfinish = function () { if (++done === n) fin(); }; });
+  }
+  btn.setAttribute("aria-expanded", "false");
+  btn.addEventListener("click", function (e) { e.stopPropagation(); open(); });
+  closeB.addEventListener("click", close);
+  scrim.addEventListener("click", close);
+  box.addEventListener("click", function (e) { if (e.target === box) close(); });
+  addEventListener("keydown", function (e) {
+    if (state === "shut") return;
+    if (e.key === "Escape") { e.preventDefault(); close(); }
+    else if (e.key === "Tab") { e.preventDefault(); closeB.focus(); }
+  });
+  /* the hint: only after a while with nothing touched, a soft glint passes over the paper, then rests */
+  function idle() {
+    clearTimeout(idleT);
+    if (state !== "shut") return;
+    idleT = setTimeout(function () {
+      if (state !== "shut" || (o.blocked && o.blocked()) || document.hidden) { idle(); return; }
+      btn.classList.remove("hint"); void btn.offsetWidth; btn.classList.add("hint");
+      idleT = setTimeout(idle, 2600);
+    }, o.idleMs || 6500);
+  }
+  btn.querySelector(".glint").addEventListener("animationend", function () { btn.classList.remove("hint"); });
+  ["pointermove", "pointerdown", "keydown", "wheel", "touchstart"].forEach(function (ev) { addEventListener(ev, function () { if (state === "shut") idle(); }, { passive: true }); });
+  addEventListener("resize", function () { place(); painted = ""; if (state !== "shut") paint(); });
+  idle();
+  return { place: place, open: open, close: close, state: function () { return state; } };
+}
+/*@/LIB@*/
+/*@BIRDS@*/
+/* ================= far birds: now and then a loose line of them crosses the sky, small and unhurried ================= */
+/* o: canvas, band () -> [yTop, yBottom] in px, colour, every [min, max] seconds, phone */
+function Birds(o) {
+  var cv = o.canvas, x = cv.getContext("2d"), flock = null, next = performance.now() + 1000 * (o.first || 9), live = false, last = 0, dpr = 1;
+  function size() { dpr = Math.min(devicePixelRatio || 1, 2); cv.width = Math.round(innerWidth * dpr); cv.height = Math.round(innerHeight * dpr); }
+  function spawn(now) {
+    var b = o.band(), n = 2 + Math.floor(Math.random() * 4), dir = Math.random() < .5 ? 1 : -1, y0 = b[0] + Math.random() * (b[1] - b[0]);
+    var sc = (o.phone ? .8 : 1) * (.7 + Math.random() * .5), sp = (14 + Math.random() * 10) * sc;
+    var list = [];
+    for (var i = 0; i < n; i++) list.push({ dx: -i * (16 + Math.random() * 14) * sc, dy: (Math.random() - .5) * 18 * sc + i * (Math.random() < .5 ? 2 : -2), ph: Math.random() * 6.28, fr: 2.6 + Math.random() * 1.2, s: sc * (.8 + Math.random() * .4) });
+    if (o.onSpawn) setTimeout(function () { o.onSpawn(dir); }, 2500);
+    flock = { t0: now, dir: dir, x0: dir > 0 ? -60 : innerWidth + 60, y0: y0, sp: sp * dir, list: list, life: (innerWidth + 260) / sp };
+  }
+  function frame(now) {
+    if (document.hidden) { live = false; return; }
+    requestAnimationFrame(frame);
+    if (now - last < 1000 / 30) return; last = now;
+    x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, innerWidth, innerHeight);
+    if (!flock && now > next && !(o.paused && o.paused())) spawn(now);
+    if (!flock) return;
+    var t = (now - flock.t0) / 1000;
+    if (t > flock.life) { flock = null; next = now + 1000 * (o.every[0] + Math.random() * (o.every[1] - o.every[0])); return; }
+    var fade = Math.min(1, t / 2, (flock.life - t) / 2);
+    x.strokeStyle = o.colour; x.lineCap = "round"; x.lineJoin = "round";
+    flock.list.forEach(function (b) {
+      var bx = flock.x0 + flock.sp * t + b.dx * flock.dir, by = flock.y0 + b.dy + Math.sin(t * .6 + b.ph) * 3;
+      var w = Math.sin(t * b.fr * 6.28 + b.ph), span = 3.1 * b.s, lift = w * 1.7 * b.s;
+      x.globalAlpha = fade * .55; x.lineWidth = Math.max(.6, .75 * b.s);
+      x.beginPath(); x.moveTo(bx - span, by - lift); x.quadraticCurveTo(bx - span * .4, by - lift * .2 - .8 * b.s, bx, by); x.quadraticCurveTo(bx + span * .4, by - lift * .2 - .8 * b.s, bx + span, by - lift); x.stroke();
+    });
+  }
+  addEventListener("resize", size);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && !live) { live = true; requestAnimationFrame(frame); } });
+  size(); live = true; requestAnimationFrame(frame);
+  return { soon: function () { next = Math.min(next, performance.now() + 1500); } };
+}
+/*@/BIRDS@*/
+var RW = 2560, RH = 1440, PCW = 810, PCX = Math.max(0, Math.min(RW - PCW, Math.round(MARK_X * RW - PCW / 2)));
+var NOTE = /*@PAPER@*/[[1488.2,1225.3],[1496.7,1228.7],[1505.2,1231.0],[1513.8,1232.5],[1522.3,1233.4],[1530.9,1234.0],[1539.5,1234.5],[1548.1,1234.8],[1556.7,1234.5],[1565.4,1233.4],[1574.1,1231.1],[1574.8,1230.8],[1575.5,1230.5],[1576.2,1230.0],[1576.9,1229.4],[1577.6,1228.7],[1578.3,1227.9],[1579.0,1226.9],[1579.7,1225.9],[1580.4,1224.8],[1581.0,1223.5],[1581.6,1218.4],[1582.1,1213.3],[1582.6,1208.2],[1583.0,1203.2],[1583.5,1198.2],[1584.0,1193.3],[1584.4,1188.4],[1584.8,1183.6],[1585.2,1178.8],[1585.6,1174.1],[1577.4,1174.6],[1569.2,1174.9],[1561.1,1175.0],[1552.9,1174.8],[1544.8,1174.5],[1536.7,1173.9],[1528.6,1173.1],[1520.5,1172.1],[1512.5,1170.9],[1504.5,1169.4],[1503.9,1174.1],[1503.3,1178.8],[1502.7,1183.5],[1502.0,1188.3],[1501.4,1193.2],[1500.7,1198.0],[1500.0,1203.0],[1499.3,1208.0],[1498.6,1213.0],[1497.8,1218.0],[1496.9,1219.3],[1496.0,1220.4],[1495.0,1221.4],[1494.1,1222.3],[1493.1,1223.1],[1492.2,1223.7],[1491.2,1224.3],[1490.2,1224.8],[1489.2,1225.1]];
+/* how the picture sits in the window: the visible part of the full frame (aux) and of the video in play, as fractions */
+function view() {
+  var vw = innerWidth, vh = innerHeight;
+  if (portrait) {
+    var s = Math.max(vw / PCW, vh / RH), wf = vw / (PCW * s), hf = vh / (RH * s), x0 = (1 - wf) * .5, y0 = (1 - hf) * .5;
+    return { v: [x0, y0, wf, hf], a: [(PCX + x0 * PCW) / RW, y0, wf * PCW / RW, hf], s: s, ox: -(PCX + x0 * PCW) * s, oy: -y0 * RH * s };
+  }
+  var s2 = Math.max(vw / RW, vh / RH), wf2 = vw / (RW * s2), hf2 = vh / (RH * s2), x2 = (1 - wf2) * MARK_X, y2 = (1 - hf2) * .5;
+  return { v: [x2, y2, wf2, hf2], a: [x2, y2, wf2, hf2], s: s2, ox: -x2 * RW * s2, oy: -y2 * RH * s2 };
+}
+function toScreen(x, y) { var V = view(); return [V.ox + x * V.s, V.oy + y * V.s]; }
+var BR = null, LT = null;
+function lettered() { return LT && LT.state() !== "shut"; }
+if (!reduced && !freeze) {
+  BR = Breath({ canvas: $("bg"), video: video, aux: "assets/dawn-depth.png",
+    crop: function () { return view().a; }, vcrop: function () { return view().v; },
+    centre: [MARK_X, .62], par: .0042, dolly: .008, period: 60, swell: .018, swellPeriod: 29,
+    cloud: { k: .1, scale: 1.3, speed: .018 }, phone: portrait,
+    onStart: function () { html.classList.add("breath"); } });
+  addEventListener("resize", function () { if (BR) BR.size(); });
+  var BD = Birds({ canvas: $("birds"), colour: "rgba(42, 30, 40, .75)", every: [16, 34], first: 7, phone: portrait,
+    band: function () { var V = view(); return [V.oy + 240 * V.s, V.oy + 560 * V.s]; }, paused: lettered,
+    onSpawn: function (d) { SND.flock(d > 0 ? -.4 : .4); } });
+  addEventListener("pointermove", function (e) { if (!lettered()) SND.stir(Math.hypot(e.movementX || 0, e.movementY || 0)); }, { passive: true });
+}
+/* the note: sunrise behind it, so the sheet is warm on the lit edge and rose in the shade */
+LT = Letter({ world: $("world"), reduced: reduced, style: "dawn", paper: "#F0E9DD", grain: "assets/paper-grain.webp", zoom: 1.3, idleMs: 7000,
+  outline: function () { return NOTE.map(function (p) { return toScreen(p[0], p[1]); }); },
+  angle: function () { return 0; },
+  blocked: function () { return html.classList.contains("opening"); },
+  light: [
+    { x: -.05, y: .45, r: 1.0, stops: [[0, "rgba(255,200,140,.20)"], [.55, "rgba(255,200,140,.06)"], [1, "rgba(255,200,140,0)"]] },
+    { x: 1.1, y: .9, r: .9, stops: [[0, "rgba(150,110,140,.10)"], [1, "rgba(150,110,140,0)"]] }
+  ],
+  decorate: function (x, W, H, dpr, rnd) {
+    /* folded once across the middle: a soft valley in the paper, lit on one side */
+    var y = H * .5, g = x.createLinearGradient(0, y - H * .06, 0, y + H * .06);
+    g.addColorStop(0, "rgba(80,60,60,0)"); g.addColorStop(.47, "rgba(80,60,60,.06)"); g.addColorStop(.5, "rgba(255,250,240,.35)"); g.addColorStop(.53, "rgba(80,60,60,.05)"); g.addColorStop(1, "rgba(80,60,60,0)");
+    x.fillStyle = g; x.fillRect(0, y - H * .06, W, H * .12);
+    var g2 = x.createLinearGradient(0, 0, 0, H * .5); g2.addColorStop(0, "rgba(255,240,225,.05)"); g2.addColorStop(1, "rgba(120,90,90,.04)");
+    x.fillStyle = g2; x.fillRect(0, 0, W, H * .5);
+    /* where the pebble sat: a faint grey bloom near the fold */
+    var px = W * .42, py = H * .64, r = W * .07, g3 = x.createRadialGradient(px, py, 0, px, py, r);
+    g3.addColorStop(0, "rgba(90,80,70,.06)"); g3.addColorStop(1, "rgba(90,80,70,0)"); x.fillStyle = g3; x.fillRect(px - r, py - r, 2 * r, 2 * r);
+  },
+  onOpen: function () { SND.muffle(true); }, onClose: function () { SND.muffle(false); }
+});
+addEventListener("resize", function () { if (LT) LT.place(); });
+setTimeout(function () { LT.place(); }, 0);
 })();
 </script>
 </body>

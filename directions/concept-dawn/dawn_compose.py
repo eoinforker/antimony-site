@@ -14,6 +14,7 @@ ap.add_argument('--out', required=True); ap.add_argument('--shots', required=Tru
 ap.add_argument('--frames', type=int, default=144); ap.add_argument('--fps', type=int, default=24)
 ap.add_argument('--loop-w', type=int, default=1920); ap.add_argument('--crf', type=int, default=24)
 ap.add_argument('--vp9-crf', type=int, default=36); ap.add_argument('--still-only', action='store_true')
+ap.add_argument('--tone', type=float, default=0.0)
 A = ap.parse_args()
 os.makedirs(A.out, exist_ok=True); os.makedirs(A.shots, exist_ok=True)
 
@@ -33,6 +34,8 @@ def blur(ch, r, lo=0.0, hi=1.0):
     return np.asarray(u).astype(np.float32) / 255 * (hi - lo) + lo
 
 BEAUTY = read16(A.beauty); PASS = read16(A.passes)
+# the passes PNG carries the sRGB curve (its 'Standard' view): undo it so depth is in metres and the tags are their values
+PASS = np.where(PASS > 0.04045, ((PASS + 0.055) / 1.055) ** 2.4, PASS / 12.92).astype(np.float32)
 H0, W0, _ = BEAUTY.shape
 
 def grade_static(a):
@@ -48,6 +51,10 @@ def grade_static(a):
 
 def finish(a, hal, vig, rng, grain=0.075):
     a = a + 0.22 * hal * (1 - a)
+    if A.tone > 0:
+        # one palette: the shadows lean rose, the light leans gold
+        l_ = np.clip(a @ np.array([0.2126, 0.7152, 0.0722], np.float32), 0, 1)[..., None]
+        a = a + A.tone * ((1 - l_) ** 2 * np.array([0.035, 0.0, 0.02], np.float32) + l_ ** 2 * np.array([0.03, 0.012, -0.03], np.float32))
     a = a * vig
     lum = np.clip(a @ np.array([0.2126, 0.7152, 0.0722], np.float32), 0, 1)
     g = rng.normal(0, 1, lum.shape).astype(np.float32)
@@ -58,7 +65,7 @@ def finish(a, hal, vig, rng, grain=0.075):
 def to8(a): return (np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8)
 
 # where the mark is: the phone crop is centred on it and the warp never touches it
-mk = PASS[..., 1] > 0.5
+mk = PASS[..., 1] > 0.9          # the stone only (the note is tagged 0.45, its rock 0.3)
 ys, xs = np.nonzero(mk)
 mark_cx = float(xs.mean()) / W0 if len(xs) else 0.6
 mark_box = (xs.min() / W0, ys.min() / H0, xs.max() / W0, ys.max() / H0) if len(xs) else None
@@ -90,7 +97,15 @@ if A.still_only: sys.exit(0)
 # ---------------------------------------------------------------- the loop
 W = A.loop_w; H = int(round(W * 9 / 16)) // 2 * 2
 src = resize(BEAUTY, W, H); ps = resize(PASS, W, H)
-plant = blur(ps[..., 0], 1.0); mark = blur((ps[..., 1] > 0.3).astype(np.float32), 6) > 0.02
+plant = blur(ps[..., 0], 1.0); mark = blur((ps[..., 1] > 0.2).astype(np.float32), 6) > 0.02
+# the note's lifted leaf: it lifts and settles in the air, more towards its free edge
+notem = ((ps[..., 1] > 0.38) & (ps[..., 1] < 0.6)).astype(np.float32)
+if notem.any():
+    nys = np.nonzero(notem.any(1))[0]; ny0, ny1 = nys.min(), nys.max()
+    yy_ = np.arange(H, dtype=np.float32)[:, None]
+    flut = blur(notem, 1.0) * np.clip((ny1 - yy_) / max(1, ny1 - ny0), 0, 1) ** 1.5 * (W / 1920)
+else:
+    flut = None
 depth = np.maximum(ps[..., 2] * 400.0, 0.5)
 amp = np.clip(9.0 / depth, 0.2, 4.0) * (W / 1920) * plant
 amp[mark] = 0
@@ -121,6 +136,9 @@ def frame(t):
     ph = 2 * np.pi * t / A.frames
     wave = 0.62 * np.sin(ph - xx / W * 9.0 + yy / H * 2.0) + 0.38 * np.sin(2 * ph - xx / W * 17.0 + 1.3)
     dx = amp * wave; dy = 0.25 * amp * np.sin(ph * 1 - xx / W * 11.0 + 0.7)
+    if flut is not None:
+        g_ = 0.6 + 0.4 * np.sin(ph * 2 + 0.4)
+        dy = dy + flut * 1.6 * g_ * np.sin(ph * 3 + 1.1); dx = dx + flut * 0.7 * np.sin(ph * 2 + 2.0)
     sx = np.clip(xx - dx, 0, W - 1.001); sy = np.clip(yy - dy, 0, H - 1.001)
     x0 = sx.astype(np.int32); y0 = sy.astype(np.int32); fx = (sx - x0)[..., None]; fy = (sy - y0)[..., None]
     a = (src[y0, x0] * (1 - fx) * (1 - fy) + src[y0, x0 + 1] * fx * (1 - fy)

@@ -48,3 +48,33 @@ Honest limits
   - The terraces beyond are procedural boxes with a window shader and fern scatter; they read in the mist but
     would not hold up close.
   - Haze does not drift.
+
+The paper, the beauty pass and the breathing layer (October 27)
+  The paper: a rain-spotted handbill, 20 by 28 cm, tucked under the right rail of the lightbox frame, just above the
+  bollard so its foot catches the warm light against the blue. It is real geometry in the render (rain_scene.py
+  --paper <print png>): a thin card curling off the stone, soaked spots and a damp foot (darker, glossier), cockled
+  where it got wet. Its printed face is the letter's layout as grey lines (illegible at this size, by design).
+  rain_scene.py --corners also writes the handbill's outline; the page puts a focusable button over it.
+  The letter: the handbill opens into a full-screen sheet: the street eases in towards it, the sheet lifts off the
+  wall with a slight turn and settles flat. The sheet is a scanned board (ambientCG Paper002, CC0) laid over paper
+  colour, lit as the street is (blue hour above, the bollard warm low on the right), with dried rain marks.
+  Escape, the close mark or a click outside eases back. Reduced motion: a crossfade. After about seven seconds
+  with nothing touched, a soft glint passes over the handbill (never a label).
+  No products anywhere: the shards that chip off the poster keep their stone faces only (no marks, names or links).
+  Beauty pass: more lit terrace windows, warm lane lamps that light the mist, more standing water on the paving,
+  a little more haze and the poster's light stronger on the wall; in the compose, the warm group up a fifth, the
+  sky's light a deeper blue, a soft far glow of the terraces in the mist, lifted blue-black shadows, warmer highlights.
+  Breathing: the loop is drawn through its own depth (assets/rain-depth.png: R disparity about the wall, G the wet
+  paving) in a small WebGL layer, pivoted on the wall, so the wall, the live poster and the handbill hold perfectly
+  still while the bench and paving come forward and the terraces fall back: a slow drift over about a minute and a
+  gentle answer to the pointer or tilt. Moving the pointer across the wet paving sets rings spreading in the water
+  (a touch drops a bigger one), each with a small, far-off drop in the sound. The rain swells a little with movement,
+  and the street goes soft and muffled while the letter is open.
+  rain_compose.py --mode aux writes the depth map (run at full resolution: depth is clamped before filtering).
+  Final render: 2560x1440, 400 samples capped at 1050 s: 1101 s of rendering (1712 s wall, waiting on the shared lock).
+  rain_scene.py args added to the earlier run: --paper <card png> --lit-k 0.15 --fac-k 1.8 --lamp-w 150 --pud 0.06
+    --haze 0.008 --poster-str 4.2. Compose: --kw 1.0 --sky-tint 0.85,0.95,1.18 --far-glow 1.6 --lift 0.025,0.035,0.06
+    --sat 1.12 --hi-warm 0.05 --bloom-th 1.2 --bloom 0.06. Loops encoded at CRF 19 (H.264) and 33 (VP9).
+  Honest limits, new: the thicker haze fills the cafe room too, so its lamps bloom into a large warm glow on the
+  window; it reads as light in the mist, but it is heavier than it should be. The handbill is lit only by the blue
+  hour sky (it sits behind the face's plane, out of the poster's light), so it is quiet rather than glowing.

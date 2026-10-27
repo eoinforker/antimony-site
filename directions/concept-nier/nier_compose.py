@@ -153,11 +153,11 @@ def bloom(L):
         h = down(h, 2) if i else down(h, 4); b += up(blur(h, 2), H, W) * wgt
     return L + b * np.array([1.2, 1.0, 0.82], np.float32) * arg('bloom', 0.09)
 def grade(img, grain=0.0):
-    lift = np.array([0.06, 0.066, 0.08], np.float32) * arg('lift', 1.0)        # pale, slightly blue pastel blacks
+    lift = np.array([float(v) for v in arg('lift-col', '0.06,0.066,0.08').split(',')], np.float32) * arg('lift', 1.0)        # pale pastel blacks
     out = lift + img * (1 - lift)
     lum = (out @ LUMW)[..., None]
     out = lum + (out - lum) * arg('sat', 1.0)
-    out = out * (1 + (np.array([1.03, 1.0, 0.955], np.float32) - 1) * smooth(0.5, 1.0, lum))   # warm highlights
+    out = out * (1 + (np.array([1.03, 1.0, 0.955], np.float32) - 1) * arg('warm', 1.0) * smooth(0.5, 1.0, lum))   # warm highlights
     out = out * vig[..., None]
     ca = arg('ca', 0.7) * S
     rx = (xx - W / 2) / (W / 2); ry = (yy - H / 2) / (W / 2)

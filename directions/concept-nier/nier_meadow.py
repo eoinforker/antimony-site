@@ -116,7 +116,7 @@ clampn.inputs['Factor'].default_value = 1.0; link(wn, env.outputs['Color'], clam
 clampn.inputs['B'].default_value = (arg('sky-clamp', 6.0),) * 3 + (1,)
 wash = node(wn, 'ShaderNodeMix', (-100, 0)); wash.data_type = 'RGBA'; wash.blend_type = 'MIX'
 wash.inputs['Factor'].default_value = arg('sky-wash', 0.2)
-link(wn, clampn.outputs['Result'], wash.inputs['A']); wash.inputs['B'].default_value = (0.96, 0.99, 1.04, 1)
+link(wn, clampn.outputs['Result'], wash.inputs['A']); wash.inputs['B'].default_value = tuple(float(v) for v in arg('wash-col', '0.96,0.99,1.04').split(',')) + (1,)
 bg = node(wn, 'ShaderNodeBackground', (100, 0)); bg.inputs['Strength'].default_value = arg('sky', 1.0)
 link(wn, wash.outputs['Result'], bg.inputs['Color'])
 wo = node(wn, 'ShaderNodeOutputWorld', (300, 0)); link(wn, bg.outputs['Background'], wo.inputs['Surface'])
@@ -124,7 +124,7 @@ wld.cycles.sampling_method = 'MANUAL'; wld.cycles.sample_map_resolution = 1024
 SUN_EL = math.radians(arg('sun-el', 21.0))
 sdir = Vector((math.cos(SUN_EL) * math.cos(SUN_AZ), math.cos(SUN_EL) * math.sin(SUN_AZ), math.sin(SUN_EL)))
 sun_d = bpy.data.lights.new('sun', 'SUN'); sun_d.energy = arg('sun', 12.0); sun_d.angle = math.radians(1.2)
-sun_d.color = (1.0, 0.86, 0.68)
+sun_d.color = tuple(float(v) for v in arg('sun-col', '1.0,0.86,0.68').split(','))
 sun = link_ob(bpy.data.objects.new('sun', sun_d))
 sun.rotation_euler = (-sdir).to_track_quat('-Z', 'Y').to_euler()
 
@@ -138,7 +138,7 @@ cam_d.clip_start = 0.05; cam_d.clip_end = 5000
 HALF = math.atan(18 / cam_d.lens) + math.radians(5)
 
 # ------------------------------------------------------------------ the Break: exact geometry, dark honed scanned stone, glass crystal
-S = 0.019; T = arg('thick', 0.46)
+S = arg('s', 0.019); T = arg('thick', 0.46)
 MX, MY = arg('mx', 3.0), arg('my', 14.5)
 MYAW = math.radians(arg('yaw', -22.0))
 def svg_poly(d):
@@ -246,6 +246,21 @@ ad = node(nt, 'ShaderNodeAddShader'); link(nt, b.outputs['BSDF'], ad.inputs[0]);
 o = node(nt, 'ShaderNodeOutputMaterial'); link(nt, ad.outputs['Shader'], o.inputs['Surface'])
 aov(nt, 'mk'); aov(nt, 'cr')
 crystal.data.materials.append(m_cr)
+
+# the shared stone (directions/stone/stone.py): the exact Break carved from scanned basalt, softened and chipped arrises,
+# drove marks, lichen and moss at the foot, the crystal true sky glass; it replaces the simple prism above
+if arg('stone-module', 1):
+    sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'stone'))
+    import stone
+    parts = stone.build_stone(sc.collection, scale_m=100 * S, location=(MX, MY, 0.0), rotation=(0.01, -0.012, MYAW),
+                              wetness=0.0, moss=arg('st-moss', 0.6), glow=arg('st-glow', 0.12), caustics=False, detail=arg('st-detail', 340))
+    tile.hide_render = True; crystal.hide_render = True
+    for ob_ in (parts['stone'], parts.get('veil')):
+        if ob_ is not None:
+            for m in ob_.data.materials:
+                if m: aov(m.node_tree, 'mk')
+    for m in parts['crystal'].data.materials:
+        if m: aov(m.node_tree, 'mk'); aov(m.node_tree, 'cr')
 
 # ------------------------------------------------------------------ ground: scanned soil near, scanned turf far
 bpy.ops.mesh.primitive_plane_add(size=1); gnd = bpy.context.object; gnd.name = 'ground'
@@ -439,6 +454,25 @@ def dress(obs, sat=1.0, val=1.0, hue=0.5):
             if not m or m.name in done or not m.use_nodes: continue
             done.add(m.name); nt_ = m.node_tree
             aov(nt_, 'pl')
+            if arg('tl', 0.0) > 0:
+                outn = [n_ for n_ in nt_.nodes if n_.bl_idname == 'ShaderNodeOutputMaterial']
+                prn = [n_ for n_ in nt_.nodes if n_.bl_idname == 'ShaderNodeBsdfPrincipled']
+                if outn and prn and outn[0].inputs['Surface'].is_linked:
+                    lk = outn[0].inputs['Surface'].links[0]; srcs = lk.from_socket
+                    bc = prn[0].inputs['Base Color']
+                    tl_ = nt_.nodes.new('ShaderNodeBsdfTranslucent'); tint = nt_.nodes.new('ShaderNodeMix'); tint.data_type = 'RGBA'; tint.blend_type = 'MULTIPLY'
+                    tint.inputs['Factor'].default_value = 1.0; tint.inputs['B'].default_value = (1.25, 1.2, 0.62, 1)
+                    if bc.is_linked: nt_.links.new(bc.links[0].from_socket, tint.inputs['A'])
+                    else: tint.inputs['A'].default_value = bc.default_value
+                    nt_.links.new(tint.outputs['Result'], tl_.inputs['Color'])
+                    # keep alpha cut-outs: the translucent part is added only where the surface is opaque
+                    ad_ = nt_.nodes.new('ShaderNodeMixShader'); ad_.inputs['Fac'].default_value = arg('tl', 0.0)
+                    alpha = prn[0].inputs['Alpha']
+                    if alpha.is_linked:
+                        mul = nt_.nodes.new('ShaderNodeMath'); mul.operation = 'MULTIPLY'; mul.inputs[1].default_value = arg('tl', 0.0)
+                        nt_.links.new(alpha.links[0].from_socket, mul.inputs[0]); nt_.links.new(mul.outputs[0], ad_.inputs['Fac'])
+                    nt_.links.remove(lk); nt_.links.new(srcs, ad_.inputs[1]); nt_.links.new(tl_.outputs['BSDF'], ad_.inputs[2])
+                    nt_.links.new(ad_.outputs['Shader'], outn[0].inputs['Surface'])
             if sat == 1.0 and val == 1.0 and hue == 0.5: continue
             for n_ in list(nt_.nodes):
                 if n_.bl_idname != 'ShaderNodeBsdfPrincipled' or not n_.inputs['Base Color'].is_linked: continue
@@ -633,7 +667,7 @@ instancer('shrubs', slib, sp_, srot, np.stack([ss_] * 3, 1), rng.integers(0, len
 
 # the mark's span on screen (x over y), so nothing near the lens may rise over it
 _c, _s = math.cos(MYAW), math.sin(MYAW)
-_corn = [(MX + dx * _c - dy * _s, MY + dx * _s + dy * _c) for dx in (-0.97, 0.97) for dy in (-T / 2, T / 2)]
+_corn = [(MX + dx * _c - dy * _s, MY + dx * _s + dy * _c) for dx in (-(50 * S + 0.02), 50 * S + 0.02) for dy in (-T / 2, T / 2)]
 U0 = min(x_ / y_ for x_, y_ in _corn) - 0.012; U1 = max(x_ / y_ for x_, y_ in _corn) + 0.012
 YS = min(y_ for x_, y_ in _corn)
 def los_cap(x, y):
@@ -643,7 +677,8 @@ def los_cap(x, y):
     c, s_ = math.cos(-MYAW), math.sin(-MYAW)
     yf = (-(T / 2 + 0.02) + MX * s_ + MY * c) / (u * s_ + c)          # where the ray at u meets the front face
     inside = (u > U0) & (u < U1) & (y < yf + 0.05)
-    cap = CAM.z - (CAM.z - 0.02) * y / yf
+    FH = arg('foot-h', 0.02)
+    cap = CAM.z - (CAM.z - FH) * y / yf
     return np.where(inside, np.maximum(cap, 0.0), 99.0)
 # rubble in the grass: scanned mossy rocks standing in for fallen concrete, half buried
 rp = []
@@ -679,19 +714,29 @@ def fpick(m, pw, pb):
     return np.where(u < pw, IW[rng.integers(0, NW, m)], np.where(u < pw + pb, IB[rng.integers(0, NB, m)], IY[rng.integers(0, NY, m)]))
 print('libs grass', len(GR), 'flowers', NY, NB, NW, 'trees', len(TREES))
 
+PAPER = arg('paper', '')
+PAX, PAY = arg('pam-x', 1.1), arg('pam-y', 8.6)
+PZ0 = arg('pam-z', 0.12)
 def field(n, rmin, rmax, keep):
     th = rng.uniform(-HALF, HALF, n); r = np.sqrt(rng.uniform(rmin ** 2, rmax ** 2, n))
     x = r * np.sin(th); y = r * np.cos(th)
     k = rng.uniform(0, 1, n) < keep(r, x, y); x, y, r = x[k], y[k], r[k]
     c, s_ = math.cos(-MYAW), math.sin(-MYAW)
     lx = (x - MX) * c - (y - MY) * s_; ly = (x - MX) * s_ + (y - MY) * c
-    ok = ~((np.abs(lx) < 1.06) & (np.abs(ly) < T / 2 + 0.06))         # nothing grows on the mark
+    ok = ~((np.abs(lx) < 50 * S + 0.11) & (np.abs(ly) < T / 2 + 0.06))         # nothing grows on the mark
+    if PAPER: ok &= np.hypot(x - PAX, y - PAY) > arg('pam-clear', 0.13)
     return x[ok], y[ok], r[ok]
 def plant(name, coll, x, y, r, scl, pick):
     # heights are capped so that no blade or flower in front of the mark rises over it: the mark stays whole
     dimz = np.array([o_.dimensions.z for o_ in sorted(coll.objects, key=lambda o_: o_.name)]) * 1.1   # Collection Info picks in name order
     sz = scl * rng.uniform(0.85, 1.25, len(x))
-    f = np.minimum(1.0, los_cap(x, y) / np.maximum(dimz[pick] * sz, 1e-3))
+    capv = los_cap(x, y)
+    if PAPER:
+        # and kept below the line from the lens to the pamphlet's foot, so it is seen over the grass in front of it
+        up_ = PAX / PAY; hw_ = arg('pam-hw', 0.2) / PAY
+        inside = (y < PAY) & (y > 0.3) & (np.abs(x / np.maximum(y, 0.1) - up_) < hw_)
+        capv = np.where(inside, np.minimum(capv, np.maximum(CAM.z - (CAM.z - (PZ0 + 0.03)) * y / PAY, 0.0)), capv)
+    f = np.minimum(1.0, capv / np.maximum(dimz[pick] * sz, 1e-3))
     keep = f > 0.12
     x, y, scl, sz, pick, f = x[keep], y[keep], scl[keep], sz[keep], pick[keep], f[keep]
     m = len(x); P = np.stack([x, y, np.full(m, -0.02)], 1)
@@ -723,6 +768,57 @@ u = rng.uniform(0, 1, len(x))
 plant('fore_flowers', flib, x, y, np.hypot(x, y), rng.uniform(1.0, 1.4, len(x)),
       fpick(len(x), 0.1, 0.06))
 
+# ------------------------------------------------------------------ the pamphlet: a tri-fold, sun-faded and torn, caught upright in the grass
+if PAPER:
+    PW3, PHH = 0.3 * arg('pam-s', 1.0), 0.21 * arg('pam-s', 1.0)       # unfolded 30 by 21 cm, three panels (scaled)
+    FOLDS = (math.radians(arg('fold1', 32.0)), math.radians(arg('fold2', -26.0)))
+    LEAN = math.radians(arg('pam-lean', 24.0)); PYAW = math.atan2(-PAX, PAY) + math.radians(arg('pam-turn', 14.0))
+    TILT = math.radians(arg('pam-tilt', -7.0))
+    def pam_pt(u, v):
+        # along the sheet: three panels hinged at a third and two thirds, each turned about the vertical fold
+        x = u * PW3; px_, py_ = 0.0, 0.0; ang = 0.0; done = 0.0
+        for k, edge in enumerate((PW3 / 3, 2 * PW3 / 3, PW3)):
+            seg = min(x, edge) - done
+            if seg > 0: px_ += seg * math.cos(ang); py_ += seg * math.sin(ang); done += seg
+            if k < 2 and x > edge: ang += FOLDS[k]
+        px_ -= PW3 * 0.5
+        z = v * PHH; z += 0.006 * math.sin(math.pi * u * 3) * v      # paper is never flat
+        # tilt in its plane, lean back, then face the lens
+        px2 = px_ * math.cos(TILT) - z * math.sin(TILT); z2 = px_ * math.sin(TILT) + z * math.cos(TILT)
+        yl = py_ + z2 * math.sin(LEAN); zl = z2 * math.cos(LEAN)
+        c_, s_ = math.cos(PYAW), math.sin(PYAW)
+        return (PAX + px2 * c_ - yl * s_, PAY + px2 * s_ + yl * c_, PZ0 + zl)
+    m_pam, nt = mat('pamphlet')
+    tcp = node(nt, 'ShaderNodeTexCoord'); tip = node(nt, 'ShaderNodeTexImage'); tip.image = img(PAPER); tip.extension = 'CLIP'
+    link(nt, tcp.outputs['UV'], tip.inputs['Vector'])
+    PG = arg('paper-grain', os.path.join(ACG, 'Paper002'))
+    mpn = node(nt, 'ShaderNodeMapping'); mpn.inputs['Scale'].default_value = (2.0, 1.4, 1.0); link(nt, tcp.outputs['UV'], mpn.inputs['Vector'])
+    tnr = node(nt, 'ShaderNodeTexImage'); tnr.image = img(os.path.join(PG, 'Paper002_2K-JPG_NormalGL.jpg'), True); link(nt, mpn.outputs['Vector'], tnr.inputs['Vector'])
+    nmp = node(nt, 'ShaderNodeNormalMap'); nmp.inputs['Strength'].default_value = 0.7; link(nt, tnr.outputs['Color'], nmp.inputs['Color'])
+    bn = node(nt, 'ShaderNodeBsdfPrincipled'); link(nt, tip.outputs['Color'], bn.inputs['Base Color'])
+    bn.inputs['Roughness'].default_value = 0.75; bn.inputs['Specular IOR Level'].default_value = 0.3; link(nt, nmp.outputs['Normal'], bn.inputs['Normal'])
+    tln = node(nt, 'ShaderNodeBsdfTranslucent'); tcm = node(nt, 'ShaderNodeMix'); tcm.data_type = 'RGBA'; tcm.blend_type = 'MULTIPLY'
+    tcm.inputs['Factor'].default_value = 1.0; link(nt, tip.outputs['Color'], tcm.inputs['A']); tcm.inputs['B'].default_value = (1.0, 0.88, 0.7, 1)
+    link(nt, tcm.outputs['Result'], tln.inputs['Color'])
+    mx1 = node(nt, 'ShaderNodeMixShader'); mx1.inputs['Fac'].default_value = arg('pam-tl', 0.3); link(nt, bn.outputs['BSDF'], mx1.inputs[1]); link(nt, tln.outputs['BSDF'], mx1.inputs[2])
+    trn = node(nt, 'ShaderNodeBsdfTransparent'); mx2 = node(nt, 'ShaderNodeMixShader'); link(nt, tip.outputs['Alpha'], mx2.inputs['Fac'])
+    link(nt, trn.outputs['BSDF'], mx2.inputs[1]); link(nt, mx1.outputs['Shader'], mx2.inputs[2])
+    o = node(nt, 'ShaderNodeOutputMaterial'); link(nt, mx2.outputs['Shader'], o.inputs['Surface'])
+    aov(nt, 'pl', 0.35)                               # it stirs a little with the grass in the loop
+    NU, NV = 36, 16
+    bm = bmesh.new(); uvl = bm.loops.layers.uv.new('UV')
+    vs_ = [[bm.verts.new(pam_pt(i / NU, j / NV)) for i in range(NU + 1)] for j in range(NV + 1)]
+    for j in range(NV):
+        for i in range(NU):
+            f = bm.faces.new((vs_[j][i], vs_[j][i + 1], vs_[j + 1][i + 1], vs_[j + 1][i]))
+            for lp, (a, b_) in zip(f.loops, ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1))):
+                lp[uvl].uv = (a / NU, b_ / NV)
+    me = bpy.data.meshes.new('pamphlet'); bm.to_mesh(me); bm.free()
+    for p_ in me.polygons: p_.use_smooth = True
+    pam = link_ob(bpy.data.objects.new('pamphlet', me)); me.materials.append(m_pam)
+    so = pam.modifiers.new('thick', 'SOLIDIFY'); so.thickness = 0.0006
+    PAM_PTS = [(i / 18, 0.0) for i in range(19)] + [(1.0, j / 8) for j in range(1, 9)] + [(1 - i / 18, 1.0) for i in range(1, 19)] + [(0.0, 1 - j / 8) for j in range(1, 8)]
+
 # ------------------------------------------------------------------ haze: a thin real volume that scatters camera rays only (the sun still
 # shapes it through the towers, without the speckle), and aerial perspective by depth in nier_compose.py
 if arg('vol', 1):
@@ -732,7 +828,7 @@ if arg('vol', 1):
     pv = node(nt, 'ShaderNodeVolumePrincipled')
     lpv = node(nt, 'ShaderNodeLightPath'); dn = node(nt, 'ShaderNodeMath', operation='MULTIPLY'); dn.inputs[1].default_value = arg('haze', 0.00035)
     link(nt, lpv.outputs['Is Camera Ray'], dn.inputs[0]); link(nt, dn.outputs['Value'], pv.inputs['Density'])
-    pv.inputs['Color'].default_value = (0.95, 0.96, 1.0, 1); pv.inputs['Anisotropy'].default_value = 0.6
+    pv.inputs['Color'].default_value = tuple(float(v) for v in arg('haze-col', '0.95,0.96,1.0').split(',')) + (1,); pv.inputs['Anisotropy'].default_value = arg('haze-g', 0.6)
     o = node(nt, 'ShaderNodeOutputMaterial'); link(nt, pv.outputs['Volume'], o.inputs['Volume'])
     vb.data.materials.append(m_v)
     vb.visible_shadow = False
@@ -754,9 +850,12 @@ for nm_, sock in (('rgb', 'Image'), ('Depth', 'Depth'), ('pl', 'pl'), ('mk', 'mk
 # where the mark lands on the frame, for the page
 from bpy_extras.object_utils import world_to_camera_view
 bpy.context.view_layer.update()
-pts = [world_to_camera_view(sc, cam, mark.matrix_world @ Vector((x_, 0, z_))) for x_ in (-0.95, 0.95) for z_ in (0, 1.9)]
-json.dump({'u0': min(p.x for p in pts), 'u1': max(p.x for p in pts), 'v0': 1 - max(p.y for p in pts), 'v1': 1 - min(p.y for p in pts)},
-          open(EXR + 'mark.json', 'w'))
+pts = [world_to_camera_view(sc, cam, mark.matrix_world @ Vector((x_, 0, z_))) for x_ in (-50 * S, 50 * S) for z_ in (0, 100 * S)]
+MJ = {'u0': min(p.x for p in pts), 'u1': max(p.x for p in pts), 'v0': 1 - max(p.y for p in pts), 'v1': 1 - min(p.y for p in pts)}
+if PAPER:
+    Wr, Hr = sc.render.resolution_x, sc.render.resolution_y
+    MJ['paper'] = [[round(c_.x * Wr, 1), round((1 - c_.y) * Hr, 1)] for c_ in (world_to_camera_view(sc, cam, Vector(pam_pt(u, v))) for u, v in PAM_PTS)]
+json.dump(MJ, open(EXR + 'mark.json', 'w'))
 print('MARK', open(EXR + 'mark.json').read())
 if '--dry' in argv:
     print('DRY_OK'); sys.exit(0)

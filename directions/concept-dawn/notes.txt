@@ -40,3 +40,34 @@ Honest limits
     real, at distance they are a speckle.
   - The phone loop is a 608x1080 crop of the 1920x1080 loop, so it is softer than the phone still.
   - Haze does not truly drift; the sway is an image warp, not moving geometry.
+
+The paper, the beauty pass and the breathing layer (October 27)
+  The paper: a folded note (18 by 25 cm, folded once), held on a low mossy rock about 3.8 m from the lens by a pebble,
+  its upper leaf opened by the morning air so the low sun shines through it. Real geometry in dawn_scene.py --paper
+  <print png> (Poly Haven rock_moss_set_01 for the rock and pebble, ambientCG Paper002 for the paper's grain;
+  thin paper is a third translucent). It sits low and left of the stone, on the line towards it, so it is in the
+  phone crop too. The flowers along the line from the lens to it are kept short so it is seen over them.
+  dawn_scene.py --paper-json writes its outline for the page's button. In the mark pass the note is tagged 0.45 and
+  the rock 0.3, so the loop never sways them as plants; the note's lifted leaf lifts and settles a little on its own.
+  The letter: as Rain's, lit as the field is (sunrise warm low from the left, the shade a cool rose), with the fold.
+  Beauty pass: the far field is flowers all the way to the moat and on up the rise beyond it (two more scatters of
+  larger cushions, so they read through the haze as drifts), a blush tint added to the scanned heliophila for one
+  pink and gold palette, less general haze, stronger shafts between the pillars, a brighter sun. The stone is now
+  the shared stone (directions/stone/stone.py): scanned basalt, softened and chipped arrises, dew and moss at its
+  foot, true sky glass. Compose: depth is decoded from the passes' sRGB curve (it was read as encoded before), and a
+  gentle split tone (rose shadows, gold light).
+  Fixed: Collection Info picks instances in name order, so flower colours are now indexed by name.
+  Breathing: the loop drawn through its depth (assets/dawn-depth.png, pivoted on the stone, which is pinned so it
+  never moves), a slow drift and a push over a minute, pointer and tilt parallax, slow cloud shade sliding over the
+  land, a light that swells and settles, now and then a few far birds crossing the sky (with a soft call when the
+  sound is on). Sound: the wind gusts through the flowers as the pointer moves, a very low far hum of the old
+  structures, and everything goes soft while the letter is open.
+  Final render: 2560x1440, 384 samples capped at 1080 s: 1105 s of rendering. (A first final at 1111 s was
+  discarded: the stronger shafts showed the volume's box edges as hard lines in the sky; the shafts volume now
+  fades to nothing towards its faces, --shaft-soft.)
+  dawn_scene.py --assets <dl> --paper <note png> --paper-json <json> --far-flowers 70000 --beyond-flowers 40000
+    --haze 0.00008 --shafts 0.0015 --sun 10 --note-open 140 --rock-s 0.32 --rock-sz 0.33 --res 2560x1440
+    --samples 384 --time 1080 --out beauty.png --passes passes.png
+  dawn_compose.py ... --crf 21 --vp9-crf 32 --tone 1.0
+  Honest limits, new: the note is lit from behind and its face is in shade, so it reads as a pale card rather than a
+  glowing one; the rock under it is a dark mass. The far field reads as drifts of colour, still not as flowers.

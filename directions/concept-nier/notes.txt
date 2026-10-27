@@ -55,3 +55,33 @@ Honest limits
   - The ivy is scanned leaf cards scaled with distance so it reads through the haze; close up it would need real
     vines.
   - The grass moves by image warp, not by moving geometry.
+
+The paper, the beauty pass and the breathing layer (October 27)
+  The paper: a tri-fold pamphlet, sun-faded and torn at one edge (a corner gone, a small tear at the top), Z-folded
+  and caught upright in the grass, leaning back, a little left of and in front of the stone so it sits in the phone
+  crop too. Real geometry in nier_meadow.py --paper <rgba print png> (the torn edge is the print's alpha; ambientCG
+  Paper002 grain; thin paper partly translucent so the low sun comes through it). It is tagged 0.35 in the plant
+  mask, so it stirs a little with the grass in the loop. Grass between the lens and the pamphlet is kept below the
+  line to its foot (as for the stone) so it is seen. Its outline is written into <prefix>mark.json for the page.
+  The letter: as the other pages, lit as the meadow (warm sun from above, a green bounce from the grass), the sheet
+  sun-bleached along one side, Z-folded, with its corner torn away and a fibrous foot.
+  Beauty pass: a low warm sun (8 degrees up, from the front left) so the grass and flowers are backlit and
+  translucent and shadows run long towards the lens; a warmer, less grey sky; warm luminous haze between the
+  towers; grass and petals given a translucent component; the stone smaller (1.6 m) and now the shared stone
+  (directions/stone/stone.py): scanned basalt, softened, chipped edges, lichen and moss at the foot, sky glass;
+  low turf may rise a few centimetres at its face, so it stands in the grass instead of on a bare strip.
+  Compose: blacks lifted warm, not blue (--lift-col), warmer highlights (--warm).
+  Breathing: the loop drawn through its depth (assets/nier-depth.png, pivoted and pinned on the stone), a slow drift
+  and push over about a minute, pointer and tilt parallax, slow cloud shadows sliding across the meadow, a light
+  that swells and settles, now and then a few far birds crossing between the towers. Sound: a gust through the
+  grass that answers the pointer, a skylark high and far off now and then, a soft call when the birds cross, and
+  everything goes soft while the letter is open.
+  Final render: 2560x1440, 48 samples (time cap 1100 s, reached the samples first): 777 s of rendering.
+  nier_meadow.py --ph <polyhaven> --acg <ambientcg> --paper <pamphlet rgba png> --s 0.016 --thick 0.42 --foot-h 0.07
+    --sun-el 8 --sun-az 135 --sun 15 --sky 0.6 --haze-g 0.72 --pam-s 1.35 --sun-col 1.0,0.76,0.52 --sky-wash 0.3
+    --wash-col 1.06,0.96,0.84 --haze 0.0005 --haze-col 1.0,0.9,0.78 --tl 0.35 --res 2560x1440 --samples 48 --time 1100
+  nier_compose.py ... --exposure 0.3 --sat 1.1 --lift 0.7 --lift-col 0.075,0.066,0.05 --warm 1.6
+  The page's low mist band is thinner (11vh, 6vh on phones) so it does not wash over the pamphlet.
+  Honest limits, new: the sun is low and behind the towers' side, but the long shadows across the meadow are still
+  faint in the haze; the light reads as warm and backlit rather than as hard golden sun. The pamphlet is small and
+  reads as a pale, crumpled sheet rather than as a printed pamphlet until it is opened.

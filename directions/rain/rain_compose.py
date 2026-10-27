@@ -97,9 +97,19 @@ def view(lin):
 FOG = np.array([0.30, 0.38, 0.52], np.float32); FOG = np.where(FOG > 0.04045, ((FOG + 0.055) / 1.055) ** 2.4, FOG / 12.92) * 0.1
 fogk = np.clip(D['Mist'], 0, 1)[..., None] * 0.82
 PL = arg('poster-k', 1.0)
+SKYT = np.array([float(v) for v in arg('sky-tint', '1,1,1').split(',')], np.float32)
+KW = arg('kw', 1.0)
+# the far warm light (terrace windows, lane lamps) held in the mist: a wide soft bloom of the warm group, beyond the wall
+far = np.clip((D['Depth'] - 15.0) / 6.0, 0, 1)[..., None]
+FARG = arg('far-glow', 0.0)
+if FARG > 0:
+    fw = P['warm'] * far
+    FARL = (up(blur(down(fw, 8), 6), H, W) * 0.6 + up(blur(down(fw, 16), 5), H, W) * 0.4) * FARG * np.array([1.0, 0.82, 0.62], np.float32)
+else:
+    FARL = 0.0
 def light(kw=1.0, kp=PL):
-    L = P['sky'] + P['poster'] * kp + P['warm'] * kw
-    return L * (1 - fogk) + FOG * fogk
+    L = P['sky'] * SKYT + P['poster'] * kp + P['warm'] * kw * KW
+    return L * (1 - fogk) + FOG * fogk + FARL
 plant = np.clip(D['plant'], 0, 1)
 plantb = blur(plant, max(1, int(4 * S)))
 water = np.clip(D['rill'], 0, 1); water = np.maximum(water, (D['rill'] > 1.5).astype(np.float32))
@@ -199,15 +209,24 @@ def rings(t):
 # ---------------------------------------------------------------- finishing: bloom with a warm halation, aberration, vignette, grain
 vig = 1 - 0.28 * np.clip(((xx / W - 0.5) ** 2 * 1.3 + (yy / H - 0.5) ** 2 * 1.0) * 2.4 - 0.15, 0, 1) ** 1.3
 def bloom(L):
-    hi = np.maximum(L - 0.6, 0)
+    hi = np.maximum(L - arg('bloom-th', 0.6), 0)
     b = np.zeros_like(L); h = hi
     for i, wgt in enumerate((0.5, 0.35, 0.25, 0.18)):
         h = down(h, 2) if i else down(h, 4)
         b += up(blur(h, 2), H, W) * wgt
     hal = b * np.array([1.25, 0.95, 0.75], np.float32)
     return L + hal * arg('bloom', 0.07)
+LIFT = np.array([float(v) for v in arg('lift', '0,0,0').split(',')], np.float32)
+SAT = arg('sat', 1.0); HW = arg('hi-warm', 0.0)
+def grade(img):
+    # gentle: blacks lifted towards deep blue, warmth in the highlights, a little more colour
+    y = (img * np.array([0.2126, 0.7152, 0.0722], np.float32)).sum(-1, keepdims=True)
+    img = y + (img - y) * SAT
+    img = img + (img ** 3) * np.array([1.0, 0.45, -0.5], np.float32) * HW
+    img = LIFT + (1 - LIFT) * np.clip(img, 0, 1)
+    return img
 def finish(img, t=0.0, grain=0.0):
-    out = img * vig[..., None]
+    out = grade(img) * vig[..., None]
     ca = arg('ca', 0.6) * S                                  # lateral colour fringe, growing to the corners
     rx = (xx - W / 2) / (W / 2); ry_ = (yy - H / 2) / (W / 2)
     out[..., 0] = sample(out[..., :1], xx + rx * ca, yy + ry_ * ca)[..., 0]
@@ -247,6 +266,22 @@ elif MODE == 'spill':
     on = finish(view(frame(0.0, rain=False))); off = finish(view(frame(0.0, rain=False, kp=0.0)))
     save(OUT, np.clip(on - off, 0, 1))
     save(OUT.replace('.png', '_off.png'), off)
+elif MODE == 'aux':
+    # for the page's breathing layer: R disparity about the wall (128 = the wall, brighter is nearer),
+    # G the wet paving where a touch can ring the water. Run at full resolution (no --res): depth is clamped
+    # before any filtering, so the sky's huge values never bleed into the wall.
+    piv = -CY
+    z = np.clip(D['Depth'], 0.5, 1000.0)
+    dsp = np.clip(piv / z - 1.0, -1, 1)
+    k = int(arg('aux-k', 4)); dsp = down(dsp, k)
+    pd_ = np.pad(dsp, 2, mode='edge')
+    dsp = np.median(np.stack([pd_[j:j + dsp.shape[0], i:i + dsp.shape[1]] for j in range(5) for i in range(5)]), 0)
+    gnd = ((z < piv - 0.05) & (yy > H * 0.81) & (blur(plant, 3) < 0.05)).astype(np.float32)
+    gnd = blur(down(gnd, k), 2)
+    h_, w_ = dsp.shape
+    o = np.stack([dsp * 0.5 + 0.5, gnd[:h_, :w_], np.zeros_like(dsp)], -1)
+    H, W = h_, w_
+    save(OUT, np.clip(o, 0, 1))
 elif MODE == 'loop':
     import time
     for f in range(F0, F1):
