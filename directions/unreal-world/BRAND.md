@@ -31,7 +31,8 @@ magical and be made with the craft that designers and creative VCs respect. Firs
 
 ## The giant luminous form (our own, in place of the game's tree)
 
-- The crystal: `assets/crystal-ink.png`, `assets/crystal-paper.png`, `brand/crystals/`, `brand/compare/img/crystal*.webp`.
+- The crystal: `assets/crystal-ink.png`, `assets/crystal-paper.png`, `brand/compare/img/crystal*.webp`; the crystal
+  studies page is `brand/crystals/index.html`.
 - The stone: `brand/kit-v3/textures/stone-panel.jpg`, `brand/kit-v3/posters/antimony-poster-stone.png`. The live
   stone on the site is in `directions/final/index.html`.
 
