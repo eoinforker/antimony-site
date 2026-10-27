@@ -117,7 +117,7 @@ html.opening .paper { visibility: hidden; }
 <div id="topfade" aria-hidden="true"></div>
 <div id="veil"></div>
 <h1 class="vh">Antimony</h1>
-<p class="vh">Inside a vast old stone hall, its roof broken open, one shaft of warm daylight falls through drifting dust onto a bed of white, pale blue and yellow flowers growing through the cracked floor. Among them stands the Antimony stone, split by its seam, its sky blue crystal lit by the sun. Still water in the floor holds the light. Ivy climbs the columns, and a folded letter rests on a fallen block in the light.</p>
+<p class="vh">Inside a vast old stone hall, its roof broken open, one shaft of warm daylight falls through drifting dust onto a bed of white, pale blue and yellow flowers growing through the cracked floor. Among them stands the Antimony stone, split by its seam, its sky blue crystal lit by the sun. Still water in the floor holds the light. Through a great open arch at the far end, a second roofless hall stands in sunlit haze with low ridges beyond. Ivy climbs the columns, and a folded letter leans against a fallen block at the edge of the light.</p>
 <div class="sign">
 @@WORDMARK@@
   <p>Software, made on purpose.</p>
@@ -178,7 +178,7 @@ function layout() {
   var w = innerWidth, h = innerHeight, s = Math.max(w / V.w, h / V.h) * 1.035;   // a little margin for the breath
   fit.s = s; fit.x = (w - V.w * s) * V.fx; fit.y = (h - V.h * s) / 2;
   // tall narrow screens: keep the whole stone and the letter in view; the hall's dark vault fades in above
-  var a = Math.min(V.letter[0], V.stone[0]) - .025, b = V.stone[2] + .03, sSpan = w / ((b - a) * V.w), fade = 0;
+  var a = Math.min(V.letter[0], V.stone[0]) - .06, b = Math.max(V.letter[2], V.stone[2]) + .04, sSpan = w / ((b - a) * V.w), fade = 0;
   if (portrait && sSpan < s) {
     s = sSpan; fit.s = s;
     fit.x = Math.min(0, Math.max(w - V.w * s, -a * V.w * s));
@@ -226,7 +226,7 @@ function initGL() {
   uOff = gl.getUniformLocation(prog, "o"); uPiv = gl.getUniformLocation(prog, "pv");
   dImg.onload = function () { gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, dtex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, dImg); glReady = true; };
-  dImg.src = portrait ? "assets/garden-depth-phone.png" : "assets/garden-depth.png";
+  dImg.src = portrait ? "assets/garden-depth-phone.webp" : "assets/garden-depth.webp";
   sizeGL();
 }
 

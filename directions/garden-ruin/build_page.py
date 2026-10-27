@@ -12,9 +12,12 @@ W, H = info['w'], info['h']
 
 def phone_box():
     cw = int(round(H * 9 / 16))
-    x0 = info['letter'][0] * W - 0.06 * cw
-    x0 = min(x0, info['stone'][0] * W - 0.05 * cw)
-    x0 = max(x0, info['stone'][2] * W + 0.08 * cw - cw)
+    # the stone whole and the letter beside it, centred together; if both cannot fit, the stone stays whole
+    L_, S_ = info['letter'], info['stone']
+    a = min(L_[0], S_[0]) * W; b = max(L_[2], S_[2]) * W
+    x0 = (a + b) / 2 - cw / 2
+    x0 = min(x0, S_[0] * W - 0.04 * cw)
+    x0 = max(x0, S_[2] * W + 0.04 * cw - cw)
     x0 = int(np.clip(x0, 0, W - cw))
     return x0, cw
 
@@ -30,9 +33,9 @@ def to_phone(b):
 
 A = os.path.join(HERE, 'assets')
 L = {'desk': {'w': 1920, 'h': 1080, 'fx': 0.56, 'letter': info['letter'], 'stone': info['stone'],
-              'pivot': round(pivot(os.path.join(A, 'garden-depth.png'), info['stone']), 4)},
+              'pivot': round(pivot(os.path.join(A, 'garden-depth.webp'), info['stone']), 4)},
      'phone': {'w': 1080, 'h': 1920, 'fx': 0.5, 'letter': to_phone(info['letter']), 'stone': to_phone(info['stone']),
-               'pivot': round(pivot(os.path.join(A, 'garden-depth-phone.png'), to_phone(info['stone'])), 4)}}
+               'pivot': round(pivot(os.path.join(A, 'garden-depth-phone.webp'), to_phone(info['stone'])), 4)}}
 for k in L:
     for kk in ('letter', 'stone'): L[k][kk] = [round(v, 4) for v in L[k][kk]]
 src = open(os.path.join(HERE, 'page.src.html')).read()

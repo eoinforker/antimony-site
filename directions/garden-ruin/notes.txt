@@ -3,11 +3,13 @@ The Garden in the Ruin, path traced
 What this is
   Inside a vast old stone hall at day. The nave roof is broken open in two places: one ragged break lets in a single
   steep shaft of warm sun, the other, far down the nave, shows the sky at the top of the frame. The shaft falls
-  through drifting dust onto a bed of flowers growing where the flagstones have gone. The Antimony stone (2.6 m) stands
-  in the light among them, its sky crystal lit. A shallow sheet of still water in the floor holds the stone, the
-  crystal and the far window. Arcades of round arches on columns recede into cool shade; ivy climbs and hangs from
-  the columns, ferns grow at their feet, fallen roof blocks and a column drum lie in the aisles. A folded letter
-  rests on a fallen block at the edge of the light.
+  through drifting dust onto a bed of flowers growing where the flagstones have gone. The Antimony stone (2.6 m),
+  hand-carved dark basalt, stands in the light among them, its crystal clear sky glass. A shallow sheet of still
+  water in the floor holds the stone, the crystal and the far arch. At the far end the great window has lost its
+  sill and glazing and opens as an arch into a second hall, roofless and sunlit, its arcade broken down towards a
+  far gable with a great open arch, with low ridges beyond in haze. Arcades of round arches on columns recede into
+  cool shade; ivy climbs and hangs from the columns, ferns grow at their feet, fallen roof blocks and a column drum
+  lie in the aisles. A folded letter leans against a fallen block at the edge of the light.
   Camera: 22 mm on 36 mm, 0.95 m high, 9 m from the stone, pitched up 9 degrees so the broken roof shows, f/3.2.
   Blender 4.5.15 LTS, Cycles on CPU, OpenImageDenoise, adaptive sampling, light tree, AgX Medium High Contrast.
 
@@ -33,19 +35,23 @@ The six fixes after the first frame
 Cheats, all common on film sets
   - A warm bounce card and a cool skylight panel, invisible to the camera and to reflections.
   - Denser air along the shaft (a volume column), so the light has shape without fogging the whole hall.
-  - Refractive caustics are off; the crystal's own faint glow stands in for the sun through it.
+  - A soft card behind the stone, seen only through the crystal (invisible to the lens, lights nothing), so the glass
+    has light to transmit, as in a gem photograph. The crystal has no glow of its own.
+  - The beam's dust thins low down, so it does not veil the far arch where the line of sight crosses it.
+  - The far ridges are a step darker than the sunlit scan, so they hold against the sky.
   - The grade pulls lilac petals back to pale blue.
 
 Run (S is the scratchpad), always under the shared lock
   flock $S/blender.lock nice -n 5 blender -b --factory-startup -P garden_scene.py -- --ph $S/assets/polyhaven \
-    --acg $S/assets/ambientcg --out beauty.png --passes data.png --res 2560x1440 --samples 400 --time 1100
-  python3 -I garden_post.py still beauty.png beauty.png.json assets      (graded stills, phone crop, AVIF and WebP)
-  python3 -I garden_post.py depth data.png assets/garden-depth.png --w 1280 --json beauty.png.json
-  python3 -I garden_post.py depth data.png assets/garden-depth-phone.png --w 720 --crop phone --json beauty.png.json
-  python3 -I garden_post.py loop beauty.png data.png beauty.png.json <frames> --w 1920            (and --w 720 --crop phone)
+    --acg $S/assets/ambientcg --out beauty.png --passes data.png --res 2560x1440 --samples 400 --time 2700
+  (writes beauty.png, beauty.png.json, data.png (16-bit, Raw) and data.npz: the same data, linear and exact)
+  python3 -I garden_post.py still beauty.png beauty.png.json <outdir>     (graded stills, phone crop, AVIF and WebP)
+  python3 -I garden_post.py depth data.npz assets/garden-depth.webp --w 1280 --json beauty.png.json
+  python3 -I garden_post.py depth data.npz assets/garden-depth-phone.webp --w 720 --crop phone --json beauty.png.json
+  python3 -I garden_post.py loop beauty.png data.npz beauty.png.json <frames> --w 1920            (and --w 720 --crop phone)
   ffmpeg: H.264 CRF 20 (slow, faststart), VP9 CRF 33.
-  python3 -I build_page.py beauty.png.json assets/wordmark.svg      (index.html from page.src.html, with the layout)
-  Final render: 2560x1440, 400 samples capped at 1100 s: 1123 s of rendering.
+  python3 -I build_page.py assets/render.json assets/wordmark.svg      (index.html from page.src.html, with the layout)
+  Final render: 2560x1440, 400 samples capped at 2700 s: 2720 s of rendering (45 min).
 
 The loop (8 s, 24 fps, 192 frames, seamless), built from the one still and its data pass
   The data pass: R depth / 60 m, G still water, B object (stone, crystal, letter). The beam is not a pass: it is
@@ -54,8 +60,11 @@ The loop (8 s, 24 fps, 192 frames, seamless), built from the one still and its d
     things, soft with the lens's depth of field.
   - Light breathing: the shaft and its pool swell and settle by about 5 percent, once per loop.
   - Water: a slow shimmer, and two drips from the roof setting rings across the water (one once a loop, one twice).
+  - Petals: six, each falling once a loop from high in the shaft to the flowers, swaying and turning so they catch
+    the sun, fading in high and out low, lit only inside the beam.
   The stone and crystal never move. Every motion repeats a whole number of times in 8 s.
-  Sizes: desktop H.264 0.7 MB, WebM 0.3 MB; phone H.264 0.5 MB, WebM 0.15 MB.
+  Sizes: desktop H.264 0.78 MB, WebM 0.32 MB; phone H.264 0.47 MB, WebM 0.16 MB. Stills: AVIF 84 KB (phone 55 KB),
+  WebP 116 KB (phone 76 KB). Depth maps, lossless WebP: 472 KB (phone 427 KB).
 
 The page (index.html)
   The loop is the background (WebM or H.264), with the AVIF or WebP still as its poster and fallback. A small WebGL
@@ -64,7 +73,7 @@ The page (index.html)
   pointer or tilt. Opening: the hall comes up out of black over about 3.5 s, then the type; any click, key, scroll
   or touch skips it; once per session. Type: the wordmark and "Software, made on purpose." (alternatives in a
   comment), small, lower left. No products, no links.
-  The paper: the folded letter on the fallen block is real geometry in the render. A focusable button ("Read the
+  The paper: the folded letter leaning against the fallen block is real geometry in the render. A focusable button ("Read the
   note") sits over it; after about seven quiet seconds a soft glint passes over it. Opening it eases the hall in
   towards the letter, the sheet lifts from the block with a turn and settles flat, lit as the hall is (warm from high
   on the left, cool shade on the right) with the fold across its middle and ambientCG Paper002 grain. Escape, the
@@ -78,9 +87,39 @@ The page (index.html)
   letter opens and closes. Shots in shots/.
 
 Honest limits
-  - The letter is small in the frame (an A4 sheet at 8.6 m): its button is padded and the glint finds it, but by eye
-    it is a pale sliver on the block.
-  - The haze is still a little milky on the upper left, where the far break's sun crosses the nave.
-  - The flowers in front of the stone are kept very low, so the bed reads thinner there than at its sides.
-  - On the narrowest phones the vault fades to black at the top rather than showing the roof.
-  - The motes and ripples are image effects over the still: the drips do not splash and the dust casts no light.
+  - The letter reads as folded paper and is about six times its old area, but on a phone it is still small, and on a
+    390 px screen it sits close to the left edge (the page leaves it a margin and fades the vault in above).
+  - The ridges beyond the far arch are faint: the arch reads as a second hall and sky more than a distant country.
+  - The crystal is near #94E6FF but a little deeper and greyer than the swatch (about 126, 175, 189 against 148, 230, 255).
+  - The petals are small at this distance (2 to 3 px long at 1920): they read as slow, turning flecks, not as petals.
+  - The motes, petals and ripples are image effects over the still: the drips do not splash and nothing casts light.
+  - The hero ran 45 minutes and stopped at the cap before 400 samples; it is clean after denoising, but the deep shade
+    is a little soft.
+
+The push (finished; the first frames it went through are kept as shots/push-first-frame.png and push-second-frame.png)
+  1. The stone, hand carved and old, and clean: stone.py opt-in options (defaults unchanged for every other world):
+     growth=False (no moss or lichen on the mark; growth only on the ground at its foot), carve (broad, shallow chisel
+     scoops in patches at varied angles, a smooth drafted margin along every arris, pick marks on the seam and cavity
+     walls; relief only, so it shows where light rakes across), damp_foot (a darker damp band wicked up from the
+     ground), chip_size and chip_dots (larger faceted spalls, no row of small bites). Same Break geometry; honed basalt
+     held dark (stone_value 0.68) for weight; the render is not lifted or cooled in post.
+  2. The crystal: clear glass (IOR 1.544, sky absorption, a faint body tint, no glow). As in a gem photograph, a soft
+     card stands behind the stone, seen only through the glass (invisible to the lens, lights nothing), so the crystal
+     has light to transmit and its facets read light and dark; its reflection in the water sees the same. MNEE was
+     tried and shows nothing from this camera (the sun crosses away from the lens, so refracted light lands behind the
+     stone). A projected caustic at the foot was tried and cut: it read as a glow. garden_post.py still --hold k is a
+     light crystal hold towards #94E6FF, off by default.
+  3. Depth: the far window is now a great open arch into a second hall, roofless and sunlit, its arcade broken down,
+     to a far gable with a great open arch; past it three low ridges (Poly Haven coastal_cliff_01, scaled and laid low,
+     a step darker) in aerial haze read from the sky's horizon colour. The beam's dust thins low down so it no longer
+     veils the arch where the line of sight crosses it.
+  4. The letter: a writing sheet (24 by 34 cm) folded once, leaning back against the fallen block at the edge of the
+     light, turned so the sun rakes across the fold; warm paper a touch below white, with its shadow on the block.
+     Plants are kept clear of it and of the line from the lens. The phone crop (garden_post.py, build_page.py) now
+     centres the letter and the stone together, keeping the stone whole. The page's hit area follows the render's
+     letter box on rebuild.
+  5. The finish: crystal absorption 2.1 times denser with a slightly stronger body tint, so it lands near #94E6FF in
+     render (graded median about 126, 175, 189; no post hold); the ridges a step darker again; the letter 29 by 41 cm.
+     The data pass is now written linear (Raw) and kept exact as data.npz, so depth for the parallax and the loop's
+     occlusion is right (it went through the sRGB curve before). The loop adds six petals falling through the shaft.
+     One grade (garden_post.py grade) for the stills, the phone still and both loops.

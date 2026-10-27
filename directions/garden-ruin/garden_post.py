@@ -1,16 +1,19 @@
 # The Garden in the Ruin: stills, the depth map and the seamless loop, from one render and its data pass.
 # Plain numpy and Pillow, run with python3 -I.
 #
-#   still : python3 -I garden_post.py still  <render.png> <render.json> <outdir>
-#   loop  : python3 -I garden_post.py loop   <render.png> <data.png> <render.json> <frames_dir> [--w 1920] [--crop phone]
-#   depth : python3 -I garden_post.py depth  <data.png> <out.png> [--w 1280] [--crop phone]
+#   still : python3 -I garden_post.py still  <render.png> <render.json> <outdir> [--data <data.png> --hold 0.2]
+#           (--hold k: a light hold of the crystal towards sky #94E6FF, 0 to 1; off by default)
+#   loop  : python3 -I garden_post.py loop   <render.png> <data.npz> <render.json> <frames_dir> [--w 1920] [--crop phone]
+#   depth : python3 -I garden_post.py depth  <data.npz> <out.webp> [--w 1280] [--crop phone]   (lossless WebP)
 #
-# The data pass is a 16-bit PNG: R depth / 60 m, G still water, B object index / 4 (1 stone, 2 crystal, 3 letter).
+# The data pass (data.npz, linear float16): R depth / 60 m, G still water, B object index / 4 (1 stone, 2 crystal,
+# 3 letter). Earlier renders wrote it as a PNG through the sRGB curve; it is now saved linear and exact.
 # The loop (8 s, 24 fps, 192 frames) is built from the one still:
 #   - motes: dust drifting in the sunbeam, each on its own closed path (whole cycles per loop), lit by the beam,
 #     hidden behind anything nearer than it, soft with the lens's depth of field
 #   - the light breathes: the shaft and its pool swell and settle by a few percent
 #   - the water: a slow shimmer, and two drips from the broken roof setting rings spreading across it
+#   - a very few petals falling slowly through the shaft, turning as they fall, lit only inside the beam
 # The stone and the crystal never move. Every motion repeats a whole number of times in 8 s.
 import sys, os, json, math
 import numpy as np
@@ -22,6 +25,13 @@ def opt(name, default):
 
 def read_rgb(path):
     return np.asarray(Image.open(path).convert('RGB'), np.float32) / 255.0
+
+def read_data(path):
+    # the data pass, linear: R depth / 60 m, G still water, B object index / 4. The render saves it exactly as
+    # data.npz (float16); a PNG beside it is the same data written linear (Raw), 8 bits once PIL has read it.
+    if path.endswith('.npz'):
+        return np.load(path)['data'].astype(np.float32)
+    return read16(path)
 
 def read16(path):
     im = Image.open(path)
@@ -39,15 +49,18 @@ def resize(a, w, h, resample=Image.LANCZOS):
 def save8(a, path, q=None):
     im = Image.fromarray((np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8))
     if q: im.save(path, quality=q)
+    elif path.endswith('.webp'): im.save(path, lossless=True, quality=100, method=6)    # depth maps stay exact
     else: im.save(path)
 
 def crop_box(W, H, info, mode):
     if mode != 'phone': return 0, 0, W, H
     cw = int(round(H * 9 / 16))
-    # the stone whole, and the letter on its block in the light at the left
-    x0 = info['letter'][0] * W - 0.06 * cw
-    x0 = min(x0, info['stone'][0] * W - 0.05 * cw)
-    x0 = max(x0, info['stone'][2] * W + 0.08 * cw - cw)
+    # the stone whole and the letter beside it, centred together; if both cannot fit, the stone stays whole
+    L_, S_ = info['letter'], info['stone']
+    a = min(L_[0], S_[0]) * W; b = max(L_[2], S_[2]) * W
+    x0 = (a + b) / 2 - cw / 2
+    x0 = min(x0, S_[0] * W - 0.04 * cw)
+    x0 = max(x0, S_[2] * W + 0.04 * cw - cw)
     x0 = int(np.clip(x0, 0, W - cw))
     return x0, 0, x0 + cw, H
 
@@ -134,6 +147,29 @@ def grade(img):
     out = lift + out * (1 - lift)
     return np.clip(out, 0, 1)
 
+def obj_index(data):
+    return data[..., 2] * 4
+
+def hold_marks(img, data, k=0.0):
+    # a light hold of the crystal towards sky #94E6FF (its facets keep their light and dark); k 0 is off.
+    # The stone is left exactly as rendered.
+    idx = obj_index(data)
+    lw = np.array([0.2126, 0.7152, 0.0722], np.float32)
+    l = img @ lw
+    # the index pass is speckled through glass: close the mask first, then soften its edge
+    cm = blur((blur((np.abs(idx - 2) < 0.4).astype(np.float32), 3.0) > 0.35).astype(np.float32), 1.2)
+    if cm.max() > 0:
+        # read the facets' light from a smoothed luminance, so render grain is not lifted into sparkle
+        ls = blur(l * cm, 2.5) / np.maximum(blur(cm, 2.5), 1e-3)
+        ref = np.percentile(ls[cm > 0.5], 85)
+        t = ls / max(ref, 1e-4)
+        sky = np.array([0x94, 0xE6, 0xFF], np.float32) / 255
+        held = sky[None, None, :] * (0.25 + 0.75 * np.clip(t, 0, 1)[..., None])
+        held = held + np.clip(t - 1, 0, 0.6)[..., None] * (1 - sky)      # the brightest glints go towards white
+        a_ = k * cm[..., None]
+        img = img * (1 - a_) + np.clip(held, 0, 1) * a_
+    return img
+
 # ---------------------------------------------------------------- modes
 mode = sys.argv[1]
 
@@ -141,7 +177,11 @@ if mode == 'still':
     src, js, outdir = sys.argv[2:5]
     info = json.load(open(js))
     os.makedirs(outdir, exist_ok=True)
-    img = Image.fromarray((grade(read_rgb(src)) * 255 + 0.5).astype(np.uint8))
+    g_ = grade(read_rgb(src))
+    if opt('data', '') and opt('hold', 0.0) > 0:
+        d_ = read_data(opt('data', ''))
+        g_ = hold_marks(g_, d_ if d_.shape[:2] == g_.shape[:2] else resize(d_, g_.shape[1], g_.shape[0], Image.NEAREST), opt('hold', 0.0))
+    img = Image.fromarray((np.clip(g_, 0, 1) * 255 + 0.5).astype(np.uint8))
     img.save(os.path.join(outdir, 'garden-still.png'))
     os.makedirs(outdir, exist_ok=True)
     W, H = img.size
@@ -156,7 +196,7 @@ if mode == 'still':
 
 elif mode == 'depth':
     datap, out = sys.argv[2:4]
-    data = read16(datap)
+    data = read_data(datap)
     Hs, Ws = data.shape[:2]
     info = json.load(open(opt('json', '')))
     box = crop_box(Ws, Hs, info, opt('crop', 'desktop'))
@@ -174,7 +214,7 @@ elif mode == 'loop':
     src, datap, js, fdir = sys.argv[2:6]
     info = json.load(open(js))
     os.makedirs(fdir, exist_ok=True)
-    base = grade(read_rgb(src)); data = read16(datap)
+    base = grade(read_rgb(src)); data = read_data(datap)
     Hr, Wr = base.shape[:2]
     if data.shape[:2] != (Hr, Wr): data = resize(data, Wr, Hr, Image.NEAREST)
     box = crop_box(Wr, Hr, info, opt('crop', 'desktop'))
@@ -211,6 +251,13 @@ elif mode == 'loop':
     tw_c = rng.integers(1, 4, NM); tw_p = rng.uniform(0, 2 * np.pi, NM)
     size_w = rng.uniform(0.0012, 0.003, NM)                 # metres
     focus = np.linalg.norm(np.array(info['beam_foot']) - camera(info, W, H, box)[1])
+    # petals: each falls once per loop from high in the shaft to the flowers, swaying, fading in high and out low
+    NP = opt('petals', 6)
+    prng = np.random.default_rng(17)
+    p_ph = (np.arange(NP) + prng.uniform(0.1, 0.9, NP)) / NP          # staggered so one is always on its way
+    p_r = info['beam_r'] * 0.75 * np.sqrt(prng.uniform(0.05, 1, NP)); p_th = prng.uniform(0, 2 * np.pi, NP)
+    p_top = prng.uniform(4.5, 7.0, NP); p_sw = prng.uniform(0.12, 0.3, NP); p_sp = prng.integers(2, 5, NP)
+    p_len = prng.uniform(0.016, 0.024, NP)
     for f in range(N):
         t = f / N
         img = base.copy()
@@ -256,5 +303,34 @@ elif mode == 'loop':
             gy, gx = np.mgrid[y0:y1, x0:x1]
             k = np.exp(-(((gx - x) ** 2 + (gy - y) ** 2) / (rad * rad)))
             img[y0:y1, x0:x1] += (k * inten)[..., None] * np.array([1.0, 0.9, 0.74], np.float32) * (1 - img[y0:y1, x0:x1]) * 0.9
+        # petals
+        for i in range(NP):
+            ft = (t + p_ph[i]) % 1.0
+            z = p_top[i] * (1 - ft) + 0.25 * ft
+            alpha = min(1.0, ft / 0.12) * min(1.0, (1 - ft) / 0.1)
+            if alpha <= 0: continue
+            sway = p_sw[i] * math.sin(2 * math.pi * (2 * t + p_ph[i] * 3))
+            on_axis = P0 + u * (z / u[2])
+            ang = p_th[i] + 0.6 * math.sin(2 * math.pi * (t + p_ph[i]))
+            Pp = on_axis + (p_r[i] * math.cos(ang) + sway) * a1 + p_r[i] * math.sin(ang) * a2
+            px_, py_, pz_, fpx_ = project(info, W, H, box, Pp[None, :])
+            x, y, zc = px_[0], py_[0], pz_[0]
+            if zc <= 0.3 or not (4 <= x < W - 4 and 4 <= y < H - 4): continue
+            if depth[int(y), int(x)] < zc - 0.05: continue
+            dist_ax = np.linalg.norm(np.cross(Pp - P0, u))
+            lit = 1.0 if dist_ax < info['beam_r'] * 0.9 else 0.3
+            spin = 2 * math.pi * p_sp[i] * t + p_ph[i] * 7
+            flick = 0.45 + 0.55 * abs(math.cos(spin))                      # a turning petal catches the sun
+            L_ = max(p_len[i] * fpx_ / zc, 1.2 * sx); Wd = max(L_ * 0.45 * (0.35 + 0.65 * abs(math.sin(spin))), 0.7 * sx)
+            th_ = spin * 0.5
+            R_ = int(math.ceil(L_ * 1.6)) + 2
+            x0, x1 = int(x) - R_, int(x) + R_ + 1; y0, y1 = int(y) - R_, int(y) + R_ + 1
+            if x0 < 0 or y0 < 0 or x1 > W or y1 > H: continue
+            gy, gx = np.mgrid[y0:y1, x0:x1]
+            dx_, dy_ = gx - x, gy - y
+            ca, sa = math.cos(th_), math.sin(th_)
+            q = ((dx_ * ca + dy_ * sa) / (L_ * 0.5)) ** 2 + ((-dx_ * sa + dy_ * ca) / (Wd * 0.5)) ** 2
+            k = np.exp(-q * 1.6) * alpha * lit * flick * 0.85
+            img[y0:y1, x0:x1] = img[y0:y1, x0:x1] * (1 - k[..., None]) + k[..., None] * np.array([0.98, 0.95, 0.9], np.float32)
         save8(img, os.path.join(fdir, f'f_{f:04d}.jpg'), q=95)
         if f % 24 == 0: print('frame', f, flush=True)

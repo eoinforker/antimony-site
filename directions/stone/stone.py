@@ -54,6 +54,24 @@
 #     seed=7              varies the chips, erosion and growth.
 #     geometry=None       path to break-geometry.json (defaults to the copy beside this file).
 #     name='antimony'     prefix for object names.
+#     Opt-in (defaults leave the stone exactly as before):
+#     growth=True         False keeps the mark clean: no moss or lichen on the stone at all (growth only
+#                         on the ground around it, which the scene owns).
+#     carve=0.0           hand tooling on the faces, 0 none, 1 clear: patches of parallel chisel strokes
+#                         at varied angles, a smooth drafted margin along every arris, point (pick) marks
+#                         on the seam and cavity walls, worn faint in places.
+#     chip_size=1.0       scale of the edge chips (2 gives larger, rarer spalls).
+#     chip_dots=1.0       the small round bites along the arrises (0 leaves only the larger faceted spalls).
+#     damp_foot=0.0       damp wicked up from the ground: a darker, slightly glossier band at the foot
+#                         with a ragged, tongued upper edge (0 none, 1 about a tenth of the stone's height).
+#     crystal_depth=0.0   more depth in the glass (0 as before, 1 full): a second, weak absorption that
+#                         leans long paths toward cobalt (thick parts read deeper, thin edges stay sky),
+#                         the inner glow lowered so it does not fill the gem evenly, and a finer polish
+#                         so catches of light are crisp.
+#     crystal_bevel=1.0   width of the polished arrises on the crystal, as a multiple of the usual
+#                         (larger catches light along the edges as a fine line).
+#     inner_faces=0       extra faint internal fracture planes at varied angles inside the crystal (they
+#                         use the veil's material and go in the returned 'inner' object).
 #   Returns a dict: {'root': empty parent, 'stone': mesh object, 'crystal': mesh object,
 #                    'veil': internal facet object or None, 'info': dict of measures (scale, T, sink,
 #                    footprint half sizes, matrix)}.
@@ -244,10 +262,13 @@ def _prism(name, pts, y0, y1, coll):
 def build_stone(collection, scale_m=2.0, location=(0, 0, 0), rotation=(0, 0, 0), wetness=0.0, moss=0.5,
                 cache_dir=DEFAULT_CACHE, thickness=0.26, sink=0.035, bevel=0.009, chips=1.0, erosion=1.0,
                 tool_marks=1.0, lichen=None, stone_value=1.0, veins=0.0, glow=0.15, inner_facets=True, caustics=True,
-                detail=380, seed=7, geometry=None, name='antimony'):
+                detail=380, seed=7, geometry=None, name='antimony', growth=True, carve=0.0, damp_foot=0.0,
+                chip_size=1.0, chip_dots=1.0, crystal_depth=0.0, inner_faces=0, crystal_bevel=1.0):
     geo = json.load(open(geometry or os.path.join(HERE, 'break-geometry.json')))
     if lichen is None:
         lichen = 0.6 * moss
+    if not growth:
+        moss, lichen = 0.0, 0.0
     S = scale_m / 100.0                      # metres per SVG unit
     T = thickness * scale_m
     SK = sink * scale_m
@@ -294,7 +315,7 @@ def build_stone(collection, scale_m=2.0, location=(0, 0, 0), rotation=(0, 0, 0),
         * _smooth(0.5 * BV, 1.5 * BV, d_t)
     rng = np.random.default_rng(seed)
     off = Vector(rng.uniform(-50, 50, 3))
-    fchip = 1.0 / (0.045 * scale_m); fsm = 1.0 / (0.012 * scale_m); fer = 1.0 / (0.16 * scale_m)
+    fchip = 1.0 / (0.045 * scale_m * chip_size); fsm = 1.0 / (0.012 * scale_m * chip_size); fer = 1.0 / (0.16 * scale_m)
     chip = np.zeros(N); disp = np.zeros(N)
     zrel = (co[:, 2] + SK) / scale_m                            # 0 at the tile's foot, 1 at its top
     for i in range(N):
@@ -308,7 +329,7 @@ def build_stone(collection, scale_m=2.0, location=(0, 0, 0), rotation=(0, 0, 0),
             n1 = noise.fractal(p * fchip, 0.8, 2.1, 4)
             n2 = noise.cell(p * fsm)
             c = max(0.0, min(1.0, (n1 - 0.26) / 0.18))
-            c = max(c, 1.0 if n2 > 0.88 else 0.0) * e
+            c = max(c, (1.0 if n2 > 0.88 else 0.0) * chip_dots) * e
             # a fracture is faceted: quantise the depth a little
             depth = math.floor((0.55 + 0.45 * noise.cell(p * fchip * 2.0)) * 4) / 4
             chip[i] = c
@@ -339,7 +360,7 @@ def build_stone(collection, scale_m=2.0, location=(0, 0, 0), rotation=(0, 0, 0),
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     cme = bpy.data.meshes.new(name + '_crystal'); bm.to_mesh(cme); bm.free()
     crystal = bpy.data.objects.new(name + '_crystal', cme); tmp.objects.link(crystal)
-    bvc = crystal.modifiers.new('arris', 'BEVEL'); bvc.width = 0.0012 * scale_m; bvc.segments = 2
+    bvc = crystal.modifiers.new('arris', 'BEVEL'); bvc.width = 0.0012 * scale_m * crystal_bevel; bvc.segments = 2 if crystal_bevel == 1.0 else 3
     bvc.limit_method = 'ANGLE'; bvc.angle_limit = math.radians(20)
     _bake(crystal)
     veil = None
@@ -352,18 +373,39 @@ def build_stone(collection, scale_m=2.0, location=(0, 0, 0), rotation=(0, 0, 0),
                        [], [(0, 1, 2, 3)])
         veil = bpy.data.objects.new(name + '_veil', vm); tmp.objects.link(veil)
         veil.visible_shadow = False
+    inner = None
+    if inner_faces > 0:
+        # small fracture planes inside the gem, each at its own angle and tilt, slightly irregular
+        rs = np.random.default_rng(seed + 31)
+        R = 0.5 * max(math.dist(gem[i], gem[j]) for i in range(len(gem)) for j in range(len(gem)))
+        iv, ifc = [], []
+        for _ in range(int(inner_faces)):
+            a = rs.uniform(0, math.pi); b = rs.uniform(0.35, 1.2) * rs.choice((-1, 1))
+            u = Vector((math.cos(a), 0, math.sin(a))); w = Vector((-math.sin(a), 0, math.cos(a)))
+            v = (w * math.cos(b) + Vector((0, 1, 0)) * math.sin(b)).normalized()
+            c = Vector((cx, 0, cz)) + w * rs.uniform(-0.25, 0.25) * R + u * rs.uniform(-0.2, 0.2) * R
+            lh = rs.uniform(0.25, 0.5) * R; wh = min(rs.uniform(0.12, 0.25) * R, 0.06 * T / max(abs(math.sin(b)), 0.2))
+            k0 = len(iv)
+            for su, sv in ((1, 1), (-1, 1), (-1, -1), (1, -1)):
+                iv.append(tuple(c + u * su * lh * rs.uniform(0.7, 1.0) + v * sv * wh * rs.uniform(0.6, 1.0)))
+            ifc.append((k0, k0 + 1, k0 + 2, k0 + 3))
+        im_ = bpy.data.meshes.new(name + '_inner'); im_.from_pydata(iv, [], ifc)
+        inner = bpy.data.objects.new(name + '_inner', im_); tmp.objects.link(inner)
+        inner.visible_shadow = False
 
     # 6. materials
     tile.data.materials.append(_stone_material(name, scale_m, T, SK, cache_dir, wetness, moss, lichen,
-                                               tool_marks, erosion, stone_value, seed, veins))
-    crystal.data.materials.append(_crystal_material(name, T, glow))
+                                               tool_marks, erosion, stone_value, seed, veins, growth, carve, damp_foot))
+    crystal.data.materials.append(_crystal_material(name, T, glow, crystal_depth))
     if veil:
         veil.data.materials.append(_veil_material(name))
+    if inner:
+        inner.data.materials.append(veil.data.materials[0] if veil else _veil_material(name))
 
     # 7. parent, place, hand over
     root = bpy.data.objects.new(name, None); root.empty_display_size = scale_m * 0.6
     collection.objects.link(root)
-    for ob in (tile, crystal, veil):
+    for ob in (tile, crystal, veil, inner):
         if ob is None:
             continue
         tmp.objects.unlink(ob); collection.objects.link(ob); ob.parent = root
@@ -376,10 +418,11 @@ def build_stone(collection, scale_m=2.0, location=(0, 0, 0), rotation=(0, 0, 0),
     info = {'scale': scale_m, 'T': T, 'sink': SK, 'half_w': 50 * S, 'half_t': T / 2, 'wetness': wetness,
             'moss': moss, 'cache_dir': cache_dir, 'matrix': root.matrix_world.copy(),
             'crystal_centre': root.matrix_world @ Vector((cx, 0, cz)), 'faces': len(me.polygons)}
-    return {'root': root, 'stone': tile, 'crystal': crystal, 'veil': veil, 'info': info}
+    return {'root': root, 'stone': tile, 'crystal': crystal, 'veil': veil, 'inner': inner, 'info': info}
 
 
-def _stone_material(name, scale_m, T, SK, cache, wet, moss, lichen, tool_marks, erosion, value, seed, veins=0.0):
+def _stone_material(name, scale_m, T, SK, cache, wet, moss, lichen, tool_marks, erosion, value, seed, veins=0.0,
+                    growth=True, carve=0.0, damp_foot=0.0):
     m = bpy.data.materials.new(name + '_stone'); m.use_nodes = True
     g = _NT(m); L = g.l
     tc = g.n('ShaderNodeTexCoord', (-2600, 0))
@@ -520,6 +563,8 @@ def _stone_material(name, scale_m, T, SK, cache, wet, moss, lichen, tool_marks, 
     mos = g.math('MULTIPLY', mos, g.math('SUBTRACT', 1.0, g.math('MULTIPLY', face_y, 0.25)), clamp=True)
     mos = g.ramp(g.math('MULTIPLY', mos, g.ramp(mn.outputs['Fac'], 0.35, 0.6, 0.4, 1.0)), 0.35, 0.75, loc=(-800, -2250))
     mos = g.ramp(g.math('ADD', mos, g.math('MULTIPLY', g.math('SUBTRACT', noise_m(0.08, 6), 0.5), 0.6)), 0.1, 0.9)
+    if not growth:
+        mos = 0.0
     m_c = box(_acg(cache, 'Moss002', 'Color'), False, 0.45, 0.2, (-1900, -2500))
     m_n = box(_acg(cache, 'Moss002', 'NormalGL'), True, 0.45, 0.2, (-1900, -2750))
     mhs = g.n('ShaderNodeHueSaturation', (-1600, -2500)); mhs.inputs['Saturation'].default_value = 0.85
@@ -549,6 +594,67 @@ def _stone_material(name, scale_m, T, SK, cache, wet, moss, lichen, tool_marks, 
         dk = g.mix(cut, dk, g.mix(1.0, dk, (0.75, 0.75, 0.75), 'MULTIPLY'))
         col = g.mix(wmask, col, dk, loc=(850, 700))
         rough = g.mixf(g.math('MULTIPLY', wmask, 0.85), rough, 0.16, (550, 300))
+    if not growth:
+        lmask = 0.0
+    if damp_foot > 0:
+        # damp wicked up from the ground: a ragged upper edge with a few tongues where water runs back down
+        dn = g.math('MULTIPLY', g.math('SUBTRACT', noise_m(0.05 * scale_m, 5, 0.6), 0.5), 0.07 * scale_m)
+        tm_ = g.n('ShaderNodeMapping'); tm_.inputs['Scale'].default_value = (1 / (0.03 * scale_m), 1 / (0.03 * scale_m), 1 / (0.25 * scale_m))
+        L(pos, tm_.inputs['Vector'])
+        tn_ = g.n('ShaderNodeTexNoise'); tn_.inputs['Scale'].default_value = 1.0; tn_.inputs['Detail'].default_value = 3
+        L(tm_.outputs['Vector'], tn_.inputs['Vector'])
+        tongue = g.math('MULTIPLY', g.ramp(tn_.outputs['Fac'], 0.55, 0.75), 0.06 * scale_m)
+        hd = g.math('SUBTRACT', g.math('SUBTRACT', hz, dn), tongue)
+        top_ = 0.1 * scale_m * damp_foot
+        dmp = g.ramp(hd, top_ * 0.55, top_, 1.0, 0.0)
+        # the tide line: a faint paler rim where salts dry out at the top of the damp
+        rim = g.math('MULTIPLY', g.ramp(hd, top_ * 0.9, top_, 0.0, 1.0), g.ramp(hd, top_, top_ * 1.12, 1.0, 0.0))
+        col = g.mix(g.math('MULTIPLY', rim, 0.18), col, g.mix(1.0, col, (1.35, 1.35, 1.33), 'MULTIPLY'))
+        col = g.mix(dmp, col, g.mix(1.0, col, (0.5, 0.52, 0.53), 'MULTIPLY'))
+        rough = g.mixf(g.math('MULTIPLY', dmp, 0.6), rough, 0.28)
+    carve_h = None
+    if carve > 0:
+        # hand tooling: patches (about 45 cm) each worked with broad, shallow chisel scoops at its own angle,
+        # each about 4.5 cm wide and 12 to 22 cm long, of varied depth; it shows only where light rakes across
+        cp = g.n('ShaderNodeSeparateXYZ'); L(pos, cp.inputs['Vector'])
+        uu = g.math('ADD', cp.outputs['X'], cp.outputs['Y']); vv = cp.outputs['Z']
+        cxy = g.n('ShaderNodeCombineXYZ'); L(uu, cxy.inputs['X']); L(vv, cxy.inputs['Y'])
+        vo = g.n('ShaderNodeTexVoronoi'); vo.voronoi_dimensions = '2D'; vo.inputs['Scale'].default_value = 1.0 / 0.45
+        vo.inputs['Randomness'].default_value = 0.9; L(cxy.outputs['Vector'], vo.inputs['Vector'])
+        sp_ = g.n('ShaderNodeSeparateColor'); L(vo.outputs['Color'], sp_.inputs['Color'])
+        ang = g.math('ADD', g.math('MULTIPLY', g.math('SUBTRACT', sp_.outputs['Red'], 0.5), math.radians(75)), math.radians(16))
+        ca, sa = g.math('COSINE', ang), g.math('SINE', ang)
+        s_ = g.math('ADD', g.math('MULTIPLY', uu, ca), g.math('MULTIPLY', vv, sa))
+        t_ = g.math('SUBTRACT', g.math('MULTIPLY', vv, ca), g.math('MULTIPLY', uu, sa))
+        pitch = 0.045
+        sk = g.math('DIVIDE', s_, pitch); k_ = g.math('FLOOR', sk); f_ = g.math('SUBTRACT', sk, k_)
+        prof = g.ramp(g.math('ABSOLUTE', g.math('SUBTRACT', g.math('MULTIPLY', f_, 2.0), 1.0)), 0.0, 1.0)
+        def white(a, b, c):
+            cc_ = g.n('ShaderNodeCombineXYZ')
+            for i_, v_ in enumerate((a, b, c)):
+                if isinstance(v_, (int, float)): cc_.inputs[i_].default_value = v_
+                else: L(v_, cc_.inputs[i_])
+            w_ = g.n('ShaderNodeTexWhiteNoise'); w_.noise_dimensions = '3D'; L(cc_.outputs['Vector'], w_.inputs['Vector'])
+            return w_.outputs['Value']
+        seg_len = g.math('ADD', 0.12, g.math('MULTIPLY', white(k_, sp_.outputs['Green'], 3.1), 0.10))
+        tk = g.math('ADD', g.math('DIVIDE', t_, seg_len), white(k_, sp_.outputs['Red'], 1.7))
+        sg = g.math('FLOOR', tk); gf = g.math('SUBTRACT', tk, sg)
+        endf = g.math('MULTIPLY', g.ramp(gf, 0.0, 0.35), g.ramp(gf, 1.0, 0.65))
+        dep = g.ramp(white(k_, sg, sp_.outputs['Blue']), 0.2, 1.0, 0.0, 1.0)
+        strokes = g.math('MULTIPLY', g.math('MULTIPLY', prof, dep), endf)
+        # worn faint in places, gone in the drafted margin along every arris and on the cut walls
+        worn = g.ramp(noise_m(0.35, 4), 0.3, 0.62, 0.25, 1.0)
+        margin = g.ramp(edge, 0.03, 0.2, 1.0, 0.0)
+        mk = g.math('MULTIPLY', g.math('MULTIPLY', worn, margin), g.math('SUBTRACT', 1.0, g.math('MAXIMUM', cut, chip)), clamp=True)
+        tool = g.math('MULTIPLY', strokes, mk)
+        # point (pick) marks on the seam and cavity walls: small irregular pits
+        q_d, q_c = cells(0.011, 0.9)
+        picks = g.math('MULTIPLY', g.ramp(g.math('DIVIDE', q_d, g.ramp(q_c, 0, 1, 0.25, 0.5)), 1.0, 0.0), g.ramp(q_c, 0.3, 0.5), clamp=True)
+        picks = g.math('MULTIPLY', picks, cut)
+        carve_h = g.math('SUBTRACT', g.math('MULTIPLY', tool, -1.0), g.math('MULTIPLY', picks, 0.8))
+        # dust and grime lodge in the scoops; the ridges stay a touch paler
+        col = g.mix(g.math('MULTIPLY', tool, min(0.3, 0.12 * carve)), col, g.mix(1.0, col, (0.8, 0.81, 0.82), 'MULTIPLY'))
+        rough = g.mixf(g.math('MULTIPLY', tool, 0.25), rough, 0.6)
     bsdf = g.n('ShaderNodeBsdfPrincipled', (1200, 300))
     L(col, bsdf.inputs['Base Color']); L(rough, bsdf.inputs['Roughness'])
     bsdf.inputs['Specular IOR Level'].default_value = 0.5
@@ -563,7 +669,11 @@ def _stone_material(name, scale_m, T, SK, cache, wet, moss, lichen, tool_marks, 
     nb = g.n('ShaderNodeMix', (-400, -200)); nb.data_type = 'VECTOR'
     L(g.math('MAXIMUM', cut, chip), nb.inputs['Factor']); L(nm_h.outputs['Normal'], nb.inputs[4]); L(nm_c.outputs['Normal'], nb.inputs[5])
     nb2 = g.n('ShaderNodeMix', (-250, -300)); nb2.data_type = 'VECTOR'
-    L(mos, nb2.inputs['Factor']); L(nb.outputs[1], nb2.inputs[4]); L(nm_m.outputs['Normal'], nb2.inputs[5])
+    if growth:
+        L(mos, nb2.inputs['Factor'])
+    else:
+        nb2.inputs['Factor'].default_value = 0.0
+    L(nb.outputs[1], nb2.inputs[4]); L(nm_m.outputs['Normal'], nb2.inputs[5])
     # drove marks: fine parallel grooves at the seam's 16 degrees, worn away in patches
     a16 = math.radians(16)
     dm = g.n('ShaderNodeMapping', (-1600, -3400)); dm.inputs['Rotation'].default_value = (0, a16, 0)
@@ -610,14 +720,19 @@ def _stone_material(name, scale_m, T, SK, cache, wet, moss, lichen, tool_marks, 
     bmp.inputs['Distance'].default_value = 0.003                  # fine detail is real size
     L(h, bmp.inputs['Height']); L(bmc.outputs['Normal'], bmp.inputs['Normal'])
     L(bmp.outputs['Normal'], bsdf.inputs['Normal'])
+    if carve_h is not None:
+        bct = g.n('ShaderNodeBump'); bct.inputs['Strength'].default_value = min(1.0, 0.5 * carve)
+        bct.inputs['Distance'].default_value = 0.003 * carve
+        L(carve_h, bct.inputs['Height']); L(bmp.outputs['Normal'], bct.inputs['Normal'])
+        L(bct.outputs['Normal'], bsdf.inputs['Normal'])
     if wmask is not None:
-        L(bmp.outputs['Normal'], bsdf.inputs['Coat Normal'])
+        L(bmp.outputs['Normal'] if carve_h is None else bct.outputs['Normal'], bsdf.inputs['Coat Normal'])
     out = g.n('ShaderNodeOutputMaterial', (1500, 300)); L(bsdf.outputs['BSDF'], out.inputs['Surface'])
     m['antimony_masks'] = 'edge chip cut'
     return m
 
 
-def _crystal_material(name, T, glow):
+def _crystal_material(name, T, glow, depth=0.0):
     m = bpy.data.materials.new(name + '_crystal'); m.use_nodes = True
     g = _NT(m); L = g.l
     sky = sky_linear()
@@ -629,7 +744,7 @@ def _crystal_material(name, T, glow):
     tc = g.n('ShaderNodeTexCoord', (-800, 0))
     nz = g.n('ShaderNodeTexNoise', (-600, 0)); nz.inputs['Scale'].default_value = 6.0 / T; nz.inputs['Detail'].default_value = 5
     L(tc.outputs['Object'], nz.inputs['Vector'])
-    L(g.ramp(nz.outputs['Fac'], 0.45, 0.75, 0.0, 0.035), b.inputs['Roughness'])
+    L(g.ramp(nz.outputs['Fac'], 0.45, 0.75, 0.0, 0.035 * (1 - 0.7 * depth)), b.inputs['Roughness'])
     o = g.n('ShaderNodeOutputMaterial', (600, 0)); L(b.outputs['BSDF'], o.inputs['Surface'])
     # the colour is held by absorption: light crossing the crystal once lands on #94E6FF
     d = 0.8 * T                                                # a typical path through it
@@ -638,6 +753,13 @@ def _crystal_material(name, T, glow):
     va = g.n('ShaderNodeVolumeAbsorption', (0, -250)); va.inputs['Color'].default_value = (*col, 1)
     va.inputs['Density'].default_value = D
     vol = va.outputs['Volume']
+    if depth > 0:
+        # long paths lean toward cobalt: a weak second absorption that takes red first, then green
+        vb = g.n('ShaderNodeVolumeAbsorption', (0, -350)); vb.inputs['Color'].default_value = (0.30, 0.55, 1.0, 1)
+        vb.inputs['Density'].default_value = D * 0.45 * depth
+        ab_ = g.n('ShaderNodeAddShader', (150, -300)); L(vol, ab_.inputs[0]); L(vb.outputs['Volume'], ab_.inputs[1])
+        vol = ab_.outputs['Shader']
+        glow = glow * (1 - 0.55 * depth)
     if glow > 0:
         ve = g.n('ShaderNodeEmission', (0, -450)); ve.inputs['Color'].default_value = (*sky, 1)
         ve.inputs['Strength'].default_value = glow * 2.5 / d

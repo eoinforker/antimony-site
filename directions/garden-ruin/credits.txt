@@ -11,6 +11,7 @@ Poly Haven (polyhaven.com)
   grass_medium_01 (grass in the bed and the cracks)
   fern_02 (ferns at the column feet)
   rock_moss_set_01 (rubble)
+  coastal_cliff_01 (the far ridges seen through the great arch, scaled and laid low in aerial haze)
 
 ambientCG (ambientcg.com)
   LeafSet017 (ivy leaves)

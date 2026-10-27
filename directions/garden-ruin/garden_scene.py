@@ -166,19 +166,62 @@ sun.rotation_euler = SUN_D.to_track_quat('-Z', 'Y').to_euler()
 S = arg('scale', 0.026)        # 100 units = 2.6 m: a monolith you stand beside
 T = arg('thick', 0.55)
 MARK_X, MARK_Y = arg('mx', 2.6), arg('my', 10.5)
-BLOCK = (arg('bx', 0.25), arg('by', 9.0))
+BLOCK = (arg('bx', 0.55), arg('by', 9.3))
 MARK_YAW = math.radians(arg('yaw', -14.0))
 
 # the shared stone (directions/stone/stone.py): exact Break geometry, honed scanned basalt, softened and
 # chipped arrises, faint drove marks, lichen at the foot, the crystal as true sky glass
 sys.path.insert(0, arg('stone-dir', os.path.join(os.path.dirname(HERE), 'stone')))
 import stone
+# hand-carved and old: chipped, worn arrises, chisel tooling in patches with a drafted margin, pick marks in the
+# seam, damp wicked up at the foot. Nothing grows on the mark (growth=False): growth stays on the ground around it.
 STONE = stone.build_stone(sc.collection, scale_m=S * 100, location=(MARK_X, MARK_Y, 0.0),
-                          rotation=(0.01, -0.006, MARK_YAW), wetness=0.0, moss=arg('moss', 0.45),
-                          cache_dir=os.path.dirname(PH.rstrip('/')), stone_value=arg('st-val', 0.8),
-                          glow=arg('cr-glow', 0.2), caustics=bool(arg('caustics', 0)), detail=arg('detail', 300))
+                          rotation=(0.01, -0.006, MARK_YAW), wetness=0.0, moss=0.0, growth=False,
+                          cache_dir=os.path.dirname(PH.rstrip('/')), stone_value=arg('st-val', 0.68),
+                          glow=arg('cr-glow', 0.0), caustics=bool(arg('caustics', 0)), detail=arg('detail', 340),
+                          chips=arg('chips', 1.6), chip_size=arg('chip-size', 1.9), chip_dots=0.0,
+                          bevel=arg('st-bevel', 0.012), erosion=arg('erosion', 1.4),
+                          tool_marks=arg('tool', 0.3), carve=arg('carve', 0.8), damp_foot=arg('damp', 1.0))
 T = STONE['info']['T']
 crystal = STONE['crystal']
+# the crystal as real, clear glass with only a faint body tint: its sky colour comes from the light it transmits
+# (held by absorption), never from a glow of its own
+cm_ = crystal.active_material; cnt = cm_.node_tree
+cb_ = next(n_ for n_ in cnt.nodes if n_.bl_idname == 'ShaderNodeBsdfPrincipled')
+cout = next(n_ for n_ in cnt.nodes if n_.bl_idname == 'ShaderNodeOutputMaterial')
+body = node(cnt, 'ShaderNodeBsdfPrincipled', (0, 600))
+# pre-balanced against the warm sun, so the lit crystal lands on #94E6FF and never drifts to teal
+body.inputs['Base Color'].default_value = (arg('cb-r', 0.16), arg('cb-g', 0.55), 1.0, 1); body.inputs['Roughness'].default_value = 0.25
+body.inputs['Subsurface Weight'].default_value = 1.0; body.inputs['Subsurface Radius'].default_value = (0.03, 0.06, 0.09)
+body.inputs['Coat Weight'].default_value = 1.0; body.inputs['Coat Roughness'].default_value = 0.02
+cmix = node(cnt, 'ShaderNodeMixShader', (350, 300)); cmix.inputs['Fac'].default_value = arg('cr-body', 0.14)
+for n_ in cnt.nodes:                      # denser sky absorption, so what the glass transmits lands nearer #94E6FF
+    if n_.bl_idname == 'ShaderNodeVolumeAbsorption':
+        n_.inputs['Density'].default_value *= arg('cr-abs', 2.1)
+link(cnt, cb_.outputs['BSDF'], cmix.inputs[1]); link(cnt, body.outputs['BSDF'], cmix.inputs[2])
+link(cnt, cmix.outputs['Shader'], cout.inputs['Surface'])
+
+# what the crystal refracts: through the cavity it would see the stone's own shadowed bed, so, as in any gem
+# photograph, a soft card stands behind it, seen only through the glass (invisible to the lens, lights nothing)
+if arg('cr-card', 1):
+    nb_ = (STONE['root'].matrix_world.to_3x3() @ Vector((0, 1, 0))).normalized()
+    cc0 = Vector(STONE['info']['crystal_centre'])
+    bpy.ops.mesh.primitive_plane_add(size=1); card = bpy.context.object; card.name = 'crystal_card'
+    card.scale = (1.8, 1.8, 1); card.location = cc0 + nb_ * arg('card-d', 0.9)
+    card.rotation_euler = (-nb_).to_track_quat('Z', 'Y').to_euler()
+    mcd, ntc = mat('crystal_card')
+    tcc = node(ntc, 'ShaderNodeTexCoord', (-800, 0))
+    nzc = node(ntc, 'ShaderNodeTexNoise', (-600, 0)); nzc.inputs['Scale'].default_value = 2.2; nzc.inputs['Detail'].default_value = 3
+    link(ntc, tcc.outputs['Object'], nzc.inputs['Vector'])
+    gr_ = node(ntc, 'ShaderNodeSeparateXYZ', (-600, -200)); link(ntc, tcc.outputs['Object'], gr_.inputs['Vector'])
+    # brighter high up (the sky's side), with soft broken variation so the facets differ
+    sv = math_n(ntc, 'MULTIPLY', maprange(ntc, gr_.outputs['Y'], -0.5, 0.5, 0.35, 1.0), maprange(ntc, nzc.outputs['Fac'], 0.3, 0.7, 0.45, 1.1))
+    emc = node(ntc, 'ShaderNodeEmission', (-100, 0)); emc.inputs['Color'].default_value = (1.0, 0.98, 0.95, 1)
+    link(ntc, math_n(ntc, 'MULTIPLY', sv, arg('card', 1.9)), emc.inputs['Strength'])
+    oc_ = node(ntc, 'ShaderNodeOutputMaterial', (200, 0)); link(ntc, emc.outputs['Emission'], oc_.inputs['Surface'])
+    card.data.materials.append(mcd)
+    card.visible_camera = False; card.visible_diffuse = False; card.visible_glossy = False
+    card.visible_shadow = False; card.visible_volume_scatter = False; card.visible_transmission = True
 
 # ---------------------------------------------------------------- the floor plan: masks for the garden bed and the water
 # one map over the hall floor (x -12..12, y -12..42): R garden bed, G still water
@@ -196,7 +239,7 @@ def fbm(x, y, seed, oct_=5, f0=0.35):
         amp *= 0.55; f *= 2.1
     return v / tot * 2.2
 BED_C = (MARK_X - 0.3, MARK_Y + 0.3)
-POOL = (MARK_X - arg('pool-dx', 0.8), MARK_Y - arg('pool-dy', 0.45))   # where the shaft lands
+POOL = (MARK_X - arg('pool-dx', 1.0), MARK_Y - arg('pool-dy', 0.45))   # where the shaft lands
 def bed_field(x, y):
     d = np.hypot((x - BED_C[0]) / 1.0, (y - BED_C[1]) / 0.8)
     return 3.4 - d + 0.9 * fbm(x, y, 3)          # > 0 inside the bed
@@ -327,7 +370,8 @@ for side in (-1, 1):
 # the far wall with one great arched window; a plain wall behind the camera
 far = box('far', -13.2, 13.2, 41, 42.4, 0, Z_ROOF + 1.2, M_ASHLAR)
 FWW = arg('far-win', 2.2)
-fc = [box('fw', -FWW, FWW, 40, 43.4, 3.5, 13.5)]
+FWS = arg('far-sill', 0.45)      # the great window has lost its sill and glazing: an open arch into the next hall
+fc = [box('fw', -FWW, FWW, 40, 43.4, FWS, 13.5)]
 c4 = cyl('fwa', FWW, -1.5, 1.5, n=64); c4.rotation_euler = (math.pi / 2, 0, 0); c4.location = (0, 41.7, 13.5); fc.append(c4)
 # a smaller window high in each aisle bay of the far wall
 for xs in (-9.0, 9.0):
@@ -335,10 +379,63 @@ for xs in (-9.0, 9.0):
     c5 = cyl('fsa', 1.0, -1.5, 1.5, n=40); c5.rotation_euler = (math.pi / 2, 0, 0); c5.location = (xs, 41.7, 8.5); fc.append(c5)
 cut(far, fc)
 # mullions in the great window
-for xm in (-FWW / 3, FWW / 3):
-    box(f'mullion_{xm}', xm - 0.1, xm + 0.1, 41.4, 41.9, 3.5, 15.4, M_ASHLAR, 0.02)
-box('transom', -FWW, FWW, 41.4, 41.9, 8.8, 9.05, M_ASHLAR, 0.02)
+# a fallen mullion lies across the threshold
+mb_ = box('mullion_fallen', -0.1, 0.1, -2.6, 2.6, -0.1, 0.1, M_ASHLAR, 0.02)
+mb_.location = (0.9, 43.6, 0.12); mb_.rotation_euler = (0.0, 0.0, 1.2)
 box('back', -13.2, 13.2, -13.4, -12.0, 0, Z_ROOF + 1.2, M_ASHLAR)
+
+# ---------------------------------------------------------------- beyond the far window: a second hall, roofless and sunlit,
+# its arcade broken down towards a far gable with a great open arch; past it, ridges (scanned cliffs) in layered haze
+SH = arg('hall2', 1)
+if SH:
+    rs_ = np.random.default_rng(21)
+    X2 = 2.7
+    Y2 = [47.0, 53.0, 59.0, 65.0, 71.0, 77.0, 83.0, 89.0]
+    for side in (-1, 1):
+        for i, y in enumerate(Y2):
+            full = (i < 4) if side < 0 else (i < 2)
+            ztop = 8.0 if full else float(rs_.uniform(2.5, 6.5))
+            if not full and rs_.uniform() < 0.25: continue          # a few have fallen entirely
+            x = side * X2
+            box(f'p2_{side}_{i}', x - 0.62, x + 0.62, y - 0.62, y + 0.62, 0, 0.3, M_COLUMN, 0.03)
+            sh_ = cyl(f's2_{side}_{i}', 0.48, 0.3, ztop, x, y, 40, m=M_COLUMN, bevel=0.02)
+            if full:
+                box(f'a2_{side}_{i}', x - 0.66, x + 0.66, y - 0.66, y + 0.66, ztop, ztop + 0.45, M_COLUMN, 0.03)
+            else:
+                sh_.rotation_euler = (float(rs_.normal(0, 0.03)), float(rs_.normal(0, 0.03)), 0)
+        # the arcade wall stands over the first bays only, its top broken
+        if side > 0: continue
+        nb_ = 2
+        w2 = box(f'arc2_{side}', side * X2 - 0.5, side * X2 + 0.5, Y2[0] - 0.7, Y2[nb_] + 0.7, 8.45, 13.6, M_ASHLAR)
+        cs_ = []
+        for a_, b_ in zip(Y2[:nb_], Y2[1:nb_ + 1]):
+            c_ = cyl('arch2', 2.45, -1.5, 1.5, n=56); c_.rotation_euler = (0, math.pi / 2, 0); c_.location = (side * X2, (a_ + b_) / 2, 8.45)
+            cs_.append(c_)
+        # a stepped break where the courses have fallen away
+        for k_ in range(3):
+            cs_.append(box('brk2', side * X2 - 1, side * X2 + 1, Y2[nb_] + 0.7 - 1.3 * (k_ + 1), Y2[nb_] + 1.0, 13.6 - 1.4 * (k_ + 1), 14.0))
+        cut(w2, cs_)
+    # the far gable: a great arch open to the country beyond, its top broken
+    g2 = box('gable2', -12, 12, 95.0, 96.6, 0, 17.0, M_ASHLAR)
+    ga = cyl('g2a', 3.4, -2, 2, n=64); ga.rotation_euler = (math.pi / 2, 0, 0); ga.location = (0.4, 95.8, 9.0)
+    gb = box('g2b', -3.0, 3.8, 94, 97.6, 0, 9.0)
+    # its top fallen in steps, lower to the right
+    brk_ = [box('g2t', x0_, 13, 94, 97.6, z0_, 18) for x0_, z0_ in ((-1.5, 15.2), (3.5, 13.4), (7.5, 11.0))]
+    brk_ += [box('g2t', -13, x1_, 94, 97.6, z0_, 18) for x1_, z0_ in ((-6.0, 16.0), (-9.5, 14.6))]
+    cut(g2, [ga, gb] + brk_)
+    # floor of the second hall (unseen but it bounces the sun up into the haze and the arcade)
+    box('floor2', -14, 14, 42.4, 97, -0.2, 0.0, M_ASHLAR)
+    # its air: thicker than the nave's and lit by the open sky, so it falls back in layers
+    def _hz(name, x0, x1, y0, y1, z0, z1, dens, col, aniso=0.3):
+        ob_ = box(name, x0, x1, y0, y1, z0, z1)
+        m_, nt_ = mat(name)
+        pv_ = node(nt_, 'ShaderNodeVolumePrincipled', (0, 0)); pv_.inputs['Density'].default_value = dens
+        pv_.inputs['Anisotropy'].default_value = aniso; pv_.inputs['Color'].default_value = (*col, 1)
+        o_ = node(nt_, 'ShaderNodeOutputMaterial', (300, 0)); link(nt_, pv_.outputs['Volume'], o_.inputs['Volume'])
+        link(nt_, node(nt_, 'ShaderNodeBsdfTransparent', (0, 200)).outputs['BSDF'], o_.inputs['Surface'])
+        ob_.data.materials.append(m_); return ob_
+    _hz('haze_hall2', -12, 12, 42.4, 95.0, -0.2, 26.0, arg('haze2', 0.0015), (0.93, 0.96, 1.0))
+
 
 # the nave roof (plaster vault soffit), broken open where the sun comes in
 roof = box('roof', -NAVE - 0.7, NAVE + 0.7, -12, 41, Z_ROOF, Z_ROOF + 1.2, M_PLASTER)
@@ -435,7 +532,7 @@ def water_at(x, y): return (water_field(x, y) > -0.1) & ~bed_at(x, y)
 # ---------------------------------------------------------------- air: a faint haze in the hall so the shaft has shape
 hz = box('haze', -12, 12, -12, 41, -0.5, Z_ROOF)
 m_h, nt = mat('haze')
-pv = node(nt, 'ShaderNodeVolumePrincipled', (0, 0)); pv.inputs['Density'].default_value = arg('haze', 0.008)
+pv = node(nt, 'ShaderNodeVolumePrincipled', (0, 0)); pv.inputs['Density'].default_value = arg('haze', 0.006)
 pv.inputs['Anisotropy'].default_value = arg('aniso', 0.35); pv.inputs['Color'].default_value = (0.95, 0.96, 1.0, 1)
 o = node(nt, 'ShaderNodeOutputMaterial', (300, 0)); link(nt, pv.outputs['Volume'], o.inputs['Volume'])
 link(nt, node(nt, 'ShaderNodeBsdfTransparent', (0, 200)).outputs['BSDF'], o.inputs['Surface'])
@@ -449,7 +546,7 @@ def haze_obj(name, ob, dens, aniso=0.35, col=(0.95, 0.96, 1.0)):
     link(nt_, node(nt_, 'ShaderNodeBsdfTransparent', (0, 200)).outputs['BSDF'], o_.inputs['Surface'])
     ob.data.materials.append(m_)
 # air thickens with distance (aerial depth towards the far window)
-haze_obj('haze_far', box('haze_far', -12, 12, 20, 41, -0.5, Z_ROOF), arg('haze-far', 0.022), 0.2, (0.9, 0.95, 1.0))
+haze_obj('haze_far', box('haze_far', -12, 12, 20, 41, -0.5, Z_ROOF), arg('haze-far', 0.009), 0.2, (0.9, 0.95, 1.0))
 # dust hangs in the sunbeam: a column of denser air along the shaft (the light itself draws its edge)
 bm = bmesh.new(); bmesh.ops.create_cone(bm, cap_ends=True, segments=32, radius1=2.4, radius2=2.4, depth=30)
 me_ = bpy.data.meshes.new('shaftair'); bm.to_mesh(me_); bm.free()
@@ -457,6 +554,12 @@ sa = link_obj(bpy.data.objects.new('shaftair', me_))
 sa.location = Vector((POOL[0], POOL[1], 0)) - SUN_D * 12
 sa.rotation_euler = (-SUN_D).to_track_quat('Z', 'Y').to_euler()
 haze_obj('haze_shaft', sa, arg('haze-shaft', 0.04), arg('aniso', 0.35), (1.0, 0.97, 0.92))
+# the dust thins low down, so the beam does not veil the far arch where the line of sight crosses it
+_ms = sa.data.materials[0]; _nt = _ms.node_tree
+_pv = next(n_ for n_ in _nt.nodes if n_.bl_idname == 'ShaderNodeVolumePrincipled')
+_gp = node(_nt, 'ShaderNodeNewGeometry', (-600, 0)); _sz = node(_nt, 'ShaderNodeSeparateXYZ', (-400, 0))
+link(_nt, _gp.outputs['Position'], _sz.inputs['Vector'])
+link(_nt, math_n(_nt, 'MULTIPLY', maprange(_nt, _sz.outputs['Z'], arg('shaft-fade0', 2.0), arg('shaft-fade1', 6.5), 0.15, 1.0), arg('haze-shaft', 0.04)), _pv.inputs['Density'])
 
 # ---------------------------------------------------------------- instancing (geometry nodes from a point cloud)
 def instances(name, coll, P, R, Sc, pick):
@@ -570,9 +673,19 @@ def off_mark(x, y, pad=0.12):
     lx = (x - MARK_X) * c_m - (y - MARK_Y) * s_m; ly = (x - MARK_X) * s_m + (y - MARK_Y) * c_m
     return ~((np.abs(lx) < 50 * S + pad) & (np.abs(ly) < T / 2 + pad))
 
+# the letter leans against the front of the block, facing the lens
+LB_N = Vector((math.sin(0.42), -math.cos(0.42), 0))
+LETTER_BASE = Vector((BLOCK[0], BLOCK[1], 0)) + LB_N * arg('letter-off', 0.64)
+def off_letter(x, y):
+    # clear around the letter and in a narrowing lane from it towards the camera, so nothing hides it
+    vx, vy = 0.3 - LETTER_BASE.x, 1.8 - LETTER_BASE.y; L_ = math.hypot(vx, vy); vx /= L_; vy /= L_
+    dx, dy = x - LETTER_BASE.x, y - LETTER_BASE.y
+    along = dx * vx + dy * vy; perp = np.abs(dx * vy - dy * vx)
+    return ~(((along > -0.25) & (along < 2.6) & (perp < 0.3 + 0.03 * np.maximum(along, 0))) | (np.hypot(dx, dy) < 0.35))
+
 def plant_points(n, x0, x1, y0, y1, keep):
     x = rng.uniform(x0, x1, n); y = rng.uniform(y0, y1, n)
-    k = keep(x, y) & off_mark(x, y)
+    k = keep(x, y) & off_mark(x, y) & off_letter(x, y)
     return x[k], y[k]
 
 P, R, Sc, K = [], [], [], []
@@ -590,7 +703,7 @@ x, y = plant_points(int(34000 * DENS), BED_C[0] - 6, BED_C[0] + 6, BED_C[1] - 6,
 depth = np.clip(bed_field(x, y) / 1.6, 0, 1)
 front = (y < MARK_Y - 0.2) & (np.abs(x - MARK_X) < 1.35 + 0.1 * (MARK_Y - y))
 blockz = np.hypot(x - BLOCK[0], y - BLOCK[1]) < 0.75
-keep = (rng.uniform(0, 1, len(x)) < (0.35 + 0.65 * depth) * np.where(front, 0.85, 1.0)) & ~blockz
+keep = (rng.uniform(0, 1, len(x)) < (0.35 + 0.65 * depth) * np.where(front, 0.85, 1.0)) & ~blockz & off_letter(x, y)
 x, y = x[keep], y[keep]
 u = rng.uniform(0, 1, len(x))
 grass_k = u < 0.3
@@ -672,7 +785,6 @@ for i, (sz, lc, rt) in enumerate(fall):
     block(f'fallen{i}', sz, lc, rt)
 # the block in the light, where the letter rests
 pb_ = block('letterblock', (0.95, 0.7, 0.62), (BLOCK[0], BLOCK[1], 0.24), (0.04, -0.03, 0.42))
-BLOCK_TOP = 0.24 + 0.31 - 0.01
 drum = cyl('drum', 0.74, -0.6, 0.6, n=64, m=M_COLUMN, bevel=0.04)
 drum.rotation_euler = (math.pi / 2, 0, 0.6); drum.location = (-8.2, 9.0, 0.68)
 drum2 = cyl('drum2', 0.74, -0.55, 0.55, n=64, m=M_COLUMN, bevel=0.04)
@@ -807,9 +919,48 @@ for ym in mids:
     for side in (-1, 1):
         portal((side * 11.9, ym, 6.5), (0, side * math.pi / 2, 0), 7.5, 2.1)
         if side > 0: portal((side * NAVE, ym, 16.0), (0, side * math.pi / 2, 0), 5.2, 1.7)
-portal((0, 40.9, 9.5), (-math.pi / 2, 0, 0), 2 * FWW, 12.5)
+portal((0, 40.9, (FWS + 15.7) / 2), (-math.pi / 2, 0, 0), 2 * FWW, 15.7 - FWS)
 portal((1.5, 36.0, Z_ROOF - 0.05), (0, 0, 0), 9.0, 9.0)
 portal((HOLE[0], HOLE[1], Z_ROOF - 0.05), (0, 0, 0), 5.5, 5.5)
+
+# ---------------------------------------------------------------- the far country: scanned cliffs as ridges, in aerial haze
+if SH:
+    # the haze colour is the sky's own, read from the HDRI just above the horizon
+    px_ = np.empty(len(env.image.pixels), np.float32); env.image.pixels.foreach_get(px_)
+    iw_, ih_ = env.image.size; px_ = px_.reshape(ih_, iw_, 4)
+    HAZE = px_[int(ih_ * 0.52):int(ih_ * 0.56), :, :3].reshape(-1, 3).mean(0) * arg('sky', 0.65) * arg('haze-sky', 0.8)
+    HAZE = HAZE * np.array([0.86, 0.96, 1.12])        # distance cools it a little, as air does
+    print('HAZE', HAZE)
+    def aerial(m_, L_):
+        # mix towards the sky's horizon colour with distance from the lens: 1 - exp(-d / L)
+        nt_ = m_.node_tree
+        out_ = next(n_ for n_ in nt_.nodes if n_.bl_idname == 'ShaderNodeOutputMaterial' and n_.is_active_output)
+        src_ = out_.inputs['Surface'].links[0].from_socket
+        cd_ = node(nt_, 'ShaderNodeCameraData', (0, -600))
+        f_ = math_n(nt_, 'SUBTRACT', 1.0, math_n(nt_, 'EXPONENT', math_n(nt_, 'DIVIDE', math_n(nt_, 'MULTIPLY', cd_.outputs['View Distance'], -1.0), L_)))
+        em_ = node(nt_, 'ShaderNodeEmission', (0, -800)); em_.inputs['Color'].default_value = (*[float(v) for v in HAZE], 1)
+        mx_ = node(nt_, 'ShaderNodeMixShader', (300, -600)); link(nt_, f_, mx_.inputs['Fac'])
+        link(nt_, src_, mx_.inputs[1]); link(nt_, em_.outputs['Emission'], mx_.inputs[2])
+        link(nt_, mx_.outputs['Shader'], out_.inputs['Surface'])
+        # a step darker and cooler than the sunlit scan, so each ridge holds against the sky
+        pb_ = next((n_ for n_ in nt_.nodes if n_.bl_idname == 'ShaderNodeBsdfPrincipled'), None)
+        if pb_ is not None and pb_.inputs['Base Color'].is_linked:
+            sc_ = pb_.inputs['Base Color'].links[0].from_socket
+            link(nt_, mixrgb(nt_, 1.0, sc_, (0.25, 0.29, 0.37, 1), 'MULTIPLY'), pb_.inputs['Base Color'])
+    cl_ = load_objs(os.path.join(PH, 'coastal_cliff_01', 'coastal_cliff_01_1k.blend'), ['coastal_cliff_01_LOD3'])
+    if cl_:
+        base_ = cl_[0]; aerial(base_.data.materials[0], arg('aerial', 4200.0))
+        # three low ridges, one behind another, each further and paler
+        for i, (loc_, rz_, s_, sz_) in enumerate((((-40, 430, -24), 0.05, 8.0, 5.0),
+                                                 ((180, 760, -34), -0.3, 14.0, 7.5),
+                                                 ((-380, 1100, -46), 0.25, 20.0, 10.0))):
+            o_ = base_ if i == 0 else base_.copy()
+            sc.collection.objects.link(o_)
+            o_.location = loc_; o_.rotation_euler = (0, 0, rz_); o_.scale = (s_, s_, sz_ * arg('cliff-z', 1.0))
+            o_.visible_shadow = False
+            bpy.context.view_layer.update()
+            bb_ = [o_.matrix_world @ Vector(c) for c in o_.bound_box]
+            print('CLIFF', i, [round(min(v[k] for v in bb_)) for k in range(3)], [round(max(v[k] for v in bb_)) for k in range(3)])
 
 # ---------------------------------------------------------------- fill: what the bright pool and the sky would give back
 def fill_light(name, loc, aim, size, power, col, spot=False):
@@ -820,7 +971,7 @@ def fill_light(name, loc, aim, size, power, col, spot=False):
     ob.visible_camera = False; ob.visible_glossy = False; ob.visible_transmission = False
     return ob
 # warm bounce off the sunlit flowers onto the stone's face (a film-set bounce card), so the seam reads top to bottom
-fill_light('bounce', (MARK_X - 0.9, MARK_Y - 3.2, 0.35), (MARK_X, MARK_Y, 1.3), (2.6, 0.8), arg('bounce', 80.0), (1.0, 0.78, 0.55))
+fill_light('bounce', (MARK_X - 0.9, MARK_Y - 3.2, 0.35), (MARK_X, MARK_Y, 1.3), (2.6, 0.8), arg('bounce', 80.0), (1.0, 0.88, 0.76))
 # cool skylight from the breaks, high in the nave, so the columns, arches and ivy read in the blue shadow
 fill_light('skyfill', (0.0, 14.0, Z_ROOF - 1.0), (0.0, 14.0, 0.0), (10.0, 30.0), arg('skyfill', 1100.0), (0.62, 0.74, 1.0))
 
@@ -830,7 +981,8 @@ pd_ = os.path.join(ACG, 'Paper002', 'Paper002_2K-JPG_')
 uvp = node(nt, 'ShaderNodeUVMap', (-900, 0))
 tpc = node(nt, 'ShaderNodeTexImage', (-700, 200)); tpc.image = img(pd_ + 'Color.jpg'); link(nt, uvp.outputs['UV'], tpc.inputs['Vector'])
 tpn = node(nt, 'ShaderNodeTexImage', (-700, -200)); tpn.image = img(pd_ + 'NormalGL.jpg', True); link(nt, uvp.outputs['UV'], tpn.inputs['Vector'])
-pcol = mixrgb(nt, 0.55, tpc.outputs['Color'], (0.86, 0.83, 0.76, 1))
+pcol = mixrgb(nt, 0.55, tpc.outputs['Color'], (0.64, 0.59, 0.50, 1))     # warm paper, a touch below white
+pcol = mixrgb(nt, 1.0, pcol, (0.7, 0.7, 0.7, 1), 'MULTIPLY')
 nmp = node(nt, 'ShaderNodeNormalMap', (-400, -200)); nmp.inputs['Strength'].default_value = 0.5; link(nt, tpn.outputs['Color'], nmp.inputs['Color'])
 pbp = node(nt, 'ShaderNodeBsdfPrincipled', (0, 200)); pbp.inputs['Roughness'].default_value = 0.85
 link(nt, pcol, pbp.inputs['Base Color']); link(nt, nmp.outputs['Normal'], pbp.inputs['Normal'])
@@ -838,21 +990,21 @@ tlp = node(nt, 'ShaderNodeBsdfTranslucent', (0, -100)); tlp.inputs['Color'].defa
 mpp_ = node(nt, 'ShaderNodeMixShader', (250, 0)); mpp_.inputs['Fac'].default_value = 0.2
 link(nt, pbp.outputs['BSDF'], mpp_.inputs[1]); link(nt, tlp.outputs['BSDF'], mpp_.inputs[2])
 op_ = node(nt, 'ShaderNodeOutputMaterial', (500, 0)); link(nt, mpp_.outputs['Shader'], op_.inputs['Surface'])
-PW, PH_, NU, NV = 0.21, 0.297, 14, 20       # an A4 sheet, folded across the middle
+PW, PH_, NU, NV = arg('letter-w', 0.29), arg('letter-h', 0.41), 16, 24   # a writing sheet, folded once across
 bm = bmesh.new(); uvl = bm.loops.layers.uv.new('UVMap')
 grid = []
+bow = arg('bow', 0.09)                    # the crease stands forward: the fold has not quite let go
 for j in range(NV + 1):
     row = []
     v = j / NV
     for i in range(NU + 1):
         u = i / NU
         x = (u - 0.5) * PW
-        if v <= 0.5:                            # lower half flat on the stone, its corner curling up a little
-            y = v * PH_; z = 0.0005 + 0.006 * max(0, (u - 0.7) / 0.3) ** 2 * (1 - v * 2)
-        else:                                   # upper half lifts from the crease, open a few degrees
-            t = (v - 0.5) * PH_; a = math.radians(arg('fold', 14.0))
-            y = 0.5 * PH_ - t * math.cos(a) * 0.98; z = 0.0012 + t * math.sin(a) + 0.002 * math.sin(u * math.pi)
-        row.append(bm.verts.new((x, y - 0.25 * PH_, z)))
+        y = v * PH_
+        z = bow * (1 - abs(2 * v - 1)) ** 0.8                          # local z: out of the sheet, towards the lens
+        z += 0.012 * max(0, (v - 0.82) / 0.18) ** 2 * (0.4 + 0.6 * abs(2 * u - 1))   # the top edge curls a little
+        z += 0.006 * max(0, (0.12 - v) / 0.12) ** 2 * max(0, (u - 0.75) / 0.25)       # a lifted bottom corner
+        row.append(bm.verts.new((x, y, z)))
     grid.append(row)
 for j in range(NV):
     for i in range(NU):
@@ -862,12 +1014,65 @@ for j in range(NV):
 me = bpy.data.meshes.new('letter'); bm.to_mesh(me); bm.free()
 for p_ in me.polygons: p_.use_smooth = True
 letter = link_obj(bpy.data.objects.new('letter', me)); me.materials.append(m_pp)
-letter.modifiers.new('sol', 'SOLIDIFY').thickness = 0.0005
-letter.location = (BLOCK[0] + 0.05, BLOCK[1] - 0.03, BLOCK_TOP); letter.rotation_euler = (0, 0, math.radians(arg('letter-rot', 18.0)))
+letter.modifiers.new('sol', 'SOLIDIFY').thickness = 0.0006
+# stand it up, leaning back against the block, turned towards the lens with a little give
+lean = math.radians(arg('lean', 34.0))
+yaw_l = math.radians(arg('letter-rot', 38.0))       # turned so the sun rakes across the fold
+Rl = Matrix.Rotation(yaw_l, 4, 'Z') @ Matrix(((1, 0, 0, 0), (0, math.sin(lean), -math.cos(lean), 0), (0, math.cos(lean), math.sin(lean), 0), (0, 0, 0, 1)))
+letter.matrix_world = Matrix.Translation(LETTER_BASE + Vector((0, 0, -0.004))) @ Rl
 letter.pass_index = 3
 for ob_ in (STONE['stone'],): ob_.pass_index = 1
 for ob_ in (STONE['crystal'], STONE.get('veil')):
     if ob_ is not None: ob_.pass_index = 2
+
+# ---------------------------------------------------------------- light through the crystal
+# The sun crosses the hall away from the lens, so light refracted straight through the crystal lands behind the stone,
+# out of view. What a cut crystal also throws is light that enters its front, reflects inside and leaves forward:
+# a soft dapple of sky blue on the ground at the stone's foot. Projected by a small spot just in front of the crystal.
+if arg('fake-caustic', 0):     # cut after review: at the foot it read as a glow, not as light
+    Mst = STONE['root'].matrix_world
+    nf = (Mst.to_3x3() @ Vector((0, -1, 0))).normalized()
+    cc_ = Vector(STONE['info']['crystal_centre'])
+    lp_ = cc_ + nf * (T / 2 + 0.14)
+    tgt = Vector((cc_.x, cc_.y, 0.0)) + nf * arg('caustic-d', 1.1) + Vector((-0.15, 0, 0))
+    kd = bpy.data.lights.new('caustic', 'SPOT'); kd.energy = arg('caustic', 1600.0); kd.color = (1, 1, 1)
+    kd.spot_size = math.radians(arg('caustic-cone', 44.0)); kd.spot_blend = 0.9; kd.shadow_soft_size = 0.02
+    kd.use_nodes = True; kn = kd.node_tree; kn.nodes.clear()
+    ktc = node(kn, 'ShaderNodeTexCoord', (-1000, 0)); ksp = node(kn, 'ShaderNodeSeparateXYZ', (-800, 0))
+    link(kn, ktc.outputs['Normal'], ksp.inputs['Vector'])
+    kz = math_n(kn, 'MAXIMUM', math_n(kn, 'MULTIPLY', ksp.outputs['Z'], -1.0), 0.05)
+    kc = node(kn, 'ShaderNodeCombineXYZ', (-500, 0))
+    link(kn, math_n(kn, 'DIVIDE', ksp.outputs['X'], kz), kc.inputs['X']); link(kn, math_n(kn, 'DIVIDE', ksp.outputs['Y'], kz), kc.inputs['Y'])
+    def cvor(scale, rot, loc):
+        mp_ = node(kn, 'ShaderNodeMapping', (loc, 200)); mp_.inputs['Rotation'].default_value = (0, 0, rot)
+        mp_.inputs['Location'].default_value = (rot * 3.1, rot * 1.7, 0)
+        link(kn, kc.outputs['Vector'], mp_.inputs['Vector'])
+        v_ = node(kn, 'ShaderNodeTexVoronoi', (loc + 200, 200)); v_.voronoi_dimensions = '2D'; v_.feature = 'DISTANCE_TO_EDGE'
+        v_.inputs['Scale'].default_value = scale; v_.inputs['Randomness'].default_value = 0.85
+        link(kn, mp_.outputs['Vector'], v_.inputs['Vector'])
+        return maprange(kn, v_.outputs['Distance'], 0.0, 0.16, 1.0, 0.0)
+    veins = math_n(kn, 'ADD', math_n(kn, 'MULTIPLY', cvor(5.0, 0.4, -400), 0.7), math_n(kn, 'MULTIPLY', cvor(8.0, 1.3, -400), 0.45))
+    veins = math_n(kn, 'ADD', math_n(kn, 'POWER', veins, 2.2), 0.06)
+    kem = node(kn, 'ShaderNodeEmission', (0, 0)); kem.inputs['Color'].default_value = (*SKY, 1)
+    link(kn, veins, kem.inputs['Strength'])
+    ko = node(kn, 'ShaderNodeOutputLight', (200, 0)); link(kn, kem.outputs['Emission'], ko.inputs['Surface'])
+    kob = link_obj(bpy.data.objects.new('caustic', kd)); kob.location = lp_
+    kob.rotation_euler = (tgt - lp_).to_track_quat('-Z', 'Y').to_euler()
+    kob.visible_camera = False; kob.visible_glossy = False; kob.visible_transmission = False
+    # light linking: it falls on the ground and flowers only, never on the stone or the crystal that throw it
+    kx = bpy.data.collections.new('caustic_excl')
+    for o_ in (STONE['stone'], STONE['crystal'], STONE.get('veil')):
+        if o_ is not None: kx.objects.link(o_)
+    kob.light_linking.receiver_collection = kx
+    for co_ in kx.collection_objects:
+        co_.light_linking.link_state = 'EXCLUDE'
+    print('CAUSTIC at', tuple(round(v, 2) for v in lp_), 'to', tuple(round(v, 2) for v in tgt))
+if arg('caustics', 0):
+    # MNEE shadow caustics: the sun is a caustic light, the crystal a caster, the stone, floor and flowers receivers
+    stone.mark_caustic_lights([sun])
+    for n_ in ('floor', 'garden', 'letterblock'):
+        o_ = bpy.data.objects.get(n_)
+        if o_: o_.cycles.is_caustics_receiver = True
 
 # ---------------------------------------------------------------- compositor: soft bloom, a breath of halation, vignette
 sc.use_nodes = True
@@ -897,7 +1102,8 @@ if PASSES:
     fo = ct.nodes.new('CompositorNodeOutputFile')
     fo.base_path = os.path.dirname(PASSES); fo.format.file_format = 'PNG'
     fo.format.color_depth = '16'; fo.format.color_mode = 'RGB'
-    fo.format.color_management = 'OVERRIDE'; fo.format.view_settings.view_transform = 'Standard'
+    # Raw, so the values are written linear (Standard would put them through the sRGB curve)
+    fo.format.color_management = 'OVERRIDE'; fo.format.view_settings.view_transform = 'Raw'
     fo.format.view_settings.look = 'None'; fo.format.view_settings.exposure = 0; fo.format.view_settings.gamma = 1
     fo.file_slots.clear(); fo.file_slots.new('data')
     cc = ct.nodes.new('CompositorNodeCombineColor'); cc.mode = 'RGB'
@@ -925,6 +1131,11 @@ info = {'w': W, 'h': H, 'lens': cam_d.lens, 'sensor': cam_d.sensor_width,
 json.dump(info, open(OUT + '.json', 'w'), indent=1)
 print('LETTER', info['letter'], 'STONE', info['stone'])
 
+if arg('border', ''):
+    b_ = [float(v) for v in arg('border', '').split(',')]
+    sc.render.use_border = True; sc.render.use_crop_to_border = True
+    sc.render.border_min_x, sc.render.border_max_x = b_[0], b_[2]
+    sc.render.border_min_y, sc.render.border_max_y = 1 - b_[3], 1 - b_[1]
 if '--dry' in argv:
     print('DRY_OK'); sys.exit(0)
 
@@ -935,3 +1146,12 @@ print('RENDER_SECONDS', round(time.time() - t0, 1))
 if PASSES:
     cand = os.path.join(os.path.dirname(PASSES), 'data0001.png')
     if os.path.exists(cand): os.replace(cand, PASSES)
+    try:
+        # read the 16-bit PNG back as plain numbers and keep it exact as data.npz (float16), which numpy reads directly
+        vi = bpy.data.images.load(PASSES); vi.colorspace_settings.name = 'Non-Color'; vw_, vh_ = vi.size
+        a_ = np.empty(vw_ * vh_ * 4, np.float32); vi.pixels.foreach_get(a_)
+        a_ = a_.reshape(vh_, vw_, 4)[::-1, :, :3]
+        np.savez_compressed(os.path.splitext(PASSES)[0] + '.npz', data=a_.astype(np.float16))
+        print('DATA_NPZ', a_.shape, [float(a_[..., k].max()) for k in range(3)])
+    except Exception as e_:
+        print('DATA_NPZ failed', e_)
