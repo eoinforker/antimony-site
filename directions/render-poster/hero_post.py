@@ -2,7 +2,8 @@
 # print's four corners), a breath of halation on the print and highlights, slight chromatic aberration at the
 # edges, a gentle vignette, fine grain, and an optional nearest-neighbour upscale (the quick first frames).
 #
-#   python3 -I hero_post.py raw.png raw.png.json out.png [--up 4] [--grain 0.012] [--hold 0.85]
+#   python3 -I hero_post.py raw.png raw.png.json out.png [--w 1920] [--up 4] [--grain 0.012] [--hold 0.85]
+# Writes out.json beside the frame: the print's corners and the mark's box at the output size.
 
 import json, os, sys
 import numpy as np
@@ -15,7 +16,16 @@ def arg(k, d):
 RAW, JS, OUT = a[0], a[1], a[2]
 UP = arg('--up', 1); GRAIN = arg('--grain', 0.012); HOLD = arg('--hold', 0.85); SEED = arg('--seed', 3)
 info = json.load(open(JS))
-img = np.asarray(Image.open(RAW).convert('RGB'), np.float32) / 255.0
+src = Image.open(RAW).convert('RGB')
+TW = arg('--w', 0)
+if TW and TW != src.size[0]:
+    k = TW / src.size[0]
+    src = src.resize((TW, round(src.size[1] * k)), Image.LANCZOS)
+    info['corners'] = {kk: [v[0] * k, v[1] * k] for kk, v in info['corners'].items()}
+    for kk in ('mark_box', 'gem_box'):
+        if kk in info: info[kk] = [v * k for v in info[kk]]
+    info['w'], info['h'] = src.size
+img = np.asarray(src, np.float32) / 255.0
 Hh, Ww = img.shape[:2]
 
 def homography(src, dst):
@@ -45,12 +55,19 @@ if HOLD > 0 and os.path.exists(gem_p):
     held = np.clip(sky * (0.85 + 0.15 * lum / max(ref, 1e-3)), 0, 1)
     img = img * (1 - m * HOLD) + held * m * HOLD
 
+# ---------------------------------------------------------------- grade: saturation, blacks lifted toward night blue
+SAT = arg('--sat', 1.0); LIFT = arg('--lift', 0.0)
+if SAT != 1.0 or LIFT > 0:
+    lum0 = (img * [0.2126, 0.7152, 0.0722]).sum(-1, keepdims=True)
+    img = np.clip(lum0 + (img - lum0) * SAT, 0, 1)
+    img = img + LIFT * (1 - img) * np.array([0.10, 0.14, 0.32]) * np.clip(1 - lum0 * 3, 0, 1)
+HAL = arg('--halation', 1.0)
 # ---------------------------------------------------------------- halation, chromatic aberration, vignette, grain
 lum = (img * [0.2126, 0.7152, 0.0722]).sum(-1)
 hi = np.clip((lum - 0.72) / 0.28, 0, 1)[..., None] * img
 r = max(2, int(Ww * 0.012))
 glow = np.asarray(Image.fromarray((hi * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(r)), np.float32) / 255.0
-img = 1 - (1 - img) * (1 - glow * np.array([0.30, 0.42, 0.62]))
+img = 1 - (1 - img) * (1 - glow * np.array([0.30, 0.42, 0.62]) * HAL)
 yy, xx = np.mgrid[0:Hh, 0:Ww]; cx, cy = (Ww - 1) / 2, (Hh - 1) / 2
 dx, dy = (xx - cx) / cx, (yy - cy) / cy; rr = np.sqrt(dx * dx + dy * dy)
 k = 0.0016 * Ww
@@ -65,4 +82,11 @@ img = np.clip(img + g * (0.4 + 0.6 * np.sqrt(np.clip(img, 0, 1))), 0, 1)
 out = Image.fromarray((img * 255 + 0.5).astype(np.uint8))
 if UP > 1: out = out.resize((Ww * UP, Hh * UP), Image.NEAREST)
 out.save(OUT)
+if UP > 1:
+    info['corners'] = {kk: [v[0] * UP, v[1] * UP] for kk, v in info['corners'].items()}
+    for kk in ('mark_box', 'gem_box'):
+        if kk in info: info[kk] = [v * UP for v in info[kk]]
+    info['w'], info['h'] = out.size
+info['corners'] = {kk: [round(v[0], 1), round(v[1], 1)] for kk, v in info['corners'].items()}
+json.dump(info, open(os.path.splitext(OUT)[0] + '.json', 'w'), indent=1)
 print('POST', OUT, out.size)

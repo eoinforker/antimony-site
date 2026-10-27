@@ -1,0 +1,10 @@
+Poster 1 hero frames (poster_hero.py): sources, all free to use
+
+Poly Haven (CC0): flower_heliophila, periwinkle_plant, fern_02, calathea_orbifolia_01, pachira_aquatica_01, shrub_02,
+  tree_small_02, fir_tree_01 (lod2), coastal_cliff_01, coastal_cliff_02, rock_face_01, rock_moss_set_01,
+  large_sandstone_blocks, qwantani_night_puresky, rogland_clear_night, kloppenheim_07_puresky
+ambientCG (CC0): Concrete027 (4K, board-formed wall), Concrete017 (slabs), Ground037, Moss002
+NASA Scientific Visualization Studio, Deep Star Maps 2020 (svs.gsfc.nasa.gov/4851), public domain:
+  starmap_2020_8k_gal.exr, the Milky Way and stars in the starlit frames
+The print: Antimony's own Blue Field render (directions/w11-blue-field/assets/still.webp), the Break mark from its
+  exact geometry, the ANTIMONY wordmark outlines, Timeless Serif (licensed by Eoin).

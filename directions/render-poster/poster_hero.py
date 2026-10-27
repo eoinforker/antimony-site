@@ -24,17 +24,18 @@ def arg(k, d):
     v = argv[argv.index(k) + 1]
     return type(d)(v) if not isinstance(d, str) else v
 
-SET = arg('--setting', 1)
+SET = str(arg('--setting', '1'))
 RES = arg('--res', '960x540'); W, H = (int(v) for v in RES.split('x'))
 SAMPLES = arg('--samples', 64); TCAP = arg('--time', 0.0)
 DEVICE = arg('--device', 'CPU').upper()
-OUT = os.path.abspath(arg('--out', os.path.join(HERE, 'hero-%02d.png' % SET)))
+OUT = os.path.abspath(arg('--out', os.path.join(HERE, 'hero-%s.png' % SET)))
 DATA = arg('--data', '')
 PRINT = arg('--print', os.path.join(HERE, 'assets', 'hero-print.png'))
 PH = arg('--ph', os.path.join(SCR, 'assets', 'polyhaven')); ACG = arg('--acg', os.path.join(SCR, 'assets', 'ambientcg'))
 LITE = arg('--lite', 0)
+FULL = arg('--full', 0)            # the hero finish: micro-displacement, hand-placed debris, layered air
 EXPO = arg('--exposure', 0.0)
-rng = np.random.default_rng(7 + SET)
+rng = np.random.default_rng(7 + sum(ord(c) * (i + 1) for i, c in enumerate(SET)))
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene
@@ -119,7 +120,7 @@ def find(folder, key):
     return None
 
 def scanned(name, folder, uvfun, size, rot=0.0, tint=(1, 1, 1), value=1.0, wet=None, rough_mul=1.0, bump=0.6,
-            extra=None):
+            extra=None, disp=0.0):
     """A scanned PBR set at true scale in metres; two samplings mixed by noise to break the tiling.
     uvfun(nt) gives a 2D coordinate in metres. wet(nt) gives a 0..1 wetness (darker, glossier, coated)."""
     m, nt = newmat(name)
@@ -146,6 +147,9 @@ def scanned(name, folder, uvfun, size, rot=0.0, tint=(1, 1, 1), value=1.0, wet=N
         if extra is not None: h = M(nt, 'ADD', h, extra(nt))
         bp = node(nt, 'ShaderNodeBump'); bp.inputs['Strength'].default_value = bump; bp.inputs['Distance'].default_value = 0.02
         put(nt, bp.inputs['Height'], h)
+        if disp > 0:
+            dn = node(nt, 'ShaderNodeDisplacement'); dn.inputs['Scale'].default_value = disp; dn.inputs['Midlevel'].default_value = 0.5
+            put(nt, dn.inputs['Height'], h); DISP.append((m, dn.outputs[0]))
         if nm is not None: link(nt, nm, bp.inputs['Normal'])
         nm = bp.outputs[0]
     bsdf = node(nt, 'ShaderNodeBsdfPrincipled')
@@ -160,8 +164,18 @@ def scanned(name, folder, uvfun, size, rot=0.0, tint=(1, 1, 1), value=1.0, wet=N
     put(nt, bsdf.inputs['Base Color'], col)
     if nm is not None: link(nt, nm, bsdf.inputs['Normal'])
     bsdf.inputs['Specular IOR Level'].default_value = 0.5
-    out(nt, bsdf.outputs[0])
+    o_ = node(nt, 'ShaderNodeOutputMaterial'); link(nt, bsdf.outputs[0], o_.inputs['Surface'])
+    for (mm, dsock) in DISP:
+        if mm is m: link(nt, dsock, o_.inputs['Displacement']); m.displacement_method = 'BOTH'
     return m
+
+DISP = []
+def micro(ob, rate=1.0):
+    """true micro-displacement: adaptive subdivision diced to about a pixel near the lens"""
+    sc.cycles.feature_set = 'EXPERIMENTAL'; sc.cycles.dicing_rate = rate; sc.cycles.offscreen_dicing_scale = 8.0
+    md = ob.modifiers.new('sub', 'SUBSURF'); md.subdivision_type = 'SIMPLE'
+    try: ob.cycles.use_adaptive_subdivision = True
+    except Exception: md.render_levels = 6
 
 def uv_wall(nt):   # a wall in the XZ plane: u along the wall, v up it
     x, y, z = sep(nt, pos(nt)); return comb(nt, x, z, 0.0)
@@ -172,6 +186,20 @@ def plain(name, col, rough, metal=0.0, coat=0.0):
     m, nt = newmat(name); b = node(nt, 'ShaderNodeBsdfPrincipled')
     b.inputs['Base Color'].default_value = (*col, 1); b.inputs['Roughness'].default_value = rough
     b.inputs['Metallic'].default_value = metal; b.inputs['Coat Weight'].default_value = coat; b.inputs['Coat Roughness'].default_value = 0.05
+    out(nt, b.outputs[0]); return m
+
+def anodised():
+    """dark anodised aluminium: brushed grain along the rails, a thin wet coat"""
+    if 'anodised' in bpy.data.materials: return bpy.data.materials['anodised']
+    m, nt = newmat('anodised'); b = node(nt, 'ShaderNodeBsdfPrincipled')
+    x, y, z = sep(nt, pos(nt))
+    grain = noise(nt, comb(nt, M(nt, 'MULTIPLY', x, 3.0), M(nt, 'MULTIPLY', y, 400.0), M(nt, 'MULTIPLY', z, 400.0)), 1.0, 2.0, 0.5)
+    b.inputs['Base Color'].default_value = (0.022, 0.025, 0.03, 1); b.inputs['Metallic'].default_value = 0.9
+    put(nt, b.inputs['Roughness'], M(nt, 'ADD', 0.2, M(nt, 'MULTIPLY', grain, 0.14)))
+    b.inputs['Anisotropic'].default_value = 0.6
+    b.inputs['Coat Weight'].default_value = 0.5; b.inputs['Coat Roughness'].default_value = 0.04
+    bp = node(nt, 'ShaderNodeBump'); bp.inputs['Strength'].default_value = 0.08; bp.inputs['Distance'].default_value = 0.0005
+    put(nt, bp.inputs['Height'], grain); link(nt, bp.outputs[0], b.inputs['Normal'])
     out(nt, b.outputs[0]); return m
 
 def water_mat(name='water'):
@@ -185,6 +213,7 @@ print_info = json.load(open(os.path.splitext(PRINT)[0] + '.json')) if os.path.ex
     {'mark': [0.35, 0.215, 0.65, 0.415]}
 GLOW = (0.50, 0.66, 1.0)
 E_PRINT = arg('--print-e', 1.15)
+GLOW_K = arg('--glow', 1.0)
 
 def lightbox(cx, cy, z0, stand=False, glow=60.0, beam=0.10):
     """the print's face at y = cy, its foot at z0; on a wall (case into the wall behind) or freestanding on two legs.
@@ -192,7 +221,7 @@ def lightbox(cx, cy, z0, stand=False, glow=60.0, beam=0.10):
     FW, D = 0.045, (0.075 if not stand else 0.14)
     x0, x1, z1 = cx - PW / 2, cx + PW / 2, z0 + PH_
     yf = cy - 0.012                       # glass a little in front of the print
-    m_case = plain('anodised', (0.018, 0.02, 0.024), 0.28, metal=0.85, coat=0.6)
+    m_case = anodised()
     parts = [box('case_t', x0 - FW, x1 + FW, yf - 0.01, cy + D, z1, z1 + FW, m_case, 0.004),
              box('case_b', x0 - FW, x1 + FW, yf - 0.01, cy + D, z0 - FW, z0, m_case, 0.004),
              box('case_l', x0 - FW, x0, yf - 0.01, cy + D, z0, z1, m_case, 0.004),
@@ -202,13 +231,38 @@ def lightbox(cx, cy, z0, stand=False, glow=60.0, beam=0.10):
         for lx in (x0 + 0.12, x1 - 0.12):
             parts.append(box('leg', lx - 0.02, lx + 0.02, cy + D * 0.3, cy + D * 0.7, -0.05, z0 - FW, m_case, 0.003))
             parts.append(box('foot', lx - 0.05, lx + 0.05, cy - 0.16, cy + D + 0.16, -0.02, 0.02, m_case, 0.004))
+    # a thin rubber seal round the print, two fixing bolts on the top rail, the feed cable at the foot
+    m_seal = plain('rubber', (0.008, 0.008, 0.009), 0.55)
+    sw = 0.006
+    parts += [box('seal_t', x0, x1, yf + 0.001, cy, z1 - sw, z1, m_seal), box('seal_b', x0, x1, yf + 0.001, cy, z0, z0 + sw, m_seal),
+              box('seal_l', x0, x0 + sw, yf + 0.001, cy, z0, z1, m_seal), box('seal_r', x1 - sw, x1, yf + 0.001, cy, z0, z1, m_seal)]
+    m_bolt = plain('bolt', (0.25, 0.26, 0.28), 0.3, metal=1.0)
+    for bx_ in (x0 + 0.12, x1 - 0.12):
+        bm_ = bmesh.new(); bmesh.ops.create_cone(bm_, cap_ends=True, segments=16, radius1=0.0065, radius2=0.0065, depth=0.004)
+        me_ = bpy.data.meshes.new('bolt'); bm_.to_mesh(me_); bm_.free(); me_.materials.append(m_bolt)
+        bo = link_obj(bpy.data.objects.new('bolt', me_)); bo.location = (bx_, yf - 0.012, z1 + FW / 2); bo.rotation_euler = (math.radians(90), 0, 0)
+        parts.append(bo)
+    cb = bpy.data.curves.new('feed', 'CURVE'); cb.dimensions = '3D'; cb.bevel_depth = 0.0045; cb.bevel_resolution = 2
+    sp = cb.splines.new('BEZIER')
+    if stand:
+        pts = [(x1 - 0.12, cy + D * 0.5, 0.06), (x1 - 0.05, cy + 0.5, 0.005), (x1 + 0.6, cy + 2.0, 0.005), (x1 + 2.5, cy + 4.5, 0.005)]
+    else:
+        pts = [(x1 - 0.1, cy + D * 0.5, z0 - FW), (x1 - 0.02, cy + D * 0.6, 0.08), (x1 + 0.4, -0.008, 0.008), (x1 + 6.0, -0.008, 0.008)]
+    sp.bezier_points.add(len(pts) - 1)
+    for i, pt in enumerate(pts):
+        bp_ = sp.bezier_points[i]; bp_.co = pt; bp_.handle_left_type = bp_.handle_right_type = 'AUTO'
+    cbo = link_obj(bpy.data.objects.new('feed', cb)); cb.materials.append(plain('cable', (0.01, 0.01, 0.011), 0.35, coat=0.6))
+    parts.append(cbo)
     for p in parts: p.pass_index = 3
     # the print: emission from the image, seen by the lens and in reflections; the area light does the lighting
     img = bpy.data.images.load(PRINT, check_existing=True)
     m, nt = newmat('print')
     t = node(nt, 'ShaderNodeTexImage', image=img, interpolation='Cubic', extension='EXTEND')
     put(nt, t.inputs[0], node(nt, 'ShaderNodeTexCoord').outputs['UV'])
-    e = node(nt, 'ShaderNodeEmission'); link(nt, t.outputs[0], e.inputs['Color']); e.inputs['Strength'].default_value = E_PRINT
+    e = node(nt, 'ShaderNodeEmission'); link(nt, t.outputs[0], e.inputs['Color'])
+    u_, v_, _ = sep(nt, node(nt, 'ShaderNodeTexCoord').outputs['UV'])
+    edge = M(nt, 'MINIMUM', M(nt, 'MULTIPLY', M(nt, 'MINIMUM', u_, M(nt, 'SUBTRACT', 1.0, u_)), PW), M(nt, 'MULTIPLY', M(nt, 'MINIMUM', v_, M(nt, 'SUBTRACT', 1.0, v_)), PH_))
+    put(nt, e.inputs['Strength'], M(nt, 'MULTIPLY', mr(nt, edge, 0.0, 0.07, 0.82, 1.0, smooth=True), E_PRINT))   # the light falls off at the edges
     out(nt, e.outputs[0])
     m.cycles.emission_sampling = 'NONE'
     pr = mesh_obj('print', [(x0, cy, z0), (x1, cy, z0), (x1, cy, z1), (x0, cy, z1)], [(0, 1, 2, 3)], [m],
@@ -224,7 +278,7 @@ def lightbox(cx, cy, z0, stand=False, glow=60.0, beam=0.10):
     g.visible_shadow = False
     wm = water_mat('drops')
     V, F = [], []
-    nd = 90 if LITE else 380
+    nd = 90 if LITE else arg('--drops', 380)
     for _ in range(nd):
         x = rng.uniform(x0 + 0.01, x1 - 0.01); z = rng.uniform(z0 + 0.01, z1 - 0.01)
         r = rng.uniform(0.0016, 0.0045) * (1.0 if rng.random() < 0.88 else 1.7)
@@ -244,7 +298,7 @@ def lightbox(cx, cy, z0, stand=False, glow=60.0, beam=0.10):
     dr = mesh_obj('glass_drops', V, F, [wm], smooth=True); dr.pass_index = 2; dr.visible_shadow = False
     # the light the print gives: an area light on its face, with a little spread forward
     la = bpy.data.lights.new('print_light', 'AREA'); la.shape = 'RECTANGLE'; la.size = PW; la.size_y = PH_
-    la.energy = glow; la.color = GLOW; la.spread = math.radians(150)
+    la.energy = glow * GLOW_K; la.color = GLOW; la.spread = math.radians(150)
     lo = link_obj(bpy.data.objects.new('print_light', la)); lo.location = (cx, yf - 0.02, z0 + PH_ / 2)
     lo.rotation_euler = (math.radians(-90), 0, 0)     # facing -Y, out towards the lens
     # the light pouring out into the air: denser air only in front of the print, thinning with distance
@@ -255,7 +309,8 @@ def lightbox(cx, cy, z0, stand=False, glow=60.0, beam=0.10):
         x, y, z = sep(bnt, pos(bnt))
         d = M(bnt, 'ADD', M(bnt, 'ABSOLUTE', M(bnt, 'SUBTRACT', y, cy)), M(bnt, 'MULTIPLY', M(bnt, 'ABSOLUTE', M(bnt, 'SUBTRACT', x, cx)), 0.5))
         fall = M(bnt, 'EXPONENT', M(bnt, 'MULTIPLY', d, -1.1))
-        put(bnt, pv.inputs['Density'], M(bnt, 'MULTIPLY', fall, beam))
+        var = mr(bnt, noise(bnt, comb(bnt, M(bnt, 'MULTIPLY', x, 0.8), y, M(bnt, 'MULTIPLY', z, 0.5)), 0.9, 3.0), 0.3, 0.75, 0.35, 1.25)
+        put(bnt, pv.inputs['Density'], M(bnt, 'MULTIPLY', M(bnt, 'MULTIPLY', fall, var), beam))
         out(bnt, None, pv.outputs['Volume']); bx.data.materials.append(bm)
         bx.visible_shadow = False
     return pr, lo, (x0 - FW, x1 + FW, z0 - FW, z1 + FW, cy)
@@ -288,13 +343,13 @@ def haze(name, x0, x1, y0, y1, z0, z1, dens, col=(0.8, 0.88, 1.0), aniso=0.2, zf
     bx.visible_shadow = False
     return bx
 
-def rain(n, x0, x1, y0, y1, z0, z1, cam_loc, length=(0.12, 0.26), slant=0.02):
+def rain(n, x0, x1, y0, y1, z0, z1, cam_loc, length=(0.12, 0.26), slant=0.02, alpha=0.45):
     """streaks as thin strips turned to the lens; they catch the print's light where they cross it"""
     m, nt = newmat('rain')
     tr = node(nt, 'ShaderNodeBsdfTransparent'); tl = node(nt, 'ShaderNodeBsdfTranslucent'); tl.inputs[0].default_value = (0.9, 0.95, 1.0, 1)
     gl = node(nt, 'ShaderNodeBsdfGlossy'); gl.inputs['Roughness'].default_value = 0.2
     m1 = node(nt, 'ShaderNodeMixShader'); m1.inputs[0].default_value = 0.35; link(nt, tl.outputs[0], m1.inputs[1]); link(nt, gl.outputs[0], m1.inputs[2])
-    m2 = node(nt, 'ShaderNodeMixShader'); m2.inputs[0].default_value = 0.45; link(nt, tr.outputs[0], m2.inputs[1]); link(nt, m1.outputs[0], m2.inputs[2])
+    m2 = node(nt, 'ShaderNodeMixShader'); m2.inputs[0].default_value = alpha; link(nt, tr.outputs[0], m2.inputs[1]); link(nt, m1.outputs[0], m2.inputs[2])
     out(nt, m2.outputs[0])
     P = np.stack([rng.uniform(x0, x1, n), rng.uniform(y0, y1, n), rng.uniform(z0, z1, n)], 1)
     L = rng.uniform(*length, n); wd = rng.uniform(0.0007, 0.0014, n) * (1 + np.linalg.norm(P - np.array(cam_loc), axis=1) * 0.06)
@@ -330,7 +385,7 @@ def libcoll(name, objs):
     c.hide_render = True
     return c
 
-def recolour(m, mode):
+def recolour(m, mode, glow=0.0):
     """petals only. 'blue': white petals and the scan's mauve petals to a clean pale blue; 'white': to a cool white.
     Leaves and stems are pulled cool and dark so the palette holds. Works on a Principled Base Color or on the
     Poly Haven group's Diffuse and Translucency inputs."""
@@ -354,6 +409,15 @@ def recolour(m, mode):
         for i, k in enumerate(tint): link(nt, M(nt, 'MULTIPLY', lum, k), cc.inputs[i])
         leaf = mix(nt, 1.0, src, (0.32, 0.46, 0.72), 'MULTIPLY')
         link(nt, mix(nt, petal, leaf, cc.outputs[0]), sock)
+        if glow > 0 and sock.name in ('Diffuse', 'Base Color', 'Albedo', 'Color'):
+            # a soft light from within the petals only (the founder's luminous flowers): added to the surface
+            mo = next(n for n in nt.nodes if n.bl_idname == 'ShaderNodeOutputMaterial' and n.inputs['Surface'].is_linked)
+            surf = mo.inputs['Surface'].links[0].from_socket
+            em = node(nt, 'ShaderNodeEmission'); link(nt, cc.outputs[0], em.inputs['Color'])
+            put(nt, em.inputs['Strength'], M(nt, 'MULTIPLY', M(nt, 'POWER', petal, 1.5), glow))
+            ad = node(nt, 'ShaderNodeAddShader'); link(nt, surf, ad.inputs[0]); link(nt, em.outputs[0], ad.inputs[1])
+            link(nt, ad.outputs[0], mo.inputs['Surface'])
+            m.cycles.emission_sampling = 'NONE'
 
 def instances(name, coll, P, R, Sc, pick):
     m = len(P)
@@ -383,14 +447,14 @@ def instances(name, coll, P, R, Sc, pick):
     print(name, m, 'instances')
     return ob
 
-def flowers(kind='blue'):
+def flowers(kind='blue', glow=0.0):
     """Poly Haven heliophila (three sizes) and periwinkle, recoloured; returns the library and its index ranges"""
     helio = load_objs(os.path.join(PH, 'flower_heliophila', 'flower_heliophila_2k.blend'),
                       ['flower_heliophila_small_LOD2', 'flower_heliophila_medium_LOD2', 'flower_heliophila_large_LOD2'])
-    for mm in {o.data.materials[0] for o in helio}: recolour(mm, kind)
+    for mm in {o.data.materials[0] for o in helio}: recolour(mm, kind, glow)
     peri = load_objs(os.path.join(PH, 'periwinkle_plant', 'periwinkle_plant_1k.blend'),
                      ['periwinkle_plant_0%d_LOD3' % i for i in range(1, 6)])
-    if peri: recolour(peri[0].data.materials[0], 'blue')
+    if peri: recolour(peri[0].data.materials[0], 'blue', glow * 0.6)
     return libcoll('flower_lib_' + kind, helio + peri), len(helio), len(peri)
 
 # ---------------------------------------------------------------- camera and the poster's keep-out
@@ -461,7 +525,7 @@ def only_light(light_ob, objs):
     light_ob.light_linking.receiver_collection = c
 
 # ---------------------------------------------------------------- shared ground pieces
-def wet_slabs(name, x0, x1, y0, y1, slab=(0.9, 0.6), puddle=0.55, flood=0.0, z=0.0):
+def wet_slabs(name, x0, x1, y0, y1, slab=(0.9, 0.6), puddle=0.55, flood=0.0, z=0.0, disp=0.0):
     """big precast slabs, wet, with water standing where they have settled; scanned concrete surface"""
     def wetf(nt):
         x, y, zz = sep(nt, pos(nt)); yy = M(nt, 'MULTIPLY', y, -1.0)
@@ -482,8 +546,10 @@ def wet_slabs(name, x0, x1, y0, y1, slab=(0.9, 0.6), puddle=0.55, flood=0.0, z=0
         j = M(nt, 'MINIMUM', M(nt, 'MULTIPLY', M(nt, 'MINIMUM', fu, M(nt, 'SUBTRACT', 1.0, fu)), slab[0]),
               M(nt, 'MULTIPLY', M(nt, 'MINIMUM', fv, M(nt, 'SUBTRACT', 1.0, fv)), slab[1]))
         return M(nt, 'MULTIPLY', mr(nt, j, 0.008, 0.002), -0.6)
-    m = scanned(name, os.path.join(ACG, 'Concrete017'), uv_floor, 2.2, tint=(0.62, 0.68, 0.8), value=0.45, wet=wetf, extra=joints)
-    return mesh_obj(name, [(x0, y0, z), (x1, y0, z), (x1, y1, z), (x0, y1, z)], [(0, 1, 2, 3)], [m])
+    m = scanned(name, os.path.join(ACG, 'Concrete017'), uv_floor, 2.2, tint=(0.62, 0.68, 0.8), value=0.45, wet=wetf, extra=joints, disp=disp)
+    ob = mesh_obj(name, [(x0, y0, z), (x1, y0, z), (x1, y1, z), (x0, y1, z)], [(0, 1, 2, 3)], [m])
+    if disp > 0: micro(ob, arg('--dice', 1.0))
+    return ob
 
 def board_wall_mat(name, panel=(2.4, 1.2), value=0.42):
     """board-marked precast concrete: the ambientCG scan (boards turned to run level) with the panel joints,
@@ -519,7 +585,7 @@ def s_wall(mist_heavy):
     wall = mesh_obj('wall', [(-WX, 0, 0), (WX, 0, 0), (WX, 0, 40), (-WX, 0, 40)], [(0, 3, 2, 1)], [wall_m])
     for sx in (-1, 1):
         mesh_obj('wall_end', [(sx * WX, 0, 0), (sx * WX, 2.5, 0), (sx * WX, 2.5, 40), (sx * WX, 0, 40)], [(0, 1, 2, 3)], [wall_m])
-    wet_slabs('slabs', -30, 30, -14, 0.0)
+    wet_slabs('slabs', -30, 30, -14, 0.0, disp=0.006 if FULL else 0.0)
     wet_slabs('slabs_far', -60, 60, 0.0, 120.0, puddle=0.6)
     pr, lo, rect = lightbox(0.0, -0.075, 0.17, stand=False, glow=34.0, beam=0.07 if mist_heavy else 0.05)
     CAMLOC = (0.0, -6.9, 0.52)
@@ -530,11 +596,28 @@ def s_wall(mist_heavy):
         box('far', x - w / 2, x + w / 2, y, y + w, 0, h, fac)
     haze('aerial', -80, 80, 0.5, 140, -0.4, 140, 0.012, (0.72, 0.82, 1.0), 0.25)
     world(os.path.join(PH, 'rogland_clear_night', 'rogland_clear_night_4k.hdr'), 0.12, (0.30, 0.45, 1.0), rot=1.2)
-    moon = sun('moon', (0.25, 0.9, -0.55), 3.0, (0.55, 0.68, 1.0), 2.0, receivers=[o for o in bpy.data.objects if o.name.startswith(('far', 'aerial', 'slabs_far'))])
+    moon = sun('moon', (0.2, -0.85, -0.45) if FULL else (0.25, 0.9, -0.55), 2.5 if FULL else 3.0, (0.5, 0.64, 1.0), 2.0,
+               receivers=[o for o in bpy.data.objects if o.name.startswith(('far', 'aerial', 'slabs_far'))])
     # the faint cobalt fill from off frame, high on the left, raking the wall's boards
     area('cobalt_fill', (-6.5, -2.2, 0.2), (0, 0, 1.4), 2600.0, (0.16, 0.30, 1.0), 2.5, receivers=[wall])
     area('cobalt_floor', (5, -9, 6), (0, -2, 0), 1500.0, (0.2, 0.36, 1.0), 6.0, receivers=[o for o in bpy.data.objects if o.name == 'slabs'])
-    if mist_heavy:
+    if mist_heavy and FULL:
+        ground_mist(-40, 40, -12, 60, 1.1, 0.26, 1.8, drift=1.0)
+        # the wall rising into darkness and mist: air that thickens with height, lit only faintly from above
+        hm = box('high_mist', -9, 9, -7, -0.05, 1.8, 16)
+        m_, nt_ = newmat('high_mist'); pv_ = node(nt_, 'ShaderNodeVolumePrincipled')
+        pv_.inputs['Color'].default_value = (0.55, 0.66, 1.0, 1); pv_.inputs['Anisotropy'].default_value = 0.3
+        hx, hy, hz = sep(nt_, pos(nt_))
+        dvar = mr(nt_, noise(nt_, comb(nt_, M(nt_, 'MULTIPLY', hx, 0.3), hy, M(nt_, 'MULTIPLY', hz, 0.6)), 0.5, 3.0), 0.3, 0.75, 0.5, 1.3)
+        put(nt_, pv_.inputs['Density'], M(nt_, 'MULTIPLY', M(nt_, 'MULTIPLY', mr(nt_, hz, 2.4, 7.0, 0.0, 1.0, smooth=True), dvar), 0.11))
+        out(nt_, None, pv_.outputs['Volume']); hm.data.materials.append(m_); hm.visible_shadow = False
+        sun('mist_moon', (0.1, 0.3, -0.95), 0.25, (0.45, 0.6, 1.0), 3.0, receivers=[hm])
+        # rain: fewer, finer streaks at many depths, bright only where they cross the print's light
+        rain(520, -3.2, 3.2, -6.0, -0.25, -0.1, 4.2, CAMLOC, (0.08, 0.22), alpha=0.3)
+        rain(380, -1.4, 1.4, -2.6, -0.15, 0.0, 2.6, CAMLOC, (0.06, 0.16), alpha=0.3)
+        rain(500, -40, 40, 1.0, 30, 0, 14, CAMLOC, (0.3, 0.6), alpha=0.3)
+        debris(rect)
+    elif mist_heavy:
         ground_mist(-40, 40, -12, 60, 1.3, 0.24, 1.8, drift=1.0)
         rain(2600 if not LITE else 1600, -5, 5, -6.2, -0.2, -0.1, 4.6, CAMLOC)
         rain(1400, -40, 40, 1.0, 30, 0, 14, CAMLOC, (0.3, 0.6))
@@ -568,6 +651,36 @@ def s_wall(mist_heavy):
         area('print_spill', (0, -1.0, 1.0), (0, -0.2, 0), 70.0, GLOW, 1.6, receivers=[fl])
         area('cobalt_low', (-6, -3, 0.4), (0, -0.3, 0.1), 500.0, (0.2, 0.36, 1.0), 2.0, receivers=[fl])
     return pr, rect
+
+def debris(rect, x0=-2.2, x1=2.2, y0=-3.2, y1=-0.15, n_leaves=26, n_stones=40, z=0.0):
+    """wet fallen leaves and grit placed near the print's light, thinning away from it, kept off the reflection's core"""
+    leaves = load_objs(os.path.join(PH, 'tree_small_02', 'tree_small_02_1k.blend'),
+                       ['tree_small_02_leaves_a_LOD1', 'tree_small_02_leaves_b_LOD1', 'tree_small_02_leaves_c_LOD1'])
+    with bpy.data.libraries.load(os.path.join(PH, 'rock_moss_set_01', 'rock_moss_set_01_1k.blend'), link=False) as (src, dst):
+        rn = list(src.objects)
+    rocks = [o for o in load_objs(os.path.join(PH, 'rock_moss_set_01', 'rock_moss_set_01_1k.blend'), rn) if o.type == 'MESH']
+    for o in rocks:
+        k = 1.0 / max(o.dimensions); o.data.transform(Matrix.Diagonal((k, k, k, 1.0)))     # unit size, scaled per stone below
+    for o in leaves:
+        for mm in o.data.materials:
+            if mm: recolour(mm, 'white')
+    lib = libcoll('debris_lib', leaves + rocks); nr = len(rocks)      # instance order follows the names: rocks, then leaves
+    def place(n, spread):
+        r_ = np.abs(rng.normal(0, spread, n)); a_ = rng.uniform(0, math.pi, n)
+        X = np.cos(a_) * r_ * 1.4; Y = -0.2 - np.sin(a_) * r_
+        keep = (X > x0) & (X < x1) & (Y > y0) & (Y < y1) & ~((np.abs(X) < 0.35) & (Y < -0.5))
+        return X[keep], Y[keep]
+    X, Y = place(n_leaves * 2, 1.2); X, Y = X[:n_leaves], Y[:n_leaves]
+    P = np.stack([X, Y, np.full(len(X), z + 0.004)], 1)
+    R = np.stack([rng.normal(0, 0.15, len(X)), rng.normal(0, 0.15, len(X)), rng.uniform(0, 6.28, len(X))], 1)
+    sl = rng.uniform(0.6, 1.0, len(X))
+    Xs, Ys = place(n_stones * 2, 1.0); Xs, Ys = Xs[:n_stones], Ys[:n_stones]
+    Ps = np.stack([Xs, Ys, np.full(len(Xs), z + 0.003)], 1)
+    Rs = rng.uniform(0, 6.28, (len(Xs), 3)); ss = rng.uniform(0.012, 0.045, len(Xs))
+    PP = np.concatenate([P, Ps]); RR = np.concatenate([R, Rs]); SS = np.concatenate([np.stack([sl, sl, sl], 1), np.stack([ss, ss, ss * 0.6], 1)])
+    pick = np.concatenate([nr + rng.integers(0, len(leaves), len(X)), rng.integers(0, max(1, nr), len(Xs))])
+    ok = keep_clear(PP, np.full(len(PP), 0.02), rect)
+    return instances('debris', lib, PP[ok], RR[ok], SS[ok], pick[ok])
 
 def s_field():
     global CAMLOC
@@ -605,21 +718,99 @@ def s_field():
     cliffs = load_objs(os.path.join(PH, 'coastal_cliff_02', 'coastal_cliff_02_1k.blend'), ['coastal_cliff_02_LOD2'])
     cliffs += load_objs(os.path.join(PH, 'coastal_cliff_01', 'coastal_cliff_01_1k.blend'), ['coastal_cliff_01_LOD2'])
     sp = []
-    for (src, x, y, h, rz) in ((0, -70, 230, 90, 0.3), (1, 85, 300, 130, 1.9), (0, -170, 420, 150, 2.6), (1, 190, 480, 170, 0.8), (0, 30, 600, 110, 1.2), (1, -30, 380, 60, 2.2)):
+    spires = ((0, -70, 230, 90, 0.3), (1, 85, 300, 130, 1.9), (0, -170, 420, 150, 2.6), (1, 190, 480, 170, 0.8), (0, 30, 600, 110, 1.2), (1, -30, 380, 60, 2.2))
+    if FULL:   # more depths: a nearer pair, the main ranks, and the faintest far off
+        spires = ((1, -46, 140, 48, 0.9), (0, 58, 170, 62, 2.0)) + spires + ((1, -260, 720, 190, 0.4), (0, 240, 820, 210, 1.7))
+    for (src, x, y, h, rz) in spires:
         o = cliffs[src].copy(); link_obj(o); o.rotation_euler = (0, math.radians(90), rz)
         o.data = needle(cliffs[src].data)
         d = cliffs[src].dimensions; h *= 1.7; o.scale = (h / d.x, 0.54 * h / d.x, 0.54 * h / d.x)
         o.location = (x, y, 0); sp.append(o)
     for c_ in cliffs: bpy.data.objects.remove(c_)
-    world(os.path.join(PH, 'qwantani_night_puresky', 'qwantani_night_puresky_4k.hdr'), 0.18, (0.32, 0.48, 1.0), rot=2.0)
-    sun('moon_rim', (-0.4, 0.9, -0.35), 1.8, (0.6, 0.72, 1.0), 1.5, receivers=sp)
-    sun('moon_back', (0.3, -0.8, -0.5), 0.35, (0.55, 0.7, 1.0), 1.5, receivers=[o for o in bpy.data.objects if o.name == 'field'])
-    ground_mist(-400, 400, -12, 700, 0.12, 0.6, 5.0, drift=0.6)
-    air = haze('aerial', -800, 800, 20, 900, -0.4, 260, 0.010, (0.62, 0.76, 1.0), 0.5, zfall=70.0)
-    sun('mist_glow', (0.1, -1.0, -0.3), 0.3, (0.4, 0.58, 1.0), 4.0, receivers=[air])
-    rain(1500 if not LITE else 900, -6, 6, -10.5, 6, 0, 5, CAMLOC, (0.18, 0.32))
-    area('cobalt_fill', (8, -8, 7), (0, 2, 0.5), 300.0, (0.16, 0.3, 1.0), 6.0)
+    if not FULL:
+        world(os.path.join(PH, 'qwantani_night_puresky', 'qwantani_night_puresky_4k.hdr'), 0.18, (0.32, 0.48, 1.0), rot=2.0)
+        sun('moon_rim', (-0.4, 0.9, -0.35), 1.8, (0.6, 0.72, 1.0), 1.5, receivers=sp)
+        sun('moon_back', (0.3, -0.8, -0.5), 0.35, (0.55, 0.7, 1.0), 1.5, receivers=[o for o in bpy.data.objects if o.name == 'field'])
+        ground_mist(-400, 400, -12, 700, 0.12, 0.6, 5.0, drift=0.6)
+        air = haze('aerial', -800, 800, 20, 900, -0.4, 260, 0.010, (0.62, 0.76, 1.0), 0.5, zfall=70.0)
+        sun('mist_glow', (0.1, -1.0, -0.3), 0.3, (0.4, 0.58, 1.0), 4.0, receivers=[air])
+        rain(1500 if not LITE else 900, -6, 6, -10.5, 6, 0, 5, CAMLOC, (0.18, 0.32))
+        area('cobalt_fill', (8, -8, 7), (0, 2, 0.5), 300.0, (0.16, 0.3, 1.0), 6.0)
+        return pr, rect
+    # ---- the full frame. Idea: one cool light kept in a field at night, the land going on for ever behind it.
+    # firs from the moon forest: a few stands at the field's edges and in the middle distance, never before the box
+    firs = load_objs(os.path.join(PH, 'fir_tree_01_lod2', 'fir_tree_01_lod2.blend'), ['fir_tree_01_a_LOD2', 'fir_tree_01_b_LOD2', 'fir_tree_01_c_LOD2'])
+    for o in firs:
+        for mm in o.data.materials:
+            if mm and 'twig' in mm.name: recolour(mm, 'white')
+    lf = libcoll('fir_lib', firs)
+    fp = []
+    for (cx_, cy_, nn, sp_) in ((-17, 26, 5, 4.0), (-24, 40, 4, 5.0), (19, 34, 5, 4.5), (27, 52, 4, 5.0), (-62, 95, 7, 8.0), (70, 120, 6, 8.0), (-14, 150, 3, 6.0)):
+        for k in range(nn):
+            fp.append((cx_ + rng.normal(0, sp_), cy_ + rng.normal(0, sp_ * 0.8), 0.0))
+    FP = np.array(fp); nf = len(FP); fs = rng.uniform(1.0, 1.5, nf)
+    fob = instances('firs', lf, FP, np.stack([np.zeros(nf), np.zeros(nf), rng.uniform(0, 6.28, nf)], 1), np.stack([fs, fs, fs], 1), rng.integers(0, len(firs), nf))
+    world_clouds(os.path.join(PH, 'kloppenheim_07_puresky', 'kloppenheim_07_puresky_2k.hdr'), -82.6, 0.2)
+    moon = sun('moon', (-0.55, -0.6, -0.55), 0.5, (0.55, 0.68, 1.0), 0.6)
+    sun('moon_rim', (-0.4, 0.9, -0.35), 1.6, (0.6, 0.72, 1.0), 1.5, receivers=sp + [fob])
+    # the air in layers: thin banks at several depths, each lit from behind so it glows a little, the sky clear above
+    banks = []
+    for (ya, yb, top, dens) in ((25, 70, 14, 0.010), (110, 190, 30, 0.006), (260, 420, 55, 0.004), (560, 900, 90, 0.003)):
+        banks.append(haze('bank', -900, 900, ya, yb, -0.4, top, dens, (0.6, 0.74, 1.0), 0.55, zfall=top * 0.45))
+    sun('mist_glow', (0.1, -1.0, -0.25), 0.45, (0.4, 0.58, 1.0), 4.0, receivers=banks)
+    ground_mist(-400, 400, -12, 700, 0.05, 0.5, 4.0, drift=0.6)
+    rain(700, -5, 5, -10.5, 4, 0, 5, CAMLOC, (0.08, 0.2), alpha=0.32)
+    # the print's light falling on the flowers in front of it: petals catch it
+    field = bpy.data.objects['field']
+    area('print_spill', (0, -1.6, 1.4), (0, -2.5, 0), 120.0, GLOW, 1.4, receivers=[field])
+    area('cobalt_fill', (8, -8, 7), (0, 2, 0.5), 260.0, (0.16, 0.3, 1.0), 6.0, receivers=[field])
     return pr, rect
+
+STARMAP = arg('--starmap', os.path.join(SCR, 'assets', 'nasa_svs', 'starmap_2020_8k_gal.exr'))
+def world_stars(rot=(-20.0, 55.0, 90.0), k=60.0, gamma=1.6, horizon=(0.07, 0.07, 0.2), hz_h=0.14, glow=(0.26, 0.2, 0.55), glow_h=0.06):
+    """the real sky: NASA SVS Deep Star Maps 2020 (public domain), galactic map turned so the Milky Way rises across
+    the frame; toned to the cobalt palette (the core's warmth kept only as a trace); the horizon sinks into mist"""
+    wm = bpy.data.worlds.new('w'); sc.world = wm; wm.use_nodes = True; nt = wm.node_tree; nt.nodes.clear()
+    tc = node(nt, 'ShaderNodeTexCoord'); mp = node(nt, 'ShaderNodeMapping')
+    mp.inputs['Rotation'].default_value = tuple(math.radians(a) for a in rot)
+    link(nt, tc.outputs['Generated'], mp.inputs[0])
+    et = node(nt, 'ShaderNodeTexEnvironment', image=bpy.data.images.load(STARMAP)); link(nt, mp.outputs[0], et.inputs['Vector'])
+    bw = node(nt, 'ShaderNodeRGBToBW'); link(nt, et.outputs[0], bw.inputs[0])
+    v = M(nt, 'POWER', M(nt, 'MULTIPLY', bw.outputs[0], k), gamma)
+    cob = comb(nt, M(nt, 'MULTIPLY', v, 0.36), M(nt, 'MULTIPLY', v, 0.5), M(nt, 'MULTIPLY', v, 1.0))
+    raw = mix(nt, 1.0, et.outputs[0], (k * 0.9, k * 0.9, k * 0.9), 'MULTIPLY')
+    col = mix(nt, 0.9, raw, cob)
+    z = sep(nt, tc.outputs['Generated'])[2]
+    # deep cobalt overhead, a luminous violet-lilac glow low on the horizon
+    zen = M(nt, 'MAXIMUM', z, 0.0)
+    base = comb(nt, M(nt, 'ADD', 0.008, M(nt, 'MULTIPLY', M(nt, 'EXPONENT', M(nt, 'DIVIDE', zen, -glow_h)), glow[0])),
+                M(nt, 'ADD', 0.014, M(nt, 'MULTIPLY', M(nt, 'EXPONENT', M(nt, 'DIVIDE', zen, -glow_h)), glow[1])),
+                M(nt, 'ADD', 0.05, M(nt, 'MULTIPLY', M(nt, 'EXPONENT', M(nt, 'DIVIDE', zen, -glow_h)), glow[2])))
+    col = node(nt, 'ShaderNodeVectorMath', operation='ADD'); put(nt, col.inputs[0], mix(nt, 0.9, raw, cob)); put(nt, col.inputs[1], base); col = col.outputs[0]
+    c = mix(nt, mr(nt, z, hz_h * 0.25, 0.0, smooth=True), col, horizon)
+    bg = node(nt, 'ShaderNodeBackground'); link(nt, c, bg.inputs['Color']); bg.inputs['Strength'].default_value = 1.0
+    # the camera sees the sky at full strength; the land gets only a little of its light
+    lp = node(nt, 'ShaderNodeLightPath'); bg2 = node(nt, 'ShaderNodeBackground'); link(nt, c, bg2.inputs['Color']); bg2.inputs['Strength'].default_value = 0.35
+    ms = node(nt, 'ShaderNodeMixShader'); link(nt, lp.outputs['Is Camera Ray'], ms.inputs[0]); link(nt, bg2.outputs[0], ms.inputs[1]); link(nt, bg.outputs[0], ms.inputs[2])
+    o = node(nt, 'ShaderNodeOutputWorld'); link(nt, ms.outputs[0], o.inputs['Surface'])
+
+def world_clouds(hdr, rot_deg, k=0.17):
+    """the scanned moonlit cloud deck, normalised by its median, cooled to cobalt; the horizon sinks into the mist colour"""
+    wm = bpy.data.worlds.new('w'); sc.world = wm; wm.use_nodes = True; nt = wm.node_tree; nt.nodes.clear()
+    tc = node(nt, 'ShaderNodeTexCoord'); mp = node(nt, 'ShaderNodeMapping'); mp.inputs['Rotation'].default_value = (0, 0, math.radians(rot_deg))
+    im = bpy.data.images.load(hdr); et = node(nt, 'ShaderNodeTexEnvironment', image=im)
+    link(nt, tc.outputs['Generated'], mp.inputs[0]); link(nt, mp.outputs[0], et.inputs['Vector'])
+    w_, h_ = im.size; px_ = np.empty(w_ * h_ * 4, np.float32); im.pixels.foreach_get(px_)
+    px_ = px_.reshape(h_, w_, 4)[h_ // 2 + h_ // 40:, :, :3]
+    med = float(np.median((px_ * np.array([0.2126, 0.7152, 0.0722], np.float32)).sum(2))); del px_
+    bw = node(nt, 'ShaderNodeRGBToBW'); link(nt, et.outputs[0], bw.inputs[0])
+    cl = M(nt, 'MULTIPLY', M(nt, 'MINIMUM', M(nt, 'POWER', M(nt, 'DIVIDE', bw.outputs[0], med), 2.2), 9.0), k)
+    col = comb(nt, M(nt, 'MULTIPLY', cl, 0.42), M(nt, 'MULTIPLY', cl, 0.58), M(nt, 'MULTIPLY', cl, 1.0))
+    z = sep(nt, tc.outputs['Generated'])[2]
+    hz = mr(nt, z, 0.16, 0.0)
+    c = mix(nt, hz, col, (0.05, 0.09, 0.19))
+    bg = node(nt, 'ShaderNodeBackground'); link(nt, c, bg.inputs['Color']); bg.inputs['Strength'].default_value = 1.0
+    o = node(nt, 'ShaderNodeOutputWorld'); link(nt, bg.outputs[0], o.inputs['Surface'])
 
 def s_ruins():
     global CAMLOC
@@ -809,8 +1000,249 @@ def s_forest():
     ground_mist(-60, 60, -10, 90, 0.18, 0.4, 2.0)
     return pr, rect
 
-BUILD = {1: lambda: s_wall(True), 2: lambda: s_wall(False), 3: s_field, 4: s_ruins, 7: s_undercity, 8: s_pond, 9: s_forest}
-NAMES = {1: 'mist', 2: 'flowers', 3: 'blue-field', 4: 'ruins', 7: 'undercity', 8: 'pond-courtyard', 9: 'moon-forest'}
+def s_undergreen():
+    """Idea: beneath the plate, nature has quietly taken the city back, and one cool light still burns there."""
+    global CAMLOC
+    ZP = 22.0                                       # the underside of the plate
+    conc = board_wall_mat('plate', panel=(6.0, 3.0), value=0.32)
+    def mossy(nt):
+        # moss settles on every upward face and creeps down the sides
+        n_ = node(nt, 'ShaderNodeNewGeometry'); x, y, z = sep(nt, n_.outputs['Normal'])
+        return mr(nt, z, 0.3, 0.8)
+    col_m = scanned('column', os.path.join(ACG, 'Concrete027'), uv_wall, 2.0, rot=math.radians(90), tint=(0.7, 0.8, 0.75), value=0.3)
+    moss_m = scanned('moss', os.path.join(ACG, 'Moss002'), uv_floor, 1.2, tint=(0.55, 0.85, 0.5), value=0.6)
+    # the plate: slabs with two gaps where the sky comes through, girders beneath it
+    for (x0, x1, y0, y1) in ((-120, 120, -30, 26), (-120, 4, 26, 42), (16, 120, 26, 42), (-120, 120, 42, 60),
+                             (-120, -24, 60, 74), (-12, 120, 60, 74), (-120, 120, 74, 220)):
+        box('plate', x0, x1, y0, y1, ZP, ZP + 4, conc)
+    for gx in np.arange(-60, 61, 7.5):
+        box('girder', gx - 0.45, gx + 0.45, -30, 220, ZP - 1.8, ZP, col_m)
+    for gy in np.arange(-6, 200, 16):
+        box('beam', -120, 120, gy - 0.5, gy + 0.5, ZP - 1.2, ZP, col_m)
+    # supports: great columns rising out of the overgrowth into the haze
+    cols = []
+    for (x, y, w) in ((-7.5, 9, 2.6), (7.5, 9, 2.6), (-15, 30, 3.2), (15, 30, 3.2), (-9, 52, 3.6), (22.5, 56, 3.6), (-30, 75, 4), (0, 95, 4), (30, 110, 4)):
+        cols.append(box('column', x - w / 2, x + w / 2, y - w / 2, y + w / 2, -0.5, ZP - 1.8, col_m, 0.05))
+    # ground: moss and loam, a wet path of slabs to the box and on into the green
+    gm = scanned('loam', os.path.join(ACG, 'Ground037'), uv_floor, 2.5, tint=(0.45, 0.62, 0.5), value=0.22)
+    mesh_obj('ground', [(-200, -30, -0.02), (200, -30, -0.02), (200, 300, -0.02), (-200, 300, -0.02)], [(0, 1, 2, 3)], [gm])
+    wet_slabs('path', -1.6, 1.6, -14, 40, slab=(1.6, 0.8), puddle=0.48, flood=0.06, z=0.0)
+    pr, lo, rect = lightbox(0.0, 0.0, 0.30, stand=True, glow=40.0, beam=0.12)
+    CAMLOC = (0.0, -9.0, 1.35)
+    camera(CAMLOC, 0, 0, 20.0, shift_y=0.10, fstop=4.0, focus=9.0, clip=1500)
+    # the overgrowth, all scanned: ferns, calathea's broad leaves, pachira canopies, shrubs, moss
+    fern = load_objs(os.path.join(PH, 'fern_02', 'fern_02_1k.blend'), ['fern_02_a', 'fern_02_b', 'fern_02_c', 'fern_02_d'])
+    cal = load_objs(os.path.join(PH, 'calathea_orbifolia_01', 'calathea_orbifolia_01_1k.blend'), ['calathea_orbifolia_01_%s' % k for k in 'abc'])
+    pac = load_objs(os.path.join(PH, 'pachira_aquatica_01', 'pachira_aquatica_01_1k.blend'),
+                    ['pachira_aquatica_01_leaves_%s' % k for k in 'acd'])
+    shr = load_objs(os.path.join(PH, 'shrub_02', 'shrub_02_1k.blend'), ['shrub_02_%s_LOD1' % k for k in 'bcd'])
+    # instance order follows the names: calathea, fern, pachira, shrub
+    lib = cal + fern + pac + shr
+    L_ = libcoll('jungle_lib', lib)
+    iC, iF, iP, iS = 0, len(cal), len(cal) + len(fern), len(cal) + len(fern) + len(pac)
+    n = 9000 if not LITE else 4000
+    X = rng.normal(0, 1, n) * 12; Y = rng.uniform(-9, 70, n)
+    X = np.where(np.abs(X) < 2.2, np.sign(X + 1e-6) * (2.2 + rng.uniform(0, 1.5, n)), X)
+    u = rng.uniform(0, 1, n)
+    pick = np.where(u < 0.45, rng.integers(iF, iP, n), np.where(u < 0.65, rng.integers(iC, iF, n),
+           np.where(u < 0.85, rng.integers(iP, iP + 3, n), rng.integers(iS, len(lib), n))))
+    s = rng.uniform(0.6, 1.4, n) * np.where((pick >= iP) & (pick < iS), np.where(Y < 12, 0.8, rng.uniform(1.4, 3.6, n)), 1.0) * (1 + np.clip(Y, 0, 60) / 120)
+    s = s * np.where(np.abs(X) < 3.2, 0.7, 1.0)
+    P = np.stack([X, Y, np.zeros(n)], 1)
+    ok = keep_clear(P, 1.2 * s, rect, margin=0.03)
+    P, pick, s = P[ok], pick[ok], s[ok]
+    R = np.stack([rng.normal(0, 0.05, len(P)), rng.normal(0, 0.05, len(P)), rng.uniform(0, 6.28, len(P))], 1)
+    jungle = instances('jungle', L_, P, R, np.stack([s, s, s], 1), pick)
+    # creepers hanging from the girders and the columns' heads: scanned leaves strung down a stem
+    vine_pts, vine_rot, vine_s, vine_pick = [], [], [], []
+    cu = bpy.data.curves.new('creepers', 'CURVE'); cu.dimensions = '3D'; cu.bevel_depth = 0.012; cu.bevel_resolution = 1
+    for k in range(150):
+        gx = rng.choice(np.arange(-30, 31, 7.5)) + rng.normal(0, 1.2); gy = rng.uniform(2, 60)
+        if abs(gx) < 4 and gy < 20: continue
+        top = ZP - 1.8; Lh = rng.uniform(4, 14) * (0.6 + 0.4 * rng.random())
+        sp = cu.splines.new('POLY'); m_ = int(Lh / 0.4) + 1; sp.points.add(m_ - 1)
+        sway = rng.normal(0, 0.15)
+        for i in range(m_):
+            z = top - i * 0.4; x = gx + sway * math.sin(i * 0.3)
+            sp.points[i].co = (x, gy, z, 1)
+            if rng.random() < 0.8:
+                vine_pts.append((x + rng.normal(0, 0.05), gy + rng.normal(0, 0.05), z)); vine_rot.append((math.pi + rng.normal(0, 0.4), rng.normal(0, 0.4), rng.uniform(0, 6.28)))
+                sc_ = rng.uniform(0.8, 1.4); vine_s.append((sc_, sc_, sc_)); vine_pick.append(rng.integers(iC, iF))
+    vo = link_obj(bpy.data.objects.new('creepers', cu)); cu.materials.append(plain('stem', (0.015, 0.022, 0.014), 0.6))
+    vp = np.array(vine_pts); okv = keep_clear(vp, np.full(len(vp), 0.3), rect)
+    vines = instances('creeper_leaves', L_, vp[okv], np.array(vine_rot)[okv], np.array(vine_s)[okv], np.array(vine_pick)[okv])
+    # water falling in threads from the plate, and a fine drizzle
+    for (x, y) in ((-5.0, 14.0), (5.5, 22.0), (-12.0, 34.0), (10.0, 34.0), (3.0, 48.0)):
+        rain(500, x - 0.25, x + 0.25, y - 0.25, y + 0.25, 0, ZP - 2, CAMLOC, (0.6, 1.4), slant=0.0)
+    rain(900 if not LITE else 500, -6, 6, -7, 8, 0, 8, CAMLOC, (0.15, 0.3))
+    # light: the sky through the gaps (shafts in humid air), green light filtering down, cobalt in the shadows
+    world(None, 1.0, flat=(0.02, 0.05, 0.035))
+    sun('sky_through', (0.12, -0.32, -0.94), 9.0, (0.86, 1.0, 0.9), 1.5)
+    canopy = area('green_down', (0, 30, ZP - 3), (0, 30, 0), 90000.0, (0.58, 0.92, 0.66), 40.0,
+                  receivers=[jungle] + cols)
+    area('plate_bounce', (0, 40, 1.0), (0, 40, ZP), 60000.0, (0.4, 0.62, 0.5), 60.0,
+         receivers=[o for o in bpy.data.objects if o.name.startswith(('plate', 'girder', 'beam'))] + [vines, vo])
+    area('cobalt_shadow', (-6, -6, 2.0), (0, 6, 0.5), 900.0, (0.16, 0.3, 1.0), 4.0, receivers=[jungle, vo] + cols)
+    haze('humid_air', -120, 120, -12, 220, -0.4, ZP - 0.2, 0.014, (0.78, 0.95, 0.82), 0.6, zfall=40.0)
+    ground_mist(-60, 60, -10, 120, 0.12, 0.5, 2.5, col=(0.7, 0.9, 0.78))
+    return pr, rect
+
+def spires_from_scans(spec):
+    """Poly Haven sea cliff scans stood on end and drawn to a point (local +X is the foot once turned)"""
+    cliffs = load_objs(os.path.join(PH, 'coastal_cliff_02', 'coastal_cliff_02_1k.blend'), ['coastal_cliff_02_LOD2'])
+    cliffs += load_objs(os.path.join(PH, 'coastal_cliff_01', 'coastal_cliff_01_1k.blend'), ['coastal_cliff_01_LOD2'])
+    tapered, out_ = {}, []
+    def needle(me, sharp):
+        key = (me.name, sharp)
+        if key in tapered: return tapered[key]
+        nm = me.copy(); co = np.empty(len(nm.vertices) * 3, np.float32); nm.vertices.foreach_get('co', co); co = co.reshape(-1, 3)
+        x0, x1 = co[:, 0].min(), co[:, 0].max(); t = (x1 - co[:, 0]) / (x1 - x0)
+        kk = (1.0 - sharp * t) ** 1.15
+        cy_, cz_ = co[:, 1].mean(), co[:, 2].mean()
+        co[:, 1] = cy_ + (co[:, 1] - cy_) * kk; co[:, 2] = cz_ + (co[:, 2] - cz_) * kk
+        nm.vertices.foreach_set('co', co.ravel()); nm.update(); tapered[key] = nm
+        return nm
+    for (src, x, y, z, h, rz, sharp, thick) in spec:
+        o = cliffs[src].copy(); link_obj(o); o.rotation_euler = (0, math.radians(90), rz)
+        o.data = needle(cliffs[src].data, sharp)
+        d = cliffs[src].dimensions; h *= 1.7; o.scale = (h / d.x, thick * h / d.x, thick * h / d.x)
+        o.location = (x, y, z); out_.append(o)
+    for c_ in cliffs: bpy.data.objects.remove(c_)
+    return out_
+
+def firs_lib():
+    firs = load_objs(os.path.join(PH, 'fir_tree_01_lod2', 'fir_tree_01_lod2.blend'), ['fir_tree_01_a_LOD2', 'fir_tree_01_b_LOD2', 'fir_tree_01_c_LOD2'])
+    for o in firs:
+        for mm in o.data.materials:
+            if mm and 'twig' in mm.name: recolour(mm, 'white')
+    return libcoll('fir_lib', firs), len(firs)
+
+def drift_field(lib, nh, npw, n, x0, x1, y0, y1, rect, z_of=None, clear=None, scale=1.0, drift_scale=0.12):
+    """flowers in drifts: dense where a slow noise says so, thin between; heliophila mostly, a little periwinkle"""
+    X = rng.uniform(x0, x1, n); Y = rng.uniform(y0, y1, n)
+    f = (np.sin(X * drift_scale + 1.3) * np.cos(Y * drift_scale * 1.3 + 0.4) + np.sin((X + Y) * drift_scale * 0.6)) * 0.5
+    keep = rng.uniform(0, 1, n) < np.clip(0.35 + f * 0.9, 0.08, 1.0)
+    if clear is not None: keep &= ~clear(X, Y)
+    X, Y = X[keep], Y[keep]; m = len(X)
+    pick = np.where(rng.uniform(0, 1, m) < 0.82, rng.integers(1, nh, m), nh + rng.integers(0, npw, m))
+    s = rng.uniform(0.7, 1.25, m) * scale
+    Z = z_of(X, Y) if z_of else np.zeros(m)
+    P = np.stack([X, Y, Z], 1)
+    ok = keep_clear(P, 0.38 * s, rect)
+    P, pick, s = P[ok], pick[ok], s[ok]
+    R = np.stack([rng.normal(0, 0.06, len(P)), rng.normal(0, 0.06, len(P)), rng.uniform(0, 6.28, len(P))], 1)
+    return instances('field', lib, P, R, np.stack([s, s, s], 1), pick)
+
+def s_coast():
+    """Idea: one cool light kept on a headland at the edge of the world, under the whole sky."""
+    global CAMLOC
+    lib, nh, npw = flowers('white', glow=arg('--petal-glow', 2.2))
+    # the headland: a meadow sloping gently down towards the sea, rounding over into the cliff
+    EDGE, SEA = 22.0, -24.0
+    def hz(X, Y): return -0.075 * (Y + 14.0) - np.maximum(0.0, Y - EDGE) ** 2 * 0.08 - 0.03 * np.sin(X * 0.3)
+    nx, ny = 160, 140
+    xs = np.linspace(-110, 110, nx); ys = np.linspace(-30, 48, ny)
+    GX, GY = np.meshgrid(xs, ys); GZ = hz(GX, GY)
+    V = np.stack([GX.ravel(), GY.ravel(), GZ.ravel()], 1)
+    F = [(j_ * nx + i_, j_ * nx + i_ + 1, (j_ + 1) * nx + i_ + 1, (j_ + 1) * nx + i_) for j_ in range(ny - 1) for i_ in range(nx - 1)]
+    soil = scanned('turf', os.path.join(ACG, 'Ground037'), uv_floor, 2.0, tint=(0.35, 0.45, 0.7), value=0.1)
+    mesh_obj('headland', V, F, [soil])
+    # the sea: mirror-calm, a long slow swell, catching the sky and the glow
+    m_sea, snt = newmat('sea'); b = node(snt, 'ShaderNodeBsdfPrincipled'); b.inputs['Base Color'].default_value = (0.003, 0.005, 0.01, 1)
+    b.inputs['Roughness'].default_value = 0.015; b.inputs['Specular IOR Level'].default_value = 0.6
+    x_, y_, _ = sep(snt, pos(snt))
+    bp = node(snt, 'ShaderNodeBump'); bp.inputs['Strength'].default_value = 0.12; bp.inputs['Distance'].default_value = 0.5
+    put(snt, bp.inputs['Height'], noise(snt, comb(snt, M(snt, 'MULTIPLY', x_, 0.02), M(snt, 'MULTIPLY', y_, 0.12), 0.0), 3.0, 4.0, 0.5))
+    link(snt, bp.outputs[0], b.inputs['Normal']); out(snt, b.outputs[0]); aov(snt, 1.0)
+    mesh_obj('sea', [(-4000, 20, SEA), (4000, 20, SEA), (4000, 5000, SEA), (-4000, 5000, SEA)], [(0, 1, 2, 3)], [m_sea])
+    BOXY = 2.0
+    pr, lo, rect = lightbox(0.0, BOXY, float(hz(np.array([0.0]), np.array([BOXY]))[0]) + 0.30, stand=True, glow=44.0, beam=0.07)
+    for o_ in bpy.data.objects:      # the stand's legs and feet down to the sloping ground
+        pass
+    CAMLOC = (0.0, -15.5, float(hz(np.array([0.0]), np.array([-15.5]))[0]) + 1.05)
+    camera(CAMLOC, 0, -1.5, 30.0, shift_y=arg('--shift', 0.02), fstop=arg('--fstop', 4.0), focus=17.5, clip=8000)
+    drift_field(lib, nh, npw, 70000 if not LITE else 24000, -30, 30, -13.5, EDGE + 3, rect, z_of=hz,
+                clear=lambda X, Y: ((np.abs(X) < 0.9) & (Y > BOXY - 0.6) & (Y < BOXY + 0.5)),
+                drift_scale=0.2, scale=0.8)
+    # a few large flowers right before the lens, soft and glowing
+    NF = np.array([(-1.3, -13.4), (-0.85, -13.1), (1.15, -13.3), (1.6, -12.9), (-1.9, -12.8)])
+    NP = np.stack([NF[:, 0], NF[:, 1], hz(NF[:, 0], NF[:, 1])], 1)
+    instances('near_flowers', lib, NP, np.stack([rng.normal(0, 0.1, 5), rng.normal(0, 0.1, 5), rng.uniform(0, 6.28, 5)], 1),
+              np.full((5, 3), 2.3), np.array([1, 2, 1, 2, 1]))
+    # sea stacks: scanned cliff and rock, broken and varied, at several depths; one carries firs
+    stacks = spires_from_scans(((1, 40, 1100, SEA, 95, 1.7, 0.78, 1.0), (0, 330, 900, SEA, 110, 0.3, 0.8, 1.0)))
+    rf = load_objs(os.path.join(PH, 'rock_face_01', 'rock_face_01_1k.blend'), ['rock_face_01'])
+    if rf:
+        r_ = rf[0]; link_obj(r_); r_.scale = (9.0, 9.0, 11.0); r_.rotation_euler = (0, 0, 0.7); r_.location = (-190, 430, SEA - 2)
+        # more stacks from the same scan, turned and stretched differently so no two read alike
+        for (x, y, sxy, sz_, rz, tilt) in ((140, 470, 7.0, 17.0, 2.1, 0.03), (230, 680, 9.0, 21.0, 4.0, -0.04), (-70, 800, 8.0, 15.0, 1.1, 0.03), (150, 250, 4.0, 8.0, 5.3, 0.0)):
+            c_ = r_.copy(); link_obj(c_); c_.scale = (sxy, sxy * 0.8, sz_); c_.rotation_euler = (tilt, 0, rz); c_.location = (x, y, SEA - 3); stacks.append(c_)
+        bpy.context.view_layer.update()
+        top = max((r_.matrix_world @ v.co).z for v in r_.data.vertices)
+        flib, nfl = firs_lib()
+        TP = np.array([(-190 + rng.uniform(-18, 18), 430 + rng.uniform(-12, 12), top - rng.uniform(1.0, 6.0)) for _ in range(14)])
+        fs = rng.uniform(1.0, 1.6, len(TP))
+        instances('stack_firs', flib, TP, np.stack([np.zeros(len(TP)), np.zeros(len(TP)), rng.uniform(0, 6.28, len(TP))], 1),
+                  np.stack([fs, fs, fs], 1), rng.integers(0, nfl, len(TP)))
+        stacks.append(r_)
+    else:
+        flib, nfl = firs_lib()
+    # two firs on the headland, well to the sides, framing
+    HF = np.array([(-19.0, 10.0), (-24.0, 15.0), (22.0, 13.0)]); HZ = hz(HF[:, 0], HF[:, 1])
+    hs = np.array([0.95, 1.2, 1.05])
+    instances('headland_firs', flib, np.stack([HF[:, 0], HF[:, 1], HZ], 1), np.stack([np.zeros(3), np.zeros(3), rng.uniform(0, 6.28, 3)], 1),
+              np.stack([hs, hs, hs], 1), np.array([0, 1, 2]))
+    world_stars(rot=(arg('--sx', -18.0), arg('--sy', 52.0), arg('--sz', 90.0)), k=arg('--stars', 60.0),
+                glow=(0.3, 0.3, 0.85), glow_h=0.05)
+    # the light low on the horizon behind the stacks: rays through the mist on the water, rims on the rock
+    moon = sun('horizon_light', (-0.32, -0.94, -0.1), 1.6, (0.55, 0.62, 1.0), 0.8,
+               receivers=stacks + [o for o in bpy.data.objects if o.name in ('sea', 'stack_firs')])
+    banks = [haze('sea_mist', -4000, 4000, 40, 5000, SEA - 1, SEA + 22, 0.012, (0.62, 0.7, 1.0), 0.65, zfall=8.0),
+             haze('high_air', -4000, 4000, 80, 5000, SEA + 18, 200, 0.0006, (0.6, 0.66, 1.0), 0.7)]
+    sun('mist_glow', (-0.3, -0.95, -0.08), 0.55, (0.48, 0.55, 1.0), 4.0, receivers=banks)
+    ground_mist(-80, 80, -16, EDGE + 6, 0.04, 0.4, 2.5)
+    field = bpy.data.objects['field']
+    area('print_spill', (0, BOXY - 1.6, 1.4 + hz(np.array([0.0]), np.array([BOXY]))[0]), (0, BOXY - 2.5, -0.3), 110.0, GLOW, 1.4, receivers=[field])
+    return pr, rect
+
+def s_starfield():
+    """Idea: a field of quiet light under the whole sky, and one made light among it."""
+    global CAMLOC
+    lib, nh, npw = flowers('white', glow=arg('--petal-glow', 2.2))
+    m_soil, snt = newmat('soil'); b = node(snt, 'ShaderNodeBsdfPrincipled'); b.inputs['Base Color'].default_value = (0.008, 0.011, 0.02, 1)
+    b.inputs['Roughness'].default_value = 0.4; out(snt, b.outputs[0])
+    mesh_obj('ground', [(-900, -40, 0), (900, -40, 0), (900, 1500, 0), (-900, 1500, 0)], [(0, 1, 2, 3)], [m_soil])
+    pr, lo, rect = lightbox(0.0, 0.0, 0.30, stand=True, glow=44.0, beam=0.08)
+    CAMLOC = (0.0, -12.0, 0.9)
+    camera(CAMLOC, 0, 0, 32.0, shift_y=0.12, fstop=arg('--fstop', 11.0), focus=13.0, clip=6000)
+    drift_field(lib, nh, npw, 40000 if not LITE else 15000, -45, 45, -11.5, 70, rect,
+                clear=lambda X, Y: (np.abs(X) < 0.9) & (Y > -0.6) & (Y < 0.5), drift_scale=0.16)
+    sp = spires_from_scans(((1, -46, 140, 0, 48, 0.9, 0.86, 0.85), (0, 58, 170, 0, 62, 2.0, 0.86, 0.85), (0, -70, 230, 0, 90, 0.3, 0.86, 0.85),
+                            (1, 85, 300, 0, 130, 1.9, 0.86, 0.85), (0, -170, 420, 0, 150, 2.6, 0.86, 0.85), (1, 190, 480, 0, 170, 0.8, 0.86, 0.85),
+                            (0, 30, 600, 0, 110, 1.2, 0.86, 0.85), (1, -260, 720, 0, 190, 0.4, 0.86, 0.85)))
+    flib, nfl = firs_lib()
+    fp = []
+    for (cx_, cy_, nn, sp_) in ((-34, 70, 4, 5.0), (-48, 90, 5, 6.0), (40, 85, 4, 5.0), (58, 110, 5, 7.0), (-95, 170, 8, 10.0), (110, 200, 7, 10.0), (-20, 260, 5, 9.0)):
+        for k in range(nn): fp.append((cx_ + rng.normal(0, sp_), cy_ + rng.normal(0, sp_ * 0.8), 0.0))
+    FP = np.array(fp); nf = len(FP); fs = rng.uniform(1.0, 1.5, nf)
+    fob = instances('firs', flib, FP, np.stack([np.zeros(nf), np.zeros(nf), rng.uniform(0, 6.28, nf)], 1), np.stack([fs, fs, fs], 1), rng.integers(0, nfl, nf))
+    world_stars(rot=(arg('--sx', -18.0), arg('--sy', 52.0), arg('--sz', 90.0)), k=arg('--stars', 60.0))
+    # the moon high behind, its rays through the banks between the spires
+    sun('moon_rim', (-0.35, 0.9, -0.3), 1.2, (0.6, 0.72, 1.0), 1.5, receivers=sp + [fob])
+    banks = []
+    for (ya, yb, top, dens) in ((25, 70, 14, 0.010), (110, 190, 30, 0.006), (260, 420, 55, 0.005), (560, 900, 90, 0.004)):
+        banks.append(haze('bank', -900, 900, ya, yb, -0.4, top, dens, (0.6, 0.74, 1.0), 0.6, zfall=top * 0.45))
+    sun('rays', (0.25, -0.9, -0.36), 1.1, (0.45, 0.6, 1.0), 0.8, receivers=banks)
+    ground_mist(-400, 400, -12, 700, 0.05, 0.5, 4.0, drift=0.6)
+    rain(500, -5, 5, -10.5, 4, 0, 5, CAMLOC, (0.08, 0.2), alpha=0.32)
+    field = bpy.data.objects['field']
+    area('print_spill', (0, -1.6, 1.4), (0, -2.5, 0), 110.0, GLOW, 1.4, receivers=[field])
+    return pr, rect
+
+BUILD = {'1': lambda: s_wall(True), '2': lambda: s_wall(False), '3': s_field, '4': s_ruins, '7': s_undercity, '7b': s_undergreen, '3b': s_starfield, '11': s_coast,
+         '8': s_pond, '9': s_forest}
+NAMES = {'1': 'mist', '2': 'flowers', '3': 'blue-field', '4': 'ruins', '7': 'undercity', '7b': 'undercity-green', '3b': 'starlit-field', '11': 'starlit-coast', '8': 'pond-courtyard',
+         '9': 'moon-forest'}
 
 # ---------------------------------------------------------------- render
 t0 = time.time()
@@ -835,7 +1267,7 @@ r.image_settings.file_format = 'PNG'; r.image_settings.color_mode = 'RGB'; r.ima
 sc.use_nodes = True; ct = sc.node_tree; ct.nodes.clear()
 rl = ct.nodes.new('CompositorNodeRLayers')
 gl = ct.nodes.new('CompositorNodeGlare'); gl.glare_type = 'BLOOM'; gl.quality = 'HIGH'
-for k, v in (('Threshold', 1.2), ('Smoothness', 0.7), ('Strength', 0.28), ('Size', 0.8)):
+for k, v in (('Threshold', arg('--bloom-th', 1.2)), ('Smoothness', 0.7), ('Strength', arg('--bloom', 0.28)), ('Size', 0.8)):
     try: gl.inputs[k].default_value = v
     except Exception: pass
 ct.links.new(rl.outputs['Image'], gl.inputs['Image'])
