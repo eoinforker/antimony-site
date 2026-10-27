@@ -1,0 +1,1412 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EEEAE0">
+<meta name="description" content="Antimony. Software, made on purpose.">
+<title>Antimony</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2722%27 fill=%27%23141311%27/%3E%3Cpath fill=%27%2394E6FF%27 d=%27M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z%27/%3E%3C/svg%3E">
+<link rel="preload" href="assets/fonts/CommitMono-Latin-VF.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/TimelessSerifVF.woff2" as="font" type="font/woff2" crossorigin>
+<script>
+/* Before first paint: whether the opening plays (once per session; never under reduced motion). */
+(function () {
+  var h = document.documentElement, q = location.search, seen = false;
+  try { seen = sessionStorage.getItem("antimony.door") === "1"; } catch (e) {}
+  if (/[?&](t=\d|again)/.test(q)) seen = false;
+  if (/[?&]rest\b/.test(q)) seen = true;
+  h.classList.add(!seen && !matchMedia("(prefers-reduced-motion: reduce)").matches ? "opening" : "wait");
+})();
+</script>
+<style>
+@font-face { font-family: "Commit Mono"; src: url("assets/fonts/CommitMono-Latin-VF.woff2") format("woff2"); font-weight: 200 700; font-display: block; }
+@font-face { font-family: "Timeless Serif"; src: url("assets/fonts/TimelessSerifVF.woff2") format("woff2"); font-weight: 200 700; font-display: swap; }
+:root {
+  --sky: #94E6FF; --ground: #EEEAE0; --type: #0B0C0C; --dimt: rgba(11, 12, 12, .56); --cut: #1F3F7A;
+  --s: clamp(140px, 21vmin, 220px);
+  --g: clamp(16px, 2.4vw, 34px);
+  --fb: clamp(26px, 6vh, 64px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--ground); color: var(--type); overflow: hidden; overscroll-behavior: none; }
+html.opening:not(.cover), html.opening:not(.cover) body { background: #000; }
+html.opening, html.opening body { overflow: hidden; }
+body { min-height: 100vh; min-height: 100svh; overflow-x: clip; font: 400 16px/1.5 "Timeless Serif", Georgia, serif; -webkit-font-smoothing: antialiased; }
+::selection { background: var(--sky); color: #0B0C0C; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+a, button { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 1px solid var(--type); outline-offset: 5px; }
+
+/* the opening's layers: the ground of black (webgl), the characters above it, the typed line above all */
+#gl { display: block; pointer-events: none; }
+#wall { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 4; pointer-events: none; display: block; }
+html:not(.opening) #wall { display: none; }
+.type { position: fixed; z-index: 5; top: 30px; left: 0; right: 0; text-align: center; white-space: pre; pointer-events: none;
+  font: 400 12px/16px "Commit Mono", ui-monospace, Menlo, monospace; letter-spacing: 3px; color: #EEEAE0; }
+.type span { visibility: hidden; }
+.type span.on { visibility: visible; }
+.type span.k { color: var(--sky); }
+.type span:last-child { letter-spacing: 0; }
+html:not(.opening) .type { display: none; }
+html.opening:not(.cover) .wm, html.opening:not(.cover) .foot, html.opening:not(.cover) .ui, html.opening:not(.cover) .paper,
+html.wait .foot, html.wait .ui, html.opening:not(.cover) .stage { visibility: hidden; }
+
+/* the room: paper, and the daylight that falls across it through a window and the leaves outside */
+.paper { position: fixed; inset: 0; z-index: 1; background: var(--ground); overflow: hidden; }
+.sun { position: absolute; inset: 0; opacity: 0; transition: opacity 2.6s cubic-bezier(.3, .1, .3, 1); pointer-events: none; }
+html.sunup .sun { opacity: 1; }
+.sun div { position: absolute; inset: 0; }
+.sun > div { inset: -6%; }
+.sun canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+.sun .cl { animation: cloud 31s ease-in-out infinite; }
+.sun .dr { animation: drift 52s ease-in-out infinite alternate; }
+.sun .la { animation: swayA 7.4s ease-in-out infinite alternate; transform-origin: 0 0; }
+.sun .lb { animation: swayB 5.1s ease-in-out -2s infinite alternate; transform-origin: 8% 0; }
+@keyframes cloud { 0%, 34%, 100% { opacity: 1; } 47% { opacity: .58; } 58% { opacity: .9; } 66% { opacity: .78; } 78% { opacity: 1; } }
+@keyframes drift { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-1.6vw, .6vh, 0); } }
+@keyframes swayA { from { transform: translate3d(0, 0, 0) rotate(0deg); } to { transform: translate3d(.5vw, .35vh, 0) rotate(.55deg); } }
+@keyframes swayB { from { transform: translate3d(0, 0, 0) rotate(0deg); } to { transform: translate3d(-.35vw, .3vh, 0) rotate(-.8deg); } }
+html.parked .sun * { animation-play-state: paused; }
+
+/* the one view */
+.stage { position: relative; z-index: 2; min-height: 100vh; min-height: 100svh; display: flex; align-items: center; justify-content: center; padding: 40px 16px 9vh; }
+.lock { display: flex; flex-direction: column; align-items: center; }
+.mw { position: relative; width: var(--s); height: var(--s); flex: none; }
+.mark { position: absolute; inset: 0; outline: none; border-radius: 22%; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mark:focus-visible { outline: 1px solid var(--type); outline-offset: 10px; }
+/* the move: the paper and the stone are carried past the frame by the same transform as the glass */
+html.moving .paper, html.moving .stage { transform-origin: 0 0; will-change: transform; }
+html.moving .mark:focus-visible { outline-color: transparent; }
+
+/* the garden: the world the crystal looks onto, arrived at full screen */
+.garden { position: fixed; inset: 0; z-index: 8; overflow: hidden; background: #07080a; color: var(--ground); opacity: 0; pointer-events: none; outline: none; }
+html.ingarden .garden { opacity: 1; pointer-events: auto; }
+html.fade .garden { transition: opacity .6s ease; }
+.gworld { position: absolute; inset: 0; transform-origin: 50% 50%; }
+.gframe { position: absolute; left: 0; top: 0; transform-origin: 0 0; background: #07080a; }
+.gframe picture, .gframe img, .gframe video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
+.topfade { position: absolute; left: 0; right: 0; top: 0; height: 0; pointer-events: none; background: linear-gradient(180deg, #08090b 0, #08090b calc(100% - 70px), rgba(8, 9, 11, 0) 100%); }
+.sign { position: absolute; left: max(28px, env(safe-area-inset-left)); bottom: max(28px, env(safe-area-inset-bottom)); width: 112px; line-height: 0; opacity: .8; }
+.sign svg { display: block; width: 100%; height: auto; overflow: visible; }
+.sign .cA { fill: var(--sky); stroke: var(--sky); }
+.back { position: absolute; left: max(14px, env(safe-area-inset-left)); top: max(10px, env(safe-area-inset-top)); min-height: 44px; padding: 10px 14px; background: none; border: 0; cursor: pointer;
+  font: 400 13px/18px "Timeless Serif", Georgia, serif; letter-spacing: .02em; color: var(--ground); opacity: .7; transition: opacity .3s ease; }
+.back:hover, .back:focus-visible { opacity: 1; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.back:focus-visible { outline: 1px solid rgba(238, 234, 224, .6); outline-offset: -2px; }
+html.ingarden .ui { z-index: 9; }
+html.ingarden .snd { color: var(--ground); }
+html.ingarden .snd:focus-visible { outline-color: var(--ground); }
+html.reading .ui, html.reading .back, html.reading .sign { visibility: hidden; }
+/* the note in the hall: a quiet button over the folded letter on the fallen block */
+.note { position: absolute; left: 0; top: 0; width: 44px; height: 44px; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 4px; }
+.note:focus { outline: none; }
+.note:focus-visible { box-shadow: 0 0 0 1px rgba(238, 234, 224, .75); }
+/* after a quiet while, a soft light passes once over the paper, as on the Garden page */
+.note .glint { position: absolute; inset: 0; border-radius: 50%; opacity: 0; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 246, 228, .6), rgba(255, 240, 214, .16) 55%, rgba(255, 240, 214, 0)); mix-blend-mode: screen; }
+.note.hint .glint { animation: glint 2.6s cubic-bezier(.3, .1, .3, 1) 1; }
+@keyframes glint { 0% { opacity: 0; transform: translate(-16%, -10%) scale(.7); } 45% { opacity: .9; } 100% { opacity: 0; transform: translate(14%, 12%) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .note.hint .glint { animation-name: glint-still; } @keyframes glint-still { 0%, 100% { opacity: 0; } 50% { opacity: .6; } } }
+/* the letter, lit as the hall is: warm sun from high on the left, the hall's cool shade on the right */
+.letter { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: var(--lt-pad, 24px); }
+.letter[hidden] { display: none; }
+.lt-scrim { position: absolute; inset: 0; background: radial-gradient(120% 90% at 40% 30%, rgba(30, 22, 12, .45), rgba(6, 8, 12, .8)); opacity: 0; }
+.sheet { position: relative; height: min(calc(100vh - 2 * var(--lt-pad, 24px)), 860px); height: min(calc(100dvh - 2 * var(--lt-pad, 24px)), 860px);
+  aspect-ratio: .707; max-width: calc(100vw - 2 * var(--lt-pad, 24px)); color: #1d1b17; outline: none; transform-origin: 50% 50%;
+  background-color: #e9e1d0; background-image:
+    linear-gradient(0deg, rgba(60, 40, 20, 0) 49.6%, rgba(60, 40, 20, .07) 50%, rgba(255, 255, 255, .18) 50.4%, rgba(255, 255, 255, 0) 51.4%),
+    radial-gradient(140% 110% at 12% 0%, rgba(255, 226, 170, .38), rgba(255, 226, 170, 0) 60%),
+    radial-gradient(120% 120% at 100% 100%, rgba(60, 80, 110, .22), rgba(60, 80, 110, 0) 60%),
+    url("assets/paper-grain.webp");
+  background-size: 100% 100%, 100% 100%, 100% 100%, 640px 640px; background-blend-mode: normal, normal, multiply, multiply;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .2), 0 12px 26px -8px rgba(0, 0, 0, .4), 0 44px 90px -30px rgba(0, 0, 0, .6); }
+.sheet-in { position: absolute; inset: 0; padding: 13% 12% 11%; display: flex; flex-direction: column;
+  text-shadow: 0 .6px 0 rgba(255, 255, 255, .45), 0 -.35px 0 rgba(0, 0, 0, .14); }
+.lt-name { font-weight: 400; font-size: 12px; letter-spacing: .38em; margin-right: -.38em; line-height: 1; }
+.lt-line { margin-top: 14px; font-size: 15px; letter-spacing: .01em; color: rgba(29, 27, 23, .62); font-style: italic; }
+.lt-body { margin-top: 18%; max-width: 21em; font-size: 18px; line-height: 1.55; letter-spacing: .003em; }
+.lt-body p + p { margin-top: 1em; }
+.lt-sign { margin-top: auto; font-size: 13px; letter-spacing: .02em; color: rgba(29, 27, 23, .62); }
+.lt-close { position: absolute; right: 10px; top: 10px; width: 40px; height: 40px; border: 0; background: none; color: rgba(29, 27, 23, .5); cursor: pointer; display: grid; place-items: center; border-radius: 50%; transition: color .3s; }
+.lt-close svg { width: 16px; height: 16px; }
+.lt-close:hover, .lt-close:focus-visible { color: rgba(29, 27, 23, .9); outline: none; }
+.lt-close:focus-visible { box-shadow: 0 0 0 1px rgba(29, 27, 23, .4); }
+.letter .sheet-in, .letter .lt-close { opacity: 0; }
+.mark .still { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+html.gl .mark .still { visibility: hidden; }
+.wm { color: var(--type); line-height: 0; width: calc(var(--s) * 1.36); margin-top: calc(var(--s) * .37); }
+.wm svg { display: block; width: 100%; height: auto; overflow: visible; }
+.wm .cA { fill: var(--cut); stroke: var(--cut); }
+
+/* the foot: one line; and the quiet controls either side of it */
+.foot { position: fixed; z-index: 2; left: 16px; right: 16px; bottom: 0; padding-bottom: max(var(--fb), env(safe-area-inset-bottom)); display: flex; justify-content: center; pointer-events: none; }
+.foot p { font-size: 10px; line-height: 12px; letter-spacing: .32em; margin-right: -.32em; text-transform: uppercase; color: var(--dimt); white-space: nowrap; }
+.snd:focus-visible { outline-offset: -2px; }
+.ui { position: fixed; z-index: 2; left: calc(var(--g) - 10px); right: calc(var(--g) - 10px); bottom: calc(max(var(--fb), env(safe-area-inset-bottom)) - 16px); height: 44px; display: flex; align-items: center; justify-content: flex-end; pointer-events: none; }
+.ui > * { pointer-events: auto; }
+.snd { width: 44px; height: 44px; background: none; border: 0; color: var(--type); cursor: pointer; display: grid; place-items: center; opacity: .74; transition: opacity .3s ease; }
+.snd:hover { opacity: 1; }
+.snd svg { width: 26px; height: 12px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 1; stroke-linecap: round; }
+.snd .w { opacity: 0; transition: opacity .4s ease; }
+.snd .f { transition: opacity .4s ease; }
+.snd[aria-pressed="true"] .w { opacity: 1; }
+.snd[aria-pressed="true"] .f { opacity: 0; }
+
+
+
+/* paper grain, fine and even */
+.grain { position: fixed; inset: 0; z-index: 6; pointer-events: none; background-size: 128px 128px; }
+html.opening .grain { opacity: 0; }
+
+@media (min-width: 601px) and (max-width: 1100px) and (min-aspect-ratio: 1/2) and (max-aspect-ratio: 1/1) { :root { --s: clamp(150px, 25vw, 200px); } }
+@media (max-width: 600px) {
+  :root { --s: min(42vw, 164px); }
+  .type { top: 22px; font-size: 11px; letter-spacing: 2.5px; }
+  .stage { padding-bottom: 14vh; }
+  .wm { width: calc(var(--s) * 1.46); }
+  .foot { padding-bottom: calc(max(var(--fb), env(safe-area-inset-bottom)) + 34px); }
+  .foot p { font-size: 9px; letter-spacing: .24em; margin-right: -.24em; }
+}
+@media (max-width: 350px) { .foot p { letter-spacing: .14em; margin-right: -.14em; } }
+@media (prefers-reduced-motion: reduce) {
+  .sun *, .sun { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<canvas id="wall" aria-hidden="true"></canvas>
+<p class="type" id="type" aria-hidden="true"></p>
+
+<div class="paper" id="paper" aria-hidden="true"><div class="sun" id="sun"><div class="cl"><div class="dr"><canvas id="sunL"></canvas><div class="la"><canvas id="sunA"></canvas></div><div class="lb"><canvas id="sunB"></canvas></div></div></div></div></div>
+
+<main class="stage" id="stage">
+  <div class="lock">
+    <div class="mw">
+    <div class="mark" id="mark" role="button" tabindex="0" aria-label="The Antimony mark: a stone split by a seam, with a crystal in the break. Step through the crystal.">
+      <!-- shown only without WebGL: the Break, still -->
+      <svg class="still" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="fs" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="75" y2="116"><stop offset="0" stop-color="#272521" id="fs0"/><stop offset="1" stop-color="#0E0D0C" id="fs1"/></linearGradient>
+          <linearGradient id="fw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E4F8FF"/><stop offset=".3" stop-color="#BDF0FF"/><stop offset=".32" stop-color="#9DE8FF"/><stop offset="1" stop-color="#3F7FD0"/></linearGradient>
+          <mask id="fm" maskUnits="userSpaceOnUse" x="-20" y="-20" width="140" height="140"><rect width="100" height="100" rx="22" fill="#fff"/><path d="M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112L31.9 112L37.65 81.5L54.85 21.5Z M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z" fill="#000"/></mask>
+        </defs>
+        <rect width="100" height="100" rx="22" fill="url(#fs)" mask="url(#fm)"/>
+        <path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z" fill="url(#fw)"/>
+        <path d="M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5Z" fill="#fff" fill-opacity=".22"/>
+      </svg>
+      <canvas id="gl" aria-hidden="true"></canvas>
+    </div>
+    </div>
+    <h1 class="vh">Antimony</h1>
+    <div class="wm" id="wm" aria-hidden="true"><svg viewBox="-10 -705 6338 715" focusable="false"><path class="cA" d="M444.5155 -286 336 -563 227.4845 -286 336 -374Z" stroke-width="14" stroke-linejoin="round"/><g fill="currentColor"><path d="M111 -95 351 -695H386L628 -95Q643 -57 663.5 -42.5Q684 -28 723 -23V0H460V-23Q497 -27 512.0 -35.5Q527 -44 527 -59Q527 -71 517 -96L463 -236L335.0 -324.0L207 -236L155 -96Q148 -75 148 -66Q148 -47 166.5 -37.0Q185 -27 228 -23V0H15V-23Q52 -27 73.5 -40.5Q95 -54 111 -95ZM444.515 -286.0 336 -563 227.484 -286.0 336.0 -374.0Z"/><path d="M989.58 -122V-573Q989.58 -612 979.08 -632.5Q968.58 -653 947.08 -661.0Q925.58 -669 888.58 -672V-695H1060.58L1463.58 -178V-575Q1463.58 -614 1453.08 -634.0Q1442.58 -654 1421.58 -661.5Q1400.58 -669 1362.58 -672V-695H1604.58V-672Q1566.58 -669 1545.58 -661.5Q1524.58 -654 1514.08 -633.5Q1503.58 -613 1503.58 -574L1504.58 0H1476.58L1029.58 -573V-123Q1029.58 -83 1040.08 -62.5Q1050.58 -42 1071.58 -34.0Q1092.58 -26 1130.58 -23V0H888.58V-23Q926.58 -26 947.58 -34.0Q968.58 -42 979.08 -62.5Q989.58 -83 989.58 -122Z"/><path d="M1984.16 -112V-657H1901.16Q1850.16 -657 1821.16 -647.5Q1792.16 -638 1773.66 -608.5Q1755.16 -579 1748.16 -519H1727.16L1737.16 -695H2325.16L2335.16 -519H2314.16Q2306.16 -580 2288.16 -609.5Q2270.16 -639 2241.16 -648.0Q2212.16 -657 2161.16 -657H2077.16V-112Q2078.16 -77 2088.66 -59.0Q2099.16 -41 2119.66 -33.5Q2140.16 -26 2177.16 -23V0H1888.16V-23Q1939.16 -27 1961.16 -45.0Q1983.16 -63 1984.16 -112Z"/><path d="M2580.740 -112V-583Q2579.740 -618 2569.240 -636.0Q2558.740 -654 2538.240 -661.5Q2517.740 -669 2480.740 -672V-695H2770.740V-672Q2719.740 -668 2697.240 -650.0Q2674.740 -632 2673.740 -583V-112Q2674.740 -62 2696.740 -44.5Q2718.740 -27 2773.740 -23V0H2483.740V-23Q2534.740 -27 2557.240 -44.5Q2579.740 -62 2580.740 -112Z"/><path d="M3042.32 -101 3057.32 -582Q3058.32 -632 3041.82 -650.0Q3025.32 -668 2979.32 -672V-695H3157.32L3403.32 -146L3617.32 -695H3789.32V-672Q3750.32 -668 3734.82 -646.5Q3719.32 -625 3721.32 -588L3741.32 -94Q3742.32 -66 3749.82 -52.0Q3757.32 -38 3773.32 -32.0Q3789.32 -26 3821.32 -23V0H3569.32V-23Q3603.32 -26 3619.82 -32.0Q3636.32 -38 3642.32 -51.5Q3648.32 -65 3647.32 -94L3626.32 -616L3390.32 0H3365.32L3099.32 -595L3084.32 -101Q3083.32 -68 3091.82 -52.5Q3100.32 -37 3118.82 -31.5Q3137.32 -26 3175.32 -23V0H2951.32V-23Q2985.32 -26 3003.82 -32.0Q3022.32 -38 3031.82 -54.0Q3041.32 -70 3042.32 -101Z"/><path d="M3997.9 -349Q3997.9 -452 4043.9 -533.0Q4089.9 -614 4167.9 -659.0Q4245.9 -704 4337.9 -704Q4429.9 -704 4508.9 -659.0Q4587.9 -614 4634.9 -533.0Q4681.9 -452 4681.9 -349Q4681.9 -246 4634.9 -164.5Q4587.9 -83 4508.9 -37.5Q4429.9 8 4337.9 8Q4245.9 8 4167.9 -37.5Q4089.9 -83 4043.9 -164.5Q3997.9 -246 3997.9 -349ZM4567.9 -349Q4567.9 -444 4538.4 -516.0Q4508.9 -588 4456.4 -627.5Q4403.9 -667 4336.9 -667Q4270.9 -667 4219.4 -627.5Q4167.9 -588 4139.4 -515.5Q4110.9 -443 4110.9 -349Q4110.9 -254 4139.4 -181.0Q4167.9 -108 4219.4 -68.0Q4270.9 -28 4336.9 -28Q4403.9 -28 4456.4 -68.0Q4508.9 -108 4538.4 -181.0Q4567.9 -254 4567.9 -349Z"/><path d="M4979.480 -122V-573Q4979.480 -612 4968.980 -632.5Q4958.480 -653 4936.980 -661.0Q4915.480 -669 4878.480 -672V-695H5050.480L5453.480 -178V-575Q5453.480 -614 5442.980 -634.0Q5432.480 -654 5411.480 -661.5Q5390.480 -669 5352.480 -672V-695H5594.480V-672Q5556.480 -669 5535.480 -661.5Q5514.480 -654 5503.980 -633.5Q5493.480 -613 5493.480 -574L5494.480 0H5466.480L5019.480 -573V-123Q5019.480 -83 5029.980 -62.5Q5040.480 -42 5061.480 -34.0Q5082.480 -26 5120.480 -23V0H4878.480V-23Q4916.480 -26 4937.480 -34.0Q4958.480 -42 4968.980 -62.5Q4979.480 -83 4979.480 -122Z"/><path d="M5973.06 -112V-281L5771.06 -625Q5761.06 -643 5754.56 -651.0Q5748.06 -659 5736.56 -664.5Q5725.06 -670 5703.06 -672V-695H5951.06V-674Q5917.06 -671 5900.06 -662.5Q5883.06 -654 5883.06 -637Q5883.06 -627 5892.06 -610L6047.06 -340L6199.06 -617Q6208.06 -635 6208.06 -645Q6208.06 -660 6192.06 -665.5Q6176.06 -671 6137.06 -674V-695H6326.06V-674Q6301.06 -671 6290.56 -668.0Q6280.06 -665 6271.06 -654.5Q6262.06 -644 6249.06 -620L6066.06 -288V-112Q6067.06 -62 6089.06 -44.5Q6111.06 -27 6166.06 -23V0H5876.06V-23Q5927.06 -27 5949.56 -44.5Q5972.06 -62 5973.06 -112Z"/></g></svg></div>
+  </div>
+</main>
+
+<footer class="foot" id="foot">
+  <p>Software, made on purpose</p>
+</footer>
+<div class="ui" id="ui">
+  <button class="snd" id="snd" type="button" aria-pressed="false" aria-label="Sound"><svg viewBox="0 0 26 12" aria-hidden="true" focusable="false"><path class="f" d="M1 6H25"/><path class="w" d="M1 6C3.4 6 4.2 1.5 7 1.5S10.6 10.5 13 10.5S16.6 1.5 19 1.5S22.6 6 25 6"/></svg></button>
+</div>
+<p class="vh" id="say" aria-live="polite"></p>
+<div class="grain" id="grain" aria-hidden="true"></div>
+
+<div class="garden" id="garden" role="region" aria-label="The garden" tabindex="-1" inert aria-hidden="true">
+  <div class="gworld" id="gworld">
+    <div class="gframe" id="gframe" aria-hidden="true">
+      <picture><source id="gavif" type="image/avif"><img id="gstill" alt=""></picture>
+      <video id="gloop" muted loop playsinline preload="auto" aria-hidden="true"></video>
+    </div>
+  </div>
+  <div class="topfade" id="topfade" aria-hidden="true"></div>
+  <p class="vh" id="galt"></p>
+  <button class="note" id="note" type="button" aria-label="Read the note" aria-haspopup="dialog" aria-controls="letter"><span class="glint" aria-hidden="true"></span></button>
+  <div class="sign" id="sign" aria-hidden="true"></div>
+  <button class="back" id="back" type="button" aria-label="Back through the crystal">Back</button>
+  <div id="letter" class="letter" role="dialog" aria-modal="true" aria-labelledby="lt-name" hidden>
+    <div class="lt-scrim"></div>
+    <div class="sheet" tabindex="-1">
+      <div class="sheet-in">
+        <h2 id="lt-name" class="lt-name">ANTIMONY</h2>
+        <p class="lt-line">Software, made on purpose.</p>
+        <div class="lt-body">
+          <p>The moats are fading. Intention remains, and we give it everything.</p>
+          <p>We have only just begun.</p>
+        </div>
+        <p class="lt-sign">Antimony, London</p>
+      </div>
+      <button class="lt-close" type="button" aria-label="Close the note"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Everything below waits for the first paint: the page (or the black of the opening) is on screen before any of it runs. */
+function main() {
+"use strict";
+var html = document.documentElement;
+var $ = function (id) { return document.getElementById(id); };
+var mark = $("mark"), canvas = $("gl"), wall = $("wall"), typeEl = $("type"), foot = $("foot"), grainEl = $("grain");
+var WMC = $("wm"), ui = $("ui"), say = $("say"), sndBtn = $("snd"), stage = $("stage"), paperEl = $("paper");
+var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+var FREEZE = /[?&]t=(\d+)/.exec(location.search); FREEZE = FREEZE ? +FREEZE[1] / 1000 : -1;
+var DEBUG = /[?&]debug/.test(location.search);
+var opening = html.classList.contains("opening");
+var KEY = "antimony.door";
+function store(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
+function read(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+function remember() { store(KEY, "1"); }
+
+/* the stone, in paper light */
+var TH = { a: [.152, .145, .133], b: [.056, .053, .049], rim: 0, cr: [.933, .918, .878, .3] };
+function hex(c, k) { return "#" + c.map(function (v) { return ("0" + Math.round(Math.min(1, v * (k || 1)) * 255).toString(16)).slice(-2); }).join(""); }
+var seedN = 1; function rnd() { seedN = (seedN * 16807) % 2147483647; return (seedN - 1) / 2147483646; }
+
+/* ---------- grain, baked once ---------- */
+(function () {
+  var n = 256, c = document.createElement("canvas"); c.width = c.height = n;
+  var x = c.getContext("2d"), d = x.createImageData(n, n), p = d.data;
+  for (var i = 0; i < p.length; i += 4) {
+    var r = Math.random();
+    if (r < .42) { p[i] = 52; p[i + 1] = 46; p[i + 2] = 38; p[i + 3] = 7 + Math.random() * 15; }
+    else if (r < .5) { p[i] = p[i + 1] = p[i + 2] = 255; p[i + 3] = 10 + Math.random() * 12; }
+  }
+  x.putImageData(d, 0, 0);
+  grainEl.style.backgroundImage = "url(" + c.toDataURL() + ")";
+})();
+
+/* ---------- the capitals, wide tracked, spaced by eye: the crystal A sits closer to N, the T and I a touch tighter ---------- */
+(function () {
+  var svg = WMC.querySelector("svg"), ps = svg.querySelectorAll("g > path"), TR = 440;
+  var adj = [-130, -30, -55, 5, -15, 0, -35], x = 0, sum = 0;
+  for (var i = 0; i < ps.length; i++) { ps[i].setAttribute("transform", "translate(" + x + " 0)"); if (i < adj.length) { x += TR + adj[i]; sum += adj[i]; } }
+  svg.setAttribute("viewBox", "-10 -705 " + (6338 + TR * 7 + sum) + " 715");
+})();
+
+/* ================= daylight: a window's light across the paper, leaves moving in it =================
+   Painted once, small, and let the browser's scaling soften it; the motion is only compositor transforms. */
+var sunL = $("sunL"), sunA = $("sunA"), sunB = $("sunB");
+function leaf(x, cx, cy, len, wid, ang) {
+  x.save(); x.translate(cx, cy); x.rotate(ang);
+  x.beginPath(); x.moveTo(0, 0);
+  x.quadraticCurveTo(len * .45, -wid, len, 0); x.quadraticCurveTo(len * .45, wid, 0, 0);
+  x.fill(); x.restore();
+}
+function paintSun() {
+  var VW = innerWidth, VH = innerHeight, mb = mark.getBoundingClientRect();
+  var mx = mb.left + mb.width / 2, my = mb.top + mb.height / 2;
+  /* each canvas covers the viewport plus 6% on every side */
+  function setup(c, f) {
+    var w = Math.ceil(VW * 1.12 / f), h = Math.ceil(VH * 1.12 / f); c.width = w; c.height = h;
+    var x = c.getContext("2d"); x.setTransform(1 / f, 0, 0, 1 / f, VW * .06 / f, VH * .06 / f); return x;
+  }
+  /* the window: a tall pane of warm light slanting down to the right, through the stone */
+  var phone = VW < 600, bw = Math.max(VW * (phone ? .6 : .4), 220), sk = VH * (phone ? .3 : .36);
+  var cx = mx - (phone ? .02 : .05) * VW, top = -VH * .1, bot = VH * 1.1;
+  var midY = my, xAt = function (y) { return cx + (y - midY) / (bot - top) * sk; };
+  var x = setup(sunL, 6);
+  var g = x.createLinearGradient(xAt(top) - bw / 2, top, xAt(bot) + bw / 2, bot);
+  g.addColorStop(0, "rgba(0,0,0,.95)"); g.addColorStop(.55, "rgba(0,0,0,.8)"); g.addColorStop(1, "rgba(0,0,0,.5)");
+  x.fillStyle = g; x.beginPath();
+  x.moveTo(xAt(top) - bw / 2, top); x.lineTo(xAt(top) + bw / 2, top); x.lineTo(xAt(bot) + bw / 2, bot); x.lineTo(xAt(bot) - bw / 2, bot); x.closePath(); x.fill();
+  /* the glazing bars, as softer shadow */
+  x.globalCompositeOperation = "destination-out"; x.fillStyle = "rgba(0,0,0,.6)";
+  var mw = Math.max(10, bw * .026), ty = my - (phone ? .27 : .33) * VH;
+  x.beginPath(); x.moveTo(xAt(top) - mw / 2, top); x.lineTo(xAt(top) + mw / 2, top); x.lineTo(xAt(bot) + mw / 2, bot); x.lineTo(xAt(bot) - mw / 2, bot); x.closePath(); x.fill();
+  x.beginPath(); x.moveTo(xAt(ty) - bw / 2, ty - mw / 2); x.lineTo(xAt(ty) + bw / 2, ty - mw / 2); x.lineTo(xAt(ty) + bw / 2, ty + mw / 2); x.lineTo(xAt(ty) - bw / 2, ty + mw / 2); x.closePath(); x.fill();
+  x.globalCompositeOperation = "source-over";
+  soften(sunL, [255, 246, 226], 1, 3);
+  /* the leaves: the paper's own colour laid over the light, so they show only where the sun falls */
+  function bough(c, f, seed, n, size, reach, r) {
+    var y = setup(c, f); seedN = seed; y.fillStyle = "#000";
+    var S = Math.max(VW, VH);
+    for (var b = 0; b < n; b++) {
+      /* a branch reaching into the pane from its upper left */
+      var y0 = top + rnd() * VH * .16, x0 = xAt(y0) - bw * (.62 - rnd() * .3);
+      var ang = .28 + rnd() * .5, len = S * reach * (.65 + rnd() * .5), sag = (rnd() - .2) * .5;
+      for (var k = 0; k < 48; k++) {
+        var t = k / 48, a = ang + sag * t * t, px = x0 + Math.cos(a) * len * t, py = y0 + Math.sin(a) * len * t;
+        var spread = size * (1.1 + t * 2), dens = .85 - t * .5;
+        for (var m = 0; m < 3; m++) {
+          if (rnd() > dens) continue;
+          var lx = px + (rnd() - .5) * spread * 2.6, ly = py + (rnd() - .5) * spread * 1.7;
+          var sz = size * (.5 + rnd() * .8) * (1 - t * .3);
+          leaf(y, lx, ly, sz * 2.3, sz * .6, a + (rnd() < .5 ? .85 : -.85) + (rnd() - .5) * 1.2);
+        }
+      }
+    }
+    soften(c, [238, 234, 224], r, 3);
+  }
+  var unit = Math.max(VW, VH) / 1440, ph = phone ? 1.35 : 1;
+  bough(sunA, 4, 7, 3, 24 * unit * ph, phone ? .5 : .44, 1);
+  bough(sunB, 3, 29, 5, 11 * unit * ph, phone ? .42 : .34, 1);
+}
+/* a box blur of the alpha, three passes (close to gaussian), then one colour throughout */
+function soften(c, rgb, r, passes) {
+  var x = c.getContext("2d"), w = c.width, h = c.height, im = x.getImageData(0, 0, w, h), d = im.data, n = w * h;
+  var a = new Float32Array(n), b = new Float32Array(n), i, j, s, k;
+  for (i = 0; i < n; i++) a[i] = d[i * 4 + 3];
+  var span = 2 * r + 1;
+  for (var p = 0; p < passes; p++) {
+    for (j = 0; j < h; j++) { s = 0; var o = j * w; for (k = -r; k <= r; k++) s += a[o + Math.min(w - 1, Math.max(0, k))];
+      for (i = 0; i < w; i++) { b[o + i] = s / span; s += a[o + Math.min(w - 1, i + r + 1)] - a[o + Math.max(0, i - r)]; } }
+    for (i = 0; i < w; i++) { s = 0; for (k = -r; k <= r; k++) s += b[Math.min(h - 1, Math.max(0, k)) * w + i];
+      for (j = 0; j < h; j++) { a[j * w + i] = s / span; s += b[Math.min(h - 1, j + r + 1) * w + i] - b[Math.max(0, j - r) * w + i]; } }
+  }
+  for (i = 0; i < n; i++) { d[i * 4] = rgb[0]; d[i * 4 + 1] = rgb[1]; d[i * 4 + 2] = rgb[2]; d[i * 4 + 3] = a[i]; }
+  x.putImageData(im, 0, 0);
+}
+var sunT = 0;
+addEventListener("resize", function () { clearTimeout(sunT); sunT = setTimeout(paintSun, 180); });
+function sunUp() { if (!html.classList.contains("sunup")) html.classList.add("sunup"); }
+
+/* ================= sound: muted until asked for; warm, close, quiet ================= */
+var A = { c: null, on: read(KEY + ".sound") === "1", armed: false };
+function noise(c, sec, brown) {
+  var b = c.createBuffer(2, c.sampleRate * sec, c.sampleRate);
+  for (var ch = 0; ch < 2; ch++) {
+    var d = b.getChannelData(ch), last = 0;
+    for (var i = 0; i < d.length; i++) { var w = Math.random() * 2 - 1; if (brown) { last = (last + .02 * w) / 1.02; d[i] = last * 3.5; } else d[i] = w; }
+    /* a seamless loop: cross-fade the ends */
+    var n = Math.min(4000, d.length >> 3); for (var j = 0; j < n; j++) { var k = j / n; d[d.length - n + j] = d[d.length - n + j] * (1 - k) + d[j] * k; }
+  }
+  return b;
+}
+function audioInit() {
+  if (A.c) return true;
+  var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+  var c = A.c = new AC();
+  A.master = c.createGain(); A.master.gain.value = 0;
+  var top = c.createBiquadFilter(); top.type = "lowpass"; top.frequency.value = 7000;
+  A.master.connect(top); top.connect(c.destination);
+  /* a small, soft room for the tones */
+  var ir = c.createBuffer(2, c.sampleRate * 2.6, c.sampleRate);
+  for (var ch = 0; ch < 2; ch++) { var d = ir.getChannelData(ch); for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3.2); }
+  var cv = c.createConvolver(); cv.buffer = ir; var wet = c.createGain(); wet.gain.value = .34; cv.connect(wet); wet.connect(A.master);
+  A.bus = c.createGain(); A.bus.connect(A.master); A.bus.connect(cv);
+  /* room tone: brown air, low, breathing */
+  var r = c.createBufferSource(); r.buffer = noise(c, 6, true); r.loop = true;
+  A.rf = c.createBiquadFilter(); A.rf.type = "lowpass"; A.rf.frequency.value = 360; A.rf.Q.value = .4;
+  A.rg = c.createGain(); A.rg.gain.value = .16;
+  r.connect(A.rf); A.rf.connect(A.rg); A.rg.connect(A.master);
+  var lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = .06; lg.gain.value = 80; lfo.connect(lg); lg.connect(A.rf.frequency); lfo.start(); r.start();
+  /* the water in the crystal: a soft wash that answers its motion */
+  var w = c.createBufferSource(); w.buffer = noise(c, 4, false); w.loop = true;
+  var wb = c.createBiquadFilter(); wb.type = "bandpass"; wb.frequency.value = 620; wb.Q.value = .7;
+  var wl = c.createBiquadFilter(); wl.type = "lowpass"; wl.frequency.value = 1500;
+  A.wg = c.createGain(); A.wg.gain.value = 0;
+  w.connect(wb); wb.connect(wl); wl.connect(A.wg); A.wg.connect(A.bus); w.start();
+  A.lastBub = 0;
+  return true;
+}
+function now() { return A.c.currentTime; }
+function setSound(on, quiet) {
+  A.on = on; store(KEY + ".sound", on ? "1" : "0");
+  sndBtn.setAttribute("aria-pressed", on ? "true" : "false");
+  if (quiet) return;
+  if (on) {
+    if (!audioInit()) return;
+    A.c.resume();
+    A.master.gain.cancelScheduledValues(now()); A.master.gain.setTargetAtTime(.9, now(), .5);
+    outsideSound(A.ambOn);
+  } else if (A.c) {
+    A.master.gain.cancelScheduledValues(now()); A.master.gain.setTargetAtTime(0, now(), .12);
+  }
+}
+function live() { return A.c && A.on && A.c.state === "running"; }
+function bubble(level) {
+  if (!live()) return;
+  var c = A.c, t = now(), f = 480 + Math.random() * 420, o = c.createOscillator(), g = c.createGain();
+  o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 1.9, t + .07);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.012 + .02 * level, t + .006); g.gain.exponentialRampToValueAtTime(.0001, t + .14);
+  o.connect(g); g.connect(A.bus); o.start(t); o.stop(t + .16);
+}
+function waterSound(level, dt) {
+  if (!live()) return;
+  A.wg.gain.setTargetAtTime(.01 + .085 * level, now(), .09);
+  if (level > .12 && Math.random() < level * dt * 7 && A.c.currentTime - A.lastBub > .09) { A.lastBub = A.c.currentTime; bubble(level); }
+}
+/* ---------- through the crystal: one struck-glass tone, then the world's own quiet air ---------- */
+function glassTone() {
+  if (!live()) return;
+  var c = A.c, t = now() + .01, f0 = 1046.5;
+  /* the partials of a struck glass: inharmonic, the upper ones dying first; a soft attack, a long natural decay */
+  [[1, .05, 4.2], [2.32, .022, 2.6], [4.25, .011, 1.6], [6.63, .005, 1.0]].forEach(function (p) {
+    var o = c.createOscillator(), g = c.createGain();
+    o.frequency.value = f0 * p[0];
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(p[1], t + .012); g.gain.setTargetAtTime(0, t + .012, p[2] / 4.6);
+    o.connect(g); g.connect(A.bus); o.start(t); o.stop(t + p[2] + .2);
+  });
+}
+/* each world's ambience, built once when first wanted; quiet, and made here from noise and sine */
+function brown(sec) { return noise(A.c, sec, true); }
+function white(sec) { return noise(A.c, sec, false); }
+function loopSrc(buf) { var s = A.c.createBufferSource(); s.buffer = buf; s.loop = true; s.start(); return s; }
+function filt(type, f, q) { var b = A.c.createBiquadFilter(); b.type = type; b.frequency.value = f; if (q != null) b.Q.value = q; return b; }
+function gainN(v) { var g = A.c.createGain(); g.gain.value = v; return g; }
+function chain() { for (var i = 0; i < arguments.length - 1; i++) arguments[i].connect(arguments[i + 1]); return arguments[arguments.length - 1]; }
+function blip(at, f, f1, dur, vol, out) {
+  var o = A.c.createOscillator(), g = A.c.createGain();
+  o.frequency.setValueAtTime(f, at); o.frequency.exponentialRampToValueAtTime(f1, at + dur);
+  g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(vol, at + Math.min(.01, dur * .2)); g.gain.exponentialRampToValueAtTime(.0001, at + dur);
+  o.connect(g); g.connect(out); o.start(at); o.stop(at + dur + .05);
+}
+function ambBuild() {
+  if (A.amb) return;
+  var c = A.c, out = A.amb = gainN(0); out.connect(A.master);
+  /* a long, soft space for the far sounds */
+  var ir = c.createBuffer(2, c.sampleRate * 4.5, c.sampleRate);
+  for (var ch = 0; ch < 2; ch++) { var d = ir.getChannelData(ch); for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3) * (i < 300 ? i / 300 : 1); }
+  var far = c.createConvolver(); far.buffer = ir; chain(far, gainN(.8), out);
+  var ev = A.ev = { far: far, out: out, next: {} };
+  if (WKEY === "garden") {
+    /* still air and a faint room tone; distant drips into water; very occasional far birds through the broken roof */
+    chain(loopSrc(brown(9)), filt("lowpass", 300), gainN(.05), out);
+    chain(loopSrc(brown(7)), filt("bandpass", 120, .7), gainN(.03), far);
+    ev.drip = function (t) { blip(t, 700 + Math.random() * 400, 1500, .12, .05, far); };
+    ev.bird = function (t) { var b = 2600 + Math.random() * 1400; for (var k = 0, n = 2 + Math.floor(Math.random() * 3); k < n; k++) blip(t + k * .12, b * 1.2, b * .85, .08, .018, far); };
+    ev.plan = [["drip", 2.5, 6], ["bird", 14, 30]];
+  } else if (WKEY === "rain") {
+    /* soft rain close by, and a far street under it */
+    var r = chain(loopSrc(white(5)), filt("highpass", 900), filt("lowpass", 6500), gainN(.032)); r.connect(out); r.connect(far);
+    chain(loopSrc(brown(6)), filt("lowpass", 520), gainN(.05), out);
+    var st = chain(loopSrc(brown(8)), filt("lowpass", 160), gainN(.07)); st.connect(out); ev.street = st;
+    ev.car = function (t) { var g = st.gain; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(.16, t + 3); g.linearRampToValueAtTime(.07, t + 7); };
+    ev.plan = [["car", 12, 26]];
+  } else if (WKEY === "meadow") {
+    /* wind in the grass, swelling and settling, and larks high and far off */
+    var wf = filt("bandpass", 1100, .5), wg = gainN(.045); chain(loopSrc(white(6)), wf, filt("lowpass", 3000), wg, out);
+    var l1 = c.createOscillator(), l1g = gainN(.02); l1.frequency.value = .11; chain(l1, l1g, wg.gain); l1.start();
+    var l2 = c.createOscillator(), l2g = gainN(320); l2.frequency.value = .07; chain(l2, l2g, wf.frequency); l2.start();
+    ev.lark = function (t) { for (var k = 0, n = 8 + Math.floor(Math.random() * 10); k < n; k++) { var f = 3200 + Math.random() * 2400; blip(t + k * .09, f, f * (Math.random() < .5 ? 1.2 : .82), .07, .007, far); } };
+    ev.plan = [["lark", 5, 12]];
+  } else {
+    /* night wind, low; and a faint low hum in the air */
+    var nf = filt("lowpass", 420), ng = gainN(.06); chain(loopSrc(brown(8)), nf, ng, out);
+    var n1 = c.createOscillator(), n1g = gainN(.03); n1.frequency.value = .05; chain(n1, n1g, ng.gain); n1.start();
+    chain(loopSrc(brown(6)), filt("bandpass", 64, 6), gainN(.12), out);
+    var h = c.createOscillator(); h.frequency.value = 49; chain(h, gainN(.006), out); h.start();
+    ev.plan = [];
+  }
+  setInterval(function () {
+    if (!A.ambOn || !live()) return;
+    var t = now();
+    ev.plan.forEach(function (p) { var k = p[0]; if (ev.next[k] == null) ev.next[k] = t + p[1] * .4; if (t >= ev.next[k]) { ev[k](t + .05); ev.next[k] = t + p[1] + Math.random() * (p[2] - p[1]); } });
+  }, 250);
+}
+/* the paper's room gives way to the world's air after the tone, and comes back on the way out */
+function outsideSound(on) {
+  A.ambOn = on;
+  if (!A.c) return;
+  if (on) ambBuild();
+  var t = now(), d = on ? 1.1 : 0;
+  A.rg.gain.setTargetAtTime(on ? .03 : .16, t + d, .6);
+  A.wg.gain.setTargetAtTime(on ? 0 : .01, t + d, .5);
+  if (A.amb) A.amb.gain.setTargetAtTime(on ? 1 : 0, t + d, on ? 1.1 : .5);
+}
+setSound(A.on, true);
+sndBtn.addEventListener("click", function () { setSound(!A.on); });
+/* a session that already chose sound resumes it on the first gesture */
+function arm() { if (A.on && !A.c) setSound(true); }
+addEventListener("pointerdown", arm, { passive: true, once: true });
+addEventListener("keydown", arm, { once: true });
+
+/* ================= the world held in the crystal, and the way into it =================
+   ?world=garden (the default), rain, meadow or bluefield. Each world's frame, and where its letter, its stone and its
+   crystal sit in that frame (fractions), for the wide framing and for phones, from each render's own data:
+   garden: garden-ruin/assets/render.json via build_page.py; rain: rain/index.html (FACE, PAPER, CROP);
+   bluefield: w11-blue-field/assets/frame.json (phone: its own crop of the wide frame); meadow: final/HERO.md's
+   focal point, and the note tucked into the stone's seam, placed by eye in both renders. */
+var WORLDS = {
+  garden: { name: "The garden", files: ["garden-still", "garden-still-phone", "garden-loop", "garden-loop-phone"], avif: true,
+    desk: { w: 1920, h: 1080, fx: .56, look: [.43, .4], letter: [.3789, .7314, .401, .7384], stone: [.4594, .4753, .6477, .8096] },
+    phone: { w: 1080, h: 1920, fx: .5, look: [.15, .4], letter: [.0604, .7314, .1302, .7384], stone: [.3149, .4753, .9101, .8096] },
+    glimpse: ["forest", "field", "rain"],
+    alt: "Inside a vast old stone hall, its roof broken open, one shaft of warm daylight falls through drifting dust onto a bed of white, pale blue and yellow flowers growing through the cracked floor. Among them stands the Antimony stone, split by its seam, its sky blue crystal lit by the sun. Still water in the floor holds the light. A folded letter rests on a fallen block in the light." },
+  rain: { name: "The rain", files: ["rain-still", "rain-still-phone", "rain-loop", "rain-loop-phone"], avif: true,
+    desk: { w: 1920, h: 1080, fx: .5, look: [.43, .52], letter: [.5933, .6542, .6172, .7199], stone: [.4117, .2718, .5883, .7428] },
+    phone: { w: 810, h: 1440, fx: .5, look: [.494, .43], letter: [.7948, .6542, .8704, .7199], stone: [.2209, .2718, .7792, .7428] },
+    glimpse: ["forest", "garden", "meadow"],
+    alt: "A pale stone wall in a green city, at dusk, in gentle rain. Ivy falls from its coping, a café window glows beside it, and set into the wall a lightbox shows the Antimony mark. A rain-spotted handbill is tucked under the edge of the lightbox's frame." },
+  meadow: { name: "The meadow", files: ["meadow-still", "meadow-still-phone", "meadow-loop", "meadow-loop-phone"], avif: false,
+    desk: { w: 1920, h: 1200, fx: .61, fy: .66, look: [.3, .5], letter: [.631, .54, .657, .564], stone: [.508, .506, .71, .822] },
+    phone: { w: 1080, h: 2340, fx: .5, look: [.5, .45], letter: [.578, .6, .612, .624], stone: [.269, .578, .75, .795] },
+    glimpse: ["forest", "garden", "rain"],
+    alt: "A meadow in low, warm late-afternoon light under a wide sky of sunlit clouds. Tall grass runs to a low rise where the Antimony stone stands, its sky-blue crystal set in the break, a folded note tucked into the top of its seam." },
+  bluefield: { name: "The blue field", files: ["bluefield-still", "bluefield-still", "bluefield-loop", "bluefield-loop"], avif: true,
+    desk: { w: 1920, h: 1080, fx: .5, look: [.3506, .649], letter: [.2978, .8025, .3215, .8121], stone: [.2562, .4825, .4422, .8116] },
+    phone: { w: 1920, h: 1080, fx: .2794, look: [.3506, .649], letter: [.2978, .8025, .3215, .8121], stone: [.2562, .4825, .4422, .8116] },
+    glimpse: ["forest", "meadow", "garden"],
+    alt: "A field of small blue flowers at night under low cloud, pale spires of rock far off in the mist and specks of light drifting in the air. The Antimony stone stands in the flowers, its crystal lit from within, and a folded letter lies in the flowers at its foot." }
+};
+var WKEY = (/[?&]world=([a-z]+)/.exec(location.search) || /^#(?:world=)?([a-z]+)/.exec(location.hash) || [])[1];
+if (!WORLDS[WKEY]) WKEY = "garden";
+var WD = WORLDS[WKEY];
+var garden = $("garden"), gworld = $("gworld"), gframe = $("gframe"), gstill = $("gstill"), gloop = $("gloop");
+var note = $("note"), backBtn = $("back"), letter = $("letter"), sheet = letter.querySelector(".sheet"), scrim = letter.querySelector(".lt-scrim");
+var portrait = innerWidth / innerHeight < .8, V = portrait ? WD.phone : WD.desk, LK = V.look;
+var isOut = false, parked = false, doorBusy = false, quietUntil = 0, glMove = null, reading = false;
+var fit = { s: 1, x: 0, y: 0, top: 0 };
+garden.setAttribute("aria-label", WD.name); $("galt").textContent = WD.alt;
+var stillBase = "assets/" + WD.files[portrait ? 1 : 0];
+$("gavif").srcset = WD.avif ? stillBase + ".avif" : "";
+function loadStill() { if (!gstill.getAttribute("src")) gstill.src = stillBase + ".webp"; }
+var loopOn = false;
+function loadLoop() {
+  if (loopOn || reduced || FREEZE >= 0) return; loopOn = true;
+  [["webm", "video/webm"], ["mp4", "video/mp4"]].forEach(function (f) {
+    var s = document.createElement("source"); s.src = "assets/" + WD.files[portrait ? 3 : 2] + "." + f[0]; s.type = f[1]; gloop.appendChild(s);
+  });
+  gloop.load(); playLoop();
+}
+function playLoop() { if (loopOn) { var p = gloop.play(); if (p && p.catch) p.catch(function () {}); } }
+/* the wordmark, small and quiet, the same capitals as the paper's */
+(function () { var w = WMC.querySelector("svg").cloneNode(true); $("sign").appendChild(w); })();
+
+/* the frame covers the window; the letter's button follows the same cover transform (as on the Garden page) */
+function layoutGarden() {
+  var w = innerWidth, h = innerHeight, s = Math.max(w / V.w, h / V.h) * 1.035, fade = 0;
+  fit.s = s; fit.x = (w - V.w * s) * V.fx; fit.y = (h - V.h * s) * (V.fy || .5);
+  var a = Math.min(V.letter[0], V.stone[0]) - .025, b = V.stone[2] + .03, span = w / ((b - a) * V.w);
+  if (portrait && span < s) {
+    s = fit.s = span;
+    fit.x = Math.min(0, Math.max(w - V.w * s, -a * V.w * s));
+    fit.y = Math.min(0, h - V.h * s);
+    if (V.h * s < h) { fit.y = h - V.h * s; fade = fit.y; }
+  }
+  fit.top = fade;
+  $("topfade").style.height = (fade ? fade + 70 : 0) + "px";
+  gframe.style.width = V.w + "px"; gframe.style.height = V.h + "px";
+  gframe.style.transform = "translate(" + fit.x + "px," + fit.y + "px) scale(" + s + ")";
+  var L = V.letter, cx = (L[0] + L[2]) / 2 * V.w * s + fit.x, cy = (L[1] + L[3]) / 2 * V.h * s + fit.y;
+  var bw = Math.max(64, (L[2] - L[0]) * V.w * s + 36), bh = Math.max(56, (L[3] - L[1]) * V.h * s + 32);
+  note.style.width = bw + "px"; note.style.height = bh + "px";
+  note.style.transform = "translate(" + (cx - bw / 2) + "px," + (cy - bh / 2) + "px)";
+}
+layoutGarden();
+
+/* arriving and leaving; the move itself is drawn in the stone's own WebGL (below); without it, or with reduced motion, a crossfade */
+function arrived() {
+  isOut = true; doorBusy = false; quietUntil = performance.now() + 700;
+  html.classList.add("ingarden", "parked"); garden.inert = false; garden.removeAttribute("aria-hidden");
+  garden.focus({ preventScroll: true }); idle();
+  say.textContent = WD.name + ", through the crystal. Press Escape to go back.";
+}
+function departed() {
+  html.classList.remove("parked");
+  isOut = false; doorBusy = false; quietUntil = performance.now() + 700;
+  mark.focus({ preventScroll: true });
+  say.textContent = "";
+}
+function fadeTo(on) {
+  doorBusy = true; html.classList.add("fade"); glassTone();
+  if (on) { loadStill(); loadLoop(); playLoop(); requestAnimationFrame(function () { html.classList.add("ingarden"); }); setTimeout(arrived, 620); }
+  else {
+    html.classList.remove("ingarden", "parked"); garden.inert = true; garden.setAttribute("aria-hidden", "true");
+    setTimeout(function () { html.classList.remove("fade"); if (!glMove) gloop.pause(); departed(); }, 620);
+  }
+}
+/* nothing moves until the world is ready to be arrived in: its still decoded and its loop able to play through (at most 2.5 s) */
+var loopErr = false, waitT = 0;
+gloop.addEventListener("error", function () { loopErr = true; }, true);
+function ready() { return gstill.complete && gstill.naturalWidth > 0 && (!loopOn || loopErr || gloop.readyState >= 3); }
+function enter() {
+  if (isOut || doorBusy || waitT || html.classList.contains("opening") || performance.now() < quietUntil) return;
+  loadStill(); if (glMove) loadLoop();
+  if (!ready()) {
+    var t0w = performance.now();
+    waitT = setInterval(function () { if (ready() || performance.now() - t0w > 2500) { clearInterval(waitT); waitT = 0; enter(); } }, 50);
+    return;
+  }
+  outsideSound(true);
+  if (glMove && !reduced) glMove(1); else fadeTo(true);
+}
+function leave() {
+  if (!isOut || doorBusy) return;
+  if (reading) { closeLetter(); return; }
+  outsideSound(false);
+  if (glMove && !reduced) glMove(-1); else fadeTo(false);
+}
+mark.addEventListener("click", enter);
+mark.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); enter(); } });
+backBtn.addEventListener("click", leave);
+addEventListener("keydown", function (e) {
+  if (e.key === "Escape") { if (reading) closeLetter(); else leave(); return; }
+  var t = e.target, typing = t && t.closest && t.closest("button");
+  if (!typing && !reading && (e.key === "PageDown" || e.key === "ArrowDown")) enter();
+  if (!typing && !reading && (e.key === "PageUp" || e.key === "ArrowUp")) leave();
+  if (e.key === "Tab" && reading) {           /* keep focus inside the letter while it is open */
+    var f = [sheet, letter.querySelector(".lt-close")];
+    if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[1].focus(); }
+    else if (!e.shiftKey && document.activeElement === f[1]) { e.preventDefault(); f[0].focus(); }
+  }
+});
+/* scrolling or swiping down goes in; up comes back out */
+var wAcc = 0, wT = 0;
+addEventListener("wheel", function (e) {
+  var t = performance.now(); if (t - wT > 300) wAcc = 0; wT = t;
+  if (reading || doorBusy || t < quietUntil || html.classList.contains("opening")) { wAcc = 0; return; }
+  wAcc += e.deltaY;
+  if (!isOut && wAcc > 50) { wAcc = 0; enter(); } else if (isOut && wAcc < -50) { wAcc = 0; leave(); }
+}, { passive: true });
+var tY = null;
+addEventListener("touchstart", function (e) { tY = e.touches.length === 1 && !reading ? e.touches[0].clientY : null; }, { passive: true });
+addEventListener("touchmove", function (e) {
+  if (tY === null) return; var dy = e.touches[0].clientY - tY;
+  if (!isOut && dy < -48) { tY = null; enter(); } else if (isOut && dy > 48) { tY = null; leave(); }
+}, { passive: true });
+
+/* ---------- the letter: the sheet lifts from the block and settles flat (as on the Garden page) ---------- */
+var inked = [letter.querySelector(".sheet-in"), letter.querySelector(".lt-close")], inkT = 0;
+/* the letter's words come up on the sheet by a plain tween of opacity, not a composited animation */
+function ink(to, ms) {
+  var from = +(inked[0].style.opacity || 0), t0i = performance.now(), id = ++inkT;
+  (function f(now) {
+    if (id !== inkT) return;
+    var k = Math.min(1, (now - t0i) / ms), v = from + (to - from) * sm(k);
+    inked.forEach(function (el) { el.style.opacity = v.toFixed(3); });
+    if (k < 1) requestAnimationFrame(f);
+  })(t0i);
+}
+function noteCentre() { var r = note.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }
+function openLetter() {
+  if (reading) return; reading = true; letter.hidden = false; html.classList.add("reading");
+  var c = noteCentre();
+  if (reduced) {
+    scrim.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, fill: "forwards" });
+    sheet.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, fill: "forwards" });
+  } else {
+    gworld.style.transformOrigin = c.x + "px " + c.y + "px";
+    gworld.animate([{ transform: "scale(1)" }, { transform: "scale(1.12)" }], { duration: 1300, easing: "cubic-bezier(.3,.1,.2,1)", fill: "forwards" });
+    scrim.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1100, easing: "ease", fill: "forwards" });
+    var r = sheet.getBoundingClientRect(), k = 46 / r.width, dx = c.x - (r.left + r.width / 2), dy = c.y - (r.top + r.height / 2);
+    sheet.animate([
+      { transform: "translate(" + dx + "px," + dy + "px) scale(" + k + ") rotate(-14deg)", opacity: 0 },
+      { transform: "translate(" + dx * .35 + "px," + (dy * .35 - 30) + "px) scale(.62) rotate(-5deg) rotateX(14deg)", opacity: 1, offset: .55 },
+      { transform: "translate(0,0) scale(1) rotate(0deg)", opacity: 1 }
+    ], { duration: 1400, easing: "cubic-bezier(.25,.1,.2,1)", fill: "forwards" });
+  }
+  setTimeout(function () {
+    letter.classList.add("open"); sheet.focus({ preventScroll: true });
+    ink(1, 700);
+  }, reduced ? 150 : 900);
+  setTimeout(function () { if (!reading) return; [sheet, scrim].forEach(function (el) { el.getAnimations().forEach(function (a) { a.cancel(); }); }); scrim.style.opacity = "1"; }, reduced ? 450 : 1450);
+}
+function closeLetter() {
+  if (!reading) return; reading = false; letter.classList.remove("open");
+  ink(0, 250);
+  var c = noteCentre(), r = sheet.getBoundingClientRect(), k = 46 / r.width, d = reduced ? 300 : 1000;
+  var dx = c.x - (r.left + r.width / 2), dy = c.y - (r.top + r.height / 2);
+  if (!reduced) {
+    sheet.animate([{ transform: "translate(0,0) scale(1)", opacity: 1 }, { transform: "translate(" + dx + "px," + dy + "px) scale(" + k + ") rotate(-12deg)", opacity: 0 }],
+      { duration: d, easing: "cubic-bezier(.5,0,.3,1)", fill: "forwards" });
+    gworld.animate([{ transform: "scale(1.12)" }, { transform: "scale(1)" }], { duration: d + 200, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" });
+  } else sheet.animate([{ opacity: 1 }, { opacity: 0 }], { duration: d, fill: "forwards" });
+  scrim.animate([{ opacity: 1 }, { opacity: 0 }], { duration: d, fill: "forwards" });
+  setTimeout(function () {
+    letter.hidden = true; html.classList.remove("reading"); scrim.style.opacity = "";
+    [sheet, scrim, gworld].forEach(function (el) { el.getAnimations().forEach(function (a) { a.cancel(); }); });
+    note.focus({ preventScroll: true });
+  }, d + 220);
+}
+note.addEventListener("click", openLetter);
+var idleT = 0;
+function idle() {
+  clearTimeout(idleT);
+  idleT = setTimeout(function () {
+    if (!isOut || doorBusy) return;
+    if (!reading) { note.classList.remove("hint"); void note.offsetWidth; note.classList.add("hint"); }
+    idle();
+  }, 7500);
+}
+addEventListener("pointermove", function () { if (isOut) idle(); }, { passive: true });
+letter.querySelector(".lt-close").addEventListener("click", closeLetter);
+scrim.addEventListener("click", closeLetter);
+letter.addEventListener("click", function (e) { if (e.target === letter) closeLetter(); });
+addEventListener("resize", function () {
+  if ((innerWidth / innerHeight < .8) !== portrait) { location.replace(location.pathname + "?rest"); return; }
+  layoutGarden();
+});
+
+/* ---------- the typed line, set in full and revealed one character at a time ---------- */
+var LABEL = "ANTIMONY //:", TEXT = " LONDON", ALL = LABEL + TEXT;
+var spans = ALL.split("").map(function (c, i) {
+  var s = document.createElement("span"); s.textContent = c; if (i < LABEL.length) s.className = "k"; typeEl.appendChild(s); return s;
+});
+
+/* ---------- the Break, in mark units ---------- */
+var GEM = [[58.6,21.5],[70.58,46.7],[67.82,56.3],[41.4,81.5],[29.42,56.3],[32.18,46.7]];
+var CAV = [[60.75,14.02],[78.19,42.8],[73.21,60.2],[39.25,88.97],[21.81,60.2],[26.79,42.8]];
+var SEAM = [[[67.46,-12],[68.96,-12],[62.35,21.5],[54.85,21.5]], [[54.85,21.5],[62.35,21.5],[45.15,81.5],[37.65,81.5]], [[37.65,81.5],[45.15,81.5],[33.4,112],[31.9,112]]];
+function edges(poly, out, o, n) {
+  var cx = 0, cy = 0; poly.forEach(function (p) { cx += p[0] / poly.length; cy += p[1] / poly.length; });
+  for (var j = 0; j < (n || poly.length); j++) {
+    if (j >= poly.length) { out[o + j * 3] = 1; out[o + j * 3 + 1] = 0; out[o + j * 3 + 2] = 1e4; continue; }
+    var a = poly[j], b = poly[(j + 1) % poly.length], ex = b[0] - a[0], ey = b[1] - a[1], l = Math.hypot(ex, ey), nx = ey / l, ny = -ex / l;
+    if (nx * (cx - a[0]) + ny * (cy - a[1]) > 0) { nx = -nx; ny = -ny; }
+    out[o + j * 3] = nx; out[o + j * 3 + 1] = ny; out[o + j * 3 + 2] = nx * a[0] + ny * a[1];
+  }
+}
+var UG = new Float32Array(18), UC = new Float32Array(18), US = new Float32Array(36);
+edges(GEM, UG, 0); edges(CAV, UC, 0); SEAM.forEach(function (q, k) { edges(q, US, k * 12); });
+var TAN = Math.tan(16 * Math.PI / 180), COS = Math.cos(16 * Math.PI / 180);
+function sdHalf(E, o, n, x, y) { var m = -1e5; for (var j = 0; j < n; j++) m = Math.max(m, E[o + j * 3] * x + E[o + j * 3 + 1] * y - E[o + j * 3 + 2]); return m; }
+function sdTile(x, y) { var px = Math.abs(x - 50) - 28, py = Math.abs(y - 50) - 28; return Math.hypot(Math.max(px, 0), Math.max(py, 0)) + Math.min(Math.max(px, py), 0) - 22; }
+function sdSide(x, y) { return ((x - 58.6) + (y - 21.5) * TAN) * COS; }
+function isStone(x, y, s) {
+  if (sdTile(x, y) > 0 || -s * sdSide(x, y) > 0) return false;
+  if (sdHalf(UC, 0, 6, x, y) < 0) return false;
+  for (var k = 0; k < 3; k++) if (sdHalf(US, k * 12, 4, x, y) < 0) return false;
+  return true;
+}
+function isGem(x, y, s) { return sdHalf(UG, 0, 6, x, y) < 0 && -s * sdSide(x, y) <= 0; }
+var NX = COS, NY = TAN * COS, AX = TAN * COS, AY = -COS;
+var OPEN0 = [8 * NX + 6 * AX, 8 * NY + 6 * AY], OPEN = OPEN0.slice(), OC = [0, 0];
+
+/* ---------- the shader ---------- */
+var VS = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
+var FS = [
+"precision highp float;",
+"uniform vec2 uRes;uniform float uDpr;uniform vec2 uOrg;uniform vec2 uM;uniform float uK;",
+"uniform float uT;uniform float uTo;uniform float uRest;uniform vec2 uOff;",
+"uniform vec4 uW;uniform vec2 uG;uniform vec3 uFl;uniform vec3 uDs;",
+"uniform vec4 uGrid;uniform vec2 uOC;uniform sampler2D uTex;uniform vec2 uSnap;uniform vec2 uS2;",
+"uniform vec3 uStA;uniform vec3 uStB;uniform float uRimR;uniform vec4 uCrC;uniform vec4 uCr[4];uniform float uCrA;",
+"uniform vec3 uH[18];uniform vec3 uHA[3];",
+"uniform vec3 uGem[6];uniform vec3 uCav[6];uniform vec3 uSeam[12];",
+"uniform float uWin;uniform vec4 uVR;uniform float uRef;uniform float uTint;uniform vec3 uGl;uniform vec2 uGS;uniform float uTop;uniform float uSoft;uniform float uCut;",
+"uniform sampler2D uVid;uniform sampler2D uGa;uniform sampler2D uGb;uniform sampler2D uGc;",
+"const vec3 PALE=vec3(.93,.985,1.);const vec3 SKY=vec3(.58,.902,1.);const vec3 PAPER=vec3(.933,.918,.878);",
+"float hash(vec2 p){p=fract(p*vec2(443.897,441.423));p+=dot(p,p.yx+19.19);return fract((p.x+p.y)*p.x);}",
+"float bayer2(vec2 a){a=floor(a);return fract(a.x/2.+a.y*a.y*.75);}",
+"float bayer8(vec2 a){return bayer2(.25*a)*.0625+bayer2(.5*a)*.25+bayer2(a);}",
+"float caustic(vec2 p,float t){vec2 i=p;float c=1.;float k=.0065;",
+" for(int n=0;n<4;n++){float tt=t*(1.-(3.5/float(n+1)));i=p+vec2(cos(tt-i.x)+sin(tt+i.y),sin(tt-i.y)+cos(tt+i.x));",
+"  c+=1./length(vec2(p.x/(sin(i.x+tt)/k),p.y/(cos(i.y+tt)/k)));}",
+" c/=4.;c=1.17-pow(c,1.4);return pow(abs(c),5.);}",
+"float sdGem(vec2 u){float m=-1e5;for(int j=0;j<6;j++){m=max(m,dot(uGem[j].xy,u)-uGem[j].z);}return m;}",
+"float sdCav(vec2 u){float m=-1e5;for(int j=0;j<6;j++){m=max(m,dot(uCav[j].xy,u)-uCav[j].z);}return m;}",
+"float sdSeam(vec2 u){float d=1e5;for(int k=0;k<3;k++){float m=-1e5;for(int j=0;j<4;j++){vec3 e=uSeam[k*4+j];m=max(m,dot(e.xy,u)-e.z);}d=min(d,m);}return d;}",
+"float sdTile(vec2 u){vec2 p=abs(u-50.)-28.;return length(max(p,0.))+min(max(p.x,p.y),0.)-22.;}",
+"float sdSide(vec2 u){return ((u.x-58.6)+(u.y-21.5)*.286745)*.961262;}",
+"float holeMin(vec2 u){float d=1e5;for(int i=0;i<3;i++){if(uHA[i].x>.5){float m=-1e5;for(int j=0;j<6;j++){vec3 e=uH[i*6+j];m=max(m,dot(e.xy,u)-e.z);}d=min(d,m);}}return d;}",
+"float sdSeg(vec2 p,vec2 a,vec2 b){vec2 pa=p-a,ba=b-a;float h=clamp(dot(pa,ba)/max(dot(ba,ba),1e-6),0.,1.);return length(pa-ba*h);}",
+"float aa(float d,float px){return clamp(.5-d/px,0.,1.);}",
+"float paperAt(vec2 q,vec2 u){if(uDs.z>.5)return 1.;if(uDs.x<-1e3)return 0.;float d=abs(sdSide(u))*uK;return (uDs.x-d)/uDs.y>bayer8(floor(q/2.))?1.:0.;}",
+"vec3 water(vec2 u,vec2 q){",
+" vec2 r=u-vec2(50.,51.5);",
+" float ys=uW.x-uW.y*r.x+uW.z*sin(r.x*.38-uT*3.1)+uW.z*.55*sin(r.x*.71+uT*4.3+1.7);",
+" float d=r.y-ys;float dp=d*uK;",
+" float k=clamp(d/40.,0.,1.);",
+" vec3 w=mix(vec3(.58,.9,1.),vec3(.36,.72,.98),smoothstep(0.,.45,k));w=mix(w,vec3(.13,.33,.74),smoothstep(.42,1.,k));",
+" vec2 rp=r+vec2(uW.w*2.2*(1.-k*.6),d*.12*uW.y);",
+" vec2 p1=rp*.105+vec2(-250.);vec2 p2=mat2(.87,.5,-.5,.87)*rp*.068+vec2(-180.);",
+" float c=caustic(p1,uT*.16+23.);float c2=caustic(p2,uT*.11+7.);",
+" w+=(PALE-w)*(c*.5+c2*.3)*(1.-k*.35);",
+" w=mix(w,PALE,.22*exp(-d*d/10.));",
+" vec3 a=mix(vec3(.9,.975,1.),vec3(.78,.95,1.),clamp((r.y+30.)/max(ys+30.,1.),0.,1.));",
+" a+=(PALE-a)*c2*.25;",
+" vec3 col=mix(a,w,clamp(.5+dp*uDpr,0.,1.));",
+" col=mix(col,vec3(1.),.9*exp(-dp*dp/1.1));",
+" col*=1.-.16*smoothstep(1.,2.6,dp)*(1.-smoothstep(2.6,8.,dp));",
+" vec2 gp=vec2(uG.x,uW.x-uW.y*uG.x);vec2 gd=r-gp;col=mix(col,vec3(1.),uG.y*exp(-dot(gd,gd)/5.));",
+" col+=(hash(floor(q*uDpr))-.5)*.02;",
+" return col;}",
+"vec3 stone(vec2 u,vec2 q){",
+" float g=clamp((u.x*.55+u.y*.85)/140.,0.,1.);",
+" vec3 c=mix(uStA,uStB,g);",
+" c+=(hash(floor(q*uDpr)+vec2(5.,9.))-.5)*.022;",
+" return c;}",
+/* the world beyond the glass: the Garden loop laid out in screen space (uVR), and the stills of other worlds, glimpsed in single facets */
+"vec3 view(vec2 q,vec3 gw){",
+" vec2 v=(q-uVR.xy)/uVR.zw;",
+" vec3 c=texture2D(uVid,clamp(v,vec2(.001),vec2(.999))).rgb;",
+" if(uTop>0.)c=mix(vec3(.031,.035,.043),c,clamp(v.y/uTop,0.,1.));",
+" vec3 a=uGl*gw;if(a.x+a.y+a.z>0.){",
+"  vec2 g=clamp(.5+(v-.5)*uGS,vec2(.001),vec2(.999));",
+"  if(a.x>0.)c=mix(c,texture2D(uGa,g).rgb,a.x);",
+"  if(a.y>0.)c=mix(c,texture2D(uGb,g).rgb,a.y);",
+"  if(a.z>0.)c=mix(c,texture2D(uGc,g).rgb,a.z);}",
+" return c;}",
+/* sky glass: the view, brightened and given contrast, then carried on the crystal's own blue; so at a glance it is the sky crystal and on a second a window */
+"vec3 glass(vec3 v){vec3 b=clamp((v-.5)*1.35+.6,0.,1.);float l=.18+.86*dot(b,vec3(.299,.587,.114));",
+" vec3 d=l<.5?mix(vec3(.2,.45,.84),SKY,l*2.):mix(SKY,PALE,min(1.,l*2.-1.));",
+" return mix(d,b,.42);}",
+"vec3 crystal(vec2 u,vec2 q,float s){",
+" vec3 c=uWin<1.?water(u,q):vec3(0.);",
+" if(uWin>0.){",
+/* the cut: a table (the gem's own outline at .42 about its centre) and six crown facets round it, one per edge.
+   The crown faces tilt outward and bend what lies beyond them; their offsets are blended across the edges (crisp at rest,
+   soft in the move) so the glass warps the view as thick glass does and never doubles it */
+"  vec2 C0=vec2(50.,51.5);vec2 p=u-C0;float gm=-1e5;float g2=-1e5;float hh=1.;float gs[6];",
+"  for(int j=0;j<6;j++){vec3 e=uGem[j];float h=e.z-dot(e.xy,C0);float g=dot(e.xy,p)/h;gs[j]=g;if(g>gm){g2=gm;gm=g;hh=h;}else if(g>g2){g2=g;}}",
+"  float sh=mix(70.,9.,uSoft);vec2 nn=vec2(0.);float ws=0.;vec3 gw=vec3(0.);",
+"  for(int j=0;j<6;j++){float w=exp((gs[j]-gm)*sh);ws+=w;nn+=w*uGem[j].xy;if(j==5)gw.x=w;if(j==2)gw.y=w;if(j==0)gw.z=w;}",
+"  nn/=ws;gw/=ws;",
+"  float bw=mix(.004,.07,uSoft);float cr=smoothstep(.42-bw,.42+bw,gm);nn*=cr;gw*=cr;",
+"  vec2 gc=uM+C0*uK;float mg=1.+mix(.025,.06,cr)*uRef;",
+"  vec3 w=view(gc+(q-gc)/mg-nn*uK*mix(.6,1.8,uSoft)*uRef,gw);",
+"  w=mix(w,glass(w),uTint);",
+/* the facet edges, softly bright: hairlines at rest, wider and fainter as they sweep past */
+"  float sw=.4+uK*uSoft*.6;float te=abs(gm-.42)*hh*uK;float ed=(gm-g2)*hh*uK;",
+"  float ln=exp(-te*te/sw)+.7*cr*exp(-ed*ed/sw);w=mix(w,PALE,min(1.,ln)*.16*uRef);",
+"  c=mix(c,w,uWin);}",
+" c*=1.-.07*smoothstep(-2.4,0.,sdGem(u));",
+/* a thin bright line just inside the edge, where the glass turns the light back */
+" float ri=-sdGem(u)*uK-.9;c=mix(c,PALE,uWin*.55*exp(-ri*ri/.32));",
+" if(s>0.)c=mix(c,vec3(1.),.2*mix(1.,uTint,uWin));",
+" return c;}",
+"float crackD(vec2 u){float d=1e5;for(int i=0;i<4;i++){d=min(d,sdSeg(u,uCr[i].xy,uCr[i].zw));}return d;}",
+/* one half of the stone with its half of the crystal; s = 1 right, -1 left */
+"void half_(vec2 uh,float s,vec2 q,float px,float rim,inout vec3 acc,inout float a){",
+" float sd=-s*sdSide(uh);",
+" float dT=max(sdTile(uh),sd);",
+" if(dT>px*1.5)return;",
+" float dS=max(dT,max(-sdSeam(uh),-sdCav(uh)));",
+" float hd=holeMin(uh);",
+" float sc=aa(max(dS,-hd),px);",
+" float gc=aa(max(sdGem(uh),sd),px);",
+" if(sc>0.){vec3 st=stone(uh,q);",
+"  float lg=1.-.72*clamp((uh.x*.55+uh.y*.85)/120.,0.,1.);st=mix(st,PAPER,rim*lg*exp(-max(0.,-dS)*uK/1.05));",
+"  if(hd<1e4)st=mix(st,PAPER,.18*exp(-max(0.,hd)*uK/1.1));",
+"  if(uCrA>0.){float cd=crackD(uh)*uK;st=mix(st,uCrC.rgb,uCrC.a*uCrA*exp(-cd*cd/.28));}",
+"  acc+=st*sc;a+=sc;}",
+" if(gc>0.){acc+=crystal(uh,q,s)*gc;a+=gc;}",
+"}",
+"vec4 markAt(vec2 u,vec2 q,float px,float rim){vec3 acc=vec3(0.);float a=0.;",
+" half_(u-uOff,1.,q,px,rim,acc,a);half_(u+uOff,-1.,q,px,rim,acc,a);",
+/* in the move the break between stone and crystal goes into shadow, as a real cut in stone */
+" if(uCut>0.){float ti=aa(sdTile(u),px)*uCut*(1.-min(a,1.));acc+=vec3(.028,.027,.026)*ti;a+=ti;}",
+" return vec4(acc,min(a,1.));}",
+/* light in the stone: the seam flare as the halves lock, and the healing line around a returned shard */
+"vec3 flare(vec2 u){",
+" if(uFl.y<=0.)return vec3(0.);",
+" float d=sdSide(u)*uK;float s=(u.y+12.)/124.;",
+" float head=exp(-pow((s-uFl.x)*10.,2.));float tail=(1.-smoothstep(uFl.x-.015,uFl.x+.015,s))*uFl.z;",
+" float I=uFl.y*(head*1.2+tail)*step(sdTile(u),0.);",
+" float core=exp(-d*d/.3);float halo=exp(-d*d/5.);",
+" return (vec3(.88,.98,1.)*core+SKY*halo*.12)*I;}",
+"float kint(vec2 u){float v=0.;for(int i=0;i<3;i++){if(uHA[i].y>0.){float m=-1e5;for(int j=0;j<6;j++){vec3 e=uH[i*6+j];m=max(m,dot(e.xy,u)-e.z);}float d=m*uK;v=max(v,uHA[i].y*exp(-d*d/.32));}}return v;}",
+"void main(){",
+" vec2 fc=vec2(gl_FragCoord.x,uRes.y-gl_FragCoord.y);",
+" vec2 q=uOrg+fc/uDpr;vec2 u=(q-uM)/uK;float px=1./(uK*uDpr);float t=uTo;",
+" float P=paperAt(q,u);",
+" if(u.x<-24.||u.x>124.||u.y<-24.||u.y>124.){gl_FragColor=uRest>.5?vec4(0.):vec4(0.,0.,0.,1.-P);return;}",
+" float rim=mix(.5,uRimR,P);",
+" if(uRest>.5){vec4 m=markAt(u,q,px,uRimR);float k=kint(u)*step(sdTile(u),0.)*m.a;",
+"  vec3 c=mix(m.rgb,vec3(.78,.95,1.)*m.a,k);gl_FragColor=vec4(c,m.a);return;}",
+/* the characters snap into square cells on the same grid they were set on; each cell then gives way to the exact mark */
+" float cd=uGrid.z;float cu=cd/(uK*uDpr);",
+" float teG=1e5;bool ex=false;\n for(int i=0;i<2;i++){float s=i==0?1.:-1.;",
+"  vec2 gp=fc+uOrg*uDpr-uGrid.xy-s*uOC*cd;vec2 id=floor(gp/cd);",
+"  if(id.x<0.||id.y<0.||id.x>=uGrid.w||id.y>=uGrid.w)continue;",
+"  vec2 lc=(id+.5)*cu;",
+"  float dT=max(sdTile(lc),-s*sdSide(lc));float dS=max(dT,max(-sdSeam(lc),-sdCav(lc)));",
+"  float g=max(sdGem(lc),-s*sdSide(lc));",
+"  float te=uS2.x+hash(id+vec2(1.3+s,8.1))*uS2.y;",
+"  if(dS>0.&&g>0.){teG=min(teG,te);continue;}",
+"  if(t>=te){ex=true;break;}",
+"  float sn=uSnap.x+texture2D(uTex,(id+vec2(.5,.5+(i==0?0.:uGrid.w)))/vec2(uGrid.w,uGrid.w*2.)).r*uSnap.y;",
+"  if(t<sn){gl_FragColor=vec4(0.,0.,0.,1.);return;}",
+"  vec2 lp=gp-id*cd;float gap=floor(uDpr+.5);",
+"  if(lp.x<gap||lp.y<gap){gl_FragColor=vec4(0.,0.,0.,1.);return;}",
+"  vec3 col;",
+"  if(dS<=0.){col=stone(lc,vec2(0.));if(dS>-cu*1.05)col=mix(col,PAPER,.36);}",
+"  else col=crystal(lc,vec2(0.),s);",
+"  gl_FragColor=vec4(col,1.);return;}",
+" if(!ex&&t<(teG<1e4?teG:uS2.x+uS2.y)){gl_FragColor=vec4(0.,0.,0.,1.);return;}",
+" vec4 m=markAt(u,q,px,rim);vec3 f=flare(u)*(1.-P)*(1.-.75*m.a);",
+" gl_FragColor=vec4(m.rgb+f,m.a+(1.-m.a)*(1.-P));}"
+].join("\n");
+
+
+var gl = null, U = {}, ok = false, tex = null, wake = null, WT = null;
+try { gl = canvas.getContext("webgl", { antialias: false, premultipliedAlpha: true, alpha: true }); } catch (e) {}
+if (gl) {
+  var mk = function (t, s) { var sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh); return sh; };
+  var prog = gl.createProgram();
+  gl.attachShader(prog, mk(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, mk(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
+  if (gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+    ok = true; gl.useProgram(prog);
+    var buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    ["uRes","uDpr","uOrg","uM","uK","uT","uTo","uRest","uOff","uW","uG","uFl","uDs","uGrid","uOC","uTex","uSnap","uS2","uStA","uStB","uRimR","uCrC","uCr","uCrA","uH","uHA","uGem","uCav","uSeam","uWin","uSoft","uCut","uVR","uRef","uTint","uGl","uGS","uTop","uVid","uGa","uGb","uGc"].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
+    gl.uniform3fv(U.uGem, UG); gl.uniform3fv(U.uCav, UC); gl.uniform3fv(U.uSeam, US);
+    gl.uniform3fv(U.uStA, TH.a); gl.uniform3fv(U.uStB, TH.b); gl.uniform1f(U.uRimR, TH.rim); gl.uniform4fv(U.uCrC, TH.cr);
+    tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, 1, 1, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, new Uint8Array([255]));
+    gl.uniform1i(U.uTex, 0);
+    /* the world's textures: the Garden (unit 1), and the three glimpses (units 2 to 4); a pixel of sky until each arrives */
+    var mkT = function (unit) {
+      var t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, new Uint8Array([148, 230, 255]));
+      return t;
+    };
+    WT = [mkT(1), mkT(2), mkT(3), mkT(4)];
+    gl.uniform1i(U.uVid, 1); gl.uniform1i(U.uGa, 2); gl.uniform1i(U.uGb, 3); gl.uniform1i(U.uGc, 4);
+    gl.activeTexture(gl.TEXTURE0);
+  }
+}
+function fontsReady() {
+  if (!document.fonts || !document.fonts.load) return Promise.resolve();
+  return Promise.race([
+    Promise.all([document.fonts.load("500 12px 'Commit Mono'"), document.fonts.load("400 13px 'Timeless Serif'")]).then(function () { return document.fonts.ready; }),
+    new Promise(function (r) { setTimeout(r, 1200); })
+  ]);
+}
+function fadeIn(els) { if (reduced) return; els.forEach(function (el) { el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 800, easing: "cubic-bezier(.25,.6,.3,1)" }); }); }
+if (!ok) {
+  /* no WebGL: the still Break, and the page at rest */
+  canvas.style.display = "none"; html.classList.remove("opening"); remember();
+  fontsReady().then(function () { html.classList.remove("wait"); paintSun(); sunUp(); });
+  return;
+}
+html.classList.add("gl");
+
+/* ---------- the opening: one line, the characters, the split Break, the join, the paper; under five seconds ---------- */
+var STEP = .06, GD = .8, T = { type0: .2 };
+T.typed = T.type0 + ALL.length * STEP;               /* 1. the line, at an even pace */
+T.fade0 = T.typed + .22; T.fade1 = T.fade0 + .4;
+T.wall0 = T.fade0 + .06; T.g0 = T.wall0 + .06;        /* 2. the characters gather, snap to cells, resolve */
+T.sn0 = T.g0 + .74; T.snSpan = .42;
+T.e0 = T.sn0 + T.snSpan + .04; T.ed = .16;
+T.j0 = T.e0 + T.ed + .1; T.j1 = T.j0 + .8;           /* 3. the join */
+T.f0 = T.j1 - .05;
+T.d0 = T.j1 + .1; T.d1 = T.d0 + .75;                /* 4. the paper */
+T.end = T.d1;
+if (DEBUG) window.__T = T;
+
+/* ---------- geometry ---------- */
+var M = { x: 0, y: 0 }, K = 1, dpr = 1, org = { x: 0, y: 0 }, grid = [0, 0, 6, 32], maxD = 1000;
+function measure() { var b = mark.getBoundingClientRect(); M = { x: b.left, y: b.top }; K = b.width / 100; }
+function frameFull() {
+  dpr = Math.min(devicePixelRatio || 1, 2);
+  if (canvas.parentNode !== document.body) document.body.insertBefore(canvas, document.body.firstChild);
+  canvas.style.cssText = "position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:3";
+  canvas.width = Math.round(innerWidth * dpr); canvas.height = Math.round(innerHeight * dpr);
+  org = { x: 0, y: 0 };
+  maxD = 0; [[0, 0], [innerWidth, 0], [0, innerHeight], [innerWidth, innerHeight]].forEach(function (c) {
+    maxD = Math.max(maxD, Math.abs(sdSide((c[0] - M.x) / K, (c[1] - M.y) / K)) * K);
+  });
+}
+function frameMark() {
+  dpr = Math.min(devicePixelRatio || 1, 2);
+  if (canvas.parentNode !== mark) mark.appendChild(canvas);
+  var pad = 4, w = K * 100 + pad * 2;
+  canvas.style.cssText = "position:absolute;z-index:0;left:" + (-pad) + "px;top:" + (-pad) + "px;width:" + w + "px;height:" + w + "px";
+  canvas.width = canvas.height = Math.round(w * dpr);
+  org = { x: M.x - pad, y: M.y - pad };
+}
+
+/* ---------- the water: damped springs for the tilt and level of the surface ---------- */
+var W = { th: 0, tv: 0, z: 0, zv: 0, rip: 0, gx: 0 };
+var OM = 2 * Math.PI * .8, ZE = .09, OMZ = 2 * Math.PI * 1.2;
+var ptr = { x: 0, y: 0, t: 0, in: false }, tiltEq = 0, tiltSeen = false;
+function step(dt) {
+  var eq = (tiltSeen ? tiltEq : 0) + .018 * Math.sin(performance.now() / 1000 * .7);
+  W.tv += (-OM * OM * (W.th - eq) - 2 * ZE * OM * W.tv) * dt; W.th += W.tv * dt;
+  if (W.th > .5) { W.th = .5; W.tv *= -.3; } else if (W.th < -.5) { W.th = -.5; W.tv *= -.3; }
+  W.zv += (-OMZ * OMZ * W.z - 2 * .12 * OMZ * W.zv) * dt; W.z += W.zv * dt;
+  W.z = Math.max(-4, Math.min(4, W.z));
+  W.rip *= Math.exp(-dt * 1.2); W.rip = Math.min(W.rip, 1.1);
+  W.gx += ((-W.th * 22) - W.gx) * Math.min(1, dt * 6);
+}
+function onTilt(e) {
+  if (e.gamma == null) return;
+  var a = (screen.orientation && screen.orientation.angle) || window.orientation || 0, deg = e.gamma;
+  if (a === 90) deg = -e.beta; else if (a === -90 || a === 270) deg = e.beta;
+  deg = Math.max(-35, Math.min(35, deg));
+  tiltEq = Math.tan(deg * Math.PI / 180) * .8 * (shards.length ? .4 : 1); tiltSeen = true;
+}
+var tiltAsked = false;
+function askTilt() {
+  if (tiltAsked) return; tiltAsked = true;
+  var D = window.DeviceOrientationEvent;
+  if (D && typeof D.requestPermission === "function") D.requestPermission().then(function (s) { if (s === "granted") addEventListener("deviceorientation", onTilt); }).catch(function () {});
+}
+if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission !== "function") addEventListener("deviceorientation", onTilt);
+
+/* ---------- drawing ---------- */
+var BIG = 1e4, SHUT = [0, 0], NOFL = [0, 0, 0], NODS = [-1e4, 1, 0], ALLP = [0, 1, 1];
+var HOLES = new Float32Array(54), HA = new Float32Array(9), CR = new Float32Array(16), crA = 0;
+for (var hi = 0; hi < 18; hi++) { HOLES[hi * 3] = 1; HOLES[hi * 3 + 2] = 1e4; }
+function draw(o) {
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.uniform2f(U.uRes, canvas.width, canvas.height); gl.uniform1f(U.uDpr, dpr);
+  var mm = o.m || M, kk = o.k || K;
+  gl.uniform2f(U.uOrg, org.x, org.y); gl.uniform2f(U.uM, mm.x, mm.y); gl.uniform1f(U.uK, kk);
+  gl.uniform1f(U.uWin, DV.win); gl.uniform1f(U.uSoft, DV.soft); gl.uniform1f(U.uCut, DV.cut); gl.uniform4f(U.uVR, DV.vr[0], DV.vr[1], DV.vr[2], DV.vr[3]); gl.uniform1f(U.uRef, DV.ref); gl.uniform1f(U.uTint, DV.tint);
+  gl.uniform3f(U.uGl, DV.gl[0], DV.gl[1], DV.gl[2]); gl.uniform2f(U.uGS, DV.gs[0], DV.gs[1]); gl.uniform1f(U.uTop, DV.top);
+  gl.uniform1f(U.uT, o.clock); gl.uniform1f(U.uTo, o.t); gl.uniform1f(U.uRest, o.rest ? 1 : 0);
+  gl.uniform2f(U.uOff, o.off[0], o.off[1]);
+  gl.uniform4f(U.uW, -15.5 + W.z, W.th, W.rip * .9, W.tv);
+  gl.uniform2f(U.uG, Math.max(-13, Math.min(13, W.gx)), .08 + Math.min(.4, Math.abs(W.tv) * .38));
+  gl.uniform3f(U.uFl, o.fl[0], o.fl[1], o.fl[2]);
+  gl.uniform3f(U.uDs, o.ds[0], o.ds[1], o.ds[2]);
+  gl.uniform4f(U.uGrid, grid[0], grid[1], grid[2], grid[3]); gl.uniform2f(U.uOC, OC[0], OC[1]);
+  gl.uniform2f(U.uSnap, T.sn0 - .1, T.snSpan + .4); gl.uniform2f(U.uS2, T.e0, T.ed);
+  gl.uniform3fv(U.uH, HOLES); gl.uniform3fv(U.uHA, HA); gl.uniform4fv(U.uCr, CR); gl.uniform1f(U.uCrA, crA);
+  gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+/* ---------- easing ---------- */
+function cl(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+function seg(t, a, b) { return cl((t - a) / (b - a)); }
+function o3(x) { return 1 - Math.pow(1 - x, 3); }
+function io3(x) { return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+function sm(x) { x = cl(x); return x * x * (3 - 2 * x); }
+function bez(x1, y1, x2, y2) {
+  return function (x) {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    var t = x;
+    for (var i = 0; i < 10; i++) {
+      var cx = 3 * x1 * t * (1 - t) * (1 - t) + 3 * x2 * t * t * (1 - t) + t * t * t - x;
+      var d = 3 * x1 * (1 - t) * (1 - t) + 6 * (x2 - x1) * t * (1 - t) + 3 * (1 - x2) * t * t;
+      if (Math.abs(cx) < 1e-6) break; t = cl(t - cx / (d || 1e-6));
+    }
+    return 3 * y1 * t * (1 - t) * (1 - t) + 3 * y2 * t * t * (1 - t) + t * t * t;
+  };
+}
+var VAULT = bez(.64, 0, .28, 1), FLOOD = bez(.42, 0, .22, 1), GATHER = bez(.55, 0, .2, 1);
+
+/* ---------- the characters: the mark's own source, set as a field of text that gathers into the Break ---------- */
+var CORPUS = ("antimony. the stone, the seam at sixteen degrees, the cavity, the crystal, the light. " +
+  "tile <rect width=\"100\" height=\"100\" rx=\"22\"/>; seam M67.46 -12L68.96 -12L62.35 21.5L45.15 81.5L33.4 112Z; " +
+  "cav M60.75 14.02L78.19 42.8L73.21 60.2L39.25 88.97L21.81 60.2L26.79 42.8Z; " +
+  "software, made on purpose. gem fill=\"#94E6FF\" M58.6 21.5L70.58 46.7L67.82 56.3L41.4 81.5L29.42 56.3L32.18 46.7Z; " +
+  "facet opacity=\".28\"; ang=16; cy=51.5; stone #141311; paper #EEEAE0; sky #94E6FF; ink #0B0C0C; london. " +
+  "points move by (cy - y) * tan(16) in x; never rotate, never stretch; the crystal holds light. ").split("");
+var DENSE = /[A-Za-z0-9#%&@$=]/;
+var wctx = wall.getContext("2d"), field = null, parts = [], wdpr = 1, atlas = null, AT = {}, MC = { x: 0, y: 0 };
+function buildWall() {
+  wdpr = dpr;
+  var VW = innerWidth, VH = innerHeight;
+  wall.width = Math.round(VW * wdpr); wall.height = Math.round(VH * wdpr);
+  var fs = VW < 600 ? 10 : VW > 1700 ? 12 : 11;
+  var ax0 = document.createElement("canvas").getContext("2d");
+  ax0.font = "500 " + fs + "px 'Commit Mono', ui-monospace, monospace";
+  var cw = ax0.measureText("M").width, chh = Math.round(fs * 1.55);
+  var cd = Math.max(4, Math.round(fs * .72 * wdpr)), cu = cd / (K * wdpr), N = Math.ceil(100 / cu) + 1;
+  OC = [Math.round(OPEN0[0] / cu), Math.round(OPEN0[1] / cu)]; OPEN = [OC[0] * cu, OC[1] * cu];
+  grid = [Math.round(M.x * wdpr), Math.round(M.y * wdpr), cd, N];
+  var chars = {}; CORPUS.forEach(function (c) { if (c !== " ") chars[c] = 1; });
+  var list = Object.keys(chars), gw = Math.ceil(fs * wdpr * 1.1), gh = Math.ceil(fs * wdpr * 1.6);
+  atlas = document.createElement("canvas"); atlas.width = gw * list.length; atlas.height = gh;
+  var ax = atlas.getContext("2d"); ax.fillStyle = "#EEEAE0"; ax.textAlign = "center"; ax.textBaseline = "middle";
+  ax.font = "500 " + (fs * wdpr) + "px 'Commit Mono', ui-monospace, monospace";
+  list.forEach(function (c, i) { ax.fillText(c, (i + .5) * gw, Math.round(gh * .5)); AT[c] = i; });
+  AT._w = gw; AT._h = gh;
+  MC = { x: M.x + 50 * K, y: M.y + 51.5 * K };
+  var rad = Math.hypot(Math.max(MC.x, VW - MC.x), Math.max(MC.y, VH - MC.y));
+  var cols = Math.ceil(VW / cw) + 1, rows = Math.ceil(VH / chh) + 1, cells = [];
+  for (var j = 0; j < rows; j++) {
+    var off = Math.floor(Math.random() * CORPUS.length), run = 0, ra = 0, gapRun = 0;
+    for (var i = 0; i < cols; i++) {
+      var x = (i + .5) * cw, y = (j + .5) * chh, r = Math.hypot(x - MC.x, y - MC.y) / rad;
+      if (gapRun > 0) { gapRun--; continue; }
+      if (run <= 0) { run = 10 + Math.random() * 40; ra = [.24, .32, .4, .52][Math.floor(Math.random() * 4)]; if (Math.random() < r * .7) { gapRun = 4 + Math.random() * 30 * r; continue; } }
+      run--;
+      var c = CORPUS[(off + i) % CORPUS.length];
+      if (c === " ") continue;
+      cells.push({ x: x, y: y, c: c, a: ra * (.16 + .84 * Math.pow(1 - Math.min(1, r), 1.4)) });
+    }
+  }
+  var snaps = new Uint8Array(N * N * 2).fill(255), S0 = T.sn0 - .1, SP = T.snSpan + .4;
+  var enc = function (t) { return Math.max(0, Math.min(254, Math.round((t - S0) / SP * 255))); };
+  var targets = [];
+  [1, -1].forEach(function (s, hI) {
+    for (var j = 0; j < N; j++) for (var i = 0; i < N; i++) {
+      var x = (i + .5) * cu, y = (j + .5) * cu, k = (j + hI * N) * N + i;
+      if (isStone(x, y, s)) {
+        var edge = !isStone(x + cu, y, s) || !isStone(x - cu, y, s) || !isStone(x, y + cu, s) || !isStone(x, y - cu, s);
+        targets.push({ x: (grid[0] + (s * OC[0] + i + .5) * cd) / wdpr, y: (grid[1] + (s * OC[1] + j + .5) * cd) / wdpr, a: edge ? 1 : .34, k: k });
+      } else if (isGem(x, y, s)) snaps[k] = enc(T.sn0 + .12 + Math.random() * (T.snSpan - .12));
+    }
+  });
+  var used = {};
+  parts = targets.map(function (tg) {
+    var k, tries = 0; do { k = Math.floor(Math.random() * cells.length); tries++; } while ((used[k] || !DENSE.test(cells[k].c)) && tries < 60);
+    used[k] = 1; var src = cells[k];
+    var d = Math.random() * .16, land = T.g0 + d + GD, sn = Math.min(T.sn0 + T.snSpan, Math.max(T.sn0, land + .1) + Math.random() * .16);
+    snaps[tg.k] = enc(sn);
+    return { x0: src.x, y0: src.y, x1: tg.x, y1: tg.y, c: src.c, a0: src.a, a1: tg.a, d: d, sn: S0 + snaps[tg.k] / 255 * SP };
+  });
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, N, N * 2, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, snaps);
+  field = document.createElement("canvas"); field.width = wall.width; field.height = wall.height;
+  var fx = field.getContext("2d");
+  cells.forEach(function (c, k) { if (used[k]) return; fx.globalAlpha = c.a; blit(fx, c.c, c.x, c.y); });
+  fx.globalAlpha = 1;
+}
+function blit(x, c, px, py) {
+  var i = AT[c]; if (i == null) return;
+  x.drawImage(atlas, i * AT._w, 0, AT._w, AT._h, Math.round(px * wdpr - AT._w / 2), Math.round(py * wdpr - AT._h / 2), AT._w, AT._h);
+}
+var wallClear = true;
+function drawWall(t) {
+  if (t < T.wall0 || t > T.sn0 + T.snSpan + .05) { if (!wallClear) { wctx.setTransform(1, 0, 0, 1, 0, 0); wctx.clearRect(0, 0, wall.width, wall.height); wallClear = true; } return; }
+  wallClear = false;
+  wctx.setTransform(1, 0, 0, 1, 0, 0); wctx.clearRect(0, 0, wall.width, wall.height);
+  var wa = o3(seg(t, T.wall0, T.wall0 + .3));
+  var gp = seg(t, T.g0, T.g0 + GD + .05), fa = wa * (1 - io3(gp));
+  if (fa > .003) {
+    var s = 1 - .7 * GATHER(gp), cx = MC.x * wdpr, cy = MC.y * wdpr;
+    wctx.globalAlpha = fa; wctx.setTransform(s, 0, 0, s, cx * (1 - s), cy * (1 - s)); wctx.drawImage(field, 0, 0);
+    wctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+  for (var n = 0; n < parts.length; n++) {
+    var p = parts[n]; if (t >= p.sn) continue;
+    var k = GATHER(seg(t, T.g0 + p.d, T.g0 + p.d + GD));
+    wctx.globalAlpha = wa * (p.a0 + (p.a1 - p.a0) * k);
+    blit(wctx, p.c, p.x0 + (p.x1 - p.x0) * k, p.y0 + (p.y1 - p.y0) * k);
+  }
+  wctx.globalAlpha = 1;
+}
+
+/* ================= the stone, at rest ================= */
+var shards = [], kintT = [0, 0, 0], kintA = [0, 0, 0], crT = 0;
+function toU(cx, cy) { return [(cx - M.x) / K, (cy - M.y) / K]; }
+addEventListener("pointermove", function (e) {
+  var now = performance.now();
+  if (html.classList.contains("opening") || isOut || doorBusy) { ptr.x = e.clientX; ptr.y = e.clientY; ptr.t = now; ptr.in = true; return; }
+  var quiet = shards.length ? .35 : 1;
+  if (ptr.in && now - ptr.t < 400) {
+    var S = K * 100, cx = M.x + 50 * K, cy = M.y + 51.5 * K;
+    var g = (.25 + .75 * Math.max(0, 1 - Math.hypot(e.clientX - cx, e.clientY - cy) / (S * 1.8))) * quiet;
+    var dx = (e.clientX - ptr.x) / S, dy = (e.clientY - ptr.y) / S;
+    W.tv = Math.max(-2, Math.min(2, W.tv + 2 * dx * g));
+    W.zv = Math.max(-28, Math.min(28, W.zv + 11 * dy * g));
+    W.rip = Math.min(1.1, W.rip + .32 * (Math.abs(dx) + Math.abs(dy)) * g);
+  }
+  ptr.x = e.clientX; ptr.y = e.clientY; ptr.t = now; ptr.in = true;
+  wake();
+}, { passive: true });
+document.addEventListener("pointerleave", function () { ptr.in = false; crT = 0; });
+addEventListener("pointerup", function (e) { if (e.pointerType !== "mouse") ptr.in = false; }, { passive: true });
+/* ================= the world in the glass ================= */
+var DV = { win: 0, soft: 0, cut: 0, vr: [0, 0, 1, 1], ref: 1, tint: 1, gl: [0, 0, 0], gs: [(V.w / V.h) / (16 / 9), 1], top: 0 };
+var hasWorld = false, vidNew = true, rvfc = !!gloop.requestVideoFrameCallback, restStarted = false, GA = [0, 0, 0];
+if (rvfc) { var onVF = function () { vidNew = true; gloop.requestVideoFrameCallback(onVF); }; gloop.requestVideoFrameCallback(onVF); }
+function upWorld() {
+  var src = null;
+  if (loopOn && gloop.readyState >= 2 && (vidNew || !rvfc)) { src = gloop; vidNew = false; }
+  else if (!hasWorld && gstill.complete && gstill.naturalWidth) src = gstill;
+  if (!src) return;
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, WT[0]);
+  try { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, src); hasWorld = true; } catch (e) {}
+  gl.activeTexture(gl.TEXTURE0);
+}
+gstill.addEventListener("load", function () { if (restStarted && !running && !isOut && !doorBusy) restDraw(30); });
+loadStill(); loadLoop();
+/* the other worlds, glimpsed in the facets on the way through: fetched once the page is at rest, or as soon as the crystal is wanted */
+var glimpsing = false;
+function loadGlimpses() {
+  if (glimpsing || reduced) return; glimpsing = true;
+  WD.glimpse.forEach(function (n, i) {
+    var im = new Image(); im.decoding = "async";
+    im.onload = function () {
+      gl.activeTexture(gl.TEXTURE2 + i); gl.bindTexture(gl.TEXTURE_2D, WT[i + 1]);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, im); gl.activeTexture(gl.TEXTURE0); GA[i] = 1;
+    };
+    im.src = "assets/glimpse-" + n + ".webp";
+  });
+}
+["pointerenter", "focus", "touchstart"].forEach(function (ev) { mark.addEventListener(ev, loadGlimpses, { passive: true }); });
+
+/* ---------- the geometry of the move ---------- */
+var G = { C: [0, 0], Z: 1, Zo: 1, w0: 1, w1: 1, P1: [0, 0] };
+function doorGeom() {
+  G.C = [M.x + 50 * K, M.y + 51.5 * K];
+  layoutGarden();
+  G.w0 = K * 100 * 1.45; G.w1 = V.w * fit.s;
+  G.P1 = [(G.C[0] - fit.x) / G.w1, (G.C[1] - fit.y) / (V.h * fit.s)];
+  /* how far in the glass must come for the whole crystal to pass the frame (Zo); the move ends a little beyond it (Z) */
+  var gt = 0;
+  [[0, 0], [innerWidth, 0], [0, innerHeight], [innerWidth, innerHeight]].forEach(function (c) {
+    var dx = c[0] - G.C[0], dy = c[1] - G.C[1];
+    for (var j = 0; j < 6; j++) { var nx = UG[j * 3], ny = UG[j * 3 + 1], h = UG[j * 3 + 2] - (nx * 50 + ny * 51.5); gt = Math.max(gt, (nx * dx + ny * dy) / (K * h)); }
+  });
+  G.Zo = gt; G.Z = gt * 1.25;
+  DV.top = fit.top ? 70 / (V.h * fit.s) : 0;
+}
+/* the world's frame on screen: small and centred on the scene's stone at rest, the Garden's own framing on arrival.
+   It grows far less than the glass does, as a landscape does when you walk up to a window. */
+function vrect(E) {
+  var w = G.w0 * Math.pow(G.w1 / G.w0, E), ar = V.h / V.w;
+  var e2 = 1 - Math.pow(1 - E, 3), px = LK[0] + (G.P1[0] - LK[0]) * e2, py = LK[1] + (G.P1[1] - LK[1]) * e2;
+  /* and never smaller than the part of the screen the crystal covers, so the glass never shows past the world's edge */
+  var kz = K * Math.pow(G.Z, E), cx = G.C[0], cy = G.C[1];
+  var l = Math.max(0, cx - 20.6 * kz), r = Math.min(innerWidth, cx + 20.6 * kz), t = Math.max(fit.top, cy - 30 * kz), b = Math.min(innerHeight, cy + 30 * kz);
+  w = Math.max(w, (cx - l) / px, (r - cx) / (1 - px), (cy - t) / (py * ar), (b - cy) / ((1 - py) * ar));
+  return [cx - px * w, cy - py * w * ar, w, w * ar];
+}
+var DOOR = bez(.55, 0, .3, 1);
+function bump(p, a, b) { var s = Math.sin(Math.PI * seg(p, a, b)); return s * s; }
+function frameMove() {
+  dpr = Math.min(devicePixelRatio || 1, 2);
+  if (canvas.parentNode !== document.body) document.body.insertBefore(canvas, document.body.firstChild);
+  canvas.style.cssText = "position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:3";
+  canvas.width = Math.round(innerWidth * dpr); canvas.height = Math.round(innerHeight * dpr);
+  org = { x: 0, y: 0 };
+}
+var lastDP = -1;
+function doorAt(p) {
+  if (lastDP >= 0 && (lastDP < .5) !== (p < .5)) glassTone(); lastDP = p;
+  var E = DOOR(p), z = Math.pow(G.Z, E), k = K * z, cx = G.C[0], cy = G.C[1];
+  var tf = "translate(" + cx + "px," + cy + "px) scale(" + z + ") translate(" + (-cx) + "px," + (-cy) + "px)";
+  paperEl.style.transform = stage.style.transform = tf;
+  paperEl.style.visibility = stage.style.visibility = z > G.Zo * 1.02 ? "hidden" : "";
+  var fo = (1 - seg(p, 0, .22)).toFixed(3); foot.style.opacity = fo; ui.style.opacity = fo;
+  grainEl.style.opacity = (1 - seg(E, .1, .5)).toFixed(3);
+  upWorld();
+  if (hasWorld) DV.win = 1;
+  DV.vr = vrect(E); DV.ref = 1 - sm(seg(E, .3, .85)); DV.soft = sm(seg(E, .05, .35)); DV.cut = sm(seg(p, 0, .2)); DV.tint = 1 - sm(seg(E, .15, .9));
+  DV.gl = [GA[0] * .34 * bump(p, .22, .5), GA[1] * .3 * bump(p, .36, .62), GA[2] * .32 * bump(p, .48, .74)];
+  draw({ clock: 30, t: BIG, rest: true, off: SHUT, fl: NOFL, ds: ALLP, m: { x: cx - 50 * k, y: cy - 51.5 * k }, k: k });
+}
+function settle() {
+  html.classList.remove("moving");
+  paperEl.style.transform = stage.style.transform = paperEl.style.visibility = stage.style.visibility = "";
+  foot.style.opacity = ui.style.opacity = grainEl.style.opacity = "";
+  measure(); frameMark(); doorGeom(); parked = false; running = false; restDraw(30); wake();
+}
+/* one continuous move: in through the glass (dir 1) or back out of it (dir -1) */
+glMove = function (dir) {
+  doorBusy = true; parked = true; lastDP = -1; html.classList.add("moving"); loadGlimpses(); loadLoop(); playLoop();
+  paperEl.style.transform = stage.style.transform = "";
+  measure(); doorGeom(); frameMove(); canvas.style.display = "";
+  var dur = portrait ? 1800 : 2000, t0m = null;
+  if (dir > 0) doorAt(0);
+  requestAnimationFrame(function f(now) {
+    if (t0m === null) {
+      t0m = now;
+      if (dir < 0) { doorAt(1); html.classList.remove("ingarden", "parked"); garden.inert = true; garden.setAttribute("aria-hidden", "true"); mark.focus({ preventScroll: true }); }
+    }
+    var p = Math.min(1, (now - t0m) / dur);
+    doorAt(dir > 0 ? p : 1 - p);
+    if (p < 1) { requestAnimationFrame(f); return; }
+    if (dir > 0) {
+      arrived(); canvas.style.display = "none"; ui.style.opacity = "";
+      paperEl.style.transform = stage.style.transform = "";
+    } else { settle(); departed(); }
+  });
+};
+if (DEBUG) window.__vr = function () { var o = []; for (var i = 0; i <= 20; i++) o.push(Math.round(vrect(i / 20)[2])); return o.join(" ") + " Z " + G.Z.toFixed(1); };
+if (DEBUG) window.__door = function (p) { parked = true; html.classList.add("moving"); paperEl.style.transform = stage.style.transform = ""; measure(); doorGeom(); frameMove(); doorAt(p); };
+
+/* ---------- rest ---------- */
+var t0 = performance.now(), running = false, visible = true, last = 0, clockOff = 0;
+function restDraw(clock) {
+  upWorld(); DV.vr = vrect(0); DV.ref = 1; DV.tint = 1; DV.gl = [0, 0, 0]; DV.soft = 0; DV.cut = 0;
+  if (!running && hasWorld) DV.win = 1;
+  draw({ clock: clock, t: BIG, rest: true, off: SHUT, fl: NOFL, ds: ALLP });
+}
+function restFrame(now) {
+  if (!running || parked || doorBusy) { running = false; return; }
+  var dt = Math.min(.1, (now - (last || now)) / 1000); last = now;
+  var n = Math.max(1, Math.ceil(dt / .008)); for (var i = 0; i < n; i++) step(dt / n);
+  crA += (crT - crA) * Math.min(1, dt * (crT ? 6 : 4));
+  for (var k = 0; k < 3; k++) { var a = (now - kintT[k]) / (kintA[k] >= 1 ? 1700 : 380); HA[k * 3 + 1] = kintA[k] * Math.pow(Math.max(0, 1 - a), 2); }
+  /* the water in the crystal clears into a window once the world beyond it has arrived */
+  if (hasWorld) DV.win = Math.min(1, DV.win + dt / 1.4);
+  restDraw((now - t0) / 1000 + clockOff);
+  waterSound(Math.min(1, Math.abs(W.tv) * 1.1 + W.rip * .55), dt);
+  if (visible && !parked) requestAnimationFrame(restFrame); else running = false;
+}
+wake = function () {
+  if (isOut || doorBusy || !restStarted) return;
+  if (!running && visible && !parked && !reduced && FREEZE < 0 && !html.classList.contains("opening")) { running = true; last = 0; requestAnimationFrame(restFrame); }
+  else if (!running && !html.classList.contains("opening")) { for (var k = 0; k < 3; k++) HA[k * 3 + 1] = 0; restDraw(30); }
+};
+document.addEventListener("visibilitychange", function () { visible = !document.hidden; if (A.c && A.on) { if (document.hidden) A.c.suspend(); else A.c.resume(); } wake(); });
+function startRest(clock) {
+  measure(); frameMark(); doorGeom(); restStarted = true;
+  clockOff = clock - (performance.now() - t0) / 1000;
+  setTimeout(loadGlimpses, 2500);
+  if (reduced || FREEZE >= 0) { restDraw(clock); return; }
+  wake();
+}
+var lastW = innerWidth;
+addEventListener("resize", function () {
+  if (html.classList.contains("opening") || doorBusy) return;
+  measure(); doorGeom();
+  if (!isOut) { frameMark(); if (!running) restDraw(30); }
+});
+fontsReady().then(begin, begin);
+
+function begin() {
+  html.classList.remove("wait");
+  if (!opening) {
+    remember();
+    paintSun();
+    startRest(30);
+    fadeIn([foot, ui]);
+    requestAnimationFrame(sunUp);
+    return;
+  }
+  measure(); frameFull(); buildWall(); paintSun();
+  if (performance.mark) performance.mark("opening-start");
+  var start = performance.now(), done = false, shown = 0;
+
+  function at(t) {
+    /* 1. the typed line */
+    var n = t < T.type0 ? 0 : Math.min(ALL.length, Math.floor((t - T.type0) / STEP) + 1);
+    if (n !== shown) { for (var i = 0; i < spans.length; i++) spans[i].className = (i < LABEL.length ? "k" : "") + (i < n ? " on" : ""); shown = n; }
+    typeEl.style.opacity = (1 - seg(t, T.fade0, T.fade1)).toFixed(3);
+    /* 2. the characters */
+    drawWall(t);
+    /* 3 and 4. the join, the paper */
+    var j = VAULT(seg(t, T.j0, T.j1)), off = [OPEN[0] * (1 - j), OPEN[1] * (1 - j)];
+    var fh = o3(seg(t, T.f0, T.f0 + .55)) * 1.1 - .05;
+    var fa = o3(seg(t, T.f0, T.f0 + .08)) * (1 - io3(seg(t, T.f0 + .3, T.d0 + .35)));
+    var tau = Math.max(0, t - T.j1), env = Math.exp(-ZE * OM * tau), amp = t > T.j1 ? .08 : 0;
+    W.th = amp * env * Math.sin(OM * tau); W.tv = amp * env * OM * (Math.cos(OM * tau) - ZE * Math.sin(OM * tau));
+    W.gx = -W.th * 22; W.z = 0; W.rip = amp * 3 * env;
+    var band = Math.max(90, maxD * .16), dk = FLOOD(seg(t, T.d0, T.d1));
+    var ds = t < T.d0 ? NODS : [-band + (maxD + band * 2) * dk, band, t >= T.d1 ? 1 : 0];
+    draw({ clock: t, t: t, rest: false, off: off, fl: [fh, fa, .45], ds: ds });
+    if (!html.classList.contains("cover")) html.classList.add("cover");
+    grainEl.style.opacity = dk.toFixed(3);
+    if (t > T.d0 + .35) sunUp();
+  }
+  function tick(now) {
+    if (done) return;
+    var t = FREEZE >= 0 ? FREEZE : (now - start) / 1000;
+    if (t >= T.end) { finish(t); return; }
+    at(t);
+    if (FREEZE < 0) requestAnimationFrame(tick);
+  }
+  function finish(t) {
+    if (done) return; done = true;
+    if (performance.mark) performance.mark("opening-end");
+    var skipped = t < T.end;
+    html.classList.remove("opening", "cover");
+    wctx.setTransform(1, 0, 0, 1, 0, 0); wctx.clearRect(0, 0, wall.width, wall.height); field = null; parts = [];
+    grainEl.style.opacity = "";
+    remember(); quietUntil = performance.now() + 600;
+    ["pointerdown", "keydown", "wheel", "touchstart"].forEach(function (ev) { removeEventListener(ev, skip, true); });
+    if (skipped) { W.th = W.tv = W.z = W.rip = 0; fadeIn([mark, WMC, foot, ui]); }
+    sunUp();
+    startRest(Math.max(t, T.e0));
+  }
+  function skip() { if (!done && FREEZE < 0) finish((performance.now() - start) / 1000); }
+  ["pointerdown", "keydown", "wheel", "touchstart"].forEach(function (ev) { addEventListener(ev, skip, { passive: true, capture: true }); });
+  addEventListener("resize", function () { if (!done && innerWidth !== lastW) skip(); });
+  if (FREEZE >= 0) window.__seek = function (s) { if (s >= T.end) finish(s); else at(s); };
+  if (FREEZE >= T.end) { finish(FREEZE); return; }
+  at(0);
+  requestAnimationFrame(function (now) { start = now; tick(now); });
+}
+}
+requestAnimationFrame(function () { setTimeout(main, 0); });
+</script>
+</body>
+</html>
