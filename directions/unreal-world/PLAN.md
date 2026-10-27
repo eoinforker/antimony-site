@@ -16,6 +16,10 @@ craft that designers and creative VCs respect. It is our own world, not a copy o
 - **The poster:** the cobalt print in its lightbox, the one made thing in the world, lit from within.
 - **One warm accent** at most (embers in a crack, a lit doorway).
 
+## Brand assets
+
+See `BRAND.md`: the print, the mark, Orbe, the crystal, colours and type, all already in the repo.
+
 ## Machine
 
 - Vast, RTX 5090 class, **at least 250 GB disk**, the Vulkan driver present (`vulkaninfo` works).
