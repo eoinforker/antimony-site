@@ -109,11 +109,13 @@ html.reading .ui, html.reading .back, html.reading .sign { visibility: hidden; }
 .note:focus { outline: none; }
 .note:focus-visible { box-shadow: 0 0 0 1px rgba(238, 234, 224, .75); }
 /* after a quiet while, a soft light passes once over the paper, as on the Garden page */
-.note .glint { position: absolute; inset: 0; border-radius: 50%; opacity: 0; pointer-events: none;
-  background: radial-gradient(closest-side, rgba(255, 246, 228, .6), rgba(255, 240, 214, .16) 55%, rgba(255, 240, 214, 0)); mix-blend-mode: screen; }
-.note.hint .glint { animation: glint 2.6s cubic-bezier(.3, .1, .3, 1) 1; }
-@keyframes glint { 0% { opacity: 0; transform: translate(-16%, -10%) scale(.7); } 45% { opacity: .9; } 100% { opacity: 0; transform: translate(14%, 12%) scale(1); } }
-@media (prefers-reduced-motion: reduce) { .note.hint .glint { animation-name: glint-still; } @keyframes glint-still { 0%, 100% { opacity: 0; } 50% { opacity: .6; } } }
+/* after a quiet while, a faint pass of light crosses the paper, as low sun would */
+.note { overflow: hidden; }
+.note .glint { position: absolute; inset: 0; opacity: 0; pointer-events: none; mix-blend-mode: soft-light;
+  background: linear-gradient(105deg, rgba(255, 250, 236, 0) 38%, rgba(255, 250, 236, .55) 50%, rgba(255, 250, 236, 0) 62%) no-repeat; background-size: 260% 100%; background-position: 130% 0; }
+.note.hint .glint { animation: glint 2.4s cubic-bezier(.4, 0, .3, 1) 1; }
+@keyframes glint { 0% { opacity: 0; background-position: 130% 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; background-position: -30% 0; } }
+@media (prefers-reduced-motion: reduce) { .note.hint .glint { animation-name: glint-still; background-position: 50% 0; } @keyframes glint-still { 0%, 100% { opacity: 0; } 50% { opacity: .6; } } }
 /* the letter, lit as the hall is: warm sun from high on the left, the hall's cool shade on the right */
 .letter { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: var(--lt-pad, 24px); }
 .letter[hidden] { display: none; }
@@ -525,8 +527,8 @@ addEventListener("keydown", arm, { once: true });
    ?world= or #: bluefield (the default), garden, rain or meadow. Each world's frame, and where its letter, its stone and its
    crystal sit in that frame (fractions), for the wide framing and for phones, from each render's own data:
    garden: garden-ruin/assets/render.json via build_page.py; rain: rain/index.html (FACE, PAPER, CROP);
-   bluefield: w11-blue-field/assets/frame.json (wide, and the tall phone render); meadow: final/HERO.md's
-   focal point, and the note tucked into the stone's seam, placed by eye in both renders. */
+   bluefield: w11-blue-field/assets/frame.json (wide, and the tall phone render); meadow: hero-meadow/index.html
+   (PAPER and its object-position), the stone placed by eye. */
 var WORLDS = {
   garden: { name: "The garden", files: ["garden-still", "garden-still-phone", "garden-loop", "garden-loop-phone"], avif: true,
     desk: { w: 1920, h: 1080, fx: .56, look: [.41, .4], letter: [.4134, .7679, .4461, .8321], stone: [.4595, .4753, .6474, .8099] },
@@ -539,10 +541,10 @@ var WORLDS = {
     glimpse: ["forest", "garden", "meadow", "field"],
     alt: "A pale stone wall in a green city, at dusk, in gentle rain. Ivy falls from its coping, a café window glows beside it, and set into the wall a lightbox shows the Antimony mark. A rain-spotted handbill is tucked under the edge of the lightbox's frame." },
   meadow: { name: "The meadow", files: ["meadow-still", "meadow-still-phone", "meadow-loop", "meadow-loop-phone"], avif: false,
-    desk: { w: 1920, h: 1200, fx: .61, fy: .66, look: [.3, .5], letter: [.631, .54, .657, .564], stone: [.508, .506, .71, .822] },
-    phone: { w: 1080, h: 2340, fx: .5, look: [.5, .45], letter: [.578, .6, .612, .624], stone: [.269, .578, .75, .795] },
+    desk: { w: 1920, h: 1080, fx: .61, fy: .8, look: [.3, .58], letter: [.4777, .9081, .5227, .9344], stone: [.5, .479, .711, .85] },
+    phone: { w: 1080, h: 2340, fx: .5, fy: .69, look: [.78, .62], letter: [.1996, .8319, .3095, .8483], stone: [.256, .56, .758, .79] },
     glimpse: ["forest", "garden", "rain", "field"],
-    alt: "A meadow in low, warm late-afternoon light under a wide sky of sunlit clouds. Tall grass runs to a low rise where the Antimony stone stands, its sky-blue crystal set in the break, a folded note tucked into the top of its seam." },
+    alt: "A meadow in low, warm late-afternoon light under a wide sky of sunlit clouds. Tall grass runs to a low rise where the Antimony stone stands, its sky-blue crystal set in the break, a folded letter resting in the grass at its foot." },
   bluefield: { name: "The blue field", files: ["bluefield-still", "bluefield-still-phone", "bluefield-loop", "bluefield-loop-phone"], avif: true,
     desk: { w: 1920, h: 1080, fx: .5, look: [.6, .3], letter: [.312, .8088, .3434, .8377], stone: [.2562, .4825, .4422, .8116] },
     phone: { w: 1080, h: 2340, fx: .43, look: [.43, .66], letter: [.3498, .7104, .4161, .7267], stone: [.2331, .5282, .6283, .7114] },
