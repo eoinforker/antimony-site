@@ -33,7 +33,7 @@ sky = spawn(unreal.SkyLight)
 sky.light_component.set_editor_property("real_time_capture", True)
 sky.light_component.set_mobility(unreal.ComponentMobility.MOVABLE)
 fog = spawn(unreal.ExponentialHeightFog)
-fog.component.set_editor_property("volumetric_fog", True)
+fog.component.set_editor_property("enable_volumetric_fog", True)
 spawn(unreal.VolumetricCloud)
 
 cam = spawn(unreal.CineCameraActor, (-700, -300, 250), (0, -12, 25))

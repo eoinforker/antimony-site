@@ -7,14 +7,14 @@ UE=${UE:-/workspace/UE}
 DIR=$(cd "$(dirname "$0")" && pwd)
 PROJ="$DIR/TestRender.uproject"
 BIN="$UE/Engine/Binaries/Linux"
-COMMON=(-unattended -nosplash -nop4 -nosound -stdout -FullStdOutLogOutput)
+COMMON=(-RenderOffscreen -unattended -nosplash -nop4 -nosound -stdout -FullStdOutLogOutput)
 
 "$BIN/UnrealEditor-Cmd" "$PROJ" -ExecutePythonScript="$DIR/build_test.py" "${COMMON[@]}" 2>&1 | tee "$DIR/build.log"
 grep -q ANTIMONY_TEST_BUILD_OK "$DIR/build.log"
 
 render() {  # $1 preset asset, $2 log name
   "$BIN/UnrealEditor" "$PROJ" /Game/TestMap -game -LevelSequence=/Game/TestSeq -MoviePipelineConfig="$1" \
-    -RenderOffscreen -vulkan -windowed -resx=1920 -resy=1080 -NoLoadingScreen "${COMMON[@]}" 2>&1 | tee "$DIR/$2"
+    -vulkan -windowed -resx=1920 -resy=1080 -NoLoadingScreen "${COMMON[@]}" 2>&1 | tee "$DIR/$2"
 }
 render /Game/TestPreset render.log
 render /Game/TestPresetPT render_pt.log || echo "PATH TRACER RENDER FAILED"
