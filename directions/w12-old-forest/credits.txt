@@ -1,0 +1,7 @@
+Assets (all CC0, no attribution required; listed anyway)
+Poly Haven (polyhaven.com): jacaranda_tree (the great tree, scaled to an ancient giant, its leaves turned gold),
+  island_tree_01, island_tree_02 (the forest, scaled tall), root_cluster_01, fern_02, rock_moss_set_01.
+ambientCG (ambientcg.com): Ground037, Moss002 (the forest floor), Paper002 (the letter),
+  and through the shared stone module Rock041, Rock035, Moss002.
+Fonts: Timeless Serif (licensed by Eóin Forker).
+Sound: synthesised in the browser with the Web Audio API; no recordings.

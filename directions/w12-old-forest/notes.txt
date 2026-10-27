@@ -1,0 +1,46 @@
+The Old Forest, path traced
+
+What this is
+  Morning in a towering old forest. Cream mist hangs between the trunks; several distinct shafts of sun
+  slant down from the upper left through gaps in the canopy and catch golden crowns; one great trunk
+  (Poly Haven jacaranda_tree scaled to an ancient giant) stands at the right on its roots. The Antimony
+  stone (the shared stone module, exact Break geometry, mossy at the foot) stands among scanned roots in a
+  clear pool of light, turned square to the camera so the seam reads top to bottom. A letter lies tucked
+  at its right foot in the light.
+  Camera: 26 mm on 36 mm, 1.55 m high, about 9.2 m from the stone, f/4.
+  Blender 4.5.15 LTS, Cycles on CPU, OpenImageDenoise, adaptive sampling, light tree, AgX.
+
+Cheats, as on a film set
+  - The canopy is a flag: an opaque sheet 34 m up with real holes cut where shafts should fall, each chosen
+    so its shaft crosses the view, and one over the stone. The trees cast no shadow of their own, so only
+    the flag shapes the light and the shafts stay clean and separate.
+  - The fill is a soft cream world light (the mist's own glow); no photographed sky shows through.
+  - The far trunks fade into cream by a depth haze in the compositor as well as the volume.
+
+Run (S is the scratchpad)
+  flock S/blender.lock nice -n 5 blender -b -P old_forest.py -- --res 2560x1440 --samples 256 --tl 930 \
+      --work S/w11-13/fin12 --out S/w11-13/fin12/graded.png
+  python3 old_forest_compose.py --work S/w11-13/fin12 --out .
+  Data pass: R disparity 2/d, G ferns 1 and leaves 0.5, B stone 0.5, crystal 1, letter 0.75.
+  Final render: 2560x1440, 256 samples capped at 930 s: 956 s of rendering.
+
+The loop (8 s, 24 fps, 192 frames, seamless), made from the still and its data pass
+  - the light shifts: the shafts swell and ebb, a slow change travelling along them
+  - motes of dust turn slowly, seen only where the light is
+  - golden leaves fall slowly, turning, each crossing the frame once a loop, hidden behind nearer things
+  - the ferns stir a little; the stone, crystal and letter hold perfectly still
+  H.264 0.9 MB, VP9 0.35 MB, 1920x1080. Still: AVIF/WebP; phone still: a 9:16 crop centred on the stone.
+
+The page (index.html): as the Blue Field's (see ../w11-blue-field/notes.txt), with this world's paper and sound.
+  The paper: "Read the note" over the letter at the stone's foot; it lifts into a warm cream sheet lit from
+  the upper left, as the shafts fall. Sound (muted until the toggle): morning air in high leaves that rises
+  with the pointer, a low warm chord (D, A, D, F sharp) breathing, and now and then a bird: a few short
+  falling whistled notes, off to one side. Checked with Playwright at 1440x900 and 390x844: no console
+  errors, no overflow, the note opens and closes.
+
+Honest limits
+  - The shafts all come from one side, as a low sun gives; they are clear in the upper left and fainter
+    across the right, where the great tree stands in shade.
+  - A few pale gaps remain between far trunks at the horizon (mist, not sky), softer than before.
+  - The letter is small in the frame and sits at the stone's foot beside the roots rather than under them.
+  - Leaves and motes are composited, so they do not cast shadows or catch the shafts' exact edges.

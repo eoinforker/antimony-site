@@ -1,0 +1,60 @@
+The Blue Field, path traced
+
+What this is
+  Night, fine rain. A vast field of scanned flowers whose petals are tinted a true sky blue to white-blue,
+  translucent and gently emissive; larger and denser near the camera, with large out-of-focus blooms at
+  the lens; their light pools on the dark grass. The field thins into low mist over softly rolling ground.
+  Far off, needles of rock stand in layers of mist: Poly Haven sea cliff scans stood on end and tapered to
+  a point in Python, so their surfaces are real scan. The Antimony stone (the shared stone module, exact
+  Break geometry) stands wet and dark in a small clearing, turned square to the camera so the seam reads
+  top to bottom, with flowers glowing behind it through the seam and the cavity. Its crystal glows gently.
+  A folded paper lies at its foot in the crystal's light.
+  Camera: 32 mm on 36 mm, 1.45 m high, 10.7 m from the stone, f/2.8, focused on the stone.
+  Blender 4.5.15 LTS, Cycles on CPU, OpenImageDenoise, adaptive sampling, light tree, AgX.
+
+Cheats, as on a film set
+  - A hidden soft light low behind the stone lights the flowers there, so the seam and outline read.
+  - A point light in front of the crystal stands in for its glow on the flowers and the paper.
+  - 36 small hidden lights among the near flowers make their own glow pool cleanly on the grass.
+  - The horizon: the sky fades to the mist's colour near the horizon, and a low, height-fading volume lies
+    over the far field, so there is no line where field meets sky.
+  - Nothing is scattered where it would stand in front of the mark or the paper (tested per plant in the
+    camera's view).
+  - The crystal's colour is pulled onto #94E6FF in the compose, keeping its light and shade.
+
+Run (S is the scratchpad)
+  flock S/blender.lock nice -n 5 blender -b -P blue_field.py -- --res 2560x1440 --samples 256 --tl 930 \
+      --work S/w11-13/fin11 --out S/w11-13/fin11/graded.png
+  python3 blue_field_compose.py --work S/w11-13/fin11 --out .
+  The scene script writes raw.png, base.png (graded: bloom, halation, lift, vignette; no grain or rain),
+  data.png (16 bit: R disparity 2/d, G plants, B stone 0.5, crystal 1, paper 0.75) and frame.json.
+  Final render: 2560x1440, 256 samples capped at 930 s: 956 s of rendering.
+
+The loop (8 s, 24 fps, 192 frames, seamless), made from the still and its data pass
+  - blooms sway: a smooth displacement from travelling waves, weighted by the plant mask and nearness;
+    the stone, crystal and paper hold perfectly still
+  - each patch of petals breathes on its own slow phase
+  - motes of sky light drift on small closed paths, hidden behind anything nearer than they are
+  - fine rain in two layers, brighter where the light is
+  - the crystal's light swells a little
+  H.264 2.1 MB, VP9 1.2 MB, 1920x1080. Still: AVIF/WebP; phone still: a 9:16 crop centred on the stone.
+
+The page (index.html)
+  The loop over its still; a breathing camera layer (WebGL) draws the loop through its depth, pivoted on
+  the stone: a slow drift over about a minute, a few percent of push, a gentle answer to the pointer or tilt.
+  On narrow screens the view settles on the stone, so the whole mark shows. Film grain is a small noise tile
+  made in the page. The wordmark and "Software, made on purpose." sit small at bottom left.
+  The paper: a focusable button over the folded sheet ("Read the note"); it opens with the view easing in
+  and the sheet lifting and settling flat (the shared Letter component from rain/), lit cool blue from the
+  crystal's side, with its fold line and a few dried rain marks. Escape, the close mark or a click outside
+  eases back; reduced motion crossfades. After about seven seconds untouched, a soft glint passes over it.
+  Sound (muted until the toggle): fine rain in two bands, a slow wind that rises as the pointer moves, a far
+  low chord (A, E, B) breathing, and now and then a single small bell. It goes soft while the note is open.
+  Opening: the field rises out of the dark once per session; any touch, key, wheel or click skips it.
+  Reduced motion: the still, no opening. Test hooks: ?rest (skip the opening), ?t=0 (still only), ?again.
+  Checked with Playwright at 1440x900 and 390x844: no console errors, no overflow, paper opens and closes.
+
+Honest limits
+  - The needles are lit flatly by the mist; they read as silhouettes in layers rather than as sculpted rock.
+  - The paper is small in the frame (about 60 px wide at 2560); it reads as a pale folded sheet, not more.
+  - The motes and rain are composited, so they do not light the flowers.

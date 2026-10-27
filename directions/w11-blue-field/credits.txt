@@ -1,0 +1,7 @@
+Assets (all CC0, no attribution required; listed anyway)
+Poly Haven (polyhaven.com): flower_heliophila, flower_empodium, celandine_01, grass_medium_01, coastal_cliff_01,
+  coastal_cliff_02 (stood on end and tapered into needles), kloppenheim_07_puresky (night sky, desaturated).
+ambientCG (ambientcg.com): Grass004, Ground037 (field), Paper002 (the paper and the letter's sheet),
+  and through the shared stone module Rock041, Rock035, Moss002.
+Fonts: Timeless Serif (licensed by Eóin Forker).
+Sound: synthesised in the browser with the Web Audio API; no recordings.
