@@ -1,13 +1,16 @@
-Hero Meadow, path traced
+Hero Meadow, path traced (finished after the push; Eóin approved the second frame)
 
 What this is
-  The Antimony stone (the shared module, directions/stone/stone.py: exact Break geometry, honed
-  basalt, softened and chipped arrises, moss at the foot, the crystal as sky glass) standing on a low
-  rise in a summer meadow in the low, warm light of late afternoon. Beyond it the field falls into a
-  shallow dip and rises to a far ridge with a hedgerow of scanned trees and shrubs; soft hills lie
-  kilometres off, and above is a wide sky of sculpted cumulus.
-  Camera: 45 mm on 36 mm, 1.9 m high, 12 m from the stone, pitched up 3.5 degrees, f/2.2,
-  focused on the stone. Sun about 19 degrees left of the view and 4.6 degrees up.
+  The Antimony stone (the shared module, directions/stone/stone.py: exact Break geometry, dark honed
+  basalt, softened and chipped arrises, shallow tooling, a damp foot; nothing grows on the mark) standing
+  on a low rise in a summer meadow in the low, warm light of late afternoon. Beyond it the field falls into
+  a shallow dip and rises to a far ridge with a hedgerow of scanned trees; past that the land layers away
+  in haze to a great escarpment, a long pale edge of rock that rises off the right of frame and recedes
+  15 km towards the sun. Above is a wide sky of sculpted cumulus.
+  Camera: 45 mm on 36 mm, 1.9 m high, 12.5 m from the stone, pitched up 3.5 degrees, f/5.6 (so the far
+  land holds), focused on the stone. Sun 34 degrees left of the view and 4.6 degrees up.
+  The stone is 2.1 m, 0.34 m thick, turned 15 degrees to the camera so its arris and side show while the
+  seam still reads; a warm bounce (an area light linked to the stone alone) gives the honed face weight.
   Blender 4.5.15 LTS, Cycles on CPU (4 threads), OpenImageDenoise, adaptive sampling, light tree,
   AgX, with a soft bloom in the compositor.
 
@@ -18,49 +21,72 @@ Light
   sharp. Its sun is softened by haze, so a matched sun lamp (warm, 0.6 degrees) at the HDRI's sun
   direction gives the raking light and long shadows. Refractive caustics from that sun go through
   the crystal (MNEE, set up by the stone module).
+  Cloud shadows: a gobo plane 450 m up, seen only by shadow rays, which stops only rays travelling within
+  a degree or two of the sun; so it lays cumulus shadows on the land from the low sun without dimming the
+  sky light. It is kept clear over the stone and the near meadow.
+
+The far escarpment
+  Poly Haven coastal_cliff_01 and 02 (scanned cliff bands, 92 m and 41 m long) scaled up about 40 times,
+  as a matte painter would, and set end to end as one long edge turned 20 degrees towards the sun, so its
+  face and ledges catch the light. A nearer, lower spur breaks down into the land. The scan's colour is
+  calmed towards one even rock (at kilometres its blotches read as cloud), and the rock and the nearer hills
+  carry their own aerial perspective in the shader: the sky's colour (from a 64 by 32 copy, so no cloud is
+  painted onto the rock) by distance, capped so the rock stays opaque, with a low mist rising only from its
+  base. The data pass marks them B = 0.25, and the grade hazes them only lightly.
 
 The paper
-  A folded letter is tucked into the seam near the top of the stone, its free edge lifting. It is
-  a real object in the render, with the same camera, light and shadow. Its frame position is
-  exported (<out>.paper.json) and placed over the picture as a focusable button ("Read the note").
-  Opening it eases the view in towards the paper; the note then lifts and settles flat, showing
-  the approved words on ambientCG Paper002, lit to match the scene. Escape, the close mark or a
-  click outside eases back. After a quiet spell the paper catches the light twice.
-  Other interaction: a few pixels of pointer parallax; with sound on, the wind swells as the
-  pointer moves and when the note is opened.
+  A folded letter, 30 by 21 cm, rests in the short grass at the stone's front left foot, in the low sun,
+  with a small clearing round it so the grass never buries it (it used to sit in the seam, where it read
+  as a sticker). It is a real object in the render, with the same camera, light and shadow. Its frame
+  position is exported (<out>.paper.json) and placed over the picture as a focusable button ("Read the
+  note"). Opening it eases the view in towards the paper; the note then lifts and settles flat, showing
+  the approved words on ambientCG Paper002, lit to match the scene. Escape, the close mark or a click
+  outside eases back. After a quiet spell the paper catches the light twice.
+  The letter carries the approved copy (rules.md); its side margins are 12 percent of the card's own width
+  and the type scales with the viewport's width as well as its height, so the longer paragraph sets as one
+  calm block on desktop and on a 390 px phone.
+  Other interaction: a few pixels of pointer parallax; with sound on, the wind swells as the pointer
+  moves and when the note is opened.
 
 Grade windows (meadow_post.py), as a colourist would
-  - The crystal's colour is pulled onto #94E6FF, keeping its light.
+  - The crystal's colour is pulled onto #94E6FF (0.5), keeping its light, so it reads as pale sky glass.
   - The grey undersides of the clouds are warmed (peach, never amber).
   - Aerial perspective: distance takes on the colour of the sky just above it, from the depth pass.
   Then lens distortion, lateral colour, halation, a vignette and grain.
 
-Run (S is the scratchpad; see hm/work/common.sh for the full argument list)
+Run (S is the scratchpad; the shared arguments are in S/hmp/draft.sh, the scene's in S/hmp/final3_args.txt)
   blender -b -P meadow_scene.py -- --assets <grass, rock> --acg <assets/ambientcg> --ph <assets/polyhaven>
     --stone directions/stone/stone.py --hdri <kloppenheim_06_puresky_4k.hdr> --sky <..._8k.hdr>
-    --sun-u 0.612 --sun-el 4.6 --sun-str 3 --sun-az 19 --lens 45 --pitch 3.5 --cam-h 1.9 --mound 0.75
-    --my 12 --thick 0.45 --yaw -9 --res 2560x1600 --samples 512 --time 1140 --out day.png --passes day_data.png
-  For the phone framing, add --crop phone --res 1080x2340.
-  python3 meadow_post.py still day.png hero-desktop.png day_data.png --crystal 0.6
-  python3 meadow_post.py loop day.png day_data.png <frames> --w 1920 --secs 8 --crystal 0.6 --grain 0.006
-  then ffmpeg: H.264 CRF 19 to 21, VP9 CRF 28 to 30.
+    --sun-u 0.612 --sun-el 4.6 --sun-str 3 --mound 0.75 --density 1.0 --lens 45 --pitch 3.5 --cam-h 1.9 --my 12.5 --stone-m 2.1 --thick 0.34 --yaw 15 --moss 0 --clean-mark 1 --carve 0.25 --damp-foot 0.4 --chip-size 1.4 --stone-value 1.1 --bounce 25 --paper-at foot --paper-dx -1.05 --paper-dy 2.7 --paper-lift 0.11 --paper-w 0.30 --paper-l 0.21 --paper-clear 0.42 --fstop 5.6 --clouds 0.9 --cloud-lo 0.42 --cloud-clear 40 --wind 0.18 --sun-az 34 --escarp 1 --escarp-h 460 --esc-near-r 3000 --esc-near-a 27 --escarp-turn 20 --spur 1 --air-k 9000 --air-max 0.5 --mist 0.45 --air-lift 0.01 --esc-calm 0.6
+    --res 2560x1440 --samples 1024 --time 1800 --out day.png --passes day_data.png
+  For the phone framing, add --crop phone --res 1080x2340 (it was --samples 512 --time 900).
+  New options, all opt-in (without them the old frame renders exactly as before):
+    --escarp 1 --escarp-h --esc-near-r/-a --esc-far-r/-a --escarp-turn --spur 1 --spur-h --air-k --air-max
+    --mist --mist-h --hills-mist --esc-calm; --clouds --cloud-size --cloud-lo --cloud-clear; --wind --wind-az;
+    --stone-m --clean-mark 1 --carve --damp-foot --chip-size --stone-value --bounce; --fstop;
+    --paper-at foot --paper-w --paper-l --paper-dx --paper-dy --paper-lift --paper-tilt --paper-rot --paper-clear.
+  Stills, loops and encodes: S/hmp/build.sh (python3 meadow_post.py still ... --crystal 0.5; loop ... --drift).
 
 The loop (8 s, 24 fps, 192 frames, seamless), built from the one still and its data pass
   The data pass is a 16-bit PNG: R log depth (ln(1 + d) / ln(4001)), G blade height fraction,
-  B mask (crystal 1, stone and paper 0.75, grass and flowers 0.5, sky 0).
+  B mask (crystal 1, stone and paper 0.75, grass and flowers 0.5, far land 0.25, sky 0).
   - Grass sway: a displacement field from three travelling waves, scaled by blade height (tips
-    move most) and by nearness; the stone, crystal and paper are held still.
-  - Light breathing: about 3 percent, more in the highlights.
-  - Warm pollen on closed drifting paths.
-  Every motion repeats a whole number of times in 8 s, so the last frame runs into the first.
+    move most) and by nearness; the gust crests show as a faint travelling sheen in the grass.
+    The stone, crystal and paper are held still.
+  - Cloud shadows drift over the land and the escarpment (from 60 m out; the stone and the near meadow
+    stay in the sun), on ground coordinates rebuilt from the depth pass.
+  - The clouds drift a few pixels (sky filled behind the land first, so nothing smears).
+  - Light breathing: about 3 percent, more in the highlights. A few warm pollen motes, fewer than before.
+  The two drifts close the loop by crossfading two offset copies; the offsets are small against the
+  pattern, so no doubling shows. Every other motion repeats a whole number of times in 8 s.
 
 Honest limits
   - The meadow flowers are modelled in the script; Poly Haven's scanned flowers are dry-country
     species that would not belong here.
-  - The sway is a warp of the still, not a re-render. The clouds do not move, and the far hedgerow
-    does not stir.
-  - The hedgerow trees are small scanned trees scaled up; at 300 m and in haze they read well,
-    closer they would not.
+  - The sway is a warp of the still, not a re-render; the far hedgerow does not stir.
+  - The escarpment is scanned cliff at many times its size: its form holds in haze, but its texture
+    is soft (1k maps over kilometres) and its face reads more as pale chalk than as a named rock.
+  - The hedgerow trees are small scanned trees scaled up; at 300 m and in haze they read well.
 
 Bloom (the night variant, night-desktop.png and night-phone.png) is shelved; its page and loops
 were removed.

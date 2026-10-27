@@ -89,7 +89,7 @@ def aov(nt, name, socket_or_value, loc=(600, -300)):
     else: link(nt, socket_or_value, o.inputs['Value'])
 
 vl = sc.view_layers[0]
-for nm in ('hf', 'gm', 'st', 'cr'):
+for nm in ('hf', 'gm', 'st', 'cr', 'ld'):
     a = vl.aovs.add(); a.name = nm; a.type = 'VALUE'
 vl.use_pass_z = True
 
@@ -144,7 +144,7 @@ if SUN_STR > 0 and not NIGHT:
 wld.cycles.sampling_method = 'MANUAL'; wld.cycles.sample_map_resolution = 2048
 
 # ---------------------------------------------------------------- the Break: geometry from break-geometry.json
-S = 0.019            # 100 units = 1.9 m: a carved stone you could walk up to
+S = arg('stone-m', 1.9) / 100     # 100 units = 1.9 m by default: a carved stone you could walk up to
 T = arg('thick', 0.5)   # slab thickness: a real block of stone
 MARK_X, MARK_Y = arg('mx', 1.05), arg('my', 13.0)
 MARK_YAW = math.radians(arg('yaw', -14.0))
@@ -233,7 +233,10 @@ if STONE:
         o.hide_render = True; o.hide_viewport = True      # the simple stone stays built but unseen
     parts = stone_mod.build_stone(sc.collection, scale_m=100 * S, location=(MARK_X, MARK_Y, float(ground_h(np.array(MARK_X), np.array(MARK_Y)))),
                                   rotation=(0.012, -0.006, MARK_YAW), wetness=0.0, moss=arg('moss', 0.35), glow=0.15,
-                                  thickness=T / (100 * S), detail=arg('detail', 380))
+                                  thickness=T / (100 * S), detail=arg('detail', 380),
+                                  **({'growth': False, 'carve': arg('carve', 0.0), 'chip_size': arg('chip-size', 1.0),
+                                      'damp_foot': arg('damp-foot', 0.0), 'stone_value': arg('stone-value', 1.0)}
+                                     if arg('clean-mark', 0) else {}))
     mark = parts['root']; Z_OFF = parts['info']['sink']
     # the grade reads these: stone and crystal held still in the loop, the crystal's colour held to sky
     def tag(ob, cr):
@@ -246,6 +249,20 @@ if STONE:
             aov(nt_, 'st', 1.0)
             if cr: aov(nt_, 'cr', 1.0, (600, -500))
     tag(parts['stone'], False); tag(parts['crystal'], True); tag(parts.get('veil'), True)
+    BOUNCE = arg('bounce', 0.0)
+    if BOUNCE > 0:
+        # the warm bounce: low sun on the meadow in front throws a little warm light back up onto the honed
+        # face, as a reflector would on set; linked to the stone alone, so the grass keeps its own light
+        bl_ = bpy.data.lights.new('bounce', 'AREA'); bl_.shape = 'RECTANGLE'; bl_.size = 4.0; bl_.size_y = 1.5
+        bl_.energy = BOUNCE; bl_.color = (1.0, 0.78, 0.55)
+        bo_ = bpy.data.objects.new('bounce', bl_); sc.collection.objects.link(bo_)
+        tgt = Vector((MARK_X, MARK_Y, float(ground_h(np.array(MARK_X), np.array(MARK_Y))) + 0.9))
+        bo_.location = Vector((MARK_X - 2.2, MARK_Y - 4.5, tgt.z - 0.75))
+        bo_.rotation_euler = (tgt - bo_.location).to_track_quat('-Z', 'Y').to_euler()
+        rc_ = bpy.data.collections.new('bounce_receivers')
+        for ob_ in (parts['stone'], parts['crystal']):
+            if ob_ is not None: rc_.objects.link(ob_)
+        bo_.light_linking.receiver_collection = rc_
     if SUN_OB is not None:
         cy.caustics_refractive = True
         stone_mod.mark_caustic_lights([SUN_OB])
@@ -253,6 +270,7 @@ if STONE:
 # ---------------------------------------------------------------- the paper: a letter tucked into the seam (by night, low, by the crystal)
 PAPER = arg('paper', 1)
 paper_ob = None
+PAPER_FOOT = None
 if PAPER:
     m_pp, nt = mat('paper')
     pb = node(nt, 'ShaderNodeBsdfPrincipled', (0, 200)); pb.inputs['Base Color'].default_value = (0.84, 0.81, 0.74, 1)
@@ -299,6 +317,30 @@ if PAPER:
     paper_ob.parent = mark
     paper_ob.location = ((right_edge - 50) * S, 0, (100 - sy) * S - Z_OFF)
     paper_ob.rotation_euler = (0, math.radians(16), 0)
+    if arg('paper-at', 'seam') == 'foot':
+        # not in the seam (it read as a sticker): a folded sheet resting in the short grass at the stone's foot,
+        # its two leaves opened into a low tent, in the low sun
+        me.clear_geometry()
+        PW, PL, NU, NV = arg('paper-w', 0.24), arg('paper-l', 0.17), 16, 12              # 24 by 17 cm folded sheet; the fold runs across its middle
+        bm = bmesh.new(); grid = []
+        for j in range(NV + 1):
+            row = []
+            for i in range(NU + 1):
+                u, v = i / NU, j / NV
+                x = (u - 0.5) * PW; y = (v - 0.5) * PL
+                z = 0.028 * (1 - abs(2 * v - 1)) ** 0.9 + 0.006 * (abs(2 * u - 1)) ** 3 + 0.004 * math.sin(u * 5.0 + v * 2.0)
+                row.append(bm.verts.new((x, y, z)))
+            grid.append(row)
+        for j in range(NV):
+            for i in range(NU):
+                bm.faces.new((grid[j][i], grid[j][i + 1], grid[j + 1][i + 1], grid[j + 1][i]))
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces); bm.to_mesh(me); bm.free()
+        for p_ in me.polygons: p_.use_smooth = True
+        paper_ob.parent = None
+        fx_, fy_ = MARK_X + arg('paper-dx', -0.95), MARK_Y - arg('paper-dy', 0.9)
+        paper_ob.location = (fx_, fy_, float(ground_h(np.array(fx_), np.array(fy_))) + arg('paper-lift', 0.07))
+        paper_ob.rotation_euler = (math.radians(arg('paper-tilt', 22.0)), math.radians(4), math.radians(arg('paper-rot', 28.0)))
+        PAPER_FOOT = (fx_, fy_)
 
 # stone: scanned seaside rock, darkened and honed (fine grain, soft sheen)
 m_st, nt = mat('stone')
@@ -735,6 +777,204 @@ if TREES:
     for p_ in me.polygons: p_.use_smooth = True
     hills = bpy.data.objects.new('hills', me); sc.collection.objects.link(hills); me.materials.append(m_h)
 
+# ---------------------------------------------------------------- the far edge: a great escarpment, kilometres off, from scans
+# Poly Haven coastal_cliff_01 and 02 (scanned cliff bands, 92 m and 41 m long) scaled up as a matte painter would,
+# set end to end along a gentle arc so they read as one long gritstone edge standing over the land in haze.
+ESC_D = arg('escarp', 0.0)
+if ESC_D > 0 and PH and not NIGHT:
+    ESC_H = arg('escarp-h', 480.0); A0, A1 = arg('escarp-a0', -6.0), arg('escarp-a1', 32.0)
+    TURN = math.radians(arg('escarp-turn', 18.0))
+    # the air's colour: the sky with its clouds smoothed away (a 64 by 32 copy), so the haze carries the
+    # warm-to-cool sweep of the horizon but never paints a cloud onto the rock
+    AIR_IMG = env.image.copy(); AIR_IMG.name = 'air'; AIR_IMG.scale(64, 32)
+    def air(nt, mist=None):
+        # aerial perspective, as the air does it: with distance the rock gives way to the colour of the sky a
+        # little above it in the same direction (the sky the camera sees, so it matches the clouds behind)
+        out_ = [n_ for n_ in nt.nodes if n_.bl_idname == 'ShaderNodeOutputMaterial'][0]
+        # at kilometres the scan's colour blotches read as cloud: calm it towards one even dark rock, so the
+        # edge stands as a solid layer and its scanned form carries it
+        for pb_ in [n_ for n_ in nt.nodes if n_.bl_idname == 'ShaderNodeBsdfPrincipled']:
+            bc_ = pb_.inputs['Base Color']
+            if bc_.links:
+                s0_ = bc_.links[0].from_socket
+                mc_ = node(nt, 'ShaderNodeMix', (pb_.location.x - 200, pb_.location.y + 200)); mc_.data_type = 'RGBA'
+                mc_.inputs['Factor'].default_value = arg('esc-calm', 0.7); mc_.inputs['B'].default_value = (0.085, 0.085, 0.075, 1)
+                link(nt, s0_, mc_.inputs['A']); link(nt, mc_.outputs['Result'], bc_)
+        src_ = out_.inputs['Surface'].links[0].from_socket
+        g_ = node(nt, 'ShaderNodeNewGeometry', (-600, 900))
+        ng_ = node(nt, 'ShaderNodeVectorMath', (-450, 900), operation='SCALE'); ng_.inputs['Scale'].default_value = -1
+        link(nt, g_.outputs['Incoming'], ng_.inputs[0])
+        up_ = node(nt, 'ShaderNodeVectorMath', (-300, 900), operation='ADD'); up_.inputs[1].default_value = (0, 0, arg('air-lift', 0.035))
+        link(nt, ng_.outputs['Vector'], up_.inputs[0])
+        mpa = node(nt, 'ShaderNodeMapping', (-150, 900)); mpa.inputs['Rotation'].default_value = mp.inputs['Rotation'].default_value
+        link(nt, up_.outputs['Vector'], mpa.inputs['Vector'])
+        ea = node(nt, 'ShaderNodeTexEnvironment', (0, 900)); ea.image = AIR_IMG; link(nt, mpa.outputs['Vector'], ea.inputs['Vector'])
+        ea.interpolation = 'Cubic'
+        em_ = node(nt, 'ShaderNodeEmission', (200, 900)); link(nt, ea.outputs['Color'], em_.inputs['Color'])
+        cd_ = node(nt, 'ShaderNodeCameraData', (-300, 1150))
+        fd_ = node(nt, 'ShaderNodeMath', (-100, 1150), operation='MULTIPLY'); fd_.inputs[1].default_value = -1.0 / arg('air-k', 6000.0)
+        link(nt, cd_.outputs['View Distance'], fd_.inputs[0])
+        ex_ = node(nt, 'ShaderNodeMath', (50, 1150), operation='EXPONENT'); link(nt, fd_.outputs['Value'], ex_.inputs[0])
+        iv_ = node(nt, 'ShaderNodeMath', (200, 1150), operation='SUBTRACT'); iv_.inputs[0].default_value = 1.0; link(nt, ex_.outputs['Value'], iv_.inputs[1])
+        cap_ = node(nt, 'ShaderNodeMath', (300, 1150), operation='MULTIPLY'); cap_.inputs[1].default_value = arg('air-max', 0.5)
+        link(nt, iv_.outputs['Value'], cap_.inputs[0])
+        # the base sinks into a low haze: more air in the lowest part of the edge
+        gz_ = node(nt, 'ShaderNodeSeparateXYZ', (-300, 1350)); link(nt, g_.outputs['Position'], gz_.inputs['Vector'])
+        lm_ = node(nt, 'ShaderNodeMapRange', (-100, 1350)); lm_.interpolation_type = 'SMOOTHSTEP'
+        lm_.inputs['From Min'].default_value = arg('mist-h', 160.0); lm_.inputs['From Max'].default_value = -20.0
+        lm_.inputs['To Min'].default_value = 0.0; lm_.inputs['To Max'].default_value = arg('mist', 0.45) if mist is None else mist
+        link(nt, gz_.outputs['Z'], lm_.inputs['Value'])
+        ad2 = node(nt, 'ShaderNodeMath', (450, 1150), operation='ADD'); ad2.use_clamp = True
+        link(nt, cap_.outputs['Value'], ad2.inputs[0]); link(nt, lm_.outputs['Result'], ad2.inputs[1])
+        mxa = node(nt, 'ShaderNodeMixShader', (400, 900)); link(nt, ad2.outputs['Value'], mxa.inputs['Fac'])
+        link(nt, src_, mxa.inputs[1]); link(nt, em_.outputs['Emission'], mxa.inputs[2])
+        link(nt, mxa.outputs['Shader'], out_.inputs['Surface'])
+    libs = []
+    for nm_, lod_ in (('coastal_cliff_01', '_LOD1'), ('coastal_cliff_02', '_LOD2')):
+        path = os.path.join(PH, nm_, nm_ + '_1k.blend')
+        with bpy.data.libraries.load(path, link=False) as (src, dst):
+            dst.objects = [n for n in src.objects if n.endswith(lod_)]
+        ob = dst.objects[0]
+        bb = [Vector(c) for c in ob.bound_box]
+        cx0 = (min(v.x for v in bb) + max(v.x for v in bb)) / 2; cy0 = (min(v.y for v in bb) + max(v.y for v in bb)) / 2
+        me = ob.data
+        me.transform(Matrix.Translation((-cx0, -cy0, -min(v.z for v in bb))))   # base centre at the origin
+        for ms_ in me.materials:
+            if ms_ is not None and ms_.use_nodes and not any(n_.bl_idname == 'ShaderNodeOutputAOV' for n_ in ms_.node_tree.nodes):
+                aov(ms_.node_tree, 'ld', 1.0)
+                air(ms_.node_tree)
+        coll = bpy.data.collections.new('lib_' + nm_); coll.objects.link(ob)
+        libs.append((coll, ob.dimensions.x, ob.dimensions.z))
+    def edge_line(rn_, an_, rf_, af_, H_, taper_end=0.0):
+        # one edge from (r, angle) near to far, angles in degrees right of the view; taper_end > 0 lets the
+        # last part of it break down and sink into the land instead of ending in a cut
+        an_, af_ = math.radians(an_), math.radians(af_)
+        P0 = Vector((rn_ * math.sin(an_), rn_ * math.cos(an_), 0)); P1 = Vector((rf_ * math.sin(af_), rf_ * math.cos(af_), 0))
+        dl = (P1 - P0); Ltot = dl.length; dl.normalize()
+        nrm = Vector((-dl.y, dl.x, 0))
+        if nrm.dot(-P0) < 0: nrm = -nrm                        # the face looks back towards the camera side
+        # turned a little towards the sun, so its upper ledges and top edge catch a rim of light
+        a_s = math.radians(SUN_AZ); sh_ = Vector((-math.sin(a_s), math.cos(a_s), 0))
+        tsign = 1.0 if nrm.cross(sh_).z > 0 else -1.0
+        tt = -0.08 * Ltot
+        while tt < Ltot * 1.05:
+            k = 0 if rng.uniform() < 0.8 else 1
+            coll, Lx, Hz = libs[k]
+            f = H_ / Hz * rng.uniform(0.85, 1.1) * (0.8 if k else 1.0)
+            span = Lx * f * 0.72
+            c_ = P0 + dl * (tt + span / 2) + nrm * rng.normal(0, 0.03 * span)
+            e = bpy.data.objects.new('i_' + coll.name, None); e.instance_type = 'COLLECTION'; e.instance_collection = coll
+            # local -Y (the scan's face) turned onto the normal, then towards the light
+            e.rotation_euler = (0, 0, math.atan2(nrm.x, -nrm.y) + tsign * TURN + rng.normal(0, 0.06))
+            flip = -1 if rng.uniform() < 0.5 else 1
+            e.scale = (f * flip, f, f)
+            tp = (tt + span / 2) / Ltot
+            sink_ = rng.uniform(0.2, 0.35) + (taper_end * max(0.0, (tp - (1 - taper_end))) / max(taper_end, 1e-6) * 0.7 if taper_end > 0 else 0)
+            e.location = (c_.x, c_.y, -Hz * f * sink_)
+            sc.collection.objects.link(e)
+            tt += span
+    if TREES and arg('hills-air', 1):
+        # the nearer hills take the same air and land mask, so they read as a darker layer in front of the edge
+        # (left to the grade they washed out to a pale wedge with a hard edge)
+        aov(m_h.node_tree, 'ld', 1.0); air(m_h.node_tree, mist=arg('hills-mist', 0.15))
+    if arg('escarp-line', 1):
+        edge_line(arg('esc-near-r', 3600.0), arg('esc-near-a', 30.0), arg('esc-far-r', 15000.0), arg('esc-far-a', -14.0), ESC_H)
+        if arg('spur', 0):
+            # a nearer, lower spur in front of the edge on the right: darker, less air, so the land layers
+            edge_line(arg('spur-near-r', 2100.0), arg('spur-near-a', 26.0), arg('spur-far-r', 4200.0), arg('spur-far-a', 8.0),
+                      arg('spur-h', 260.0), taper_end=0.45)
+    ang = math.radians(A0)
+    while ang < math.radians(A1) and not arg('escarp-line', 1):
+        k = 0 if rng.uniform() < 0.75 else 1
+        coll, Lx, Hz = libs[k]
+        # the edge rises out of the land, stands, and breaks down again: a height envelope across its length
+        tpos = (ang - math.radians(A0)) / max(1e-6, math.radians(A1 - A0))
+        envh = 0.3 + 0.7 * math.sin(math.pi * min(1.0, max(0.0, tpos * 1.25 - 0.05))) ** 0.6
+        f = ESC_H / Hz * envh * rng.uniform(0.82, 1.12) * (0.8 if k else 1.0)
+        span = Lx * max(f, ESC_H / Hz * 0.6) * 0.7
+        r_ = ESC_D * (1 + 0.04 * math.sin(ang * 9))
+        mid = ang + span / 2 / r_
+        px, py = r_ * math.sin(mid), r_ * math.cos(mid)
+        e = bpy.data.objects.new('i_' + coll.name, None); e.instance_type = 'COLLECTION'; e.instance_collection = coll
+        # face the camera (the scan's face looks down -Y), turned a little towards the light
+        e.rotation_euler = (0, 0, math.atan2(-px, py) + TURN + rng.normal(0, 0.05))
+        flip = -1 if rng.uniform() < 0.5 else 1
+        e.scale = (f * flip, f, f)
+        e.location = (px, py, -Hz * f * rng.uniform(0.12, 0.38))
+        sc.collection.objects.link(e)
+        ang += span / r_
+    # the land runs on under the edge: the far hills carried out past it
+    if TREES:
+        angs = np.linspace(-1.25, 1.25, 181); rads = np.linspace(3400, (arg('esc-far-r', 15000.0) if arg('escarp-line', 1) else ESC_D) * 1.15, 40)
+        bm = bmesh.new(); rows = []
+        for r_ in rads:
+            row = []
+            for a_ in angs:
+                x_ = r_ * math.sin(a_); y_ = r_ * math.cos(a_)
+                h_ = (45 + 30 * math.sin(a_ * 7.1 + 0.4) + 16 * math.sin(a_ * 17.3 + 1.7)) * (0.6 + 0.4 * math.sin(r_ / 900 + a_ * 4))
+                row.append(bm.verts.new((x_, y_, max(h_, 0) - 2)))
+            rows.append(row)
+        for j in range(len(rads) - 1):
+            for i in range(len(angs) - 1):
+                bm.faces.new((rows[j][i], rows[j][i + 1], rows[j + 1][i + 1], rows[j + 1][i]))
+        me = bpy.data.meshes.new('farland'); bm.to_mesh(me); bm.free()
+        for p_ in me.polygons: p_.use_smooth = True
+        fl = bpy.data.objects.new('farland', me); sc.collection.objects.link(fl); me.materials.append(m_h)
+
+# ---------------------------------------------------------------- cloud shadows on the land
+# A gobo high over the land, invisible to everything but shadow rays, and even then it only stops rays
+# that travel within a degree or two of the sun: so it lays the shadows of passing cumulus on the land
+# from the low sun without dimming the sky light. Its pattern is placed on the ground (each gobo point
+# is the ground point it shades plus the climb to the sun), kept clear over the stone and the near field.
+CLOUDS = arg('clouds', 0.0)
+if CLOUDS > 0 and SUN_OB is not None:
+    HC = 450.0
+    el = math.radians(arg('sun-el', 4.6))
+    dsun = (SUN_OB.matrix_world.to_3x3() @ Vector((0, 0, 1))).normalized()
+    off = dsun * (HC / dsun.z)
+    bpy.ops.mesh.primitive_plane_add(size=1, location=(off.x, off.y + 4000, HC))
+    gb = bpy.context.object; gb.name = 'cloud_gobo'; gb.scale = (40000, 40000, 1)
+    for v_ in ('visible_camera', 'visible_diffuse', 'visible_glossy', 'visible_transmission', 'visible_volume_scatter'):
+        setattr(gb, v_, False)
+    gb.visible_shadow = True
+    m_gb, nt = mat('gobo')
+    geo_ = node(nt, 'ShaderNodeNewGeometry', (-1400, 0))
+    gp = node(nt, 'ShaderNodeVectorMath', (-1200, 0), operation='SUBTRACT'); gp.inputs[1].default_value = tuple(off)
+    link(nt, geo_.outputs['Position'], gp.inputs[0])
+    sep = node(nt, 'ShaderNodeSeparateXYZ', (-1000, -300)); link(nt, gp.outputs['Vector'], sep.inputs['Vector'])
+    gsc = node(nt, 'ShaderNodeVectorMath', (-1000, 0), operation='MULTIPLY')
+    gsc.inputs[1].default_value = (1 / arg('cloud-size', 260.0), 1 / (arg('cloud-size', 260.0) * 1.6), 0)
+    link(nt, gp.outputs['Vector'], gsc.inputs[0])
+    gofs = node(nt, 'ShaderNodeVectorMath', (-850, 0), operation='ADD'); gofs.inputs[1].default_value = (arg('cloud-seed', 3.0), 1.7, 0.5)
+    link(nt, gsc.outputs['Vector'], gofs.inputs[0])
+    nz_ = node(nt, 'ShaderNodeTexNoise', (-700, 0)); nz_.noise_dimensions = '3D'
+    nz_.inputs['Scale'].default_value = 1.0; nz_.inputs['Detail'].default_value = 4; nz_.inputs['Roughness'].default_value = 0.55
+    link(nt, gofs.outputs['Vector'], nz_.inputs['Vector'])
+    cv = node(nt, 'ShaderNodeMapRange', (-500, 0)); cv.interpolation_type = 'SMOOTHSTEP'
+    cv.inputs['From Min'].default_value = arg('cloud-lo', 0.47); cv.inputs['From Max'].default_value = arg('cloud-lo', 0.47) + 0.09
+    link(nt, nz_.outputs['Fac'], cv.inputs['Value'])
+    # kept clear: the stone and the meadow round it (out to the dip)
+    dst_ = node(nt, 'ShaderNodeVectorMath', (-800, -500), operation='DISTANCE'); dst_.inputs[1].default_value = (MARK_X, MARK_Y, 0)
+    cmb = node(nt, 'ShaderNodeCombineXYZ', (-900, -500)); link(nt, sep.outputs['X'], cmb.inputs['X']); link(nt, sep.outputs['Y'], cmb.inputs['Y'])
+    link(nt, cmb.outputs['Vector'], dst_.inputs[0])
+    clr = node(nt, 'ShaderNodeMapRange', (-600, -500)); clr.interpolation_type = 'SMOOTHSTEP'
+    clr.inputs['From Min'].default_value = arg('cloud-clear', 55.0); clr.inputs['From Max'].default_value = arg('cloud-clear', 55.0) * 1.8
+    link(nt, dst_.outputs['Value'], clr.inputs['Value'])
+    op_ = node(nt, 'ShaderNodeMath', (-300, 0), operation='MULTIPLY'); link(nt, cv.outputs['Result'], op_.inputs[0]); link(nt, clr.outputs['Result'], op_.inputs[1])
+    # only rays on their way to the sun
+    dd_ = node(nt, 'ShaderNodeVectorMath', (-800, 400), operation='DOT_PRODUCT'); dd_.inputs[1].default_value = tuple(-dsun)
+    link(nt, geo_.outputs['Incoming'], dd_.inputs[0])
+    dm_ = node(nt, 'ShaderNodeMapRange', (-600, 400)); dm_.interpolation_type = 'SMOOTHSTEP'
+    dm_.inputs['From Min'].default_value = math.cos(math.radians(3.0)); dm_.inputs['From Max'].default_value = math.cos(math.radians(1.2))
+    link(nt, dd_.outputs['Value'], dm_.inputs['Value'])
+    op2 = node(nt, 'ShaderNodeMath', (-150, 0), operation='MULTIPLY'); link(nt, op_.outputs['Value'], op2.inputs[0]); link(nt, dm_.outputs['Result'], op2.inputs[1])
+    op3 = node(nt, 'ShaderNodeMath', (0, 0), operation='MULTIPLY'); op3.inputs[1].default_value = CLOUDS; link(nt, op2.outputs['Value'], op3.inputs[0])
+    tr_ = node(nt, 'ShaderNodeBsdfTransparent', (0, 200)); hb_ = node(nt, 'ShaderNodeBsdfDiffuse', (0, -200)); hb_.inputs['Color'].default_value = (0, 0, 0, 1)
+    mx_ = node(nt, 'ShaderNodeMixShader', (200, 0)); link(nt, op3.outputs['Value'], mx_.inputs['Fac'])
+    link(nt, tr_.outputs['BSDF'], mx_.inputs[1]); link(nt, hb_.outputs['BSDF'], mx_.inputs[2])
+    o_ = node(nt, 'ShaderNodeOutputMaterial', (400, 0)); link(nt, mx_.outputs['Shader'], o_.inputs['Surface'])
+    gb.data.materials.append(m_gb)
+
 # ---------------------------------------------------------------- camera
 CAM_H = arg('cam-h', 1.0)
 cam_d = bpy.data.cameras.new('cam'); cam = bpy.data.objects.new('cam', cam_d); sc.collection.objects.link(cam); sc.camera = cam
@@ -748,9 +988,9 @@ cam.location = (0, 0, CAM_H)
 cam.rotation_euler = (math.pi / 2 + pitch, 0, yaw)
 cam_d.dof.use_dof = True
 cam_d.dof.focus_distance = math.hypot(MARK_X, MARK_Y) - 0.15
-cam_d.dof.aperture_fstop = 2.2
+cam_d.dof.aperture_fstop = arg('fstop', 2.2)
 cam_d.dof.aperture_blades = 7; cam_d.dof.aperture_rotation = math.radians(10)
-cam_d.clip_start = 0.05; cam_d.clip_end = 2000
+cam_d.clip_start = 0.05; cam_d.clip_end = 2000 if ESC_D <= 0 else 30000
 
 # ---------------------------------------------------------------- scatter (numpy) and instance with geometry nodes
 cam_fwd = Vector((math.sin(-yaw) * -1, math.cos(yaw), 0)) if False else (cam.matrix_world.to_3x3() @ Vector((0, 0, -1)))
@@ -770,9 +1010,15 @@ def outside_mark(x, y):
     # never on the stone: drop points inside its footprint (plus a hand's width)
     c, s_ = math.cos(-MARK_YAW), math.sin(-MARK_YAW)
     lx = (x - MARK_X) * c - (y - MARK_Y) * s_; ly = (x - MARK_X) * s_ + (y - MARK_Y) * c
-    return ~((np.abs(lx) < 0.95 + 0.03) & (np.abs(ly) < T / 2 + 0.03))
+    keep = ~((np.abs(lx) < 50 * S + 0.03) & (np.abs(ly) < T / 2 + 0.03))
+    if PAPER_FOOT is not None:
+        # a little clearing where the sheet rests, so it lies on the short grass and is never buried
+        keep &= np.hypot(x - PAPER_FOOT[0], y - PAPER_FOOT[1]) > arg('paper-clear', 0.32)
+    return keep
 
 FRONT_THIN = arg('front-thin', 0.7)
+WIND = arg('wind', 0.0)            # radians of lean at the crest of a gust (0 is still air)
+WIND_AZ = arg('wind-az', -50.0)    # direction the wind blows towards, degrees from +x
 _ph = rng.uniform(0, 6.28, (2, 4)); _fq = rng.uniform(0.12, 0.45, (2, 4, 2))
 def patch(x, y, k):
     # a soft 0..1 field of clumps and thinner ground, a few metres across
@@ -796,6 +1042,23 @@ def scatter(name, coll, n, rmin, rmax, dens, nvar, scale_rng, seed_off=0, pick_b
     me = bpy.data.meshes.new(name); me.vertices.add(m); me.vertices.foreach_set('co', verts.ravel())
     rot = np.zeros((m, 3), np.float32); rot[:, 2] = rng.uniform(0, 2 * math.pi, m)
     rot[:, 0] = rng.normal(0, 0.04, m); rot[:, 1] = rng.normal(0, 0.04, m)
+    if WIND > 0:
+        # wind made visible: every clump leans the same way, more in broad travelling bands (gusts
+        # rolling through the field), composed after the clump's own random heading
+        wa = math.radians(WIND_AZ)
+        u_ = (x * math.cos(wa) + y * math.sin(wa))
+        band = 0.5 + 0.5 * np.sin(u_ / 7.5 + 0.8 * np.sin(x / 19.0 - y / 23.0)) * np.sin(u_ / 3.1 + 1.7)
+        th = (WIND * (0.3 + 0.7 * band) * rng.uniform(0.7, 1.3, m)).astype(np.float64)
+        cz, sz = np.cos(rot[:, 2]), np.sin(rot[:, 2]); cy_, sy_ = np.cos(rot[:, 1]), np.sin(rot[:, 1]); cx_, sx_ = np.cos(rot[:, 0]), np.sin(rot[:, 0])
+        E = np.empty((m, 3, 3))
+        E[:, 0, 0] = cz * cy_; E[:, 0, 1] = cz * sy_ * sx_ - sz * cx_; E[:, 0, 2] = cz * sy_ * cx_ + sz * sx_
+        E[:, 1, 0] = sz * cy_; E[:, 1, 1] = sz * sy_ * sx_ + cz * cx_; E[:, 1, 2] = sz * sy_ * cx_ - cz * sx_
+        E[:, 2, 0] = -sy_; E[:, 2, 1] = cy_ * sx_; E[:, 2, 2] = cy_ * cx_
+        k_ = np.array([-math.sin(wa), math.cos(wa), 0.0])          # lean axis: up crossed with the wind
+        K = np.array([[0, -k_[2], k_[1]], [k_[2], 0, -k_[0]], [-k_[1], k_[0], 0]])
+        Lr = np.eye(3)[None] + np.sin(th)[:, None, None] * K[None] + (1 - np.cos(th))[:, None, None] * (K @ K)[None]
+        M_ = Lr @ E
+        rot[:, 1] = -np.arcsin(np.clip(M_[:, 2, 0], -1, 1)); rot[:, 0] = np.arctan2(M_[:, 2, 1], M_[:, 2, 2]); rot[:, 2] = np.arctan2(M_[:, 1, 0], M_[:, 0, 0])
     dm = np.hypot(x - MARK_X, y - MARK_Y)
     fr_ = (np.abs(x - MARK_X) < 1.2 + 0.12 * (MARK_Y - y)) & (y < MARK_Y) & (y > MARK_Y - 7.0)
     near = NEAR_MIN + (1 - NEAR_MIN) * np.clip((dm - 1.2) / 3.0, 0, 1)
@@ -905,7 +1168,11 @@ if PASSES:
     ct.links.new(half_.outputs[0], mxm.inputs[0]); ct.links.new(q3.outputs[0], mxm.inputs[1])
     mx2 = ct.nodes.new('CompositorNodeMath'); mx2.operation = 'MAXIMUM'
     ct.links.new(mxm.outputs[0], mx2.inputs[0]); ct.links.new(cl(rl.outputs['cr']), mx2.inputs[1])
-    ct.links.new(mx2.outputs[0], cc.inputs['Blue'])
+    q4 = ct.nodes.new('CompositorNodeMath'); q4.operation = 'MULTIPLY'; q4.inputs[1].default_value = 0.25
+    ct.links.new(cl(rl.outputs['ld']), q4.inputs[0])
+    mx3 = ct.nodes.new('CompositorNodeMath'); mx3.operation = 'MAXIMUM'
+    ct.links.new(mx2.outputs[0], mx3.inputs[0]); ct.links.new(q4.outputs[0], mx3.inputs[1])
+    ct.links.new(mx3.outputs[0], cc.inputs['Blue'])
     ct.links.new(cc.outputs['Image'], fo.inputs[0])
     sc.frame_current = 1
 
@@ -924,7 +1191,17 @@ if paper_ob is not None:
     json.dump({'w': W, 'h': H, 'x0': min(xs), 'y0': min(ys), 'x1': max(xs), 'y1': max(ys)}, open(OUT + '.paper.json', 'w'))
     print('PAPER', min(xs), min(ys), max(xs), max(ys))
 import time
+if '--dry' in argv and '--probe' in argv:
+    from bpy_extras.object_utils import world_to_camera_view
+    dg_ = bpy.context.evaluated_depsgraph_get(); fr_ = cam.data.view_frame(scene=sc)
+    for (u_, v_) in ((0.05, 0.5), (0.6, 0.5), (0.6, 0.8), (0.9, 0.3), (0.3, 0.3)):
+        pt = fr_[2] + (fr_[1] - fr_[2]) * u_ + (fr_[3] - fr_[2]) * v_   # frame corners: 0 tr, 1 br, 2 bl, 3 tl
+        d_ = (cam.matrix_world.to_3x3() @ pt).normalized()
+        hit = sc.ray_cast(dg_, cam.matrix_world.translation, d_)
+        print('PROBE', u_, v_, hit[0], tuple(round(c, 1) for c in hit[1]) if hit[0] else '', hit[4].name if hit[0] else '')
 if '--dry' in argv:
+    for o_ in sc.objects:
+        if o_.name.startswith('i_lib_coastal') or o_.name.startswith('coastal') or o_.name in ('cloud_gobo', 'farland'): print('DRYOBJ', o_.name, tuple(round(v) for v in o_.location), tuple(round(v, 1) for v in o_.scale), o_.users_collection[0].name)
     print('DRY_OK'); sys.exit(0)
 t0 = time.time()
 sc.render.filepath = OUT

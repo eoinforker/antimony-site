@@ -87,7 +87,7 @@ def finish(img, seed=0, grain=0.012, halation=1.0, gain=1.0):
     return np.clip(out, 0, 1)
 
 def read_data(path, W, H):
-    d = resize(read16(path), W, H)
+    d = np.clip(resize(read16(path), W, H), 0, 1)
     d = np.where(d <= 0.04045, d / 12.92, ((d + 0.055) / 1.055) ** 2.4)   # stored through the Standard view
     depth = 4001.0 ** d[..., 0] - 1 if LOGDEPTH else d[..., 0] * 80.0
     return np.clip(depth, 0.3, 4000.0), np.clip(d[..., 1] * 1.2, 0, 1.2), d[..., 2]
@@ -113,6 +113,9 @@ def haze(img, depth, m, k=1.0):
     col = blur(img * sky[..., None], r) / (blur(sky, r)[..., None] + 1e-4)
     # fill columns with no sky nearby from the mean of the lowest sky
     f = ((1 - np.exp(-np.maximum(depth - 20, 0) / 260)) * 0.16 + (1 - np.exp(-np.maximum(depth - 500, 0) / 900)) * 0.5) * k
+    # far land (mask 0.25, the escarpment) carries its own aerial perspective from the render: only a touch here
+    land = smooth(0.15, 0.2, m) * (1 - smooth(0.3, 0.35, m))
+    f = f * (1 - 0.8 * land)
     f = np.where(sky > 0, 0, np.clip(f, 0, 0.82))[..., None]
     return img * (1 - f) + col * f
 
@@ -208,6 +211,37 @@ elif mode == 'loop':
     grass = smooth(0.3, 0.45, m) * (1 - smooth(0.6, 0.7, m))
     stone = smooth(0.6, 0.72, m)
     s = W / 1920
+    DRIFT = '--drift' in sys.argv
+    if DRIFT:
+        # ground-plane coordinates for every pixel, from the depth pass (metres across, metres out); the far
+        # edge (mask 0.25, its depth clipped) climbs its face instead, so shadows can cross it
+        fpx = opt('fpx', W * 45.0 / 36.0)
+        yy0, xx0 = np.mgrid[0:H, 0:W].astype(np.float32)
+        land = smooth(0.15, 0.2, m) * (1 - smooth(0.3, 0.35, m))
+        GY = np.where(land > 0.5, 4000.0 + (H * 0.62 - yy0) / H * 30000.0, depth)
+        GX = (xx0 - W / 2) / fpx * GY
+        # cloud shadows fall on the land from 60 m out (the stone and the near meadow stay in the sun)
+        reachc = smooth(60, 220, depth) * (1 - smooth(0.6, 0.72, m)) * (1 - (m < 0.02) * (depth > 3990))
+        reachc = blur(reachc.astype(np.float32), 1.0 * s)
+        _cr = np.random.default_rng(5)
+        cw = [(_cr.uniform(0, 6.28), _cr.uniform(-1, 1), _cr.uniform(-1, 1)) for _ in range(5)]
+        def clouds_at(ox):
+            # a soft field of cumulus shadow, about 300 to 900 m across, offset along the wind by ox metres
+            v = 0
+            for i, (ph_, a_, b_) in enumerate(cw):
+                L = 900.0 / (1 + i * 0.7)
+                v = v + np.sin((GX - ox) / L * (1 + 0.3 * a_) + GY / L * 0.6 * b_ + ph_) / (1 + i * 0.5)
+            return smooth(0.5, 0.95, v / 2.2 + 0.5)
+        CL_V = opt('cloud-m', 90.0)          # metres the shadows travel in one loop
+        # the sky, its clouds drifting a few pixels: non-sky filled from the sky round it, so nothing is smeared
+        skym = ((m < 0.02) & (depth > 3990)).astype(np.float32)
+        skym_s = blur(skym, 0.8 * s)[..., None]
+        fill = blur(img * skym[..., None], 18 * s) / (blur(skym, 18 * s)[..., None] + 1e-4)
+        skyfill = img * skym[..., None] + fill * (1 - skym[..., None])
+        SKY_PX = opt('sky-px', 7.0) * s      # pixels the clouds drift in one loop
+        P_SCALE = 0.45
+    else:
+        P_SCALE = 1.0
     # amplitude in pixels: more for the near grass and the tips, little at the stone, nothing on it
     amp = 5.0 * s * np.clip(3.5 / depth, 0.18, 1.6) * np.clip(hf, 0, 1) ** 1.4
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
@@ -219,7 +253,7 @@ elif mode == 'loop':
     TAU = 2 * math.pi
     rng = np.random.default_rng(11)
     # pollen: points of light on closed drifting paths; some near and unfocused, most small
-    P = 150 if NIGHT else 70
+    P = 150 if NIGHT else int(70 * P_SCALE)
     px0 = rng.uniform(0, W, P); py0 = rng.uniform(0.08 * H, 0.85 * H, P)
     prx = rng.uniform(30, 160, P) * s; pry = rng.uniform(10, 50, P) * s
     pph = rng.uniform(0, TAU, P); pk = rng.choice([1, 1, 1, 2], P)
@@ -248,7 +282,21 @@ elif mode == 'loop':
                0.15 * np.sin(TAU * (xx / (140 * s)) - 3 * ph + 0.4))
         dx = ampx * wnd
         dy = -0.35 * np.abs(dx)
-        fr = sample_bilinear(img, xx - dx, yy - dy)
+        src_ = img
+        if DRIFT:
+            # slow cloud: two copies of the sky, offset by the drift, crossfaded so the loop closes on itself
+            a1 = sample_bilinear(skyfill, xx - SKY_PX * t, yy); a2 = sample_bilinear(skyfill, xx - SKY_PX * (t - 1), yy)
+            skyt = a1 * (1 - t) + a2 * t
+            src_ = img * (1 - skym_s) + skyt * skym_s
+        fr = sample_bilinear(src_, xx - dx, yy - dy)
+        if DRIFT:
+            # the gusts show as travelling bands of sheen in the grass, as the blades bend and catch the light
+            gust = np.clip(wnd, 0, 1) * grass * np.clip(hf, 0, 1)
+            fr = fr * (1 + 0.035 * gust[..., None])
+            # cloud shadows drifting over the land and the far edge (the same crossfade, so it loops)
+            cs = clouds_at(CL_V * t) * (1 - t) + clouds_at(CL_V * (t - 1)) * t
+            sh_ = (cs * reachc * opt('cloud-k', 0.2))[..., None]
+            fr = fr * (1 - sh_ * np.array([1.0, 0.97, 0.88], np.float32))
         # light breathing: the sun leans in and eases off a little, more in the highlights
         br = 0.5 + 0.5 * math.sin(ph - 0.6)
         fr = fr * (0.985 + 0.03 * br) + sample_bilinear(hi, xx - dx, yy - dy) * (0.05 * br)

@@ -25,10 +25,15 @@ Ground and plants
                                        https://polyhaven.com/a/tree_small_02
                                        https://polyhaven.com/a/shrub_01
 
+The far escarpment
+  Poly Haven coastal_cliff_01, coastal_cliff_02 (scanned cliff bands, scaled up as a matte painter would)
+                                       https://polyhaven.com/a/coastal_cliff_01
+                                       https://polyhaven.com/a/coastal_cliff_02
+
 Letter paper
   ambientCG Paper002, 2K (colour, normal), lit to match the scene
                                        https://ambientcg.com/view?id=Paper002
 
 Built in meadow_scene.py: the tall grass blades, the wildflowers (buttercups, a pale blue
-five-petal flower, daisies), the folded letter in the seam, the rolling field and the distant hills.
+five-petal flower, daisies), the folded letter resting in the grass at the stone's foot, the rolling field and the distant hills.
 The Break mark geometry is Antimony's own (break-geometry.json).
