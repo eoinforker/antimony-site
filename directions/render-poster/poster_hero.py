@@ -396,7 +396,7 @@ def recolour(m, mode, glow=0.0):
         if n.bl_idname == 'ShaderNodeGroup':
             for i in n.inputs:
                 if i.is_linked and i.name in ('Diffuse', 'Translucency', 'Base Color', 'Albedo', 'Color'): targets.append(i)
-    tint = (0.86, 0.92, 1.0) if mode == 'white' else (0.55, 0.78, 1.0)
+    tint = {'white': (0.86, 0.92, 1.0), 'electric': (0.12, 0.38, 1.0)}.get(mode, (0.55, 0.78, 1.0))
     for sock in targets:
         src = sock.links[0].from_socket
         hsv = node(nt, 'ShaderNodeSeparateColor', mode='HSV'); link(nt, src, hsv.inputs['Color'])
@@ -523,6 +523,35 @@ def only_light(light_ob, objs):
     c = bpy.data.collections.new(light_ob.name + '_rx')
     for ob in objs: c.objects.link(ob)
     light_ob.light_linking.receiver_collection = c
+
+def prim(name, kind, loc, rot=(0, 0, 0), mat=None, **kw):
+    """a primitive built with bmesh (no operator context needed in background mode): 'sphere', 'cylinder', 'cone'"""
+    import bmesh
+    me = bpy.data.meshes.new(name); bm = bmesh.new()
+    if kind == 'sphere':
+        bmesh.ops.create_uvsphere(bm, u_segments=kw.get('segments', 32), v_segments=kw.get('rings', 16), radius=kw['radius'])
+    else:
+        r1 = kw['radius'] if kind == 'cylinder' else kw['radius1']; r2 = kw['radius'] if kind == 'cylinder' else kw['radius2']
+        bmesh.ops.create_cone(bm, cap_ends=True, segments=kw.get('vertices', 32), radius1=r1, radius2=r2, depth=kw['depth'])
+    bm.to_mesh(me); bm.free()
+    ob = link_obj(bpy.data.objects.new(name, me)); ob.location = loc; ob.rotation_euler = rot
+    if mat: me.materials.append(mat)
+    return ob
+
+def glow_source(name, loc, power, col, banks, radius=6.0, disc=40.0):
+    """a low light behind a silhouette: a point lamp lighting only the mist (the silhouette's shadow cuts the shafts)
+    and a soft disc the camera sees but nothing else does"""
+    l = bpy.data.lights.new(name, 'POINT'); l.energy = power * arg('--ray-power', 1.0); l.color = col
+    l.shadow_soft_size = radius
+    o = link_obj(bpy.data.objects.new(name, l)); o.location = loc
+    only_light(o, banks)
+    if disc > 0:
+        d = prim(name + '_disc', 'sphere', loc, radius=radius * 1.6)
+        m, nt = newmat(name + '_disc'); e = node(nt, 'ShaderNodeEmission'); e.inputs['Color'].default_value = (*col, 1)
+        e.inputs['Strength'].default_value = disc; out(nt, e.outputs[0]); d.data.materials.append(m)
+        for k in ('visible_diffuse', 'visible_glossy', 'visible_transmission', 'visible_volume_scatter', 'visible_shadow'):
+            setattr(d, k, False)
+    return o
 
 # ---------------------------------------------------------------- shared ground pieces
 def wet_slabs(name, x0, x1, y0, y1, slab=(0.9, 0.6), puddle=0.55, flood=0.0, z=0.0, disp=0.0):
@@ -770,6 +799,8 @@ STARMAP = arg('--starmap', os.path.join(SCR, 'assets', 'nasa_svs', 'starmap_2020
 def world_stars(rot=(-20.0, 55.0, 90.0), k=60.0, gamma=1.6, horizon=(0.07, 0.07, 0.2), hz_h=0.14, glow=(0.26, 0.2, 0.55), glow_h=0.06):
     """the real sky: NASA SVS Deep Star Maps 2020 (public domain), galactic map turned so the Milky Way rises across
     the frame; toned to the cobalt palette (the core's warmth kept only as a trace); the horizon sinks into mist"""
+    gamma = arg('--sgamma', gamma); sky = arg('--sky', 1.0)     # higher gamma: the faint field drops away
+    glow = tuple(g * sky for g in glow); glow_h *= arg('--sky-h', 1.0)
     wm = bpy.data.worlds.new('w'); sc.world = wm; wm.use_nodes = True; nt = wm.node_tree; nt.nodes.clear()
     tc = node(nt, 'ShaderNodeTexCoord'); mp = node(nt, 'ShaderNodeMapping')
     mp.inputs['Rotation'].default_value = tuple(math.radians(a) for a in rot)
@@ -794,7 +825,7 @@ def world_stars(rot=(-20.0, 55.0, 90.0), k=60.0, gamma=1.6, horizon=(0.07, 0.07,
     ms = node(nt, 'ShaderNodeMixShader'); link(nt, lp.outputs['Is Camera Ray'], ms.inputs[0]); link(nt, bg2.outputs[0], ms.inputs[1]); link(nt, bg.outputs[0], ms.inputs[2])
     o = node(nt, 'ShaderNodeOutputWorld'); link(nt, ms.outputs[0], o.inputs['Surface'])
 
-def world_clouds(hdr, rot_deg, k=0.17):
+def world_clouds(hdr, rot_deg, k=0.17, tint=(0.42, 0.58, 1.0), horizon=(0.05, 0.09, 0.19)):
     """the scanned moonlit cloud deck, normalised by its median, cooled to cobalt; the horizon sinks into the mist colour"""
     wm = bpy.data.worlds.new('w'); sc.world = wm; wm.use_nodes = True; nt = wm.node_tree; nt.nodes.clear()
     tc = node(nt, 'ShaderNodeTexCoord'); mp = node(nt, 'ShaderNodeMapping'); mp.inputs['Rotation'].default_value = (0, 0, math.radians(rot_deg))
@@ -805,10 +836,10 @@ def world_clouds(hdr, rot_deg, k=0.17):
     med = float(np.median((px_ * np.array([0.2126, 0.7152, 0.0722], np.float32)).sum(2))); del px_
     bw = node(nt, 'ShaderNodeRGBToBW'); link(nt, et.outputs[0], bw.inputs[0])
     cl = M(nt, 'MULTIPLY', M(nt, 'MINIMUM', M(nt, 'POWER', M(nt, 'DIVIDE', bw.outputs[0], med), 2.2), 9.0), k)
-    col = comb(nt, M(nt, 'MULTIPLY', cl, 0.42), M(nt, 'MULTIPLY', cl, 0.58), M(nt, 'MULTIPLY', cl, 1.0))
+    col = comb(nt, M(nt, 'MULTIPLY', cl, tint[0]), M(nt, 'MULTIPLY', cl, tint[1]), M(nt, 'MULTIPLY', cl, tint[2]))
     z = sep(nt, tc.outputs['Generated'])[2]
     hz = mr(nt, z, 0.16, 0.0)
-    c = mix(nt, hz, col, (0.05, 0.09, 0.19))
+    c = mix(nt, hz, col, horizon)
     bg = node(nt, 'ShaderNodeBackground'); link(nt, c, bg.inputs['Color']); bg.inputs['Strength'].default_value = 1.0
     o = node(nt, 'ShaderNodeOutputWorld'); link(nt, bg.outputs[0], o.inputs['Surface'])
 
@@ -1117,11 +1148,12 @@ def firs_lib():
             if mm and 'twig' in mm.name: recolour(mm, 'white')
     return libcoll('fir_lib', firs), len(firs)
 
-def drift_field(lib, nh, npw, n, x0, x1, y0, y1, rect, z_of=None, clear=None, scale=1.0, drift_scale=0.12):
+def drift_field(lib, nh, npw, n, x0, x1, y0, y1, rect, z_of=None, clear=None, scale=1.0, drift_scale=0.12, base=0.3, name='field', dk=None):
     """flowers in drifts: dense where a slow noise says so, thin between; heliophila mostly, a little periwinkle"""
     X = rng.uniform(x0, x1, n); Y = rng.uniform(y0, y1, n)
     f = (np.sin(X * drift_scale + 1.3) * np.cos(Y * drift_scale * 1.3 + 0.4) + np.sin((X + Y) * drift_scale * 0.6)) * 0.5
-    keep = rng.uniform(0, 1, n) < np.clip(0.35 + f * 0.9, 0.08, 1.0)
+    dk = arg('--drift-k', 1.6) if dk is None else dk     # drift contrast: clumps with dark gaps between, not an even carpet
+    keep = rng.uniform(0, 1, n) < np.clip(base + f * dk, 0.02, 1.0)
     if clear is not None: keep &= ~clear(X, Y)
     X, Y = X[keep], Y[keep]; m = len(X)
     pick = np.where(rng.uniform(0, 1, m) < 0.82, rng.integers(1, nh, m), nh + rng.integers(0, npw, m))
@@ -1131,7 +1163,7 @@ def drift_field(lib, nh, npw, n, x0, x1, y0, y1, rect, z_of=None, clear=None, sc
     ok = keep_clear(P, 0.38 * s, rect)
     P, pick, s = P[ok], pick[ok], s[ok]
     R = np.stack([rng.normal(0, 0.06, len(P)), rng.normal(0, 0.06, len(P)), rng.uniform(0, 6.28, len(P))], 1)
-    return instances('field', lib, P, R, np.stack([s, s, s], 1), pick)
+    return instances(name, lib, P, R, np.stack([s, s, s], 1), pick)
 
 def s_coast():
     """Idea: one cool light kept on a headland at the edge of the world, under the whole sky."""
@@ -1197,9 +1229,14 @@ def s_coast():
     # the light low on the horizon behind the stacks: rays through the mist on the water, rims on the rock
     moon = sun('horizon_light', (-0.32, -0.94, -0.1), 1.6, (0.55, 0.62, 1.0), 0.8,
                receivers=stacks + [o for o in bpy.data.objects if o.name in ('sea', 'stack_firs')])
-    banks = [haze('sea_mist', -4000, 4000, 40, 5000, SEA - 1, SEA + 22, 0.012, (0.62, 0.7, 1.0), 0.65, zfall=8.0),
-             haze('high_air', -4000, 4000, 80, 5000, SEA + 18, 200, 0.0006, (0.6, 0.66, 1.0), 0.7)]
-    sun('mist_glow', (-0.3, -0.95, -0.08), 0.55, (0.48, 0.55, 1.0), 4.0, receivers=banks)
+    MIST = arg('--mist', 1.6)
+    banks = [haze('sea_mist', -4000, 4000, 40, 5000, SEA - 1, SEA + 22, 0.012 * MIST, (0.66, 0.72, 1.0), 0.65, zfall=8.0),
+             haze('sea_bank', -4000, 4000, 120, 3000, SEA - 1, SEA + 7, 0.03 * MIST, (0.7, 0.76, 1.0), 0.75, zfall=2.5),
+             haze('high_air', -4000, 4000, 80, 5000, SEA + 18, 200, 0.0004, (0.6, 0.66, 1.0), 0.7)]
+    sun('mist_glow', (-0.3, -0.95, -0.08), 0.9, (0.5, 0.56, 1.0), 4.0, receivers=banks)
+    # the light low behind the fir stack: its shafts fan out through the banks (the stack's shadow cuts them)
+    glow_source('horizon_glow', (arg('--gx', -560.0), 1400.0, SEA + arg('--gz', 34.0)), 1.2e7, (0.62, 0.68, 1.0), banks,
+                radius=14.0, disc=30.0)
     ground_mist(-80, 80, -16, EDGE + 6, 0.04, 0.4, 2.5)
     field = bpy.data.objects['field']
     area('print_spill', (0, BOXY - 1.6, 1.4 + hz(np.array([0.0]), np.array([BOXY]))[0]), (0, BOXY - 2.5, -0.3), 110.0, GLOW, 1.4, receivers=[field])
@@ -1232,16 +1269,179 @@ def s_starfield():
     banks = []
     for (ya, yb, top, dens) in ((25, 70, 14, 0.010), (110, 190, 30, 0.006), (260, 420, 55, 0.005), (560, 900, 90, 0.004)):
         banks.append(haze('bank', -900, 900, ya, yb, -0.4, top, dens, (0.6, 0.74, 1.0), 0.6, zfall=top * 0.45))
-    sun('rays', (0.25, -0.9, -0.36), 1.1, (0.45, 0.6, 1.0), 0.8, receivers=banks)
+    MIST = arg('--mist', 1.6)
+    banks.append(haze('low_bank', -900, 900, 40, 700, -0.4, 9, 0.016 * MIST, (0.66, 0.76, 1.0), 0.7, zfall=3.0))
+    sun('rays', (0.15, -0.97, -0.14), 2.0, (0.45, 0.6, 1.0), 0.8, receivers=banks)
+    glow_source('horizon_glow', (arg('--gx', 70.0), 1300.0, arg('--gz', 55.0)), 1.0e7, (0.6, 0.7, 1.0), banks, radius=12.0, disc=30.0)
+    # large soft flowers right before the lens, a tilted standing stone to the right, grit and leaves near the box
+    NF = np.array([(-1.2, -10.4), (-0.7, -10.1), (1.1, -10.3), (1.5, -9.9), (-1.8, -9.8)])
+    instances('near_flowers', lib, np.stack([NF[:, 0], NF[:, 1], np.zeros(5)], 1),
+              np.stack([rng.normal(0, 0.1, 5), rng.normal(0, 0.1, 5), rng.uniform(0, 6.28, 5)], 1), np.full((5, 3), 2.3), np.array([1, 2, 1, 2, 1]))
+    stone = spires_from_scans(((0, 6.5, 3.5, -0.4, 2.2, 0.9, 0.25, 0.55),))[0]; stone.rotation_euler[0] = math.radians(-8)
+    if not LITE: debris(rect, z=0.0)
     ground_mist(-400, 400, -12, 700, 0.05, 0.5, 4.0, drift=0.6)
     rain(500, -5, 5, -10.5, 4, 0, 5, CAMLOC, (0.08, 0.2), alpha=0.32)
     field = bpy.data.objects['field']
     area('print_spill', (0, -1.6, 1.4), (0, -2.5, 0), 110.0, GLOW, 1.4, receivers=[field])
     return pr, rect
 
-BUILD = {'1': lambda: s_wall(True), '2': lambda: s_wall(False), '3': s_field, '4': s_ruins, '7': s_undercity, '7b': s_undergreen, '3b': s_starfield, '11': s_coast,
+def spectral_tree(name, base, height, depth, mat, spread=1.0, lean=(0.0, 0.0), roots=6, veins=None):
+    """a branching tree drawn as tapered curves: the trunk climbs, each branch splits two or three ways,
+    bending outward and up, thinner and shorter at every level. Optional roots, and ember veins up the trunk."""
+    cu = bpy.data.curves.new(name, 'CURVE'); cu.dimensions = '3D'; cu.bevel_depth = 1.0; cu.bevel_resolution = 2
+    cu.use_fill_caps = True; cu.resolution_u = 3
+    trunk_pts = []
+    def spline(pts, rad):
+        sp_ = cu.splines.new('POLY'); sp_.points.add(len(pts) - 1)
+        for pt, (c_, r_) in zip(sp_.points, zip(pts, rad)): pt.co = (*c_, 1.0); pt.radius = r_
+    def grow(p0, d, length, radius, level):
+        pts, rad = [np.array(p0, float)], [radius]; cur = pts[0].copy(); dv = np.array(d, float); nseg = 7
+        for i in range(nseg):
+            dv = dv + rng.normal(0, 0.16 + level * 0.03, 3); dv[2] += 0.04; dv /= np.linalg.norm(dv)
+            cur = cur + dv * length / nseg; pts.append(cur.copy()); rad.append(radius * (1 - 0.5 * (i + 1) / nseg))
+        spline(pts, rad)
+        if level == 0: trunk_pts.extend(pts)
+        if level < depth:
+            for _ in range(2 if level < 1 else int(rng.integers(2, 4))):
+                j = int(rng.integers(nseg // 2, nseg + 1))
+                nd = dv + rng.normal(0, 0.55, 3); nd[:2] *= 1.6 * spread; nd[2] = abs(nd[2]) * 0.6 + 0.25
+                grow(pts[j], nd / np.linalg.norm(nd), length * 0.7, rad[j] * 0.72, level + 1)
+    d0 = np.array([lean[0], lean[1], 1.0]); grow(base, d0 / np.linalg.norm(d0), height * 0.42, height * 0.035, 0)
+    for k in range(roots):    # roots: arching out and down from the foot
+        a = 2 * math.pi * k / roots + rng.uniform(-0.3, 0.3); r0 = height * 0.02
+        pts = [np.array(base) + np.array([0, 0, height * 0.06])]
+        for i in range(6):
+            t = (i + 1) / 6
+            pts.append(np.array(base) + np.array([math.cos(a) * height * 0.12 * t, math.sin(a) * height * 0.12 * t, height * 0.06 * (1 - t) ** 2 - t * 2]))
+        spline(pts, [r0 * (1 - 0.7 * i / 6) for i in range(7)])
+    ob = link_obj(bpy.data.objects.new(name, cu)); ob.data.materials.append(mat)
+    if veins is not None and trunk_pts:   # thin warm cracks of light running up the trunk
+        cv = bpy.data.curves.new(name + '_veins', 'CURVE'); cv.dimensions = '3D'; cv.bevel_depth = 1.0; cv.bevel_resolution = 1
+        for k in range(5):
+            off = rng.normal(0, 1, 3); off[2] = 0; off = off / np.linalg.norm(off) * height * 0.03
+            pts = [p_ + off + rng.normal(0, height * 0.004, 3) for p_ in trunk_pts[: 6]]
+            sp_ = cv.splines.new('POLY'); sp_.points.add(len(pts) - 1)
+            for pt, c_ in zip(sp_.points, pts): pt.co = (*c_, 1.0); pt.radius = height * 0.0016
+        vo = link_obj(bpy.data.objects.new(name + '_veins', cv)); vo.data.materials.append(veins)
+    return ob
+
+def s_erdfield():
+    """Idea: a hillside of light under a great pale tree, one made light kept among the flowers.
+    After the Elden Ring frame: low camera up a flowering slope, the spectral tree filling the sky, its light
+    breaking through the mist in shafts, firs and a cliff on the left, a domed ruin and a great rock on the right."""
+    global CAMLOC
+    lib, nh, npw = flowers('electric', glow=arg('--petal-glow', 30.0))
+    def hz(X, Y):    # flat at the box, rising to the right and away; a soft roll across the slope
+        return (0.09 * np.maximum(X - 3.0, 0.0) ** 1.25 + 0.03 * Y + 0.35 * np.sin(X * 0.17) * np.sin(Y * 0.11)
+                - 0.04 * np.maximum(-X - 8.0, 0.0) ** 1.1)
+    nx, ny = 180, 160
+    xs = np.linspace(-140, 140, nx); ys = np.linspace(-16, 260, ny)
+    GX, GY = np.meshgrid(xs, ys); GZ = hz(GX, GY)
+    V = np.stack([GX.ravel(), GY.ravel(), GZ.ravel()], 1)
+    F = [(j_ * nx + i_, j_ * nx + i_ + 1, (j_ + 1) * nx + i_ + 1, (j_ + 1) * nx + i_) for j_ in range(ny - 1) for i_ in range(nx - 1)]
+    soil = scanned('turf', os.path.join(ACG, 'Ground037'), uv_floor, 2.0, tint=(0.3, 0.4, 0.75), value=0.06, rough_mul=3.0)
+    mesh_obj('hill', V, F, [soil])
+    pr, lo, rect = lightbox(0.0, 0.0, 0.30, stand=True, glow=44.0, beam=0.07)
+    CAMLOC = (arg('--cx', -1.0), -12.5, float(hz(np.array([-1.0]), np.array([-12.5]))[0]) + arg('--ch', 0.55))
+    camera(CAMLOC, arg('--yaw', 0.0), arg('--pitch', 12.0), arg('--lens', 22.0), shift_y=0.0, fstop=arg('--fstop', 5.6), focus=12.5, clip=9000)
+    # flowers everywhere: a full carpet in drifts, brightest in the clumps
+    clr = lambda X, Y: (np.abs(X) < 0.9) & (Y > -0.6) & (Y < 0.5)
+    q = 1.0 if not LITE else 0.3
+    drift_field(lib, nh, npw, int(160000 * q), -16, 16, -12.3, 8, rect, z_of=hz, clear=clr, drift_scale=0.35, base=0.75, scale=0.9, dk=0.7)
+    drift_field(lib, nh, npw, int(160000 * q), -45, 45, 8, 50, rect, z_of=hz, drift_scale=0.2, base=0.6, scale=1.0, name='field_mid', dk=0.9)
+    drift_field(lib, nh, npw, int(120000 * q), -110, 110, 50, 200, rect, z_of=hz, drift_scale=0.1, base=0.55, scale=1.4, name='field_far', dk=0.9)
+    NF = np.array([(-2.6, -11.2), (-1.9, -11.6), (1.2, -11.4), (2.2, -11.0), (3.0, -11.5), (-3.4, -10.8), (0.4, -11.9)])
+    instances('near_flowers', lib, np.stack([NF[:, 0], NF[:, 1], hz(NF[:, 0], NF[:, 1])], 1),
+              np.stack([rng.normal(0, 0.12, 7), rng.normal(0, 0.12, 7), rng.uniform(0, 6.28, 7)], 1), np.full((7, 3), 2.4),
+              np.array([1, 2, 1, 2, 1, 2, 1]))
+    stone_m = plain('ruin_stone', (0.05, 0.055, 0.075), 0.8)
+    # the great rock, right foreground
+    rf = load_objs(os.path.join(PH, 'rock_face_01', 'rock_face_01_1k.blend'), ['rock_face_01'])
+    rocks = []
+    if rf:
+        r_ = rf[0]; link_obj(r_); k_ = 11.0 / max(r_.dimensions.z, 1e-3)
+        r_.scale = (k_ * 0.8, k_ * 0.8, k_); r_.rotation_euler = (0, 0, 2.3); r_.location = (13.5, -3.0, float(hz(np.array([13.5]), np.array([-3.0]))[0]) - 1.0)
+        rocks.append(r_)
+    # the domed ruin, right middle distance: a plinth, a colonnade, a half-barrel vault, a horned figure on top
+    RX, RY = 40.0, 92.0; RZ = float(hz(np.array([RX]), np.array([RY]))[0]) - 0.5
+    ruin = [box('ruin_base', RX - 12, RX + 12, RY - 7, RY + 7, RZ - 2, RZ + 6, stone_m, 0.2)]
+    for i in range(6):
+        cx_ = RX - 10 + i * 4
+        ruin.append(box('ruin_col', cx_ - 0.7, cx_ + 0.7, RY - 7.6, RY - 6.2, RZ + 6, RZ + 15, stone_m, 0.1))
+    ruin.append(box('ruin_lintel', RX - 12, RX + 12, RY - 8, RY + 7, RZ + 15, RZ + 17, stone_m, 0.2))
+    ruin.append(prim('ruin_drum', 'cylinder', (RX, RY, RZ + 21), (0, 0, 0), stone_m, vertices=48, radius=10.5, depth=8))
+    dome = prim('ruin_dome', 'sphere', (RX, RY, RZ + 25), (0, 0, 0), stone_m, radius=10.5, segments=48, rings=24); dome.scale = (1, 1, 0.75)
+    ruin.append(dome)
+    for sx_ in (-1, 1):
+        ruin.append(prim('ruin_horn', 'cone', (RX + sx_ * 1.5, RY - 2, RZ + 37.5), (0, math.radians(35 * sx_), 0), stone_m,
+                         vertices=12, radius1=1.6, radius2=0.2, depth=4.5))
+    ruin.append(box('ruin_figure', RX - 2, RX + 2, RY - 3.5, RY - 0.5, RZ + 32, RZ + 36, stone_m, 0.4))
+    # cliffs on the left: scanned sea cliffs stood up as a great plateau, far into the mist
+    cl = load_objs(os.path.join(PH, 'coastal_cliff_02', 'coastal_cliff_02_1k.blend'), ['coastal_cliff_02_LOD2'])
+    cl += load_objs(os.path.join(PH, 'coastal_cliff_01', 'coastal_cliff_01_1k.blend'), ['coastal_cliff_01_LOD2'])
+    cliffs = []
+    for (src, x, y, h, rz) in ((0, -330, 520, 240, 0.4), (1, -150, 760, 300, 2.0), (0, 120, 900, 260, 3.6), (1, -520, 340, 170, 1.1), (0, 300, 620, 150, 5.0)):
+        # the scans lie on their side (local +X is the height once turned, as in spires_from_scans)
+        o = cl[src].copy(); link_obj(o); d = cl[src].dimensions; k_ = h / max(d.x, 1e-3)
+        o.rotation_euler = (0, math.radians(90), rz); o.scale = (k_, k_ * 1.3, k_ * 1.3); o.location = (x, y, 0.0); cliffs.append(o)
+    for c_ in cl: bpy.data.objects.remove(c_)
+    bpy.context.view_layer.update()
+    for (o, h) in zip(cliffs, (240, 300, 260, 170, 150)):    # stand each on the ground, its foot a little sunk
+        zmin = min((o.matrix_world @ v.co).z for v in o.data.vertices); o.location.z += -zmin - h * 0.1
+    bpy.context.view_layer.update()
+    # firs: tall silhouettes on the left slope, stands on the cliff tops and along the far ridges
+    flib, nfl = firs_lib()
+    fp = []
+    for (cx_, cy_, nn, sp_, sc_) in ((-30, 45, 5, 6.0, 1.2), (-48, 70, 7, 8.0, 1.3), (-18, 90, 4, 6.0, 1.1), (-75, 110, 9, 12.0, 1.3),
+                                     (8, 140, 6, 12.0, 1.1), (25, 170, 8, 14.0, 1.2), (-110, 180, 10, 18.0, 1.3)):
+        for k in range(nn):
+            x_, y_ = cx_ + rng.normal(0, sp_), cy_ + rng.normal(0, sp_ * 0.7)
+            fp.append((x_, y_, float(hz(np.array([x_]), np.array([y_]))[0]) - 0.2, sc_ * rng.uniform(0.8, 1.2)))
+    for c_ in cliffs:
+        top = max((c_.matrix_world @ v.co).z for v in c_.data.vertices)
+        for k in range(12):
+            fp.append((c_.location.x + rng.normal(0, 40), c_.location.y + rng.normal(0, 25), top - rng.uniform(4, 25), rng.uniform(3.0, 4.5)))
+    FP = np.array(fp); nf = len(FP)
+    fob = instances('firs', flib, FP[:, :3], np.stack([np.zeros(nf), np.zeros(nf), rng.uniform(0, 6.28, nf)], 1),
+                    np.stack([FP[:, 3]] * 3, 1), rng.integers(0, nfl, nf))
+    # the great tree: pale and half transparent, glowing faintly, embers in its trunk
+    tm, tn = newmat('spectral'); tr = node(tn, 'ShaderNodeBsdfTransparent'); em = node(tn, 'ShaderNodeEmission')
+    em.inputs['Color'].default_value = (0.78, 0.76, 1.0, 1); em.inputs['Strength'].default_value = arg('--tree-glow', 0.6)
+    df = node(tn, 'ShaderNodeBsdfDiffuse'); df.inputs['Color'].default_value = (0.35, 0.34, 0.5, 1)
+    a1 = node(tn, 'ShaderNodeAddShader'); link(tn, em.outputs[0], a1.inputs[0]); link(tn, df.outputs[0], a1.inputs[1])
+    ms_ = node(tn, 'ShaderNodeMixShader'); ms_.inputs[0].default_value = arg('--tree-opacity', 0.85)
+    link(tn, tr.outputs[0], ms_.inputs[1]); link(tn, a1.outputs[0], ms_.inputs[2]); out(tn, ms_.outputs[0])
+    vm, vn = newmat('embers'); ve = node(vn, 'ShaderNodeEmission'); ve.inputs['Color'].default_value = (1.0, 0.42, 0.08, 1)
+    ve.inputs['Strength'].default_value = arg('--embers', 60.0); out(vn, ve.outputs[0])
+    TX, TY = arg('--tx', -60.0), 1150.0
+    tree = spectral_tree('great_tree', (TX, TY, -60.0), arg('--tree-h', 1500.0), 8 if not LITE else 7, tm, spread=1.8, lean=(0.05, 0.0), veins=vm)
+    # a small dead tree by the ruin, dark
+    dm = plain('deadwood', (0.03, 0.035, 0.05), 0.8)
+    spectral_tree('dead_tree', (RX - 16, RY - 2, RZ + 4), 16.0, 5, dm, spread=1.6, lean=(0.2, 0.0), roots=3)
+    # the sky: a bright cloud deck, lavender
+    world_clouds(os.path.join(PH, 'kloppenheim_07_puresky', 'kloppenheim_07_puresky_2k.hdr'), arg('--cloud-rot', -40.0),
+                 arg('--cloud', 3.0), tint=(0.74, 0.74, 1.0), horizon=(0.8, 0.82, 1.1))
+    # the air: deep aerial haze that pales every plane behind the next, a low bank in the valley
+    MIST = arg('--mist', 1.0)
+    banks = [haze('aerial', -3000, 3000, 60, 3000, -60, 1400, 0.0011 * MIST, (0.78, 0.8, 1.0), 0.72, zfall=500.0),
+             haze('valley_bank', -3000, 3000, 120, 1500, -60, 50, 0.005 * MIST, (0.75, 0.78, 1.0), 0.75, zfall=25.0)]
+    ground_mist(-120, 120, -14, 160, 0.05 * MIST, 0.6, 4.0, col=(0.6, 0.7, 1.0))
+    # the light behind the tree: shafts fanning down through the haze, cut by its branches
+    glow_source('tree_glow', (TX + arg('--gx', 90.0), TY + 150, arg('--gz', 720.0)), 9.0e7, (0.86, 0.86, 1.0), banks,
+                radius=40.0, disc=arg('--disc', 0.0))
+    # the air itself lit from behind: forward scattering makes the haze glow towards the light
+    sun('air_light', (0.05, -0.97, -0.25), arg('--air', 2.5), (0.8, 0.8, 1.0), 3.0, receivers=banks)
+    # back light: lavender rims on the rock, the ruin, the firs; little on the ground so the flowers carry it
+    sun('back_rim', (0.1, -0.95, -0.35), arg('--rim', 2.2), (0.72, 0.74, 1.0), 2.0, receivers=rocks + ruin + cliffs + [fob])
+    sun('sky_fill', (0.0, 0.3, -1.0), 0.25, (0.55, 0.6, 1.0), 20.0)
+    field = bpy.data.objects['field']
+    area('print_spill', (0, -1.6, 1.4), (0, -2.5, 0), 110.0, GLOW, 1.4, receivers=[field])
+    if not LITE: debris(rect, z=0.0)
+    return pr, rect
+
+BUILD = {'1': lambda: s_wall(True), '2': lambda: s_wall(False), '3': s_field, '4': s_ruins, '7': s_undercity, '7b': s_undergreen, '3b': s_starfield, '11': s_coast, '12': s_erdfield,
          '8': s_pond, '9': s_forest}
-NAMES = {'1': 'mist', '2': 'flowers', '3': 'blue-field', '4': 'ruins', '7': 'undercity', '7b': 'undercity-green', '3b': 'starlit-field', '11': 'starlit-coast', '8': 'pond-courtyard',
+NAMES = {'1': 'mist', '2': 'flowers', '3': 'blue-field', '4': 'ruins', '7': 'undercity', '7b': 'undercity-green', '3b': 'starlit-field', '11': 'starlit-coast', '12': 'erd-field', '8': 'pond-courtyard',
          '9': 'moon-forest'}
 
 # ---------------------------------------------------------------- render
@@ -1262,7 +1462,7 @@ cy.max_bounces = 6; cy.diffuse_bounces = 2; cy.glossy_bounces = 2; cy.transmissi
 cy.transparent_max_bounces = 16; cy.caustics_reflective = False; cy.caustics_refractive = False
 cy.blur_glossy = 1.0; cy.sample_clamp_indirect = 6.0; cy.use_light_tree = True
 cy.volume_step_rate = arg('--vstep', 4.0); cy.volume_max_steps = 256
-vs = sc.view_settings; vs.view_transform = 'AgX'; vs.look = 'AgX - Medium High Contrast'; vs.exposure = EXPO
+vs = sc.view_settings; vs.view_transform = 'AgX'; vs.look = arg('--look', 'AgX - Medium High Contrast'); vs.exposure = EXPO
 r.image_settings.file_format = 'PNG'; r.image_settings.color_mode = 'RGB'; r.image_settings.color_depth = '8'
 sc.use_nodes = True; ct = sc.node_tree; ct.nodes.clear()
 rl = ct.nodes.new('CompositorNodeRLayers')

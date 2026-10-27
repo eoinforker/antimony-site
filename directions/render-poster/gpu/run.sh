@@ -5,10 +5,13 @@
 #   bash gpu/run.sh            everything
 #   ONLY=11 bash gpu/run.sh    one setting
 #   DRY=1 bash gpu/run.sh      build the scenes and print the corners, no render
+#   PREVIEW=1 bash gpu/run.sh  1920x1080 at 384 samples, about a minute a frame, for tuning the look
+#   ARGS="--mist 1.4 --rim 3" ONLY=12 PREVIEW=1 bash gpu/run.sh   pass extra scene options
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")/.." && pwd); cd "$HERE"
 W=${W:-/workspace/poster}; A=$W/assets; B=$W/blender; OUT=$HERE/out; mkdir -p "$A" "$OUT"
-RES=${RES:-3840x2160}; SAMPLES=${SAMPLES:-2048}; NOISE=${NOISE:-0.005}; PH_RES=${PH_RES:-2k}
+RES=${RES:-3840x2160}; SAMPLES=${SAMPLES:-2048}; NOISE=${NOISE:-0.005}; PH_RES=${PH_RES:-2k}; WIDTHS="3840 1920"
+if [ -n "${PREVIEW:-}" ]; then RES=1920x1080; SAMPLES=384; NOISE=0.02; WIDTHS=1920; fi
 
 # ---- Blender 4.5 LTS
 if [ ! -x "$B/blender" ]; then
@@ -35,13 +38,17 @@ want = {'flower_heliophila': ('flower_heliophila', 'flower_heliophila_2k.blend')
         'fir_tree_01': ('fir_tree_01_lod2', 'fir_tree_01_lod2.blend'),
         'coastal_cliff_01': ('coastal_cliff_01', 'coastal_cliff_01_1k.blend'),
         'coastal_cliff_02': ('coastal_cliff_02', 'coastal_cliff_02_1k.blend'),
-        'rock_face_01': ('rock_face_01', 'rock_face_01_1k.blend')}
+        'rock_face_01': ('rock_face_01', 'rock_face_01_1k.blend'),
+        'tree_small_02': ('tree_small_02', 'tree_small_02_1k.blend'),
+        'rock_moss_set_01': ('rock_moss_set_01', 'rock_moss_set_01_1k.blend')}
 for aid, (folder, name) in want.items():
     files = json.load(urllib.request.urlopen('https://api.polyhaven.com/files/' + aid))['blend']
     b = files.get(res, files.get('2k', files['1k']))['blend']
     d = os.path.join(A, 'polyhaven', folder)
     get(b['url'], os.path.join(d, name))
     for rel, f in b.get('include', {}).items(): get(f['url'], os.path.join(d, rel))
+h = json.load(urllib.request.urlopen('https://api.polyhaven.com/files/kloppenheim_07_puresky'))['hdri']['2k']['hdr']['url']
+get(h, os.path.join(A, 'polyhaven', 'kloppenheim_07_puresky', 'kloppenheim_07_puresky_2k.hdr'))
 get('https://svs.gsfc.nasa.gov/vis/a000000/a004800/a004851/starmap_2020_8k_gal.exr',
     os.path.join(A, 'nasa_svs', 'starmap_2020_8k_gal.exr'))
 g = os.path.join(A, 'ambientcg', 'Ground037')
@@ -57,15 +64,15 @@ nvidia-smi --query-gpu=name,memory.used,utilization.gpu --format=csv,noheader ||
 common=(--device OPTIX --res "$RES" --samples "$SAMPLES" --noise "$NOISE" --time 0 --vstep 1
         --ph "$A/polyhaven" --acg "$A/ambientcg" --starmap "$A/nasa_svs/starmap_2020_8k_gal.exr"
         --print assets/hero-print.png --bloom 0.5 --bloom-th 2.0 --print-e 2.0 --petal-glow 14 --drops 800)
-declare -A EXTRA=([11]="--stars 50 --sx -10 --sy -35 --sz 95" [3b]="--stars 40 --sx -10 --sy -35 --sz 75")
-declare -A NAME=([11]=11-starlit-coast [3b]=03b-starlit-field)
-declare -A POST=([11]="--sat 1.15 --lift 0.5 --halation 1.6" [3b]="--sat 1.3 --lift 0.5 --halation 1.6")
-for s in ${ONLY:-11 3b}; do
+declare -A EXTRA=([11]="--stars 40 --sgamma 2.0 --sx -10 --sy -35 --sz 95" [3b]="--stars 30 --sgamma 2.0 --sx -10 --sy -35 --sz 75" [12]="--full 1")
+declare -A NAME=([11]=11-starlit-coast [3b]=03b-starlit-field [12]=12-erd-field)
+declare -A POST=([11]="--sat 1.15 --lift 0.5 --halation 1.6" [3b]="--sat 1.3 --lift 0.5 --halation 1.6" [12]="--sat 1.25 --lift 0.5 --halation 2.0")
+for s in ${ONLY:-12 11 3b}; do
   log=$OUT/r$s.log; echo "== $s -> $log"
-  "$B/blender" -b --factory-startup -P poster_hero.py -- --setting "$s" "${common[@]}" ${EXTRA[$s]} \
+  "$B/blender" -b --factory-startup -P poster_hero.py -- --setting "$s" "${common[@]}" ${EXTRA[$s]} ${ARGS:-} \
     ${DRY:+--dry} --out "$OUT/r$s.png" --data "$OUT/d$s.png" 2>&1 | tee "$log" | grep -E "Error|Traceback|corners|Time|saved|^\[" || true
   [ -n "${DRY:-}" ] && continue
-  for w in 3840 1920; do
+  for w in $WIDTHS; do
     python3 -I hero_post.py "$OUT/r$s.png" "$OUT/r$s.png.json" "$OUT/${NAME[$s]}-$w.png" --w $w ${POST[$s]}
   done
 done
