@@ -1,4 +1,4 @@
-# Lines (DRAFT, not approved)
+# Lines (approved by the owner, 27 Oct 2026)
 
 In the site's voice: quiet, sure of itself, in it for the long term. The scale and the magic come from the world;
 the words stay calm. Nothing here is final until the owner approves it.
@@ -31,4 +31,9 @@ the words stay calm. Nothing here is final until the owner approves it.
 
 ## Approved
 
-(empty until the owner picks)
+All of the above are approved. Lines 1 and 2 are merged around the owner's word, "intention":
+
+- **Hero line:** Large things, made with intention, for the people who make the work.
+- **Hero alternates:** 3 (A lab for software that lasts.) and 4 (We build slowly, and we build to stand.)
+- **Poster lines:** 5 to 10, one per scene.
+- **Chip the stone:** as in the table, in that order.
