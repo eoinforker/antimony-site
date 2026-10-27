@@ -516,7 +516,7 @@ addEventListener("keydown", arm, { once: true });
    ?world=garden (the default), rain, meadow or bluefield. Each world's frame, and where its letter, its stone and its
    crystal sit in that frame (fractions), for the wide framing and for phones, from each render's own data:
    garden: garden-ruin/assets/render.json via build_page.py; rain: rain/index.html (FACE, PAPER, CROP);
-   bluefield: w11-blue-field/assets/frame.json (phone: its own crop of the wide frame); meadow: final/HERO.md's
+   bluefield: w11-blue-field/assets/frame.json (wide, and the tall phone render); meadow: final/HERO.md's
    focal point, and the note tucked into the stone's seam, placed by eye in both renders. */
 var WORLDS = {
   garden: { name: "The garden", files: ["garden-still", "garden-still-phone", "garden-loop", "garden-loop-phone"], avif: true,
@@ -534,11 +534,11 @@ var WORLDS = {
     phone: { w: 1080, h: 2340, fx: .5, look: [.5, .45], letter: [.578, .6, .612, .624], stone: [.269, .578, .75, .795] },
     glimpse: ["forest", "garden", "rain"],
     alt: "A meadow in low, warm late-afternoon light under a wide sky of sunlit clouds. Tall grass runs to a low rise where the Antimony stone stands, its sky-blue crystal set in the break, a folded note tucked into the top of its seam." },
-  bluefield: { name: "The blue field", files: ["bluefield-still", "bluefield-still", "bluefield-loop", "bluefield-loop"], avif: true,
-    desk: { w: 1920, h: 1080, fx: .5, look: [.3506, .649], letter: [.2978, .8025, .3215, .8121], stone: [.2562, .4825, .4422, .8116] },
-    phone: { w: 1920, h: 1080, fx: .2794, look: [.3506, .649], letter: [.2978, .8025, .3215, .8121], stone: [.2562, .4825, .4422, .8116] },
+  bluefield: { name: "The blue field", files: ["bluefield-still", "bluefield-still-phone", "bluefield-loop", "bluefield-loop-phone"], avif: true,
+    desk: { w: 1920, h: 1080, fx: .5, look: [.6, .3], letter: [.312, .8088, .3434, .8377], stone: [.2562, .4825, .4422, .8116] },
+    phone: { w: 1080, h: 2340, fx: .43, look: [.43, .66], letter: [.3498, .7104, .4161, .7267], stone: [.2331, .5282, .6283, .7114] },
     glimpse: ["forest", "meadow", "garden"],
-    alt: "A field of small blue flowers at night under low cloud, pale spires of rock far off in the mist and specks of light drifting in the air. The Antimony stone stands in the flowers, its crystal lit from within, and a folded letter lies in the flowers at its foot." }
+    alt: "A field of small blue flowers at night under low cloud, pale spires of rock far off in the mist and specks of light drifting in the air. The Antimony stone stands in the flowers, its crystal lit from within, and a half-open letter lies in front of it." }
 };
 var WKEY = (/[?&]world=([a-z]+)/.exec(location.search) || /^#(?:world=)?([a-z]+)/.exec(location.hash) || [])[1];
 if (!WORLDS[WKEY]) WKEY = "garden";
@@ -1299,11 +1299,12 @@ glMove = function (dir) {
     } else { settle(); departed(); }
   });
 };
+if (DEBUG) window.__dv = function () { return [DV.win, hasWorld, running, gloop.readyState, gstill.complete, gstill.naturalWidth]; };
 if (DEBUG) window.__vr = function () { var o = []; for (var i = 0; i <= 20; i++) o.push(Math.round(vrect(i / 20)[2])); return o.join(" ") + " Z " + G.Z.toFixed(1); };
 if (DEBUG) window.__door = function (p) { parked = true; html.classList.add("moving"); paperEl.style.transform = stage.style.transform = ""; measure(); doorGeom(); frameMove(); doorAt(p); };
 
 /* ---------- rest ---------- */
-var t0 = performance.now(), running = false, visible = true, last = 0, clockOff = 0;
+var t0 = performance.now(), running = false, visible = true, last = 0, clockOff = 0, winT0 = 0;
 function restDraw(clock) {
   upWorld(); DV.vr = vrect(0); DV.ref = 1; DV.tint = 1; DV.gl = [0, 0, 0]; DV.soft = 0; DV.cut = 0;
   if (!running && hasWorld) DV.win = 1;
@@ -1316,7 +1317,7 @@ function restFrame(now) {
   crA += (crT - crA) * Math.min(1, dt * (crT ? 6 : 4));
   for (var k = 0; k < 3; k++) { var a = (now - kintT[k]) / (kintA[k] >= 1 ? 1700 : 380); HA[k * 3 + 1] = kintA[k] * Math.pow(Math.max(0, 1 - a), 2); }
   /* the water in the crystal clears into a window once the world beyond it has arrived */
-  if (hasWorld) DV.win = Math.min(1, DV.win + dt / 1.4);
+  if (hasWorld) { if (!winT0) winT0 = now - DV.win * 1400; DV.win = Math.min(1, (now - winT0) / 1400); }
   restDraw((now - t0) / 1000 + clockOff);
   waterSound(Math.min(1, Math.abs(W.tv) * 1.1 + W.rip * .55), dt);
   if (visible && !parked) requestAnimationFrame(restFrame); else running = false;
