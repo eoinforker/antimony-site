@@ -23,6 +23,8 @@ python3 -m pip install -q numpy pillow >/dev/null 2>&1 || true
 python3 - "$A" "$PH_RES" <<'PY'
 import json, os, sys, urllib.request
 A, res = sys.argv[1], sys.argv[2]
+op = urllib.request.build_opener(); op.addheaders = [('User-Agent', 'antimony-poster-render/1.0')]
+urllib.request.install_opener(op)   # Poly Haven's API refuses Python's default agent
 def get(url, path):
     if os.path.exists(path) and os.path.getsize(path) > 0: return
     os.makedirs(os.path.dirname(path), exist_ok=True); print('  ', os.path.relpath(path, A))
