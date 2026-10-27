@@ -65,9 +65,9 @@ elif V == 'b':
 else:
     HDR = os.path.join(PH, 'industrial_sunset_02_puresky', 'industrial_sunset_02_puresky_2k.hdr')
     P = dict(scale_m=20.0, location=(0, 0, 0), rotation=(0.02, 0.0, -0.12), wetness=0.0, moss=0.45, glow=0.2)
-    SUN = Vector((0.45, 0.85, 0.17)).normalized(); SUN_STR = 5.5; SUN_COL = (1.0, 0.78, 0.55)
+    SUN = Vector((-0.12, 0.96, 0.25)).normalized(); SUN_STR = 6.0; SUN_COL = (1.0, 0.78, 0.55)
     CAM = (7.0, -38.0, 0.7); TGT = (0.0, 0.0, 12.0); LENS = 24; FSTOP = 8.0
-    WORLD_STR = 0.8; EXPO = 0.0; MIST = (30, 900, 0.3, (0.86, 0.88, 0.92))
+    WORLD_STR = 0.8; EXPO = -0.2; MIST = (30, 900, 0.12, (0.86, 0.88, 0.92))
     GR = dict(radius=140, count=int(60000 * GRASS), scale=1.5, front_clear=False)
 
 SCALE = arg('scale', 0.0)
@@ -120,7 +120,7 @@ if V == 'c':
     bpy.ops.mesh.primitive_cube_add(size=1); hz = bpy.context.object; hz.name = 'haze'
     hz.scale = (700, 700, 160); hz.location = (0, 120, 70)
     hm = bpy.data.materials.new('haze'); hm.use_nodes = True; hnt = hm.node_tree; hnt.nodes.clear()
-    pv = hnt.nodes.new('ShaderNodeVolumePrincipled'); pv.inputs['Density'].default_value = arg('haze', 0.008)
+    pv = hnt.nodes.new('ShaderNodeVolumePrincipled'); pv.inputs['Density'].default_value = arg('haze', 0.0035)
     pv.inputs['Color'].default_value = (0.88, 0.93, 1.0, 1); pv.inputs['Anisotropy'].default_value = 0.55
     ho = hnt.nodes.new('ShaderNodeOutputMaterial'); hnt.links.new(pv.outputs['Volume'], ho.inputs['Volume'])
     hz.data.materials.append(hm); hz.visible_shadow = False
