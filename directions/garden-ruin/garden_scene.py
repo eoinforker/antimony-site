@@ -19,7 +19,7 @@ OUT = arg('out', '/tmp/garden.png')
 RES = arg('res', '640x360')
 SAMPLES = arg('samples', 32)
 TIME = arg('time', 0.0)
-EXPO = arg('exposure', 0.9)
+EXPO = arg('exposure', 0.55)
 DENS = arg('density', 1.0)
 HERE = os.path.dirname(os.path.abspath(__file__))
 GEO = json.load(open(arg('geometry', os.path.join(HERE, 'break-geometry.json'))))
@@ -55,6 +55,8 @@ sc.view_settings.exposure = EXPO
 sc.render.image_settings.file_format = 'PNG'
 sc.render.image_settings.color_depth = '8'
 sc.render.image_settings.color_mode = 'RGB'
+vl = sc.view_layers[0]
+_a = vl.aovs.add(); _a.name = 'wt'; _a.type = 'VALUE'
 
 # ---------------------------------------------------------------- helpers
 def mat(name):
@@ -155,7 +157,7 @@ wld.cycles.sampling_method = 'MANUAL'; wld.cycles.sample_map_resolution = 1024
 
 # sun travels down steeply, a little to the right and away from the camera, so it lights the stone's face from above
 SUN_D = Vector((arg('sun-x', 0.2), arg('sun-y', 0.2), -0.94)).normalized()
-sun_d = bpy.data.lights.new('sun', 'SUN'); sun_d.energy = arg('sun', 28.0); sun_d.angle = math.radians(arg('sun-angle', 1.6))
+sun_d = bpy.data.lights.new('sun', 'SUN'); sun_d.energy = arg('sun', 28.0); sun_d.angle = math.radians(arg('sun-angle', 0.9))
 sun_d.color = (1.0, 0.80, 0.58)
 sun = link_obj(bpy.data.objects.new('sun', sun_d))
 sun.rotation_euler = SUN_D.to_track_quat('-Z', 'Y').to_euler()
@@ -164,6 +166,7 @@ sun.rotation_euler = SUN_D.to_track_quat('-Z', 'Y').to_euler()
 S = arg('scale', 0.026)        # 100 units = 2.6 m: a monolith you stand beside
 T = arg('thick', 0.55)
 MARK_X, MARK_Y = arg('mx', 2.6), arg('my', 10.5)
+BLOCK = (arg('bx', 0.25), arg('by', 9.0))
 MARK_YAW = math.radians(arg('yaw', -14.0))
 
 # the shared stone (directions/stone/stone.py): exact Break geometry, honed scanned basalt, softened and
@@ -172,7 +175,7 @@ sys.path.insert(0, arg('stone-dir', os.path.join(os.path.dirname(HERE), 'stone')
 import stone
 STONE = stone.build_stone(sc.collection, scale_m=S * 100, location=(MARK_X, MARK_Y, 0.0),
                           rotation=(0.01, -0.006, MARK_YAW), wetness=0.0, moss=arg('moss', 0.45),
-                          cache_dir=os.path.dirname(PH.rstrip('/')), stone_value=arg('st-val', 1.35),
+                          cache_dir=os.path.dirname(PH.rstrip('/')), stone_value=arg('st-val', 0.8),
                           glow=arg('cr-glow', 0.2), caustics=bool(arg('caustics', 0)), detail=arg('detail', 300))
 T = STONE['info']['T']
 crystal = STONE['crystal']
@@ -193,12 +196,13 @@ def fbm(x, y, seed, oct_=5, f0=0.35):
         amp *= 0.55; f *= 2.1
     return v / tot * 2.2
 BED_C = (MARK_X - 0.3, MARK_Y + 0.3)
+POOL = (MARK_X - arg('pool-dx', 0.8), MARK_Y - arg('pool-dy', 0.45))   # where the shaft lands
 def bed_field(x, y):
-    d = np.hypot((x - BED_C[0]) / 1.0, (y - BED_C[1]) / 0.85)
-    return 4.3 - d + 1.1 * fbm(x, y, 3)          # > 0 inside the bed
+    d = np.hypot((x - BED_C[0]) / 1.0, (y - BED_C[1]) / 0.8)
+    return 3.4 - d + 0.9 * fbm(x, y, 3)          # > 0 inside the bed
 def water_field(x, y):
-    d = np.hypot((x - 0.2) / 1.3, (y - 4.3) / 0.9)
-    return 3.5 - d + 0.8 * fbm(x, y, 5)
+    d = np.hypot((x - 0.9) / 1.5, (y - 6.4) / 0.75)
+    return 2.5 - d + 0.6 * fbm(x, y, 5)
 BED = np.clip(bed_field(XX, YY) / 0.25, 0, 1)
 WAT = np.clip(water_field(XX, YY) / 0.12, 0, 1) * (1 - BED)
 mimg = bpy.data.images.new('floormask', MW, MH, alpha=False, float_buffer=True)
@@ -322,23 +326,24 @@ for side in (-1, 1):
 
 # the far wall with one great arched window; a plain wall behind the camera
 far = box('far', -13.2, 13.2, 41, 42.4, 0, Z_ROOF + 1.2, M_ASHLAR)
-fc = [box('fw', -3.2, 3.2, 40, 43.4, 3.0, 15.0)]
-c4 = cyl('fwa', 3.2, -1.5, 1.5, n=64); c4.rotation_euler = (math.pi / 2, 0, 0); c4.location = (0, 41.7, 15.0); fc.append(c4)
+FWW = arg('far-win', 2.2)
+fc = [box('fw', -FWW, FWW, 40, 43.4, 3.5, 13.5)]
+c4 = cyl('fwa', FWW, -1.5, 1.5, n=64); c4.rotation_euler = (math.pi / 2, 0, 0); c4.location = (0, 41.7, 13.5); fc.append(c4)
 # a smaller window high in each aisle bay of the far wall
 for xs in (-9.0, 9.0):
     fc.append(box('fs', xs - 1.0, xs + 1.0, 40, 43.4, 3.0, 8.5))
     c5 = cyl('fsa', 1.0, -1.5, 1.5, n=40); c5.rotation_euler = (math.pi / 2, 0, 0); c5.location = (xs, 41.7, 8.5); fc.append(c5)
 cut(far, fc)
 # mullions in the great window
-for xm in (-1.07, 1.07):
-    box(f'mullion_{xm}', xm - 0.11, xm + 0.11, 41.4, 41.9, 3.0, 17.6, M_ASHLAR, 0.02)
-box('transom', -3.2, 3.2, 41.4, 41.9, 9.0, 9.25, M_ASHLAR, 0.02)
+for xm in (-FWW / 3, FWW / 3):
+    box(f'mullion_{xm}', xm - 0.1, xm + 0.1, 41.4, 41.9, 3.5, 15.4, M_ASHLAR, 0.02)
+box('transom', -FWW, FWW, 41.4, 41.9, 8.8, 9.05, M_ASHLAR, 0.02)
 box('back', -13.2, 13.2, -13.4, -12.0, 0, Z_ROOF + 1.2, M_ASHLAR)
 
 # the nave roof (plaster vault soffit), broken open where the sun comes in
 roof = box('roof', -NAVE - 0.7, NAVE + 0.7, -12, 41, Z_ROOF, Z_ROOF + 1.2, M_PLASTER)
 t_hit = (Z_ROOF + 0.6) / -SUN_D.z
-HOLE = (MARK_X - 0.15 + SUN_D.x * -t_hit, MARK_Y + 0.25 + SUN_D.y * -t_hit)
+HOLE = (POOL[0] + SUN_D.x * -t_hit, POOL[1] + SUN_D.y * -t_hit)
 def ragged(name, cx_, cy_, r, z0, z1, rough=0.35, seed=1):
     r_ = np.random.default_rng(seed)
     bm = bmesh.new(); n = 40
@@ -352,7 +357,12 @@ def ragged(name, cx_, cy_, r, z0, z1, rough=0.35, seed=1):
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
     return link_obj(bpy.data.objects.new(name, me))
-cut(roof, [ragged('hole', HOLE[0], HOLE[1], arg('hole', 2.1), Z_ROOF - 1, Z_ROOF + 2.5, 0.3, 4)])
+cut(roof, [ragged('hole', HOLE[0], HOLE[1], arg('hole', 1.7), Z_ROOF - 1, Z_ROOF + 2.5, 0.25, 4),
+           ragged('hole2', arg('far-break-x', 1.5), arg('far-break-y', 36.0), arg('far-break', 2.4), Z_ROOF - 1, Z_ROOF + 2.5, 0.45, 9)])
+# broken roof slabs hang from the far break's edge
+for i, (hx, hy, rx_, ry_) in enumerate(((-1.6, 33.4, 0.5, -0.3), (4.2, 34.6, -0.4, 0.6))):
+    hb = box(f'hang{i}', -0.9, 0.9, -0.5, 0.5, -0.25, 0.25, M_PLASTER, 0.03)
+    hb.location = (hx, hy, Z_ROOF - 0.3); hb.rotation_euler = (rx_, ry_, 0.3 * i)
 
 # the floor: scanned flagstones (Poly Haven large_floor_tiles_02, 1 m slabs), the garden bed where they have gone,
 # and a shallow sheet of still water
@@ -416,6 +426,7 @@ link(nt, col_out, bsd.inputs['Base Color']); link(nt, mixr.outputs['Result'], bs
 o = node(nt, 'ShaderNodeOutputMaterial', (500, 0)); link(nt, bsd.outputs['BSDF'], o.inputs['Surface'])
 if arg('dbg-floor', 0):
     em_ = node(nt, 'ShaderNodeEmission', (300, 300)); link(nt, {'1': col_out, '2': f_col, '3': fcol, '4': gcol}[str(arg('dbg-floor', 0))], em_.inputs['Color']); link(nt, em_.outputs['Emission'], o.inputs['Surface'])
+ao_w = node(nt, 'ShaderNodeOutputAOV', (500, -400)); ao_w.aov_name = 'wt'; link(nt, watm, ao_w.inputs['Value'])
 flo.data.materials.append(m_f)
 
 def bed_at(x, y): return bed_field(x, y) > 0.1
@@ -438,14 +449,14 @@ def haze_obj(name, ob, dens, aniso=0.35, col=(0.95, 0.96, 1.0)):
     link(nt_, node(nt_, 'ShaderNodeBsdfTransparent', (0, 200)).outputs['BSDF'], o_.inputs['Surface'])
     ob.data.materials.append(m_)
 # air thickens with distance (aerial depth towards the far window)
-haze_obj('haze_far', box('haze_far', -12, 12, 20, 41, -0.5, Z_ROOF), arg('haze-far', 0.018), 0.2, (0.9, 0.95, 1.0))
+haze_obj('haze_far', box('haze_far', -12, 12, 20, 41, -0.5, Z_ROOF), arg('haze-far', 0.022), 0.2, (0.9, 0.95, 1.0))
 # dust hangs in the sunbeam: a column of denser air along the shaft (the light itself draws its edge)
-bm = bmesh.new(); bmesh.ops.create_cone(bm, cap_ends=True, segments=32, radius1=3.6, radius2=3.6, depth=30)
+bm = bmesh.new(); bmesh.ops.create_cone(bm, cap_ends=True, segments=32, radius1=2.4, radius2=2.4, depth=30)
 me_ = bpy.data.meshes.new('shaftair'); bm.to_mesh(me_); bm.free()
 sa = link_obj(bpy.data.objects.new('shaftair', me_))
-sa.location = Vector((MARK_X - 0.15, MARK_Y + 0.25, 0)) - SUN_D * 12
+sa.location = Vector((POOL[0], POOL[1], 0)) - SUN_D * 12
 sa.rotation_euler = (-SUN_D).to_track_quat('Z', 'Y').to_euler()
-haze_obj('haze_shaft', sa, arg('haze-shaft', 0.07), arg('aniso', 0.35), (1.0, 0.97, 0.92))
+haze_obj('haze_shaft', sa, arg('haze-shaft', 0.04), arg('aniso', 0.35), (1.0, 0.97, 0.92))
 
 # ---------------------------------------------------------------- instancing (geometry nodes from a point cloud)
 def instances(name, coll, P, R, Sc, pick):
@@ -512,7 +523,7 @@ def recolour(m, mode):
     hsv = node(nt, 'ShaderNodeSeparateColor', (-400, 600)); hsv.mode = 'HSV'; link(nt, src, hsv.inputs['Color'])
     if mode == 'blue':
         f = math_n(nt, 'MULTIPLY', maprange(nt, hsv.outputs['Blue'], 0.55, 0.75), maprange(nt, hsv.outputs['Green'], 0.3, 0.15))
-        tint = (0.42, 0.62, 0.98, 1)
+        tint = (0.30, 0.66, 1.0, 1)
         newc = mixrgb(nt, f, src, mixrgb(nt, 1.0, src, tint, 'MULTIPLY'))
     else:
         hue = hsv.outputs['Red']
@@ -526,6 +537,7 @@ def recolour(m, mode):
 # ---------------------------------------------------------------- plants, all scanned (Poly Haven)
 helio = load_objs(os.path.join(PH, 'flower_heliophila', 'flower_heliophila_2k.blend'),
                   ['flower_heliophila_small_LOD1', 'flower_heliophila_medium_LOD1', 'flower_heliophila_large_LOD2'])
+for m_ in {o.data.materials[0] for o in helio}: recolour(m_, 'periwinkle')     # the scan's mauve tips go blue, never pink
 helio_blue = []
 for o in helio:
     ob = o.copy(); ob.data = o.data.copy(); ob.name = o.name + '_blue'
@@ -574,28 +586,29 @@ def add(x, y, pick, smin, smax, z=0.0):
 
 # the bed: dense, mostly white and pale blue, a little yellow; thinner towards its edge and in front of the stone
 bed_in = lambda x, y: bed_field(x, y) > 0.0
-x, y = plant_points(int(22000 * DENS), BED_C[0] - 6, BED_C[0] + 6, BED_C[1] - 6, BED_C[1] + 6, bed_in)
+x, y = plant_points(int(34000 * DENS), BED_C[0] - 6, BED_C[0] + 6, BED_C[1] - 6, BED_C[1] + 6, bed_in)
 depth = np.clip(bed_field(x, y) / 1.6, 0, 1)
-front = (y < MARK_Y - 0.4) & (np.abs(x - MARK_X) < 1.6) & (y > MARK_Y - 2.4)
-keep = rng.uniform(0, 1, len(x)) < (0.35 + 0.65 * depth) * np.where(front, 0.45, 1.0)
+front = (y < MARK_Y - 0.2) & (np.abs(x - MARK_X) < 1.35 + 0.1 * (MARK_Y - y))
+blockz = np.hypot(x - BLOCK[0], y - BLOCK[1]) < 0.75
+keep = (rng.uniform(0, 1, len(x)) < (0.35 + 0.65 * depth) * np.where(front, 0.85, 1.0)) & ~blockz
 x, y = x[keep], y[keep]
 u = rng.uniform(0, 1, len(x))
 grass_k = u < 0.3
 g_pick = rng.integers(iGr, nG, grass_k.sum())
 gx_, gy_ = x[grass_k], y[grass_k]
-g_front = (gy_ < MARK_Y) & (np.abs(gx_ - MARK_X) < 1.7 + 0.2 * (MARK_Y - gy_))
+g_front = (gy_ < MARK_Y) & (np.abs(gx_ - MARK_X) < 1.35 + 0.1 * (MARK_Y - gy_))
 add(gx_[~g_front], gy_[~g_front], g_pick[~g_front], 1.0, 1.6)
-add(gx_[g_front], gy_[g_front], g_pick[g_front], 0.35, 0.6)
+add(gx_[g_front], gy_[g_front], iGr + 7 + rng.integers(0, 2, g_front.sum()), 0.5, 0.9)   # tiny tufts only
 fx, fy = x[~grass_k], y[~grass_k]
 v = rng.uniform(0, 1, len(fx))
-pk = np.where(v < 0.42, rng.integers(iH, iH + 2, len(fx)),
-     np.where(v < 0.7, rng.integers(iB, iB + 2, len(fx)),
-     np.where(v < 0.88, rng.integers(iP, iC, len(fx)), rng.integers(iC, iGr, len(fx)))))
+pk = np.where(v < 0.36, rng.integers(iH, iH + 2, len(fx)),
+     np.where(v < 0.62, rng.integers(iB, iB + 2, len(fx)),
+     np.where(v < 0.82, rng.integers(iB, iB + 2, len(fx)), rng.integers(iC, iGr, len(fx)))))
 sc_lo = np.where(pk >= iP, 1.3, 0.75); sc_hi = np.where(pk >= iP, 2.0, 1.15)
 s = rng.uniform(0, 1, len(fx)) * (sc_hi - sc_lo) + sc_lo
 # low in front of the stone, so the whole mark reads
-infront = (fy < MARK_Y) & (np.abs(fx - MARK_X) < 1.7 + 0.2 * (MARK_Y - fy))
-s = np.where(infront, s * 0.35, s)
+infront = (fy < MARK_Y) & (np.abs(fx - MARK_X) < 1.35 + 0.1 * (MARK_Y - fy))
+s = np.where(infront, s * 0.3, s)
 m = len(fx)
 P.append(np.stack([fx, fy, rng.uniform(-0.01, 0.0, m)], 1))
 R.append(np.stack([rng.normal(0, 0.06, m), rng.normal(0, 0.06, m), rng.uniform(0, 6.283, m)], 1))
@@ -615,10 +628,13 @@ pk = np.where(v < 0.65, rng.integers(iGr, nG, len(x)), np.where(v < 0.85, rng.in
      np.where(v < 0.93, rng.integers(iB, iB + 2, len(x)), rng.integers(iC, iGr, len(x)))))
 add(x, y, pk, 0.6, 1.1)
 # the near-left corner: a small drift of flowers at the water's edge, out of focus, for depth
-x, y = plant_points(int(1400 * DENS), -7.5, -2.5, 3.0, 8.0, lambda x, y: (water_field(x, y) < -0.15) & (np.hypot(x + 5.0, y - 5.4) < 1.7 + 0.5 * fbm(x, y, 9)))
+DRIFT = (arg('drift-x', -1.7), arg('drift-y', 5.3))
+x, y = plant_points(int(2600 * DENS), DRIFT[0] - 2.5, DRIFT[0] + 2.5, DRIFT[1] - 2.0, DRIFT[1] + 2.0,
+                    lambda x, y: (water_field(x, y) < -0.1) & (np.hypot((x - DRIFT[0]) / 1.4, y - DRIFT[1]) < 1.0 + 0.35 * fbm(x, y, 9)))
 v = rng.uniform(0, 1, len(x))
-pk = np.where(v < 0.45, rng.integers(iGr, nG, len(x)), np.where(v < 0.75, rng.integers(iH, iH + 2, len(x)), rng.integers(iB, iB + 2, len(x))))
-add(x, y, pk, 0.8, 1.2)
+pk = np.where(v < 0.3, rng.integers(iGr, nG, len(x)), np.where(v < 0.55, rng.integers(iH, iH + 2, len(x)),
+     np.where(v < 0.8, rng.integers(iB, iB + 2, len(x)), np.where(v < 0.92, rng.integers(iB, iB + 2, len(x)), rng.integers(iC, iGr, len(x))))))
+add(x, y, pk, 1.0, 1.5)
 instances('garden', L_G, np.concatenate(P), np.concatenate(R), np.concatenate(Sc), np.concatenate(K))
 
 # ferns at the feet of the columns and the walls, in the shade
@@ -638,7 +654,7 @@ for side in (-1, 1):
         s = rng.uniform(0.9, 1.5); FS.append((s, s, s)); FK.append(rng.integers(0, len(fern)))
 # ferns in the near-left drift
 for k in range(4):
-    FP.append((-5.2 + rng.normal(0, 0.6), 5.6 + rng.normal(0, 0.5), 0)); FR.append((0, 0, rng.uniform(0, 6.28)))
+    FP.append((DRIFT[0] - 0.9 + rng.normal(0, 0.4), DRIFT[1] + 0.4 + rng.normal(0, 0.3), 0)); FR.append((0, 0, rng.uniform(0, 6.28)))
     s = rng.uniform(0.9, 1.3); FS.append((s, s, s)); FK.append(rng.integers(0, len(fern)))
 instances('ferns', L_F, FP, FR, FS, FK)
 
@@ -650,11 +666,13 @@ def block(name, size, loc, rot, mtl=M_ASHLAR, bev=0.05):
     return ob
 fall = [((1.4, 0.9, 0.7), (-1.6, 12.6, 0.22), (0.12, -0.25, 0.5)),
         ((1.1, 0.8, 0.6), (5.0, 12.8, 0.2), (0.3, 0.1, 1.1)),
-        ((0.9, 0.7, 0.5), (-2.6, 7.0, 0.15), (-0.2, 0.15, 0.3)),
         ((1.6, 1.0, 0.8), (-8.5, 15.0, 0.3), (0.05, 0.2, 0.8)),
         ((0.8, 0.6, 0.45), (4.2, 15.5, 0.15), (0.2, -0.3, 2.0))]
 for i, (sz, lc, rt) in enumerate(fall):
     block(f'fallen{i}', sz, lc, rt)
+# the block in the light, where the letter rests
+pb_ = block('letterblock', (0.95, 0.7, 0.62), (BLOCK[0], BLOCK[1], 0.24), (0.04, -0.03, 0.42))
+BLOCK_TOP = 0.24 + 0.31 - 0.01
 drum = cyl('drum', 0.74, -0.6, 0.6, n=64, m=M_COLUMN, bevel=0.04)
 drum.rotation_euler = (math.pi / 2, 0, 0.6); drum.location = (-8.2, 9.0, 0.68)
 drum2 = cyl('drum2', 0.74, -0.55, 0.55, n=64, m=M_COLUMN, bevel=0.04)
@@ -715,7 +733,7 @@ def ivy_leaf(p, n_out, smin=0.07, smax=0.12):
     IP.append(tuple(p + n_out * d_)); IR.append(tuple(leaf_frame(n_out)))
     s = rng.uniform(smin, smax); IS.append((s, s, s)); IK.append(rng.integers(0, 6))
 # columns: the ivy climbs from the floor in tongues on some, hangs from the capitals on others
-CAM = Vector((0.0, 0.0, 1.25))
+CAM = Vector((0.3, 1.8, 0.95))
 for (side, yc, mode, amt) in ((-1, 2, 'climb', 1.0), (-1, 14, 'hang', 1.0), (1, 8, 'climb', 0.8), (1, 20, 'hang', 0.9), (-1, 26, 'climb', 0.7)):
     cx_, cy_ = side * NAVE, yc
     ph = rng.uniform(0, 6.28, 3)
@@ -748,7 +766,7 @@ for side in (-1, 1):
 instances('ivy', L_IV, IP, IR, IS, IK)
 
 # ---------------------------------------------------------------- dust: motes adrift in the shaft
-nm_ = int(arg('motes', 900))
+nm_ = int(arg('motes', 0))
 m_dust, nt = mat('dust')
 dd = node(nt, 'ShaderNodeBsdfPrincipled', (0, 0)); dd.inputs['Base Color'].default_value = (1, 0.95, 0.85, 1); dd.inputs['Roughness'].default_value = 0.6
 tld = node(nt, 'ShaderNodeBsdfTranslucent', (0, -200)); tld.inputs['Color'].default_value = (1, 0.9, 0.75, 1)
@@ -765,13 +783,13 @@ foot = np.array([MARK_X - 0.2, MARK_Y + 0.3, 0.0])
 axd = -np.array(SUN_D)
 pts = foot + tt[:, None] * axd + np.stack([rad * np.cos(aa), rad * np.sin(aa), np.zeros(nm_)], 1)
 s = rng.uniform(0.004, 0.009, nm_)
-instances('dust', L_D, pts, np.zeros((nm_, 3)), np.stack([s, s, s], 1), np.zeros(nm_, int))
+if nm_: instances('dust', L_D, pts, np.zeros((nm_, 3)), np.stack([s, s, s], 1), np.zeros(nm_, int))
 
 # ---------------------------------------------------------------- camera
 cam_d = bpy.data.cameras.new('cam'); cam = link_obj(bpy.data.objects.new('cam', cam_d)); sc.camera = cam
-cam_d.lens = arg('lens', 24.0); cam_d.sensor_width = 36; cam_d.sensor_fit = 'HORIZONTAL'
-cam.location = (arg('cx', 0.0), arg('cy', 0.0), arg('cz', 1.25))
-pitch = math.radians(arg('pitch', 6.0)); yaw = math.radians(arg('cam-yaw', -1.5))
+cam_d.lens = arg('lens', 22.0); cam_d.sensor_width = 36; cam_d.sensor_fit = 'HORIZONTAL'
+cam.location = (arg('cx', 0.3), arg('cy', 1.8), arg('cz', 0.95))
+pitch = math.radians(arg('pitch', 9.0)); yaw = math.radians(arg('cam-yaw', -10.0))
 cam.rotation_euler = (math.pi / 2 + pitch, 0, yaw)
 cam_d.dof.use_dof = True
 cam_d.dof.focus_distance = (Vector((MARK_X, MARK_Y, 1.3)) - cam.location).length
@@ -789,8 +807,67 @@ for ym in mids:
     for side in (-1, 1):
         portal((side * 11.9, ym, 6.5), (0, side * math.pi / 2, 0), 7.5, 2.1)
         if side > 0: portal((side * NAVE, ym, 16.0), (0, side * math.pi / 2, 0), 5.2, 1.7)
-portal((0, 40.9, 10.5), (-math.pi / 2, 0, 0), 6.4, 15.5)
+portal((0, 40.9, 9.5), (-math.pi / 2, 0, 0), 2 * FWW, 12.5)
+portal((1.5, 36.0, Z_ROOF - 0.05), (0, 0, 0), 9.0, 9.0)
 portal((HOLE[0], HOLE[1], Z_ROOF - 0.05), (0, 0, 0), 5.5, 5.5)
+
+# ---------------------------------------------------------------- fill: what the bright pool and the sky would give back
+def fill_light(name, loc, aim, size, power, col, spot=False):
+    l_ = bpy.data.lights.new(name, 'AREA'); l_.shape = 'RECTANGLE'; l_.size, l_.size_y = size
+    l_.energy = power; l_.color = col
+    ob = link_obj(bpy.data.objects.new(name, l_)); ob.location = loc
+    ob.rotation_euler = (Vector(aim) - Vector(loc)).to_track_quat('-Z', 'Y').to_euler()
+    ob.visible_camera = False; ob.visible_glossy = False; ob.visible_transmission = False
+    return ob
+# warm bounce off the sunlit flowers onto the stone's face (a film-set bounce card), so the seam reads top to bottom
+fill_light('bounce', (MARK_X - 0.9, MARK_Y - 3.2, 0.35), (MARK_X, MARK_Y, 1.3), (2.6, 0.8), arg('bounce', 80.0), (1.0, 0.78, 0.55))
+# cool skylight from the breaks, high in the nave, so the columns, arches and ivy read in the blue shadow
+fill_light('skyfill', (0.0, 14.0, Z_ROOF - 1.0), (0.0, 14.0, 0.0), (10.0, 30.0), arg('skyfill', 1100.0), (0.62, 0.74, 1.0))
+
+# ---------------------------------------------------------------- the letter: folded in half, resting on the block in the light
+m_pp, nt = mat('paper')
+pd_ = os.path.join(ACG, 'Paper002', 'Paper002_2K-JPG_')
+uvp = node(nt, 'ShaderNodeUVMap', (-900, 0))
+tpc = node(nt, 'ShaderNodeTexImage', (-700, 200)); tpc.image = img(pd_ + 'Color.jpg'); link(nt, uvp.outputs['UV'], tpc.inputs['Vector'])
+tpn = node(nt, 'ShaderNodeTexImage', (-700, -200)); tpn.image = img(pd_ + 'NormalGL.jpg', True); link(nt, uvp.outputs['UV'], tpn.inputs['Vector'])
+pcol = mixrgb(nt, 0.55, tpc.outputs['Color'], (0.86, 0.83, 0.76, 1))
+nmp = node(nt, 'ShaderNodeNormalMap', (-400, -200)); nmp.inputs['Strength'].default_value = 0.5; link(nt, tpn.outputs['Color'], nmp.inputs['Color'])
+pbp = node(nt, 'ShaderNodeBsdfPrincipled', (0, 200)); pbp.inputs['Roughness'].default_value = 0.85
+link(nt, pcol, pbp.inputs['Base Color']); link(nt, nmp.outputs['Normal'], pbp.inputs['Normal'])
+tlp = node(nt, 'ShaderNodeBsdfTranslucent', (0, -100)); tlp.inputs['Color'].default_value = (0.95, 0.88, 0.76, 1)
+mpp_ = node(nt, 'ShaderNodeMixShader', (250, 0)); mpp_.inputs['Fac'].default_value = 0.2
+link(nt, pbp.outputs['BSDF'], mpp_.inputs[1]); link(nt, tlp.outputs['BSDF'], mpp_.inputs[2])
+op_ = node(nt, 'ShaderNodeOutputMaterial', (500, 0)); link(nt, mpp_.outputs['Shader'], op_.inputs['Surface'])
+PW, PH_, NU, NV = 0.21, 0.297, 14, 20       # an A4 sheet, folded across the middle
+bm = bmesh.new(); uvl = bm.loops.layers.uv.new('UVMap')
+grid = []
+for j in range(NV + 1):
+    row = []
+    v = j / NV
+    for i in range(NU + 1):
+        u = i / NU
+        x = (u - 0.5) * PW
+        if v <= 0.5:                            # lower half flat on the stone, its corner curling up a little
+            y = v * PH_; z = 0.0005 + 0.006 * max(0, (u - 0.7) / 0.3) ** 2 * (1 - v * 2)
+        else:                                   # upper half lifts from the crease, open a few degrees
+            t = (v - 0.5) * PH_; a = math.radians(arg('fold', 14.0))
+            y = 0.5 * PH_ - t * math.cos(a) * 0.98; z = 0.0012 + t * math.sin(a) + 0.002 * math.sin(u * math.pi)
+        row.append(bm.verts.new((x, y - 0.25 * PH_, z)))
+    grid.append(row)
+for j in range(NV):
+    for i in range(NU):
+        f = bm.faces.new((grid[j][i], grid[j][i + 1], grid[j + 1][i + 1], grid[j + 1][i]))
+        for lp, (uu, vv) in zip(f.loops, ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1))):
+            lp[uvl].uv = (uu / NU * 0.5, vv / NV * 0.7)
+me = bpy.data.meshes.new('letter'); bm.to_mesh(me); bm.free()
+for p_ in me.polygons: p_.use_smooth = True
+letter = link_obj(bpy.data.objects.new('letter', me)); me.materials.append(m_pp)
+letter.modifiers.new('sol', 'SOLIDIFY').thickness = 0.0005
+letter.location = (BLOCK[0] + 0.05, BLOCK[1] - 0.03, BLOCK_TOP); letter.rotation_euler = (0, 0, math.radians(arg('letter-rot', 18.0)))
+letter.pass_index = 3
+for ob_ in (STONE['stone'],): ob_.pass_index = 1
+for ob_ in (STONE['crystal'], STONE.get('veil')):
+    if ob_ is not None: ob_.pass_index = 2
 
 # ---------------------------------------------------------------- compositor: soft bloom, a breath of halation, vignette
 sc.use_nodes = True
@@ -812,10 +889,49 @@ ct.links.new(bl.outputs['Image'], vg.inputs['Value'])
 mx = ct.nodes.new('CompositorNodeMixRGB'); mx.blend_type = 'MULTIPLY'; mx.inputs[0].default_value = 1
 ct.links.new(ld.outputs['Image'], mx.inputs[1]); ct.links.new(vg.outputs['Value'], mx.inputs[2])
 comp = ct.nodes.new('CompositorNodeComposite'); ct.links.new(mx.outputs['Image'], comp.inputs['Image'])
+PASSES = arg('passes', '')
+if PASSES:
+    # one 16-bit PNG of data, Standard view so it inverts exactly: R depth / 60 m, G still water, B object (1 stone,
+    # 2 crystal, 3 letter) / 4
+    vl.use_pass_z = True; vl.use_pass_object_index = True
+    fo = ct.nodes.new('CompositorNodeOutputFile')
+    fo.base_path = os.path.dirname(PASSES); fo.format.file_format = 'PNG'
+    fo.format.color_depth = '16'; fo.format.color_mode = 'RGB'
+    fo.format.color_management = 'OVERRIDE'; fo.format.view_settings.view_transform = 'Standard'
+    fo.format.view_settings.look = 'None'; fo.format.view_settings.exposure = 0; fo.format.view_settings.gamma = 1
+    fo.file_slots.clear(); fo.file_slots.new('data')
+    cc = ct.nodes.new('CompositorNodeCombineColor'); cc.mode = 'RGB'
+    def mr(sock, hi):
+        n_ = ct.nodes.new('CompositorNodeMapRange'); n_.use_clamp = True
+        n_.inputs['From Min'].default_value = 0; n_.inputs['From Max'].default_value = hi
+        n_.inputs['To Min'].default_value = 0; n_.inputs['To Max'].default_value = 1
+        ct.links.new(sock, n_.inputs['Value']); return n_.outputs['Value']
+    ct.links.new(mr(rl.outputs['Depth'], 60.0), cc.inputs['Red'])
+    ct.links.new(mr(rl.outputs['wt'], 1.0), cc.inputs['Green'])
+    ct.links.new(mr(rl.outputs['IndexOB'], 4.0), cc.inputs['Blue'])
+    ct.links.new(cc.outputs['Image'], fo.inputs[0])
+    sc.frame_current = 1
+# the camera, the beam and the letter, for the page and the loop
+from bpy_extras.object_utils import world_to_camera_view
+bpy.context.view_layer.update()
+def frame_box(ob):
+    dg_ = bpy.context.evaluated_depsgraph_get(); e_ = ob.evaluated_get(dg_)
+    pts_ = [world_to_camera_view(sc, cam, e_.matrix_world @ v.co) for v in e_.data.vertices]
+    return [min(p.x for p in pts_), 1 - max(p.y for p in pts_), max(p.x for p in pts_), 1 - min(p.y for p in pts_)]
+info = {'w': W, 'h': H, 'lens': cam_d.lens, 'sensor': cam_d.sensor_width,
+        'cam_matrix': [list(r) for r in cam.matrix_world], 'beam_foot': [POOL[0], POOL[1], 0.0],
+        'beam_dir': list(-SUN_D), 'beam_r': arg('hole', 2.0) * 0.95, 'letter': frame_box(letter),
+        'stone': frame_box(STONE['stone'])}
+json.dump(info, open(OUT + '.json', 'w'), indent=1)
+print('LETTER', info['letter'], 'STONE', info['stone'])
 
 if '--dry' in argv:
     print('DRY_OK'); sys.exit(0)
+
 t0 = time.time()
 sc.render.filepath = OUT
 bpy.ops.render.render(write_still=True)
 print('RENDER_SECONDS', round(time.time() - t0, 1))
+if PASSES:
+    cand = os.path.join(os.path.dirname(PASSES), 'data0001.png')
+    if os.path.exists(cand): os.replace(cand, PASSES)

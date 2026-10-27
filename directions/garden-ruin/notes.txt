@@ -1,0 +1,86 @@
+The Garden in the Ruin, path traced
+
+What this is
+  Inside a vast old stone hall at day. The nave roof is broken open in two places: one ragged break lets in a single
+  steep shaft of warm sun, the other, far down the nave, shows the sky at the top of the frame. The shaft falls
+  through drifting dust onto a bed of flowers growing where the flagstones have gone. The Antimony stone (2.6 m) stands
+  in the light among them, its sky crystal lit. A shallow sheet of still water in the floor holds the stone, the
+  crystal and the far window. Arcades of round arches on columns recede into cool shade; ivy climbs and hangs from
+  the columns, ferns grow at their feet, fallen roof blocks and a column drum lie in the aisles. A folded letter
+  rests on a fallen block at the edge of the light.
+  Camera: 22 mm on 36 mm, 0.95 m high, 9 m from the stone, pitched up 9 degrees so the broken roof shows, f/3.2.
+  Blender 4.5.15 LTS, Cycles on CPU, OpenImageDenoise, adaptive sampling, light tree, AgX Medium High Contrast.
+
+Everything is scanned (credits.txt): Poly Haven flagstones, ashlar and plaster; ambientCG moss, loam and ivy
+leaves; Poly Haven heliophila (white, and a copy tinted pale blue), celandine (yellow), grass, ferns and mossy
+rubble. The stone is the shared directions/stone/stone.py (exact Break geometry, honed basalt, the crystal as glass).
+The architecture is invented, kept simple and big (no scan of a hall exists), and stays mostly in shade.
+
+The six fixes after the first frame
+  1. The stone is lit so the whole seam reads: the shaft lands on it, and a warm bounce card (the light the pool
+     of sunlit flowers would give back) lights its face; the stone's value is held dark so the cut reads.
+  2. Nothing tall stands before the stone: in a lane in front of it there are only small flowers and tiny tufts.
+     The camera came closer (9 m, from 16) and lower (0.95 m).
+  3. A tighter shaft (1.7 m break, sun 0.9 degrees wide) aimed at the stone, with denser air only along the beam,
+     so it has an edge and lands as a pool.
+  4. More colour in the flowers, and a drift of white and blue flowers near the lens at the lower left. Warm sun
+     turns pale blue petals lilac, so the grade holds them to a pale sky blue (flower hues only).
+  5. The far window is narrower (4.4 m), lower and further into the haze, and the camera turns so it sits well left
+     of the stone.
+  6. A large cool skylight high in the nave (unseen) lifts the columns, arches and ivy out of black; the camera
+     pitches up to show the far break in the roof.
+
+Cheats, all common on film sets
+  - A warm bounce card and a cool skylight panel, invisible to the camera and to reflections.
+  - Denser air along the shaft (a volume column), so the light has shape without fogging the whole hall.
+  - Refractive caustics are off; the crystal's own faint glow stands in for the sun through it.
+  - The grade pulls lilac petals back to pale blue.
+
+Run (S is the scratchpad), always under the shared lock
+  flock $S/blender.lock nice -n 5 blender -b --factory-startup -P garden_scene.py -- --ph $S/assets/polyhaven \
+    --acg $S/assets/ambientcg --out beauty.png --passes data.png --res 2560x1440 --samples 400 --time 1100
+  python3 -I garden_post.py still beauty.png beauty.png.json assets      (graded stills, phone crop, AVIF and WebP)
+  python3 -I garden_post.py depth data.png assets/garden-depth.png --w 1280 --json beauty.png.json
+  python3 -I garden_post.py depth data.png assets/garden-depth-phone.png --w 720 --crop phone --json beauty.png.json
+  python3 -I garden_post.py loop beauty.png data.png beauty.png.json <frames> --w 1920            (and --w 720 --crop phone)
+  ffmpeg: H.264 CRF 20 (slow, faststart), VP9 CRF 33.
+  python3 -I build_page.py beauty.png.json assets/wordmark.svg      (index.html from page.src.html, with the layout)
+  Final render: 2560x1440, 400 samples capped at 1100 s: 1123 s of rendering.
+
+The loop (8 s, 24 fps, 192 frames, seamless), built from the one still and its data pass
+  The data pass: R depth / 60 m, G still water, B object (stone, crystal, letter). The beam is not a pass: it is
+  worked out from the camera and the sun (beauty.png.json), as the part of each view ray inside the shaft.
+  - Motes: 240 specks of dust in the beam, each on its own closed path, lit by the beam, hidden behind nearer
+    things, soft with the lens's depth of field.
+  - Light breathing: the shaft and its pool swell and settle by about 5 percent, once per loop.
+  - Water: a slow shimmer, and two drips from the roof setting rings across the water (one once a loop, one twice).
+  The stone and crystal never move. Every motion repeats a whole number of times in 8 s.
+  Sizes: desktop H.264 0.7 MB, WebM 0.3 MB; phone H.264 0.5 MB, WebM 0.15 MB.
+
+The page (index.html)
+  The loop is the background (WebM or H.264), with the AVIF or WebP still as its poster and fallback. A small WebGL
+  layer draws the loop through its depth map, pivoted on the stone, so the stone holds still while the near flowers
+  and water come forward and the far hall falls back: a slow breath over about a minute and a gentle answer to the
+  pointer or tilt. Opening: the hall comes up out of black over about 3.5 s, then the type; any click, key, scroll
+  or touch skips it; once per session. Type: the wordmark and "Software, made on purpose." (alternatives in a
+  comment), small, lower left. No products, no links.
+  The paper: the folded letter on the fallen block is real geometry in the render. A focusable button ("Read the
+  note") sits over it; after about seven quiet seconds a soft glint passes over it. Opening it eases the hall in
+  towards the letter, the sheet lifts from the block with a turn and settles flat, lit as the hall is (warm from high
+  on the left, cool shade on the right) with the fold across its middle and ambientCG Paper002 grain. Escape, the
+  close mark or a click outside eases back. Reduced motion: a crossfade, and the still instead of the loop.
+  Sound (procedural, muted until the toggle): the hall's air (low filtered noise through a long synthesised
+  reverb), birds outside heard through the windows (mostly reverb), and the loop's own two drips into the water,
+  timed to the rings. The air swells a little as the pointer moves; the hall goes muffled while the letter is open.
+  Phones: the tall crop keeps the stone whole and the letter in view; on very narrow screens the frame is scaled to
+  keep both, anchored at the floor, and the dark vault fades in above.
+  Checked with Playwright (Chromium, SwiftShader) at 1440x900 and 390x844: no console errors, no overflow; the
+  letter opens and closes. Shots in shots/.
+
+Honest limits
+  - The letter is small in the frame (an A4 sheet at 8.6 m): its button is padded and the glint finds it, but by eye
+    it is a pale sliver on the block.
+  - The haze is still a little milky on the upper left, where the far break's sun crosses the nave.
+  - The flowers in front of the stone are kept very low, so the bed reads thinner there than at its sides.
+  - On the narrowest phones the vault fades to black at the top rather than showing the roof.
+  - The motes and ripples are image effects over the still: the drips do not splash and the dust casts no light.
