@@ -105,7 +105,7 @@ html.opening .paper { visibility: hidden; }
 <body>
 <div id="world">
   <div id="frame" aria-hidden="true">
-    <picture><source type="image/avif" srcset="assets/still.avif"><img id="still" src="assets/still.webp" alt=""></picture>
+    <picture><source media="(max-aspect-ratio: 3/4)" type="image/avif" srcset="assets/still-phone.avif"><source media="(max-aspect-ratio: 3/4)" type="image/webp" srcset="assets/still-phone.webp"><source type="image/avif" srcset="assets/still.avif"><img id="still" src="assets/still.webp" alt=""></picture>
     <video id="loop" muted loop playsinline preload="auto"></video>
   </div>
   <canvas id="bg" aria-hidden="true"></canvas>
@@ -113,7 +113,7 @@ html.opening .paper { visibility: hidden; }
 </div>
 <div id="veil"></div>
 <h1 class="vh">Antimony</h1>
-<p class="vh">Night in a vast field of small flowers glowing a soft sky blue, in fine rain, with motes of blue light drifting over it and tall needles of rock standing far off in the mist. In the field stands the Antimony stone, a dark square block split by a slanting seam, with a sky blue crystal in the break that glows gently. At its foot lies a folded paper, lit faintly by the crystal.</p>
+<p class="vh">Night after rain in a vast field of small flowers glowing a soft sky blue, under a moonlit cloud deck, with tall needles of rock standing far off in drifting mist and ranges of hills beyond. In the field stands the Antimony stone, a square block of wet grey stone split by a slanting seam, with a sky blue crystal in the break that glows gently. At its foot lies a folded letter, half open, in the crystal's light.</p>
 <button id="paper" class="paper" type="button" aria-label="Read the note" aria-haspopup="dialog" aria-controls="letter"><span class="glint" aria-hidden="true"></span></button>
 <div id="letter" class="letter" role="dialog" aria-modal="true" aria-labelledby="lt-name" hidden>
   <div class="lt-scrim"></div>
@@ -146,7 +146,11 @@ html.opening .paper { visibility: hidden; }
 (function () {
 "use strict";
 var html = document.documentElement, $ = function (id) { return document.getElementById(id); };
-var FR = {"w": 2560, "h": 1440, "paper": [0.2978, 0.8025, 0.3215, 0.8121], "stone": [0.2562, 0.4825, 0.4422, 0.8116], "crystal": [0.3132, 0.5531, 0.388, 0.7454], "stone_disp": 0.186, "phone_crop_x": 0.191, "phone_crop_w": 0.3164};                      /* the render: size, and where the paper, the stone and the crystal are (fractions) */
+/* the two renders: the wide frame and the tall frame composed for phones; where the paper, the stone and the
+   crystal are in each (fractions). The tall one is used on any screen narrower than three by four. */
+var FRS = /*FRAMES*/{"wide": {"w": 2560, "h": 1440, "paper": [0.312, 0.8088, 0.3434, 0.8377], "stone": [0.2562, 0.4825, 0.4422, 0.8116], "crystal": [0.3133, 0.5534, 0.3879, 0.7449], "stone_disp": 0.186}, "phone": {"w": 1080, "h": 2340, "paper": [0.3498, 0.7104, 0.4161, 0.7267], "stone": [0.2331, 0.5282, 0.6283, 0.7114], "crystal": [0.352, 0.5675, 0.51, 0.6746], "stone_disp": 0.186}}/*END*/;
+var TALL = matchMedia("(max-aspect-ratio: 3/4)").matches;
+var FR = TALL ? FRS.phone : FRS.wide, SET = TALL ? "-phone" : "";
 var KEY = "antimony.bluefield";
 var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 var FREEZE = /[?&]t=(\d+)/.exec(location.search); FREEZE = FREEZE ? +FREEZE[1] / 1000 : -1;
@@ -157,7 +161,7 @@ function lettered() { return LT && LT.state() !== "shut"; }
 function remember() { try { sessionStorage.setItem(KEY, "1"); } catch (e) {} }
 
 /* ---------- framing: cover the screen; on narrow screens the view settles on the stone so the whole mark shows ---------- */
-var RW = 1920, RH = 1080, VIEW = { s: 1, ox: 0, oy: 0 };
+var RW = TALL ? 720 : 1920, RH = TALL ? 1560 : 1080, VIEW = { s: 1, ox: 0, oy: 0 };
 var stoneCx = (FR.stone[0] + FR.stone[2]) / 2, stoneW = FR.stone[2] - FR.stone[0];
 function layout() {
   var vw = innerWidth, vh = innerHeight, s = Math.max(vw / RW, vh / RH), w = vw / s, h = vh / RH * RH / s;
@@ -180,8 +184,8 @@ function toScreen(u, v) { return [(u * RW - VIEW.ox) * VIEW.s, (v * RH - VIEW.oy
 var video = $("loop"), BR = null;
 function startVideo() {
   if (STILL) return;
-  var c = document.createElement("source"); c.src = "assets/loop.webm"; c.type = "video/webm"; video.appendChild(c);
-  var m = document.createElement("source"); m.src = "assets/loop.mp4"; m.type = "video/mp4"; video.appendChild(m);
+  var c = document.createElement("source"); c.src = "assets/loop" + SET + ".webm"; c.type = "video/webm"; video.appendChild(c);
+  var m = document.createElement("source"); m.src = "assets/loop" + SET + ".mp4"; m.type = "video/mp4"; video.appendChild(m);
   video.load();
   video.addEventListener("playing", function () { video.classList.add("on"); if (!BR) BR = Breath(); }, { once: true });
   var p = video.play(); if (p && p.catch) p.catch(function () {});
@@ -213,7 +217,7 @@ function Breath() {
   var tV = tex(0), tD = tex(1), dReady = false;
   var U = {}; ["uV", "uD", "uRes", "uView", "uR", "uOff", "uPiv", "uZoom"].forEach(function (n) { U[n] = gl.getUniformLocation(pr, n); });
   gl.uniform1i(U.uV, 0); gl.uniform1i(U.uD, 1); gl.uniform2f(U.uR, RW, RH); gl.uniform1f(U.uPiv, FR.stone_disp);
-  var dimg = new Image(); dimg.onload = function () { gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, tD); gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, dimg); dReady = true; }; dimg.src = "assets/depth.png";
+  var dimg = new Image(); dimg.onload = function () { gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, tD); gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, dimg); dReady = true; }; dimg.src = "assets/depth" + SET + ".png";
   var dpr = 1;
   function resize() { dpr = Math.min(phone ? 1 : 1.5, devicePixelRatio || 1); cv.width = Math.round(innerWidth * dpr); cv.height = Math.round(innerHeight * dpr); gl.viewport(0, 0, cv.width, cv.height); }
   resize();
@@ -261,10 +265,10 @@ if (html.classList.contains("opening")) {
 } else remember();
 
 /* ---------- sound: made here, in the browser, silent until asked ----------
-   Fine rain on the flowers (soft, high, never hissing), a slow breath of wind that rises with the pointer,
-   a low held chord far off, and now and then a single small bell of light, as a mote passes. */
+   The rain has passed: a faint hush of air through the flowers, a slow breath of wind that rises with the
+   pointer, and a low held chord far off. */
 var SND = (function () {
-  var btn = $("snd"), SKEY = KEY + ".sound", ctx = null, out = null, lp = null, wind = null, on = false, stirV = 0, chimeT = 0;
+  var btn = $("snd"), SKEY = KEY + ".sound", ctx = null, out = null, lp = null, wind = null, on = false, stirV = 0;
   function noise(c, secs, brown) {
     var n = c.sampleRate * secs, b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0), l = 0;
     for (var i = 0; i < n; i++) { var w = Math.random() * 2 - 1; if (brown) { l = (l + .02 * w) / 1.02; d[i] = l * 3.5; } else d[i] = w; }
@@ -275,12 +279,10 @@ var SND = (function () {
     out = ctx.createGain(); out.gain.value = 0;
     lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 16000; lp.Q.value = .4;
     out.connect(lp); lp.connect(ctx.destination);
-    /* rain: two bands of noise, the higher one stippled by a slow random tremble */
-    var r1 = noise(ctx, 4), hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 1600;
-    var rl = ctx.createBiquadFilter(); rl.type = "lowpass"; rl.frequency.value = 6500;
-    var rg = ctx.createGain(); rg.gain.value = .032; r1.connect(hp); hp.connect(rl); rl.connect(rg); rg.connect(out); r1.start();
-    var r2 = noise(ctx, 5), bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 420; bp.Q.value = .6;
-    var rg2 = ctx.createGain(); rg2.gain.value = .05; r2.connect(bp); bp.connect(rg2); rg2.connect(out); r2.start();
+    /* the hush of the field: a soft band of noise, swelling and falling very slowly */
+    var r1 = noise(ctx, 5), bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 900; bp.Q.value = .5;
+    var rg = ctx.createGain(); rg.gain.value = .018; r1.connect(bp); bp.connect(rg); rg.connect(out); r1.start();
+    var hl = ctx.createOscillator(), hg = ctx.createGain(); hl.frequency.value = .07; hg.gain.value = .008; hl.connect(hg); hg.connect(rg.gain); hl.start();
     /* wind: brown noise through a moving low-pass */
     var w = noise(ctx, 6, true), wl = ctx.createBiquadFilter(); wl.type = "lowpass"; wl.frequency.value = 380; wl.Q.value = .7;
     wind = ctx.createGain(); wind.gain.value = .05; w.connect(wl); wl.connect(wind); wind.connect(out); w.start();
@@ -293,22 +295,13 @@ var SND = (function () {
       o.connect(g); g.connect(out); o.start();
     });
   }
-  function chime() {
-    if (!on || !ctx) return;
-    var now = ctx.currentTime, f = [1318.5, 1479.98, 1760, 1975.53, 2217.46][Math.floor(Math.random() * 5)];
-    var o = ctx.createOscillator(), g = ctx.createGain(), p = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
-    o.type = "sine"; o.frequency.value = f; g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(.012, now + .02); g.gain.exponentialRampToValueAtTime(.0001, now + 3.2);
-    o.connect(g); if (p) { p.pan.value = Math.random() * 1.4 - .7; g.connect(p); p.connect(out); } else g.connect(out);
-    o.start(now); o.stop(now + 3.4);
-  }
-  function loop() { clearTimeout(chimeT); chimeT = setTimeout(function () { chime(); loop(); }, 7000 + Math.random() * 9000); }
   function set(v, store) {
     on = v; btn.setAttribute("aria-pressed", v ? "true" : "false");
     if (v) {
       if (!ctx) build();
       if (ctx.state === "suspended") ctx.resume();
-      out.gain.cancelScheduledValues(ctx.currentTime); out.gain.setTargetAtTime(.9, ctx.currentTime, .8); loop();
-    } else if (ctx) { out.gain.cancelScheduledValues(ctx.currentTime); out.gain.setTargetAtTime(0, ctx.currentTime, .3); clearTimeout(chimeT); }
+      out.gain.cancelScheduledValues(ctx.currentTime); out.gain.setTargetAtTime(.9, ctx.currentTime, .8);
+    } else if (ctx) { out.gain.cancelScheduledValues(ctx.currentTime); out.gain.setTargetAtTime(0, ctx.currentTime, .3); }
     if (store !== false) { try { sessionStorage.setItem(SKEY, v ? "1" : "0"); } catch (e) {} }
   }
   btn.addEventListener("click", function () { set(!on); });

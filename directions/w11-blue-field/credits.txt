@@ -1,7 +1,9 @@
 Assets (all CC0, no attribution required; listed anyway)
-Poly Haven (polyhaven.com): flower_heliophila, flower_empodium, celandine_01, grass_medium_01, coastal_cliff_01,
-  coastal_cliff_02 (stood on end and tapered into needles), kloppenheim_07_puresky (night sky, desaturated).
-ambientCG (ambientcg.com): Grass004, Ground037 (field), Paper002 (the paper and the letter's sheet),
-  and through the shared stone module Rock041, Rock035, Moss002.
+Poly Haven (polyhaven.com): flower_heliophila, flower_empodium, celandine_01, grass_medium_01 (the field, the turf and
+  the sward at the stone's foot), coastal_cliff_01 and coastal_cliff_02 (stood on end and tapered into the needles),
+  kloppenheim_07_puresky at 4k (the moonlit cloud deck, cooled toward cobalt).
+ambientCG (ambientcg.com): Grass004, Ground037 (the field and the wet turf), Paper002 (the letter in the field and
+  the opened sheet), and through the shared stone module Rock041 and Rock035 (the stone's honed and cut faces).
+Stars, the far hills and ranges, and the mist are made in the scene script.
 Fonts: Timeless Serif (licensed by Eóin Forker).
 Sound: synthesised in the browser with the Web Audio API; no recordings.

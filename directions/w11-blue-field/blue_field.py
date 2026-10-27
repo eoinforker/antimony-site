@@ -1,8 +1,17 @@
-# The Blue Field (Antimony world 11): the scene, its graded still and the data pass for the loop.
+# The Blue Field (Antimony world 11): the scene, its graded still, the base and data passes for the loop.
+# Night after rain: moonlight from the right, matched in direction to the moon in the scanned cloud deck,
+# rakes the stone's face; the stone (shared module) clean of growth, honed and carved, its crystal deeper
+# with a fine glint along one arris; a real night sky (the cloud deck at 4k, moonlit, faint stars where the
+# cloud is thin); the needles rim-lit from the bright sky and standing in banks of mist before far ranges
+# of hills; the petals' own glow kept low so the moon and the crystal model them; a folded letter, half
+# open, at the stone's foot in the crystal's light. The first version is kept as blue_field_v1.py.
+# The wide frame (2560x1440) and the tall phone frame (--phone 1 --res 1080x2340) are separate renders.
 # Run headless (Blender 4.5 LTS), always under the shared lock:
-#   flock <scratch>/blender.lock nice -n 5 blender -b -P blue_field.py -- --res 2560x1440 --samples 256 --tl 900 \
-#       --work <scratch folder> --out <graded still>
-# Then: python3 blue_field_compose.py (the loop, stills and depth for the page). See notes.txt.
+#   flock <scratch>/blender.lock nice -n 5 blender -b -P blue_field.py -- --res 2560x1440 --samples 256 --tl 3300 \
+#       --vstep 6 --data 1 --work <scratch folder> --out <graded still>
+#   flock <scratch>/blender.lock nice -n 5 blender -b -P blue_field.py -- --phone 1 --res 1080x2340 --samples 224 \
+#       --tl 2700 --vstep 6 --data 1 --work <another scratch folder> --out <graded still>
+# Then: python3 blue_field_compose.py --work <wide folder> --work-phone <phone folder> (loops, stills, depth). See notes.txt.
 # Assets: Poly Haven and ambientCG scans (CC0) from the shared cache; the stone from ../stone/stone.py.
 
 
@@ -388,6 +397,7 @@ def data_pass(path, codes, hide=(), disp_k=2.0, samples=16):
 
 from mathutils.noise import noise as pnoise
 STONE_AT = Vector((-1.35, 10.5, 0.0))
+HILLS = arg('hills', 1)
 SCALE_M = 2.1
 
 def gh(x, y):
@@ -395,15 +405,30 @@ def gh(x, y):
     near = (0.35 * pnoise(Vector((x / 22, y / 22, 0.3))) + 0.08 * pnoise(Vector((x / 5, y / 5, 1.1)))) * min(1.0, d / 4.0)
     t = min(1.0, max(0.0, (y - 50) / 150)); t = t * t * (3 - 2 * t)
     roll = t * (11.0 * pnoise(Vector((x / 130, y / 110, 3.3))) + 4.0 * pnoise(Vector((x / 45, y / 45, 5.1))) + 4.0 + 0.004 * max(y - 120, 0) ** 1.2)
+    if HILLS:
+        u = min(1.0, max(0.0, (y - 280) / 260)); u = u * u * (3 - 2 * u)
+        ridge = max(0.0, pnoise(Vector((x / 210, y / 150, 7.7))) + 0.25) * 34.0 + abs(pnoise(Vector((x / 55, y / 48, 9.1)))) * 14.0 \
+            + abs(pnoise(Vector((x / 17, y / 17, 4.4)))) * 3.0
+        roll += u * ridge
+        # far ranges, lost in the mist, so the horizon is a soft skyline and not a level band
+        m_ = min(1.0, max(0.0, (y - 900) / 900)); m_ = m_ * m_ * (3 - 2 * m_)
+        roll += m_ * max(0.0, 110 + 120 * pnoise(Vector((x / 420, y / 380, 12.5))) + 25 * pnoise(Vector((x / 90, y / 90, 13.7))))
     return near + roll + 0.06
 
 # ---------------------------------------------------------------- camera first (the scatter keeps the mark clear in its view)
-cam = bpy.data.cameras.new('cam'); cam.lens = 32; cam.sensor_width = 36
+cam = bpy.data.cameras.new('cam'); cam.lens = 32; cam.sensor_width = 36; cam.clip_end = 8000.0   # past the far ranges
 cam.dof.use_dof = True; cam.dof.aperture_fstop = 2.8
 co = bpy.data.objects.new('cam', cam); sc.collection.objects.link(co); sc.camera = co
 CAM_Z = gh(0.4, 0.0) + arg('camh', 1.45)
 co.location = (0.4, 0.0, CAM_Z)
-tgt = Vector((0.4, 30, CAM_Z + 30 * math.tan(math.radians(2.6))))
+# the wide frame looks due north, 2.6 degrees up; the tall phone frame turns onto the stone and looks a
+# little higher, so the needles rise over it (--phone 1 with --res 1080x2340)
+PHONE = arg('phone', 0)
+if PHONE:
+    _yaw = math.atan2(STONE_AT.x - 0.4, STONE_AT.y) + math.radians(arg('yawoff', 2.0)); _pit = math.radians(arg('pitch', 5.0))
+else:
+    _yaw = 0.0; _pit = math.radians(2.6)
+tgt = co.location + Vector((math.sin(_yaw) * math.cos(_pit), math.cos(_yaw) * math.cos(_pit), math.sin(_pit))) * 30
 co.rotation_euler = (tgt - co.location).to_track_quat('-Z', 'Y').to_euler()
 cam.dof.focus_distance = (STONE_AT - co.location).length
 sc.render.resolution_x, sc.render.resolution_y = W, H
@@ -411,7 +436,8 @@ bpy.context.view_layer.update()
 
 # ---------------------------------------------------------------- ground
 NG, X0, X1, Y0, Y1 = 240, -900.0, 900.0, -6.0, 3000.0
-xs = np.linspace(X0, X1, NG + 1); ys = np.concatenate([np.linspace(Y0, 40, NG // 2 + 1), np.geomspace(41, Y1, NG // 2)])
+_xo = np.geomspace(126, 2600, 60)
+xs = np.concatenate([-_xo[::-1], np.linspace(-120, 120, 181), _xo]); NG = len(xs) - 1; ys = np.concatenate([np.linspace(Y0, 40, NG // 2 + 1), np.geomspace(41, Y1, NG // 2)])
 bm = bmesh.new(); vs = [[bm.verts.new((x, y, gh(x, y))) for x in xs] for y in ys]
 for j in range(len(ys) - 1):
     for i in range(NG): bm.faces.new((vs[j][i], vs[j][i + 1], vs[j + 1][i + 1], vs[j + 1][i]))
@@ -423,9 +449,15 @@ mp = node(nt, 'ShaderNodeMapping'); mp.inputs['Scale'].default_value = (0.45,) *
 G = ACG + '/Grass004/Grass004_2K-JPG_'; D = ACG + '/Ground037/Ground037_2K-JPG_'
 nz = node(nt, 'ShaderNodeTexNoise'); nz.inputs['Scale'].default_value = 0.2; link(nt, tco.outputs['Object'], nz.inputs['Vector'])
 f = maprange(nt, nz.outputs['Fac'], 0.4, 0.6)
+# turf, not bare soil, close around the stone: the soil blend fades out within about 4 m of it
+_dv = node(nt, 'ShaderNodeVectorMath'); _dv.operation = 'DISTANCE'; link(nt, tco.outputs['Object'], _dv.inputs[0])
+_dv.inputs[1].default_value = (STONE_AT.x, STONE_AT.y, 0.0)
+f = math_(nt, 'MULTIPLY', f, maprange(nt, _dv.outputs['Value'], 1.5, 4.0))
 c = mixc(nt, f, tex(nt, G + 'Color.jpg', False, mp.outputs[0]).outputs[0], tex(nt, D + 'Color.jpg', False, mp.outputs[0]).outputs[0])
-hs = node(nt, 'ShaderNodeHueSaturation'); hs.inputs['Value'].default_value = 0.35; hs.inputs['Saturation'].default_value = 0.5; link(nt, c, hs.inputs['Color'])
-bs = node(nt, 'ShaderNodeBsdfPrincipled'); link(nt, hs.outputs[0], bs.inputs['Base Color']); bs.inputs['Roughness'].default_value = 0.4
+hs = node(nt, 'ShaderNodeHueSaturation'); hs.inputs['Saturation'].default_value = 0.5; link(nt, c, hs.inputs['Color'])
+link(nt, maprange(nt, _dv.outputs['Value'], 0.6, 3.5, 0.13, 0.35), hs.inputs['Value'])          # dark, wet turf at the foot
+bs = node(nt, 'ShaderNodeBsdfPrincipled'); link(nt, hs.outputs[0], bs.inputs['Base Color'])
+link(nt, maprange(nt, _dv.outputs['Value'], 0.6, 3.5, 0.22, 0.45), bs.inputs['Roughness'])
 nm = node(nt, 'ShaderNodeNormalMap'); link(nt, tex(nt, G + 'NormalGL.jpg', True, mp.outputs[0]).outputs[0], nm.inputs['Color']); link(nt, nm.outputs[0], bs.inputs['Normal'])
 o = node(nt, 'ShaderNodeOutputMaterial'); link(nt, bs.outputs[0], o.inputs['Surface'])
 ground.data.materials.append(m)
@@ -433,28 +465,63 @@ ground.data.materials.append(m)
 # ---------------------------------------------------------------- the stone (shared module), square to the camera so the seam reads through
 SZ = gh(STONE_AT.x, STONE_AT.y)
 parts = STONE.build_stone(sc.collection, scale_m=SCALE_M, location=(STONE_AT.x, STONE_AT.y, SZ),
-                          rotation=(0.010, -0.006, math.atan2(0.4 - STONE_AT.x, STONE_AT.y) + math.radians(arg('yaw', 0.0))), wetness=0.75, moss=0.45,
+                          rotation=(0.010, -0.006, math.atan2(0.4 - STONE_AT.x, STONE_AT.y) + math.radians(arg('yaw', 0.0))), wetness=arg('wet', 0.45), moss=0.0, growth=False,
+                          stone_value=arg('sval', 2.2), carve=arg('carve', 0.55), damp_foot=0.45, chip_dots=0.0,
+                          crystal_depth=arg('cdepth', 0.5), inner_faces=arg('ifaces', 5), crystal_bevel=arg('cbevel', 3.0),
                           cache_dir=STONE.DEFAULT_CACHE, glow=arg('glow', 0.25), caustics=False, detail=arg('detail', 380))
 STONE_MATS = {m_.name for m_ in parts['stone'].data.materials if m_}
 CRYSTAL_MATS = {m_.name for m_ in parts['crystal'].data.materials if m_}
 if parts.get('veil'): CRYSTAL_MATS |= {m_.name for m_ in parts['veil'].data.materials if m_}
 CRY_C = Vector((STONE_AT.x, STONE_AT.y, SZ + SCALE_M * (100 - 51.5) / 100 - parts['info'].get('sink', 0.0)))
 # the crystal's light on the flowers and paper in front (a cheat: the glass's own glow made clean)
-cl_ = bpy.data.lights.new('crystal_light', 'POINT'); cl_.energy = arg('cl', 6.0); cl_.color = (0.42, 0.80, 1.0); cl_.shadow_soft_size = 0.25
+cl_ = bpy.data.lights.new('crystal_light', 'POINT'); cl_.energy = arg('cl', 9.0); cl_.color = (0.48, 0.84, 1.0); cl_.shadow_soft_size = 0.45
 clo = bpy.data.objects.new('crystal_light', cl_); sc.collection.objects.link(clo)
-clo.location = CRY_C + Vector((0.0, -0.55, -0.05)); clo.visible_glossy = False; clo.visible_transmission = False
+clo.location = CRY_C + Vector((0.0, -0.42, 0.05)); clo.visible_glossy = False; clo.visible_transmission = False
 
 # a soft light low behind the stone on the flowers there, so the seam and the outline read against them
-bl_ = bpy.data.lights.new('behind', 'AREA'); bl_.energy = arg('bl', 45.0); bl_.color = (0.40, 0.72, 1.0); bl_.size = 2.5
+bl_ = bpy.data.lights.new('behind', 'AREA'); bl_.energy = arg('bl', 30.0); bl_.color = (0.40, 0.72, 1.0); bl_.size = 2.5
 blo = bpy.data.objects.new('behind', bl_); sc.collection.objects.link(blo)
 blo.location = (STONE_AT.x, STONE_AT.y + 1.6, SZ + 1.5); blo.rotation_euler = (math.radians(-12), 0, 0)
 blo.visible_camera = False; blo.visible_glossy = False
 
 # ---------------------------------------------------------------- the paper: folded, at the stone's foot, by the crystal's light
-paper = make_paper('paper', glow=arg('pglow', 0.22))
-PX_, PY_ = STONE_AT.x - 0.30, STONE_AT.y - 0.85
-paper.location = (PX_, PY_, gh(PX_, PY_) + 0.012)
-paper.rotation_euler = (0.0, 0.0, math.radians(-14))
+def make_letter(name, size=(0.23, 0.30), lift=55.0, glow=0.0):
+    """a sheet folded once across its length and left half open: the near half lies on the turf, the far
+    half stands up toward the camera with a soft round crease, a slight bow and lifting corners.
+    The whole unfolded sheet carries the UVs (ambientCG Paper002 through make_paper's material)."""
+    ob = make_paper(name, size=size, glow=glow)               # for its material; the mesh is replaced
+    W_, H_ = size; H2 = H_ / 2; th = math.radians(lift); rr = 0.008
+    NU, NV = 22, 30; bm = bmesh.new(); uvl = bm.loops.layers.uv.new('UVMap'); grid = []
+    for j in range(NV + 1):
+        v = j / NV; t = (v - 0.5) * H_                         # along the sheet; the crease at t = 0
+        row = []
+        for i in range(NU + 1):
+            u = i / NU; x = (u - 0.5) * W_; a = abs(u - 0.5) * 2
+            if t <= 0:                                          # the near half on the ground, edges lifting a little
+                y, z = t, 0.003 + 0.010 * a ** 2 + 0.008 * (-t / H2) ** 2 * a
+            else:                                               # the far half, rounding off the crease, standing up
+                ang = th * min(1.0, t / (rr * th + 1e-6)) if t < rr * th else th
+                if t < rr * th: y, z = rr * math.sin(ang), rr * (1 - math.cos(ang))
+                else:
+                    t2 = t - rr * th; y0, z0 = rr * math.sin(th), rr * (1 - math.cos(th))
+                    y, z = y0 + t2 * math.cos(th), z0 + t2 * math.sin(th)
+                y += 0.012 * a ** 2 * (t / H2)                  # a slight bow across the standing half
+                z += 0.002 * math.sin(u * 7.0)
+            row.append(bm.verts.new((x, y, z)))
+        grid.append(row)
+    for j in range(NV):
+        for i in range(NU):
+            f = bm.faces.new((grid[j][i], grid[j][i + 1], grid[j + 1][i + 1], grid[j + 1][i]))
+            for k, (ii, jj) in enumerate(((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1))):
+                f.loops[k][uvl].uv = (ii / NU, jj / NV)
+    me_ = ob.data; bm.to_mesh(me_); bm.free()
+    for p in me_.polygons: p.use_smooth = True
+    return ob
+
+paper = make_letter('paper', glow=arg('pglow', 0.05))
+PX_, PY_ = STONE_AT.x + arg('paperdx', 0.05), STONE_AT.y - arg('paperdy', 1.6)
+paper.location = (PX_, PY_, gh(PX_, PY_))
+paper.rotation_euler = (0.0, 0.0, math.radians(-10))
 
 # ---------------------------------------------------------------- flowers and grass (scans)
 HEL = load_objs(f'{PH}/flower_heliophila/flower_heliophila_2k.blend',
@@ -464,11 +531,11 @@ CEL = load_objs(f'{PH}/celandine_01/celandine_01_2k.blend', [f'celandine_01_{k}_
 GRS = load_objs(f'{PH}/grass_medium_01/grass_medium_01_2k.blend',
                 [f'grass_medium_01_{k}_LOD1' for k in ('tall_a', 'tall_b', 'tall_c', 'mid_a', 'mid_b', 'large_a')])
 BLUE = (0.10, 0.50, 1.0); PALE = (0.36, 0.78, 1.0)
-pet = dict(a=BLUE, b=PALE, emit=arg('emit', 4.0))
-leaf = dict(value=0.17, sat=0.5, tint=(0.42, 0.62, 1.0), trans=0.3)
+pet = dict(a=BLUE, b=PALE, emit=arg('emit', 2.2))
+leaf = dict(value=0.2, sat=0.5, tint=(0.42, 0.62, 1.0), trans=0.42)
 def tx_(a, n): return f'{PH}/{a}/textures/{a}_{n}_2k.' + ('png' if n in ('alpha', 'translucency') else 'jpg')
 set_mat(HEL, foliage_mat('heliophila', tx_('flower_heliophila', 'diff'), tx_('flower_heliophila', 'alpha'),
-                         petal=dict(a=(0.03, 0.22, 1.0), b=(0.10, 0.45, 1.0), emit=arg('hemit', 1.1)), uvbox=(0.0, 0.56, 0.0, 0.26), **leaf))
+                         petal=dict(a=(0.03, 0.22, 1.0), b=(0.10, 0.45, 1.0), emit=arg('hemit', 0.7)), uvbox=(0.0, 0.56, 0.0, 0.26), **leaf))
 set_mat(EMP, foliage_mat('empodium', tx_('flower_empodium', 'diff'), tx_('flower_empodium', 'alpha'), petal=pet, **leaf))
 set_mat(CEL, foliage_mat('celandine', tx_('celandine_01', 'diff'), tx_('celandine_01', 'alpha'), petal=pet, **leaf))
 set_mat(GRS, foliage_mat('grass', tx_('grass_medium_01', 'diff'), tx_('grass_medium_01', 'alpha'), value=0.5, sat=0.6,
@@ -479,14 +546,21 @@ PLANT_MATS = {'heliophila', 'empodium', 'celandine', 'grass'}
 MARK = frame_rect(parts['stone']); MX0, MY0, MX1, MY1 = MARK[0] - 0.012, MARK[1] - 0.02, MARK[2] + 0.012, MARK[3] + 0.004
 STONE_DEPTH = (STONE_AT - co.location).length
 bpy.context.view_layer.update()
-_pr = frame_rect(paper); PRX0, PRY0, PRX1, PRY1 = _pr[0] - 0.01, _pr[1] - 0.01, _pr[2] + 0.01, _pr[3] + 0.01
+_pr = frame_rect(paper); print('PAPER top', _pr[1], 'MARK bottom', MARK[3], 'paper px', (_pr[2] - _pr[0]) * W, (_pr[3] - _pr[1]) * H); PRX0, PRY0, PRX1, PRY1 = _pr[0] - 0.01, _pr[1] - 0.01, _pr[2] + 0.01, _pr[3] + 0.01
 PAPER_DEPTH = (paper.location - co.location).length
+SENS_W = 0.036 * min(1.0, W / H); SENS_H = SENS_W * H / W; F_ = cam.lens / 1000
 def clear_of_mark(p, h):
-    """keep points whose plant (height h) would not cover the mark from this camera"""
+    """keep points whose plant (height h) would not cover the mark from this camera: its spread (about
+    half its height, for plants nearer than the stone) and the lens's blur at its distance are counted,
+    so no petal and no soft edge of an out-of-focus bloom reaches the mark"""
     tops = p.copy(); tops[:, 2] += h
     a = screen_xy(p); b = screen_xy(tops)
-    x = a[:, 0]; ytop = b[:, 1]
-    inside = (x > MX0) & (x < MX1) & (ytop < MY1) & (a[:, 1] > MY0)
+    x = a[:, 0]; ytop = b[:, 1]; d = np.maximum(a[:, 2], 0.05); s_ = cam.dof.focus_distance
+    near_ = np.clip((STONE_DEPTH - d) / 3.0, 0, 1)
+    spread = np.minimum(0.3 * np.asarray(h), 0.18) * near_ * F_ / d                 # sideways, on the sensor, metres
+    coc = F_ * F_ / (cam.dof.aperture_fstop * (s_ - F_)) * np.abs(d - s_) / d       # blur diameter, metres
+    rx = (spread + coc) / SENS_W + 0.003 * near_; ry = coc / SENS_H + 0.002 * near_
+    inside = (x + rx > MX0) & (x - rx < MX1) & (ytop - ry < MY1) & (a[:, 1] + ry > MY0)
     in_front = a[:, 2] < STONE_DEPTH + 0.6
     on_paper = (x > PRX0) & (x < PRX1) & (ytop < PRY1) & (a[:, 1] > PRY0) & (a[:, 2] < PAPER_DEPTH + 0.3)
     return ~(inside & in_front) & ~on_paper
@@ -496,7 +570,7 @@ def field_pts(n, ymin, ymax, power):
     u = rng.random(n); y = ymin + (ymax - ymin) * u ** power
     x = (rng.random(n) * 2 - 1) * (y * TANH + 2.0)
     keep = (np.hypot(x - STONE_AT.x, (y - STONE_AT.y) * 1.4) > 0.8) | (y > STONE_AT.y + 0.42)   # flowers right up behind it
-    keep &= np.hypot(x - PX_, y - PY_) > 0.55                                                # the paper lies in a little clearing
+    keep &= np.hypot(x - PX_, y - PY_) > 0.40                                                # the paper lies in a little clearing
     x, y = x[keep], y[keep]
     z = np.array([gh(a, b) for a, b in zip(x, y)])
     return np.stack([x, y, z], 1)
@@ -530,16 +604,27 @@ srcs = sorted(GRS, key=lambda o: o.name)
 p = field_pts(24000, 1.6, 80, 2.0); k = len(p)
 s = rng.uniform(0.8, 1.5, k) * np.clip(np.hypot(p[:, 0] - STONE_AT.x, p[:, 1] - STONE_AT.y) / 2.0, 0.5, 1.0)
 scatter_clear('grass', srcs, p, s, rng.uniform(1.0, 1.5, k), 0.15, 0.33)
+# low turf in the clearing at the stone's foot, so it stands in the field and not on a bare pad
+# (each tuft is kept only if it stays below the mark's lower edge in the camera's view)
+n_ = 6000; cx_ = STONE_AT.x + rng.uniform(-1.9, 1.9, n_); cy_ = STONE_AT.y + rng.uniform(-2.6, -0.30, n_)
+p = np.stack([cx_, cy_, np.array([gh(a, b) for a, b in zip(cx_, cy_)])], 1)
+p = p[np.hypot(p[:, 0] - PX_, p[:, 1] - PY_) > 0.22]; k = len(p)
+scatter_clear('turf', srcs, p, rng.uniform(0.16, 0.42, k), rng.uniform(0.5, 0.9, k), 0.25, 0.33)
+# and a close, cropped sward right up to the stone's foot, low enough to stay under the mark's edge
+n_ = 9000; cx_ = STONE_AT.x + rng.uniform(-1.6, 1.6, n_); cy_ = STONE_AT.y + rng.uniform(-1.5, -0.30, n_)
+p = np.stack([cx_, cy_, np.array([gh(a, b) for a, b in zip(cx_, cy_)])], 1)
+p = p[np.hypot(p[:, 0] - PX_, (p[:, 1] - PY_) * 1.3) > 0.2]; k = len(p)
+scatter_clear('sward', srcs, p, rng.uniform(0.07, 0.16, k), rng.uniform(0.5, 0.8, k), 0.3, 0.33)
 
-for i in range(36):
+for i in range(arg('pools', 18)):
     y = 1.5 + 22 * rng.random() ** 1.6; x = (rng.random() * 2 - 1) * (y * TANH + 1)
     if math.hypot(x - STONE_AT.x, y - STONE_AT.y) < 1.2: continue
-    l = bpy.data.lights.new('pool', 'POINT'); l.energy = rng.uniform(0.6, 1.8); l.color = (0.35, 0.72, 1.0); l.shadow_soft_size = 0.35
+    l = bpy.data.lights.new('pool', 'POINT'); l.energy = rng.uniform(0.5, 1.4); l.color = (0.35, 0.72, 1.0); l.shadow_soft_size = 0.35
     lo = bpy.data.objects.new('pool', l); sc.collection.objects.link(lo); lo.location = (x, y, gh(x, y) + 0.22)
     lo.visible_camera = False
 
 # ---------------------------------------------------------------- needles: scanned sea cliff stood on end and tapered to a point
-SP = load_objs(f'{PH}/coastal_cliff_01/coastal_cliff_01_1k.blend', ['coastal_cliff_01_LOD3']) + \
+SP = load_objs(f'{PH}/coastal_cliff_01/coastal_cliff_01_1k.blend', ['coastal_cliff_01_LOD2']) + \
      load_objs(f'{PH}/coastal_cliff_02/coastal_cliff_02_1k.blend', ['coastal_cliff_02_LOD3'])
 # clusters, as rock needles stand in nature: one great group right of the stone, a lesser group far left,
 # a few faint ones deep in the mist
@@ -568,35 +653,132 @@ for idx, (x, y, hgt, k, rz, lean, slim) in enumerate(NEEDLES):
     zmin = min((ev.matrix_world @ Vector(c)).z for c in ev.bound_box)
     ob.location.z += gh(x, y) - zmin - 0.2 * hgt                # a fifth of it under the field
 
+for m_ in {sl.material for o_ in SP for sl in o_.material_slots if sl.material}:
+    for n_ in m_.node_tree.nodes:
+        if n_.type == 'NORMAL_MAP': n_.inputs['Strength'].default_value = 1.8
+        if n_.type == 'BSDF_PRINCIPLED':
+            src_ = n_.inputs['Base Color'].links[0].from_socket if n_.inputs['Base Color'].links else None
+            if src_ is not None:
+                hs_ = m_.node_tree.nodes.new('ShaderNodeHueSaturation'); hs_.inputs['Saturation'].default_value = 0.35
+                hs_.inputs['Value'].default_value = arg('rockv', 1.4)
+                m_.node_tree.links.new(src_, hs_.inputs['Color']); m_.node_tree.links.new(hs_.outputs[0], n_.inputs['Base Color'])
+
 # ---------------------------------------------------------------- low mist lying over the far field, so the needles stand in layers
 bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 1520, 40)); fog = bpy.context.object; fog.name = 'lowmist'; fog.scale = (4000, 2960, 100)
 m, nt = mat('lowmist'); v_ = node(nt, 'ShaderNodeVolumePrincipled'); v_.inputs['Color'].default_value = (0.55, 0.72, 1.0, 1)
-v_.inputs['Anisotropy'].default_value = 0.4
+v_.inputs['Anisotropy'].default_value = 0.35
 gq = node(nt, 'ShaderNodeNewGeometry'); sq = node(nt, 'ShaderNodeSeparateXYZ'); link(nt, gq.outputs['Position'], sq.inputs[0])
-link(nt, math_(nt, 'MULTIPLY', math_(nt, 'EXPONENT', math_(nt, 'DIVIDE', sq.outputs['Z'], -9.0)), arg('fogd', 0.009)), v_.inputs['Density'])
+low_ = math_(nt, 'MULTIPLY', math_(nt, 'EXPONENT', math_(nt, 'DIVIDE', sq.outputs['Z'], -9.0)), arg('fogd', 0.009))
+# banks: broad, flat-bottomed sheets of mist between the layers of needles (noise stretched sideways)
+mpb = node(nt, 'ShaderNodeMapping'); mpb.inputs['Scale'].default_value = (1 / 260, 1 / 90, 1 / 26); link(nt, gq.outputs['Position'], mpb.inputs[0])
+nzb = node(nt, 'ShaderNodeTexNoise'); nzb.inputs['Scale'].default_value = 1.0; nzb.inputs['Detail'].default_value = 3.0
+link(nt, mpb.outputs[0], nzb.inputs['Vector'])
+bank = maprange(nt, nzb.outputs['Fac'], 0.47, 0.62)
+band = math_(nt, 'MULTIPLY', maprange(nt, sq.outputs['Z'], 4.0, 18.0), maprange(nt, sq.outputs['Z'], 30.0, 75.0, 1.0, 0.0))
+far_ = maprange(nt, sq.outputs['Y'], 150.0, 260.0)
+bank = math_(nt, 'MULTIPLY', math_(nt, 'MULTIPLY', bank, band), math_(nt, 'MULTIPLY', far_, arg('bankd', 0.03)))
+# and mist gathered around the needles' feet and the far ridges, so nothing stands on a hard edge
+base_ = math_(nt, 'MULTIPLY', math_(nt, 'EXPONENT', math_(nt, 'DIVIDE', sq.outputs['Z'], -arg('baseh', 20.0))),
+              math_(nt, 'MULTIPLY', maprange(nt, sq.outputs['Y'], 140.0, 230.0), arg('based', 0.006)))
+# thinning beyond about 1.5 km, so the far ranges stand as a soft skyline instead of a lit band of mist
+thin_ = maprange(nt, sq.outputs['Y'], 1100.0, 2000.0, 1.0, 0.12)
+link(nt, math_(nt, 'MULTIPLY', math_(nt, 'ADD', math_(nt, 'ADD', low_, bank), base_), thin_), v_.inputs['Density'])
 o = node(nt, 'ShaderNodeOutputMaterial'); link(nt, v_.outputs[0], o.inputs['Volume']); fog.data.materials.append(m)
 
 # ---------------------------------------------------------------- night sky, fading to the mist's colour at the horizon; moonlight
 MISTC = (0.06, 0.105, 0.21)
 wld = bpy.data.worlds.new('sky'); sc.world = wld; wld.use_nodes = True; wn = wld.node_tree; wn.nodes.clear()
-tc = node(wn, 'ShaderNodeTexCoord'); mpw = node(wn, 'ShaderNodeMapping'); mpw.inputs['Rotation'].default_value = (0, 0, math.radians(arg('skyrot', 140.0)))
-env = node(wn, 'ShaderNodeTexEnvironment'); env.image = img(f'{PH}/kloppenheim_07_puresky/kloppenheim_07_puresky_2k.hdr')
+# the scanned cloud deck (kloppenheim_07, 4k) turned so its moon lies just right of the frame, where the
+# moon lamp stands; cloud kept close to grey and cooled to cobalt; faint stars only where the cloud is thin
+SKYROT = arg('skyrot', -82.6)            # the scan's moon about 48 degrees right of north, above the frame
+tc = node(wn, 'ShaderNodeTexCoord'); mpw = node(wn, 'ShaderNodeMapping'); mpw.inputs['Rotation'].default_value = (0, 0, math.radians(SKYROT))
+env = node(wn, 'ShaderNodeTexEnvironment'); env.image = img(f'{PH}/kloppenheim_07_puresky/kloppenheim_07_puresky_4k.hdr')
 link(wn, tc.outputs['Generated'], mpw.inputs[0]); link(wn, mpw.outputs[0], env.inputs['Vector'])
+_iw, _ih = env.image.size; _px = np.empty(_iw * _ih * 4, np.float32); env.image.pixels.foreach_get(_px)
+_px = _px.reshape(_ih, _iw, 4)[_ih // 2 + _ih // 40:, :, :3]          # rows from the bottom: the upper sky, above the horizon haze
+_lum = (_px * np.array([0.2126, 0.7152, 0.0722], np.float32)).sum(2)
+LMED = float(np.median(_lum)); print('SKY median', LMED, 'p10', float(np.percentile(_lum, 10)), 'p99', float(np.percentile(_lum, 99)))
+del _px, _lum
 bw = node(wn, 'ShaderNodeRGBToBW'); link(wn, env.outputs[0], bw.inputs[0])
-cl = math_(wn, 'MINIMUM', math_(wn, 'POWER', math_(wn, 'MULTIPLY', bw.outputs[0], 2.0), 2.2), 4.0)
-cl = math_(wn, 'MULTIPLY', cl, arg('sky', 0.32))
+nrm = math_(wn, 'DIVIDE', bw.outputs[0], LMED)
+cl = math_(wn, 'MULTIPLY', math_(wn, 'MINIMUM', math_(wn, 'POWER', nrm, arg('skyg', 2.2)), 9.0), arg('sky', 0.17))
+dsat = node(wn, 'ShaderNodeHueSaturation'); dsat.inputs['Saturation'].default_value = 0.25; link(wn, env.outputs[0], dsat.inputs['Color'])
+dn = node(wn, 'ShaderNodeVectorMath'); dn.operation = 'DIVIDE'; link(wn, dsat.outputs[0], dn.inputs[0])
+cmb = node(wn, 'ShaderNodeCombineXYZ'); link(wn, math_(wn, 'MAXIMUM', bw.outputs[0], 1e-6), cmb.inputs[0]); link(wn, math_(wn, 'MAXIMUM', bw.outputs[0], 1e-6), cmb.inputs[1]); link(wn, math_(wn, 'MAXIMUM', bw.outputs[0], 1e-6), cmb.inputs[2])
+link(wn, cmb.outputs[0], dn.inputs[1])                                  # the cloud's own hue, unit brightness
 tn = node(wn, 'ShaderNodeMix'); tn.data_type = 'RGBA'; tn.blend_type = 'MULTIPLY'; tn.inputs['Factor'].default_value = 1
-cc = node(wn, 'ShaderNodeCombineColor'); link(wn, cl, cc.inputs[0]); link(wn, cl, cc.inputs[1]); link(wn, cl, cc.inputs[2])
-link(wn, cc.outputs[0], tn.inputs[6]); tn.inputs[7].default_value = (0.20, 0.30, 0.55, 1)
+link(wn, dn.outputs[0], tn.inputs[6]); tn.inputs[7].default_value = (0.50, 0.66, 1.0, 1)
+sk = node(wn, 'ShaderNodeVectorMath'); sk.operation = 'SCALE'; link(wn, tn.outputs[2], sk.inputs[0]); link(wn, cl, sk.inputs['Scale'])
+# stars: tiny points, most of them faint, a few clear; only in the gaps; fading out low over the mist
+vor = node(wn, 'ShaderNodeTexVoronoi'); vor.inputs['Scale'].default_value = arg('starscale', 260.0); link(wn, tc.outputs['Generated'], vor.inputs['Vector'])
+spt = maprange(wn, vor.outputs['Distance'], 0.10, 0.0)
+sep_ = node(wn, 'ShaderNodeSeparateColor'); link(wn, vor.outputs['Color'], sep_.inputs[0])
+gate = math_(wn, 'GREATER_THAN', sep_.outputs[0], 1.0 - arg('stardens', 0.12))
+bri = math_(wn, 'POWER', sep_.outputs[1], 5.0)
+gap = maprange(wn, nrm, 0.85, 0.45)
 sepz = node(wn, 'ShaderNodeSeparateXYZ'); link(wn, tc.outputs['Generated'], sepz.inputs[0])
+hi_ = maprange(wn, sepz.outputs['Z'], 0.10, 0.35)
+star = math_(wn, 'MULTIPLY', math_(wn, 'MULTIPLY', math_(wn, 'MULTIPLY', spt, gate), math_(wn, 'MULTIPLY', bri, gap)), math_(wn, 'MULTIPLY', hi_, arg('stars', 0.9)))
+sadd = node(wn, 'ShaderNodeVectorMath'); sadd.operation = 'MULTIPLY_ADD'
+sadd.inputs[1].default_value = (0.80, 0.90, 1.0); link(wn, sk.outputs[0], sadd.inputs[2])
+sv = node(wn, 'ShaderNodeCombineXYZ'); link(wn, star, sv.inputs[0]); link(wn, star, sv.inputs[1]); link(wn, star, sv.inputs[2]); link(wn, sv.outputs[0], sadd.inputs[0])
 hz = maprange(wn, sepz.outputs['Z'], 0.16, 0.0)
 hzm = node(wn, 'ShaderNodeMix'); hzm.data_type = 'RGBA'; link(wn, hz, hzm.inputs['Factor'])
-link(wn, tn.outputs[2], hzm.inputs[6]); hzm.inputs[7].default_value = (*[c * 0.95 for c in MISTC], 1)
+link(wn, sadd.outputs[0], hzm.inputs[6]); hzm.inputs[7].default_value = (*[c * 0.95 for c in MISTC], 1)
 bg = node(wn, 'ShaderNodeBackground'); bg.inputs['Strength'].default_value = 1.0
 link(wn, hzm.outputs[2], bg.inputs['Color']); wo = node(wn, 'ShaderNodeOutputWorld'); link(wn, bg.outputs[0], wo.inputs['Surface'])
-moon = bpy.data.lights.new('moon', 'SUN'); moon.energy = arg('moon', 0.35); moon.color = (0.62, 0.76, 1.0); moon.angle = math.radians(2)
+# the moon lamp stands where the scan's moon is (found at u 0.596, v 0.324 in the equirectangular image)
+_azm = (0.5 - 0.596) * 2 * math.pi; _el = (0.5 - 0.3236) * math.pi
+_az = _azm - math.radians(SKYROT); SKY_MOON = Vector((math.cos(_el) * math.cos(_az), math.cos(_el) * math.sin(_az), math.sin(_el)))
+# the moon lamp on the stone and field: from the right, a little toward the camera, so it rakes the face
+# (a film key, kept on the same side of the sky as the moonlit cloud)
+_la, _le = math.radians(arg('moonaz', -8.0)), math.radians(arg('moonel', 30.0))
+MOON_DIR = Vector((math.cos(_le) * math.cos(_la), math.cos(_le) * math.sin(_la), math.sin(_le)))
+print('MOON_DIR', MOON_DIR, 'SKY_MOON', SKY_MOON)
+moon = bpy.data.lights.new('moon', 'SUN'); moon.energy = arg('moon', 2.6); moon.color = (0.66, 0.79, 1.0); moon.angle = math.radians(1.5)
 mo = bpy.data.objects.new('moon', moon); sc.collection.objects.link(mo)
-mo.rotation_euler = Vector((0.45, 0.8, 0.40)).to_track_quat('Z', 'Y').to_euler()
+mo.rotation_euler = MOON_DIR.to_track_quat('Z', 'Y').to_euler()
+# the moon behind the clouds as the needles see it: a rim from the bright sky, on the needles alone
+rim = bpy.data.lights.new('rim', 'SUN'); rim.energy = arg('rim', 3.0); rim.color = (0.70, 0.82, 1.0); rim.angle = math.radians(4)
+rmo = bpy.data.objects.new('rim', rim); sc.collection.objects.link(rmo); rmo.rotation_euler = SKY_MOON.to_track_quat('Z', 'Y').to_euler()
+_nc = bpy.data.collections.new('needles_rx')
+for o_ in bpy.data.objects:
+    if o_.name.startswith('needle'): _nc.objects.link(o_)
+rmo.light_linking.receiver_collection = _nc
+# the crystal's catch of the moon: a small source along the mirror direction of the facet that best faces
+# between the moon and the lens, seen by the crystal alone and only in its reflections
+_dg = bpy.context.evaluated_depsgraph_get(); _ce = parts['crystal'].evaluated_get(_dg); _cm = _ce.to_mesh(); _M = _ce.matrix_world
+_best = None
+for f_ in _cm.polygons:
+    c_ = _M @ f_.center; n_ = (_M.to_3x3() @ f_.normal).normalized(); V_ = (co.location - c_).normalized()
+    if n_.dot(V_) < 0.15: continue
+    _el = [(_M @ _cm.vertices[f_.vertices[(i + 1) % len(f_.vertices)]].co - _M @ _cm.vertices[f_.vertices[i]].co).length for i in range(len(f_.vertices))]
+    if max(_el) < 6 * max(min(_el), 1e-5) or max(_el) < 0.04: continue          # only the long, narrow strips of the arrises
+    L_ = (2 * n_.dot(V_) * n_ - V_).normalized(); sc_ = L_.dot(MOON_DIR) + 0.3 * L_.z
+    if _best is None or sc_ > _best[0]: _best = (sc_, c_.copy(), L_.copy())
+_ce.to_mesh_clear()
+if _best and arg('catch', 160.0) > 0:
+    kl = bpy.data.lights.new('catch', 'AREA'); kl.energy = arg('catch', 160.0); kl.color = (0.80, 0.90, 1.0); kl.shape = 'DISK'; kl.size = 0.06          # small: the arris draws it out into a line
+    klo = bpy.data.objects.new('catch', kl); sc.collection.objects.link(klo); klo.location = _best[1] + _best[2] * 3.0
+    klo.rotation_euler = (-_best[2]).to_track_quat('-Z', 'Y').to_euler()
+    klo.visible_diffuse = False; klo.visible_camera = False
+    _cc = bpy.data.collections.new('crystal_rx'); _cc.objects.link(parts['crystal']); klo.light_linking.receiver_collection = _cc
+    klo.light_linking.blocker_collection = _cc                 # the stone around it casts no shadow from this one
+    print('CATCH', _best[0], tuple(_best[2]))
+
+# the sky's light on the stone's face, as a film crew would give it: a broad soft source above and to
+# the left of the camera, linked to the stone alone so the field keeps its own light
+fl_ = bpy.data.lights.new('face_fill', 'AREA'); fl_.energy = arg('fill', 85.0); fl_.color = (0.62, 0.74, 1.0)
+fl_.shape = 'DISK'; fl_.size = 5.0
+flo = bpy.data.objects.new('face_fill', fl_); sc.collection.objects.link(flo)
+flo.location = STONE_AT + Vector((-3.5, -7.0, 5.5)); flo.rotation_euler = (STONE_AT + Vector((0, 0, 1.0)) - flo.location).to_track_quat('-Z', 'Y').to_euler()
+flo.visible_camera = False; flo.visible_glossy = False
+_lk = bpy.data.collections.new('face_fill_receivers'); _lk.objects.link(parts['stone'])
+flo.light_linking.receiver_collection = _lk
+lf_ = bpy.data.lights.new('left_fill', 'AREA'); lf_.energy = arg('lfill', 35.0); lf_.color = (0.58, 0.70, 1.0); lf_.shape = 'DISK'; lf_.size = 4.0
+lfo = bpy.data.objects.new('left_fill', lf_); sc.collection.objects.link(lfo)
+lfo.location = STONE_AT + Vector((-6.0, -4.5, 2.2)); lfo.rotation_euler = (STONE_AT + Vector((0, 0, 1.0)) - lfo.location).to_track_quat('-Z', 'Y').to_euler()
+lfo.visible_camera = False; lfo.visible_glossy = False; lfo.light_linking.receiver_collection = _lk
 
 # ---------------------------------------------------------------- frame positions for the page
 bpy.context.view_layer.update()
@@ -605,15 +787,21 @@ info = {'w': W, 'h': H, 'paper': frame_rect(paper), 'stone': frame_rect(parts['s
 json.dump(info, open(os.path.join(WORK, 'frame.json'), 'w'), indent=1); print('FRAME', info)
 
 cycles(samples=SAMPLES, tl=TL, exposure=arg('exposure', 0.0), look='None', volume=True)
+sc.cycles.volume_step_rate = arg('vstep', 4.0)
 sc.cycles.transmission_bounces = 10
 if arg('dry', 0): raise SystemExit
-mist_comp(MISTC, arg('mist', 0.95), 18, 620, sky_amount=0.0)
+if arg('border', ''):                       # render only a region (fractions x0,y0,x1,y1 from the bottom left), for checks
+    _b = [float(v) for v in arg('border', '').split(',')]
+    sc.render.use_border = True; sc.render.use_crop_to_border = True
+    sc.render.border_min_x, sc.render.border_min_y, sc.render.border_max_x, sc.render.border_max_y = _b
+mist_comp(MISTC, arg('mist', 0.55), 18, 620, sky_amount=0.0)
 sc.world.mist_settings.falloff = 'LINEAR'
 import time; t0 = time.time()
 sc.render.filepath = RAW; bpy.ops.render.render(write_still=True); print('render seconds', round(time.time() - t0))
-grade(RAW, os.path.join(WORK, 'base.png'), bloom=0.30, bloom_thr=0.45, halation=0.06, grain=0.0, vignette=0.36, lift=0.018,
-      tint=(0.97, 1.0, 1.03), rain=0.0)
-grade(RAW, OUT, bloom=0.30, bloom_thr=0.45, halation=0.06, grain=0.018, vignette=0.36, lift=0.018, tint=(0.97, 1.0, 1.03), rain=0.07)
+# no rain (the sky has cleared; the stone is still wet), no motes. base.png (no grain) feeds the loop
+grade(RAW, os.path.join(WORK, 'base.png'), bloom=0.24, bloom_thr=0.5, halation=0.05, grain=0.0, vignette=0.34, lift=0.016, tint=(0.97, 1.0, 1.03), rain=0.0)
+grade(RAW, OUT, bloom=0.24, bloom_thr=0.5, halation=0.05, grain=0.016, vignette=0.34, lift=0.016, tint=(0.97, 1.0, 1.03), rain=0.0)
+if not arg('data', 0): raise SystemExit
 codes = {m_: (1.0, 0.0) for m_ in PLANT_MATS}
 codes.update({m_: (0.0, 0.5) for m_ in STONE_MATS}); codes.update({m_: (0.0, 1.0) for m_ in CRYSTAL_MATS}); codes['paper'] = (0.0, 0.75)
 data_pass(os.path.join(WORK, 'data.png'), codes, hide=('lowmist',))

@@ -1,30 +1,37 @@
-# The Blue Field: the loop, the stills and the depth map for the page, built from one render and its data pass.
+# The Blue Field: the loops, the stills and the depth maps for the page, built from two renders (the wide
+# frame and the tall phone frame) and their data passes.
 # Run with the system Python (numpy, Pillow) and ffmpeg; no Blender needed:
-#   python3 blue_field_compose.py --work <scratch folder with base.png, data.png, frame.json> --out <this folder>
-# Writes assets/loop.mp4, assets/loop.webm (8 s, 24 fps, seamless), assets/still.webp|avif (desktop),
-# assets/still-phone.webp|avif (a portrait crop centred on the stone), assets/depth.png, assets/frame.json,
-# and shots/render-still.png, shots/render-still-phone.png.
+#   python3 blue_field_compose.py --work <wide render folder> --work-phone <phone render folder> --out <this folder>
+# Each folder holds base.png (graded, no grain), data.png (16 bit: R disparity 2/d, G plants, B stone 0.5,
+# crystal 1, paper 0.75) and frame.json, as blue_field.py writes them.
+# Writes assets/loop.mp4|webm (1920x1080) and assets/loop-phone.mp4|webm (720x1560), 8 s at 24 fps, seamless;
+# assets/still.webp|avif and assets/still-phone.webp|avif; assets/depth.png and assets/depth-phone.png;
+# assets/frame.json (both frames); shots/render-still.png and shots/render-still-phone.png.
 #
-# The loop (every motion repeats a whole number of times in 8 s, so the last frame runs into the first):
-#   - blooms sway: a smooth displacement from travelling waves, weighted by the plant mask and by nearness;
-#     the stone, the crystal and the paper hold perfectly still
-#   - the petals' glow breathes slowly, each patch on its own phase
-#   - motes of sky light drift on small closed paths, hidden behind anything nearer than they are
-#   - fine rain in two layers, brighter where the light is
-#   - the crystal's light swells a little
+# Motion, restrained (every motion repeats a whole number of times in 8 s, so the last frame runs into the first):
+#   - a breath of wind through the flowers: a slow travelling sway, stronger near the lens;
+#     the stone, the crystal and the paper hold perfectly still, and the crystal's light is steady
+#   - mist drifting through the needles: soft banks of the scene's own mist colour sliding slowly sideways
+#     over the far field, thicker low down
+#   - slow cloud: the sky slides a few pixels over the loop, on a plate filled in behind the needles
+# One grade over everything (stills and loops alike): a gentle curve, blacks lifted toward night blue.
 import argparse, json, os, subprocess
 import numpy as np
 from PIL import Image
 
 ap = argparse.ArgumentParser()
-ap.add_argument('--work', required=True); ap.add_argument('--out', default=os.path.dirname(os.path.abspath(__file__)))
-ap.add_argument('--w', type=int, default=1920); ap.add_argument('--secs', type=float, default=8.0); ap.add_argument('--fps', type=int, default=24)
-ap.add_argument('--crf264', type=int, default=24); ap.add_argument('--crf9', type=int, default=36)
+ap.add_argument('--work', required=True); ap.add_argument('--work-phone', required=True)
+ap.add_argument('--out', default=os.path.dirname(os.path.abspath(__file__)))
+ap.add_argument('--secs', type=float, default=8.0); ap.add_argument('--fps', type=int, default=24)
+ap.add_argument('--crf264', type=int, default=20); ap.add_argument('--crf9', type=int, default=31)
 ap.add_argument('--frames', type=int, default=0, help='only this many frames (testing)')
+ap.add_argument('--x264', default='', help='extra x264 parameters (testing)')
+ap.add_argument('--only', default='', help='wide or phone (testing)')
 A = ap.parse_args()
 os.makedirs(os.path.join(A.out, 'assets'), exist_ok=True); os.makedirs(os.path.join(A.out, 'shots'), exist_ok=True)
-rng = np.random.default_rng(5)
 SKY = np.array([0x94, 0xE6, 0xFF], np.float32) / 255
+LUMW = np.array([0.2126, 0.7152, 0.0722], np.float32)
+TW = 2 * np.pi
 
 def load_rgb(path, bits16=False):
     w, h = Image.open(path).size
@@ -45,10 +52,25 @@ def blur(a, r):
             a = (np.take(c, range(2 * r + 1, 2 * r + 1 + n), axis=ax) - np.take(c, range(0, n), axis=ax)) / (2 * r + 1)
     return a
 
-def smooth_noise(h, w, cell, seed):
-    g = np.random.default_rng(seed).random((h // cell + 3, w // cell + 3)).astype(np.float32)
-    im = Image.fromarray(g).resize(((w // cell + 3) * cell, (h // cell + 3) * cell), Image.BICUBIC)
-    return np.asarray(im)[cell:cell + h, cell:cell + w]
+def noise2(h, w, cx, cy, seed):
+    """smooth value noise with cells cx by cy pixels"""
+    g = np.random.default_rng(seed)
+    nx = w // cx + 3; ny = h // cy + 3
+    grid = g.random((ny, nx)).astype(np.float32)
+    return np.asarray(Image.fromarray(grid).resize((nx * cx, ny * cy), Image.BICUBIC))[:h, :w]
+
+def banks(h, P, k, seed):
+    """soft banks of mist, wide and low, tiling exactly across a period of P pixels: a sum of waves whose
+    sideways frequencies are whole numbers of cycles per period"""
+    g = np.random.default_rng(seed)
+    yy, xx = np.mgrid[0:h, 0:P].astype(np.float32)
+    f = np.zeros((h, P), np.float32)
+    for i in range(40):
+        m = int(g.integers(1, 7)); sy = g.uniform(0.09, 0.24); sw_ = g.uniform(0.1, 0.5)
+        shear = 0.25 * np.cos(TW * (yy / (h * sw_) + g.uniform(0, 1)))                 # bends each band a little
+        f += (1.0 / m ** 0.7) * np.cos(TW * (m * xx / P + shear + g.uniform(0, 1))) * (0.5 + 0.5 * np.cos(TW * (yy / (h * sy) + g.uniform(0, 1))))
+    f = (f - f.mean()) / (f.std() + 1e-6)
+    return f
 
 def sample(img, X, Y):
     """bilinear lookup of img at float pixel coordinates"""
@@ -58,135 +80,119 @@ def sample(img, X, Y):
     a = img[y0, x0]; b = img[y0, x0 + 1]; c = img[y0 + 1, x0]; d = img[y0 + 1, x0 + 1]
     return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy
 
-info = json.load(open(os.path.join(A.work, 'frame.json')))
-BASE = load_rgb(os.path.join(A.work, 'base.png'))
-DATA = load_rgb(os.path.join(A.work, 'data.png'), bits16=True)
-H0, W0 = BASE.shape[:2]
+def look(F):
+    """the one grade: a gentle curve, blacks lifted toward night blue, a breath less saturation"""
+    lum = (F @ LUMW)[..., None]
+    F = lum + (F - lum) * 0.94
+    F = np.clip(F, 0, 1); F = F + 0.10 * (F - F * F) * (F - 0.35) * 2.2           # soft S around the mids
+    lift = np.array([0.010, 0.016, 0.034], np.float32)
+    return np.clip(lift + F * (1 - lift), 0, 1)
 
 class Layers:
-    """everything the frame function needs, at one resolution"""
-    def __init__(s, w):
-        s.w = w; s.h = int(round(w * H0 / W0)); k = w / 1920.0; s.k = k
-        s.F = resize(BASE, s.w, s.h) if w != W0 else BASE.copy()
-        D = resize(DATA, s.w, s.h) if w != W0 else DATA
+    """everything the frame function needs, at one size"""
+    def __init__(s, base, data, w, h):
+        s.w, s.h = w, h; k = w / 1920.0 if w > h else w / 720.0; s.k = k
+        H0, W0 = base.shape[:2]
+        s.F = resize(base, w, h) if (w, h) != (W0, H0) else base.copy()
+        D = resize(data, w, h) if (w, h) != (W0, H0) else data
         s.disp = D[..., 0]; s.plant = np.clip(D[..., 1], 0, 1); code = D[..., 2]
-        s.still = blur((code > 0.3).astype(np.float32)[..., None], 6 * k)[..., 0]          # stone, crystal, paper: no motion
-        s.still = np.clip(s.still * 3, 0, 1)
+        s.still = np.clip(blur((code > 0.3).astype(np.float32)[..., None], 6 * k)[..., 0] * 3, 0, 1)   # stone, crystal, paper
         s.crystal = blur((code > 0.9).astype(np.float32)[..., None], 3 * k)[..., 0]
         # the crystal held to sky #94E6FF: its light and shade kept, its colour pulled onto the brand's sky
-        lumF = s.F @ np.array([0.2126, 0.7152, 0.0722], np.float32)
-        held = np.clip(lumF[..., None] / float(SKY @ np.array([0.2126, 0.7152, 0.0722], np.float32)) * SKY, 0, 1)
+        lumF = s.F @ LUMW
+        held = np.clip(lumF[..., None] / float(SKY @ LUMW) * SKY, 0, 1)
         s.F = s.F * (1 - 0.8 * s.crystal[..., None]) + held * (0.8 * s.crystal[..., None])
         pl = blur(s.plant[..., None], 3 * k)[..., 0]
         near = np.clip(blur(s.disp[..., None], 4 * k)[..., 0] / 0.5, 0, 1)
-        s.sway_w = pl * (0.25 + 0.75 * near) * (1 - s.still)
-        yy, xx = np.mgrid[0:s.h, 0:s.w].astype(np.float32); s.xx, s.yy = xx, yy
-        lum = s.F @ np.array([0.2126, 0.7152, 0.0722], np.float32)
-        blue = np.clip((s.F[..., 2] - s.F[..., 0]) * 3, 0, 1)
-        s.petal = np.clip((lum - 0.22) * 3.5, 0, 1) * blue * pl
-        s.phase = smooth_noise(s.h, s.w, int(60 * k), 3)
-        s.ph2 = smooth_noise(s.h, s.w, int(140 * k), 4)
-        s.light = blur(lum[::4, ::4, None], 10 * k)[..., 0].repeat(4, 0).repeat(4, 1)[:s.h, :s.w]
-        s.motes = make_motes(s); s.rain = make_rain(s)
+        s.sway_w = pl * (0.2 + 0.8 * near) * (1 - s.still)
+        yy, xx = np.mgrid[0:h, 0:w].astype(np.float32); s.xx, s.yy = xx, yy
+        s.ph = noise2(h, w, int(150 * k), int(150 * k), 4)
+        # the sky (nothing hit) and the far field and needles (beyond about 60 m)
+        sky = ((s.disp < 1e-4) & (s.plant < 0.01) & (code < 0.1)).astype(np.float32)
+        s.sky = blur(sky[..., None], 1.5 * k)[..., 0]
+        far = np.clip((0.035 - s.disp) / 0.02, 0, 1) * (1 - sky)
+        s.far = blur(far[..., None], 3 * k)[..., 0]
+        # a sky plate: the sky with the needles and hills filled in from round about, for the cloud to slide over
+        m = sky[..., None]; num = blur(s.F * m, 40 * k); den = blur(m, 40 * k)
+        s.plate = s.F * m + np.where(den > 1e-3, num / np.maximum(den, 1e-3), s.F) * (1 - m)
+        # mist banks: long soft shapes, wider than tall, tiling sideways so they can drift for ever
+        s.mist_w = int(w * 1.5)
+        s.mist = np.clip(0.5 + 0.26 * banks(h, s.mist_w, k, 11), 0, 1) ** 1.4
+        s.mist = blur(np.concatenate([s.mist[:, -40:], s.mist, s.mist[:, :40]], 1)[..., None], 5 * k)[..., 0][:, 40:40 + s.mist_w]   # soft, still tiling
+        # where mist may lie: the far field, thickest low over the ground, up the needles' lower parts
+        hz = np.argmax(s.sky.mean(1) < 0.5) if (s.sky.mean(1) < 0.5).any() else h // 2
+        yfac = np.clip((s.yy - (hz - 0.30 * h)) / (0.30 * h), 0, 1) * np.clip(((hz + 0.18 * h) - s.yy) / (0.10 * h), 0, 1)
+        s.mist_where = np.clip(s.far + 0.5 * s.sky, 0, 1) * yfac * (1 - s.still)
+        mc = s.F[np.clip(hz, 0, h - 1) - int(0.02 * h), :, :].mean(0)                 # the mist's own colour, near the horizon
+        s.mist_col = np.clip(mc * 1.18, 0, 1)
 
-def make_motes(s):
-    n = 110; k = s.k
-    m = dict(x=rng.uniform(0, s.w, n), y=rng.uniform(0.08, 0.92, n) * s.h, d=rng.uniform(0, 1, n) ** 2.2)
-    m['d'] = 0.02 + 0.9 * m['d']                       # their disparity: most far, a few close to the lens
-    m['r'] = (1.2 + 13 * m['d'] ** 1.6) * k          # radius: near ones are soft discs of light
-    m['a'] = (0.9 + 0.7 * rng.random(n)) * (1.0 - 0.5 * m['d'])
-    m['ax'] = (8 + 40 * m['d']) * k * rng.uniform(0.5, 1, n); m['ay'] = (6 + 30 * m['d']) * k * rng.uniform(0.5, 1, n)
-    m['k1'] = rng.integers(1, 3, n); m['k2'] = rng.integers(1, 3, n); m['k3'] = rng.integers(1, 4, n)
-    m['p1'], m['p2'], m['p3'] = rng.uniform(0, 2 * np.pi, (3, n))
-    m['col'] = np.where(rng.random(n)[:, None] < 0.8, np.array([0.25, 0.68, 1.0]), np.array([0.6, 0.9, 1.0])).astype(np.float32)
-    return m
-
-def make_rain(s):
-    layers = []
-    for count, (l0, l1), amp, scroll, seed in ((int(2600 * s.k ** 2), (16, 34), 0.45, 4, 1), (int(900 * s.k ** 2), (55, 110), 0.8, 9, 2)):
-        g = np.random.default_rng(seed); tex = np.zeros((s.h, s.w), np.float32)
-        xs = g.uniform(0, s.w, count); ys = g.uniform(0, s.h, count); ls = g.uniform(l0, l1, count) * s.k
-        for t in np.linspace(0, 1, int(l1 * s.k)):
-            xi = (xs + t * ls * 0.10).astype(int) % s.w; yi = (ys + t * ls).astype(int) % s.h
-            ok = t * l1 * s.k <= ls
-            np.add.at(tex, (yi[ok], xi[ok]), np.sin(np.pi * t) * g.uniform(0.4, 1.0, ok.sum()))
-        tex = blur(tex[..., None], 1)[..., 0]
-        layers.append((tex, amp, scroll))
-    return layers
-
-def frame(s, t, rain=True, motes=True):
-    TW = 2 * np.pi
-    xx, yy = s.xx, s.yy; k = s.k
-    # sway: travelling waves across the field
-    wv = (0.6 * np.sin(TW * (xx / (420 * k) - t) + s.ph2 * 2.0) + 0.4 * np.sin(TW * (xx / (170 * k) + yy / (300 * k) - 2 * t)))
-    dx = 5.5 * k * s.sway_w * wv; dy = 1.4 * k * s.sway_w * np.sin(TW * (xx / (260 * k) - t) + 1.3)
+def frame(s, t):
+    xx, yy, k = s.xx, s.yy, s.k
+    # a breath of wind through the flowers
+    wv = 0.6 * np.sin(TW * (xx / (520 * k) - t) + s.ph * 2.0) + 0.4 * np.sin(TW * (xx / (210 * k) + yy / (340 * k) - 2 * t))
+    dx = 3.6 * k * s.sway_w * wv; dy = 0.9 * k * s.sway_w * np.sin(TW * (xx / (300 * k) - t) + 1.3)
     F = sample(s.F, xx - dx, yy - dy)
-    # the petals breathe
-    F = F * (1 + (0.11 * s.petal * np.sin(TW * (t * 2 + s.phase)))[..., None])
-    # the crystal's light swells a little; the whole light by about two percent
-    F = F + (0.035 * (0.5 + 0.5 * np.sin(TW * t)) * s.crystal)[..., None] * SKY
-    F = F * (1 + 0.018 * np.sin(TW * t + 0.6))
-    add = np.zeros_like(F)
-    if motes:
-        m = s.motes
-        for i in range(len(m['x'])):
-            x = (m['x'][i] + m['ax'][i] * np.sin(TW * m['k1'][i] * t + m['p1'][i])) % s.w
-            y = m['y'][i] + m['ay'][i] * np.sin(TW * m['k2'][i] * t + m['p2'][i])
-            xi, yi = int(x), int(np.clip(y, 0, s.h - 1))
-            if s.disp[yi, xi] > m['d'][i] + 0.01: continue        # something nearer stands in front
-            r = m['r'][i]; R = int(r * 3 + 2)
-            R = int(R * 1.8)
-            x0, x1, y0, y1 = max(0, xi - R), min(s.w, xi + R + 1), max(0, yi - R), min(s.h, yi + R + 1)
-            if x0 >= x1 or y0 >= y1: continue
-            gx = xx[y0:y1, x0:x1] - x; gy = yy[y0:y1, x0:x1] - y
-            d2 = (gx * gx + gy * gy) / (r * r)
-            spr = (np.exp(-d2 * 1.6) + 0.22 * np.exp(-d2 * 0.18)) if m['d'][i] < 0.35 else np.clip(1.15 - d2 ** 3, 0, 1) * 0.45 + np.exp(-d2 * 2) * 0.25 + 0.12 * np.exp(-d2 * 0.3)
-            tw = 0.7 + 0.3 * np.sin(TW * m['k3'][i] * t + m['p3'][i])
-            add[y0:y1, x0:x1] += (spr * m['a'][i] * tw)[..., None] * m['col'][i]
-    if rain:
-        for tex, amp, scroll in s.rain:
-            off = int(round(t * scroll * s.h)) % s.h
-            r_ = np.roll(tex, off, axis=0)
-            add += (r_ * amp * 0.07 * (0.3 + 2.2 * s.light))[..., None] * np.array([0.72, 0.86, 1.0], np.float32)
-    F = 1 - (1 - np.clip(F, 0, 1)) * (1 - np.clip(add, 0, 1))      # screen: light adds without clipping hard
-    return np.clip(F, 0, 1)
+    # slow cloud: the sky slides; two passes cross-faded so the loop closes
+    v = 14 * k
+    c1 = sample(s.plate, xx - v * t, yy); c2 = sample(s.plate, xx - v * (t - 1), yy)
+    C = c1 * (1 - t) + c2 * t
+    F = F * (1 - s.sky[..., None]) + C * s.sky[..., None]
+    # mist drifting through the needles, the same way
+    vm = 60 * k
+    def mistat(off):
+        X = (xx + off) % s.mist_w
+        x0 = X.astype(np.int32); fx = X - x0
+        return s.mist[yy.astype(np.int32), x0] * (1 - fx) + s.mist[yy.astype(np.int32), (x0 + 1) % s.mist_w] * fx
+    M = mistat(-vm * t) * (1 - t) + mistat(-vm * (t - 1)) * t
+    a = (0.34 * M * s.mist_where)[..., None]
+    F = F * (1 - a) + s.mist_col * a
+    return look(np.clip(F, 0, 1))
 
 def to8(a): return (np.clip(a, 0, 1) * 255 + 0.5).astype(np.uint8)
 def save(a, path, **kw): Image.fromarray(to8(a)).save(path, **kw); print('wrote', path)
+def avif(src, dst):
+    subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', src, '-c:v', 'libaom-av1', '-still-picture', '1', '-crf', '30', '-cpu-used', '6', dst], check=True)
 
-# ---------------------------------------------------------------- stills (frame 0) at full size
-SL = Layers(W0)
-still = frame(SL, 0.0)
-save(still, os.path.join(A.out, 'shots', 'render-still.png'))
-Image.fromarray(to8(resize(still, 1920, 1080) if W0 > 1920 else still)).save(os.path.join(A.out, 'assets', 'still.webp'), quality=82, method=6)
-st = info['stone']; cx = (st[0] + st[2]) / 2 * W0
-cw = int(H0 * 9 / 16); x0 = int(np.clip(cx - cw / 2, 0, W0 - cw))
-phone = still[:, x0:x0 + cw]
-save(phone, os.path.join(A.out, 'shots', 'render-still-phone.png'))
-Image.fromarray(to8(resize(phone, 810, 1440) if phone.shape[1] > 810 else phone)).save(os.path.join(A.out, 'assets', 'still-phone.webp'), quality=82, method=6)
-for nm in ('still', 'still-phone'):
-    subprocess.run(['ffmpeg', '-loglevel', 'error', '-y', '-i', os.path.join(A.out, 'assets', nm + '.webp'), '-c:v', 'libaom-av1',
-                    '-still-picture', '1', '-crf', '30', '-cpu-used', '6', os.path.join(A.out, 'assets', nm + '.avif')], check=True)
-# depth for the breathing layer: disparity, smoothed so the warp never tears
-dep = blur(resize(DATA, 960, 540)[..., :1], 3)[..., 0]
-Image.fromarray((np.clip(dep, 0, 1) * 255).astype(np.uint8)).save(os.path.join(A.out, 'assets', 'depth.png'))
-info['phone_crop_x'] = x0 / W0; info['phone_crop_w'] = cw / W0
-json.dump(info, open(os.path.join(A.out, 'assets', 'frame.json'), 'w'), indent=1)
-del SL
+def encode(L, name):
+    n = A.frames or int(A.secs * A.fps)
+    common = ['nice', '-n', '10', 'ffmpeg', '-loglevel', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{L.w}x{L.h}', '-r', str(A.fps), '-i', '-']
+    enc = [subprocess.Popen(common + ['-c:v', 'libx264', '-preset', 'slow', '-crf', str(A.crf264)] + (['-x264-params', A.x264] if A.x264 else []) + [ '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-an',
+                                      os.path.join(A.out, 'assets', name + '.mp4')], stdin=subprocess.PIPE),
+           subprocess.Popen(common + ['-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', str(A.crf9), '-deadline', 'good', '-cpu-used', '4', '-row-mt', '1',
+                                      '-pix_fmt', 'yuv420p', '-an', os.path.join(A.out, 'assets', name + '.webm')], stdin=subprocess.PIPE)]
+    for i in range(n):
+        fr = to8(frame(L, i / n)).tobytes()
+        for e in enc: e.stdin.write(fr)
+        if i % 24 == 0: print(name, 'frame', i, flush=True)
+    for e in enc: e.stdin.close(); e.wait()
 
-# ---------------------------------------------------------------- the loop
-L = Layers(A.w); n = int(A.secs * A.fps)
-if A.frames: n = A.frames
-enc = [subprocess.Popen(['nice', '-n', '10', 'ffmpeg', '-loglevel', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{L.w}x{L.h}', '-r', str(A.fps), '-i', '-',
-                         '-c:v', 'libx264', '-preset', 'slow', '-crf', str(A.crf264), '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-an',
-                         os.path.join(A.out, 'assets', 'loop.mp4')], stdin=subprocess.PIPE),
-       subprocess.Popen(['nice', '-n', '10', 'ffmpeg', '-loglevel', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{L.w}x{L.h}', '-r', str(A.fps), '-i', '-',
-                         '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', str(A.crf9), '-deadline', 'good', '-cpu-used', '4', '-row-mt', '1', '-pix_fmt', 'yuv420p', '-an',
-                         os.path.join(A.out, 'assets', 'loop.webm')], stdin=subprocess.PIPE)]
-for i in range(n):
-    fr = to8(frame(L, i / n)).tobytes()
-    for e in enc: e.stdin.write(fr)
-    if i % 24 == 0: print('frame', i, flush=True)
-for e in enc: e.stdin.close(); e.wait()
-for f in ('loop.mp4', 'loop.webm', 'still.webp', 'still.avif', 'still-phone.webp', 'still-phone.avif', 'depth.png'):
-    p = os.path.join(A.out, 'assets', f); print(f, round(os.path.getsize(p) / 1e6, 2), 'MB')
+out_info = {}
+try:                                       # keep the other frame's entry when only one is rebuilt
+    _old = json.load(open(os.path.join(A.out, 'assets', 'frame.json')))
+    out_info = {k: v for k, v in _old.items() if k in ('wide', 'phone')}
+except Exception:
+    pass
+for key, work, still_name, loop_name, depth_name, lw, lh, sw in (
+        ('wide', A.work, 'still', 'loop', 'depth', 1920, 1080, 1920),
+        ('phone', A.work_phone, 'still-phone', 'loop-phone', 'depth-phone', 720, 1560, 1080)):
+    if A.only and A.only != key: continue
+    info = json.load(open(os.path.join(work, 'frame.json')))
+    base = load_rgb(os.path.join(work, 'base.png')); data = load_rgb(os.path.join(work, 'data.png'), bits16=True)
+    H0, W0 = base.shape[:2]
+    # the still: frame 0 at full size
+    SL = Layers(base, data, W0, H0); still = frame(SL, 0.0); del SL
+    save(still, os.path.join(A.out, 'shots', 'render-still.png' if key == 'wide' else 'render-still-phone.png'))
+    sh = int(round(sw * H0 / W0))
+    Image.fromarray(to8(resize(still, sw, sh) if W0 > sw else still)).save(os.path.join(A.out, 'assets', still_name + '.webp'), quality=82, method=6)
+    avif(os.path.join(A.out, 'assets', still_name + '.webp'), os.path.join(A.out, 'assets', still_name + '.avif'))
+    # depth for the breathing layer: disparity, smoothed so the warp never tears
+    dw = 960 if key == 'wide' else 480
+    dep = blur(resize(data, dw, int(round(dw * H0 / W0)))[..., :1], 3)[..., 0]
+    Image.fromarray((np.clip(dep, 0, 1) * 255).astype(np.uint8)).save(os.path.join(A.out, 'assets', depth_name + '.png'))
+    out_info[key] = info
+    # the loop
+    L = Layers(base, data, lw, lh); encode(L, loop_name); del L
+json.dump(out_info, open(os.path.join(A.out, 'assets', 'frame.json'), 'w'), indent=1)
+for f in sorted(os.listdir(os.path.join(A.out, 'assets'))):
+    p = os.path.join(A.out, 'assets', f)
+    if os.path.isfile(p): print(f, round(os.path.getsize(p) / 1e6, 2), 'MB')
