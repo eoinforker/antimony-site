@@ -59,7 +59,7 @@ report = json.load(open(report_path)) if os.path.exists(report_path) else {}
 
 for name in sorted(os.listdir(FAB_SRC)):
     folder = os.path.join(FAB_SRC, name)
-    if not os.path.isdir(folder) or (name in report and report[name].get("meshes")):
+    if not os.path.isdir(folder) or (name in report and (report[name].get("meshes") or report[name].get("skip"))):
         continue
     files = mesh_files(folder)
     if not files:

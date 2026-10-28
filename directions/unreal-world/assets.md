@@ -68,6 +68,13 @@ listings need their licence read off their Fab page (some are CC BY and need a c
 | `rock_01` | Single rock | FBX | check |
 | `source` | Unnamed (a single FBX with 3 maps); to identify | FBX | check |
 
+| `ice_cliff_uhpocesfa_raw`, `ice_cliff_uhupbgxfa_raw` | Ice cliffs (Megascans), used as far cliffs | 4.5-5 m | Fab Standard |
+| `mountain-lake-part-world-machine` | Mountain lake terrain (World Machine) | FBX | check |
+| `slate_xb5gbjo`, `slate_xbsleem`, `slate_xbteejw` | Three of the South African Slate Quarry scans (the largest single formations), used as cliffs | FBX + 8K maps | Fab Standard |
+
+The rest of the slate quarry pack (63 scans) is unpacked on the box in `/workspace/fab/src_pending/`, not imported.
+The two village packs and the post-apocalypse kitbash are downloaded but not used: they do not belong in this world.
+
 ## Small rock scatter
 
 | Folder | What | Licence |

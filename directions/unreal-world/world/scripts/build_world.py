@@ -569,7 +569,7 @@ def sky_and_light():
     ppv.set_editor_property("settings", s)
 
 
-PHONE = dict(CAMERA, yaw=2.0, pitch=15.0, focal=17.0)  # the tall frame for phones: same place, the crystal and the print
+PHONE = dict(CAMERA, yaw=CAMERA["yaw"] + 3.0, pitch=CAMERA["pitch"] + 2.0, focal=17.0)  # the tall frame for phones (web/build_web.py matches)
 
 
 def camera(c, sensor):
@@ -620,7 +620,7 @@ def presets():
     depth = M.build_depth()
     for name, res, temporal, spatial, warm, fmt, pp in [
             ("Preview", (1920, 1080), 32, 1, 64, "hero_preview_{frame_number}", False),
-            ("Final", (2560, 1440), 64, 2, 96, "hero_final_{frame_number}", False),
+            ("Final", (3840, 2160), 64, 2, 96, "hero_final_{frame_number}", False),
             ("Loop", (1920, 1080), 12, 1, 64, "loop/hero_loop_{frame_number}", False),
             ("Depth", (1920, 1080), 8, 1, 32, "hero_depth_{frame_number}", True),
             ("PhoneFinal", (1080, 2340), 64, 2, 96, "phone_final_{frame_number}", False),
