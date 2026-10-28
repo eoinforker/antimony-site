@@ -45,13 +45,14 @@ def srgb(hexstr, scale=1.0):
 COBALT, SKY, PRUSSIAN, INK, STONE, CREAM = "#2448FF", "#94E6FF", "#1F3F7A", "#0B0C0C", "#141311", "#EEEAE0"
 
 # ---- the look (tune here) ----
-CAMERA = dict(x=-2.0, y=0.0, eye=0.95, pitch=13.0, yaw=-1.0, focal=20.0, fstop=2.8, focus_m=14.0)
-LIGHT = dict(pitch=-24.0, yaw=184.5, lux=8.0, colour="#D8E2FF", shafts=False, scatter=7.0)  # sun behind the crystal's upper right face
-FOG = dict(density=0.03, falloff=0.018, inscatter="#B9C6F2", vol_extinction=0.7, start_m=14.0)
-EXPOSURE_EV = -0.8          # exposure compensation in stops (manual exposure; positive is brighter)
-FLOWER_GLOW = 14.0          # emissive strength of the petals (only the bright parts of the albedo glow)
-CRYSTAL_GLOW = 6.5
-BREAK_GLOW = 7.0
+import concepts  # noqa: E402
+CONCEPT = int(os.environ.get("CONCEPT", "1"))
+CONCEPT_NAME, CONCEPT_LINE, LOOK = concepts.look(CONCEPT)
+CAMERA, LIGHT, FOG = LOOK["camera"], dict(LOOK["light"], shafts=False), LOOK["fog"]
+EXPOSURE_EV = LOOK["exposure"]   # exposure compensation in stops (manual exposure; positive is brighter)
+FLOWER_GLOW = 14.0               # emissive strength of the petals (only the bright parts of the albedo glow)
+CRYSTAL_GLOW = LOOK["crystal_glow"]
+BREAK_GLOW = LOOK["break_glow"]
 PRINT_GLOW = 2.2
 NIGHT_TINT = (0.30, 0.42, 0.75)   # albedo multiplier for plants: green leaves go to deep blue
 STONE_TINT = (0.42, 0.47, 0.62)
@@ -105,7 +106,10 @@ def build_glow(m):
     mul = mel.create_material_expression(m, unreal.MaterialExpressionMultiply, -300, 100)
     mel.connect_material_expressions(col, "", mul, "A")
     mel.connect_material_expressions(k, "", mul, "B")
-    mel.connect_material_property(mul, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    br = mel.create_material_expression(m, unreal.MaterialExpressionMultiply, -150, 150)
+    mel.connect_material_expressions(mul, "", br, "A")
+    mel.connect_material_expressions(M.breathe(m, 0.3), "", br, "B")
+    mel.connect_material_property(br, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     base = param(m, unreal.MaterialExpressionVectorParameter, "Base", -600, -200, srgb(INK))
     mel.connect_material_property(base, "", unreal.MaterialProperty.MP_BASE_COLOR)
 
@@ -139,7 +143,10 @@ def build_crystal(m):
     mul2 = mel.create_material_expression(m, unreal.MaterialExpressionMultiply, -200, 200)
     mel.connect_material_expressions(mul, "", mul2, "A")
     mel.connect_material_expressions(one, "", mul2, "B")
-    mel.connect_material_property(mul2, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    br = mel.create_material_expression(m, unreal.MaterialExpressionMultiply, -50, 250)
+    mel.connect_material_expressions(mul2, "", br, "A")
+    mel.connect_material_expressions(M.breathe(m, 0.18), "", br, "B")
+    mel.connect_material_property(br, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     opm = mel.create_material_expression(m, unreal.MaterialExpressionMultiply, -200, 450)
     mel.connect_material_expressions(op, "", opm, "A")
     mel.connect_material_expressions(one, "", opm, "B")
@@ -281,9 +288,6 @@ def main():
     assert world.get_path_name().startswith(MAP), f"editing {world.get_path_name()}, not {MAP}"
     for p in ("/Game/Hero/Mat", "/Game/Hero/Tex", "/Game/Gen"):
         fresh(p)
-    for a in ("/Game/Hero/HeroSeq", "/Game/Hero/Preview", "/Game/Hero/Final"):
-        if eal.does_asset_exist(a):
-            eal.delete_asset(a)
 
     # Generated meshes and the print texture.
     gen = {}
@@ -323,13 +327,15 @@ def main():
     # Terrain, the crystal and the Break.
     place(gen["SM_TerrainNear"], 0, 0, z=0, mats=mi["ground"], label="TerrainNear")
     place(gen["SM_TerrainFar"], 0, 0, z=0, mats=mi["ground_far"], label="TerrainFar")
-    crystal = place(gen["SM_Crystal"], 0, 0, z=0, mats=mi["crystal"], label="Crystal")
+    sx, sy, sz = LOOK["crystal_shift"]  # the crystal's meshes are built in place; a concept may move them
+    crystal = place(gen["SM_Crystal"], sx, sy, z=sz, mats=mi["crystal"], label="Crystal")
     crystal.static_mesh_component.set_editor_property("cast_shadow", False)
     # The gobo: the crystal's edges cast shadow, unseen, so its faces let the light through in shafts.
-    edges = place(gen["SM_CrystalEdges"], 0, 0, z=0, mats=instance(m_lit, "MI_Shade", {}, {"Base": srgb(INK)}), label="CrystalEdges")
+    edges = place(gen["SM_CrystalEdges"], sx, sy, z=sz, mats=instance(m_lit, "MI_Shade", {}, {"Base": srgb(INK)}), label="CrystalEdges")
     edges.static_mesh_component.set_editor_property("cast_hidden_shadow", True)
     edges.static_mesh_component.set_editor_property("visible", False)
-    brk = place(gen["SM_Break"], 0, 0, z=0, mats=mi["break"], label="Break")
+    brk = place(gen["SM_Break"], sx, sy, z=sz, mats=mi["break"], label="Break")
+    crystal_cluster(gen["SM_Crystal"], mi["crystal"], (sx, sy, sz))
     brk.static_mesh_component.set_editor_property("cast_shadow", True)   # the Break cuts the light too
 
     # The great rock on the right, and stones in the flowers.
@@ -342,7 +348,8 @@ def main():
             place(m, x, y, yaw=yaw, scale=s, mats=rock_mat(folder), sink=sink, label=f"Rock_{folder[:18]}")
 
     # Cliffs into the haze, either side of the valley, stepping back so each is paler.
-    cliff_sets = [("massive_nordic_coastal_cliff_vdssailfa_raw", 1.0), ("nordic_forest_cliff_large_xibsff1_raw", 1.4),
+    slate = sorted(k for k in REPORT if k.startswith("slate_") and REPORT[k].get("meshes"))
+    cliff_sets = [(k, 1.0) for k in slate[:4]] + [("massive_nordic_coastal_cliff_vdssailfa_raw", 1.0), ("nordic_forest_cliff_large_xibsff1_raw", 1.4),
                   ("ice_cliff_uhpocesfa_raw", 2.6), ("ice_cliff_uhupbgxfa_raw", 2.4)]
     for i, (x, y, s, yaw) in enumerate([(300, -95, 8.0, 70), (460, 120, 10.0, 250), (820, -280, 13.0, 95), (1150, 360, 15.0, 260),
                                         (1700, -620, 20.0, 80), (2200, 760, 22.0, 240), (380, -180, 6.0, 30), (620, 220, 7.0, 200)]):
@@ -407,7 +414,9 @@ def main():
                                         for _ in range(6)], lambda p: M.foliage_for(p, "dwarf-snowflake-mock-orange-flowers-summer", foliage, petal))
 
     # The poster: the cobalt print in its slim lightbox, standing in the flowers left of centre.
-    lightbox(x=15.0, y=-3.4, yaw=-22.0, mi=mi)
+    lightbox(*LOOK["lightbox"], mi=mi)
+    if LOOK["stars"]:
+        stars()
 
     sky_and_light()
     camera_and_sequence()
@@ -416,6 +425,60 @@ def main():
     for p in ("/Game/Hero", "/Game/Gen", "/Game/FabTex"):
         eal.save_directory(p, only_if_is_dirty=False, recursive=True)
     unreal.log("ANTIMONY_BUILD_OK")
+
+
+def crystal_cluster(mesh, mat, shift):
+    """Smaller crystals round the giant's foot, leaning out, so it reads as a formation grown from the land."""
+    cx, cy, cz = (CRYSTAL_CENTRE_M[0] + shift[0], CRYSTAL_CENTRE_M[1] + shift[1], CRYSTAL_CENTRE_M[2] + shift[2])
+    half_h = 45 * 28.0  # mark units x unit (gen_meshes), metres
+    rng = random.Random(5)
+    for i in range(9):
+        s = rng.uniform(0.12, 0.32)
+        ang = rng.uniform(0, 360)
+        r = rng.uniform(500, 1100)
+        foot = (cx + r * math.cos(math.radians(ang)), cy + r * math.sin(math.radians(ang)))
+        rot = unreal.Rotator(rng.uniform(-22, 22), rng.uniform(-22, 22), rng.uniform(0, 360))
+        # The mesh is built around the crystal centre C; put s*C (rotated) where this crystal's centre should be.
+        centre = unreal.Vector(foot[0] * 100, foot[1] * 100, (height(*foot) + half_h * s * 0.75) * 100)
+        moved = rot.rotate_vector(unreal.Vector(CRYSTAL_CENTRE_M[0] * 100 * s, CRYSTAL_CENTRE_M[1] * 100 * s, CRYSTAL_CENTRE_M[2] * 100 * s))
+        a = eas.spawn_actor_from_class(unreal.StaticMeshActor, centre - moved, rot)
+        a.static_mesh_component.set_static_mesh(mesh)
+        a.static_mesh_component.set_material(0, mat)
+        a.static_mesh_component.set_editor_property("cast_shadow", False)
+        a.set_actor_scale3d(unreal.Vector(s, s, s))
+        a.set_actor_label(f"Crystal_small_{i}")
+
+
+def stars():
+    """A night sky: a few thousand tiny additive points far out, untouched by the fog."""
+    m = tools.create_asset("M_Star", "/Game/Hero/Mat", unreal.Material, unreal.MaterialFactoryNew())
+    m.set_editor_property("blend_mode", unreal.BlendMode.BLEND_ADDITIVE)
+    m.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_UNLIT)
+    m.set_editor_property("apply_fogging", False)
+    k = param(m, unreal.MaterialExpressionVectorParameter, "Colour", -400, 0, unreal.LinearColor(40, 44, 55, 1))
+    mel.connect_material_property(k, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    mel.recompile_material(m)
+    sphere = eal.load_asset("/Engine/BasicShapes/Sphere")
+    rng = random.Random(3)
+    pts = []
+    R_M = 9000.0
+    for _ in range(5000):
+        az, el = rng.uniform(0, 2 * math.pi), math.asin(rng.uniform(0.02, 1.0))
+        x, y, z = R_M * math.cos(el) * math.cos(az), R_M * math.cos(el) * math.sin(az), R_M * math.sin(el)
+        s = 8.0 * (1.0 + 2.5 * rng.random() ** 6)  # most faint and small, a few bright
+        pts.append(unreal.Transform(unreal.Vector(x * 100, y * 100, z * 100), unreal.Rotator(0, 0, 0), unreal.Vector(s, s, s)))
+    host = eas.spawn_actor_from_class(unreal.Actor, unreal.Vector(0, 0, 0))
+    host.set_actor_label("Stars")
+    sds = unreal.get_engine_subsystem(unreal.SubobjectDataSubsystem)
+    root = sds.k2_gather_subobject_data_for_instance(host)[0]
+    lib = unreal.SubobjectDataBlueprintFunctionLibrary
+    handle, _ = sds.add_new_subobject(unreal.AddNewSubobjectParams(parent_handle=root, new_class=unreal.InstancedStaticMeshComponent,
+                                                                   blueprint_context=None))
+    comp = lib.get_associated_object(lib.get_data(handle))
+    comp.set_static_mesh(sphere)
+    comp.set_material(0, m)
+    comp.set_editor_property("cast_shadow", False)
+    comp.add_instances(pts, False, True)
 
 
 def lightbox(x, y, yaw, mi):
@@ -464,14 +527,14 @@ def sky_and_light():
     atmo = eas.spawn_actor_from_class(unreal.SkyAtmosphere, unreal.Vector(0, 0, 0))
     atmo.set_actor_label("Sky")
     ac = atmo.get_component_by_class(unreal.SkyAtmosphereComponent)
-    ac.set_editor_property("mie_scattering_scale", 0.012)      # three times the default: a milky, hazy sky
+    ac.set_editor_property("mie_scattering_scale", LOOK["mie"])  # above the default 0.004: a milky, hazy sky
     ac.set_editor_property("mie_anisotropy", 0.85)             # the haze glows most toward the light
     ac.set_editor_property("multi_scattering_factor", 1.6)
     sky = eas.spawn_actor_from_class(unreal.SkyLight, unreal.Vector(0, 0, 500))
     sky.set_actor_label("SkyLight")
     sky.light_component.set_mobility(unreal.ComponentMobility.MOVABLE)
     sky.light_component.set_editor_property("real_time_capture", True)
-    sky.light_component.set_intensity(0.55)
+    sky.light_component.set_intensity(LOOK["sky_light"])
 
     fog = eas.spawn_actor_from_class(unreal.ExponentialHeightFog, unreal.Vector(0, 0, 0))
     fog.set_actor_label("Mist")
@@ -498,21 +561,23 @@ def sky_and_light():
                  ("override_auto_exposure_bias", True), ("auto_exposure_bias", EXPOSURE_EV),
                  ("override_bloom_intensity", True), ("bloom_intensity", 0.45),
                  ("override_bloom_threshold", True), ("bloom_threshold", 1.5),
-                 ("override_scene_color_tint", True), ("scene_color_tint", unreal.LinearColor(0.94, 0.97, 1.08, 1)),
+                 ("override_scene_color_tint", True), ("scene_color_tint", unreal.LinearColor(*LOOK["tint"], 1)),
                  ("override_vignette_intensity", True), ("vignette_intensity", 0.45),
-                 ("override_white_temp", True), ("white_temp", 6000.0),
+                 ("override_white_temp", True), ("white_temp", LOOK["white_temp"]),
                  ("override_film_toe", True), ("film_toe", 0.6)]:
         s.set_editor_property(k, v)
     ppv.set_editor_property("settings", s)
 
 
-def camera_and_sequence():
-    c = CAMERA
+PHONE = dict(CAMERA, yaw=2.0, pitch=15.0, focal=17.0)  # the tall frame for phones: same place, the crystal and the print
+
+
+def camera(c, sensor):
     loc = unreal.Vector(c["x"] * 100, c["y"] * 100, ground(c["x"], c["y"]) + c["eye"] * 100)
     cam = eas.spawn_actor_from_class(unreal.CineCameraActor, loc, unreal.Rotator(0, c["pitch"], c["yaw"]))
     cc = cam.get_cine_camera_component()
     fb = cc.get_editor_property("filmback")
-    fb.sensor_width, fb.sensor_height = 36.0, 20.25
+    fb.sensor_width, fb.sensor_height = sensor
     cc.set_editor_property("filmback", fb)
     cc.set_editor_property("current_focal_length", c["focal"])
     cc.set_editor_property("current_aperture", c["fstop"])
@@ -520,35 +585,65 @@ def camera_and_sequence():
     fs.focus_method = unreal.CameraFocusMethod.MANUAL
     fs.manual_focus_distance = c["focus_m"] * 100
     cc.set_editor_property("focus_settings", fs)
+    return cam
 
-    seq = tools.create_asset("HeroSeq", "/Game/Hero", unreal.LevelSequence, unreal.LevelSequenceFactoryNew())
+
+def sequence(name, cam_spec, sensor, frames):
+    path = f"/Game/Hero/{name}"
+    if eal.does_asset_exist(path):
+        eal.delete_asset(path)
+    seq = tools.create_asset(name, "/Game/Hero", unreal.LevelSequence, unreal.LevelSequenceFactoryNew())
     seq.set_display_rate(unreal.FrameRate(24, 1))
     seq.set_playback_start(0)
-    seq.set_playback_end(1)
+    seq.set_playback_end(frames)
+    cam = camera(cam_spec, sensor)
     binding = seq.add_spawnable_from_instance(cam)
     eas.destroy_actor(cam)
     cut = seq.add_track(unreal.MovieSceneCameraCutTrack).add_section()
-    cut.set_range(0, 1)
+    cut.set_range(0, frames)
     cut.set_camera_binding_id(seq.get_binding_id(binding))
     return seq
 
 
+def camera_and_sequence():
+    loop = int(M.LOOP_S * 24)
+    sequence("HeroSeq", CAMERA, (36.0, 20.25), 1)
+    sequence("HeroLoop", CAMERA, (36.0, 20.25), loop)
+    sequence("PhoneSeq", PHONE, (16.6, 36.0), 1)
+    sequence("PhoneLoop", PHONE, (16.6, 36.0), loop)
+
+
 def presets():
+    """Render presets. Preview: quick Lumen check. Final: Lumen at its highest for the still (2560 wide). Loop: the
+    10 s web loop. Depth: the disparity pass for the web parallax. Phone*: the tall frame, same settings."""
     out_dir = unreal.DirectoryPath(os.path.join(PROJECT, "Saved/MovieRenders"))
-    for name, pass_cls, spatial, temporal, warm in [("Preview", unreal.MoviePipelineDeferredPassBase, 1, 32, 64),
-                                                    ("Final", unreal.MoviePipelineDeferredPass_PathTracer, 1024, 1, 8)]:
+    depth = M.build_depth()
+    for name, res, temporal, spatial, warm, fmt, pp in [
+            ("Preview", (1920, 1080), 32, 1, 64, "hero_preview_{frame_number}", False),
+            ("Final", (2560, 1440), 64, 2, 96, "hero_final_{frame_number}", False),
+            ("Loop", (1920, 1080), 12, 1, 64, "loop/hero_loop_{frame_number}", False),
+            ("Depth", (1920, 1080), 8, 1, 32, "hero_depth_{frame_number}", True),
+            ("PhoneFinal", (1080, 2340), 64, 2, 96, "phone_final_{frame_number}", False),
+            ("PhoneLoop", (720, 1560), 12, 1, 64, "loop_phone/phone_loop_{frame_number}", False),
+            ("PhoneDepth", (720, 1560), 8, 1, 32, "phone_depth_{frame_number}", True)]:
+        path = f"/Game/Hero/{name}"
+        if eal.does_asset_exist(path):
+            eal.delete_asset(path)
         p = tools.create_asset(name, "/Game/Hero", unreal.MoviePipelinePrimaryConfig, None)
-        p.find_or_add_setting_by_class(pass_cls)
+        dp = p.find_or_add_setting_by_class(unreal.MoviePipelineDeferredPassBase)
+        if pp:  # the disparity as an extra pass beside the beauty
+            ppp = unreal.MoviePipelinePostProcessPass()
+            ppp.enabled, ppp.material = True, depth
+            dp.set_editor_property("additional_post_process_materials", [ppp])
         p.find_or_add_setting_by_class(unreal.MoviePipelineImageSequenceOutput_PNG)
         o = p.find_or_add_setting_by_class(unreal.MoviePipelineOutputSetting)
-        o.output_resolution = unreal.IntPoint(1920, 1080)
+        o.output_resolution = unreal.IntPoint(*res)
         o.output_directory = out_dir
-        o.file_name_format = "hero_" + name.lower() + "_{frame_number}"
+        o.file_name_format = fmt + ("_{render_pass}" if pp else "")
         aa = p.find_or_add_setting_by_class(unreal.MoviePipelineAntiAliasingSetting)
         aa.override_anti_aliasing = True
         aa.spatial_sample_count, aa.temporal_sample_count = spatial, temporal
         aa.engine_warm_up_count, aa.render_warm_up_count = warm, warm
-        # Lumen at its best for the preview: these mirror the cinematic scalability.
         gs = p.find_or_add_setting_by_class(unreal.MoviePipelineGameOverrideSetting)
         gs.cinematic_quality_settings = True
         gs.shadow_distance_scale = 2
@@ -556,6 +651,5 @@ def presets():
         for k, v in [("r.VolumetricFog.GridPixelSize", 4), ("r.VolumetricFog.GridSizeZ", 256),
                      ("r.Lumen.ScreenProbeGather.DownsampleFactor", 8), ("r.Nanite.MaxPixelsPerEdge", 0.5)]:
             cv.add_or_update_console_variable(k, v)
-
 
 main()

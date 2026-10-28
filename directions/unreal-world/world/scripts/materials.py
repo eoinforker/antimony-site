@@ -114,6 +114,47 @@ def _create(name):
     return tools.create_asset(name, MAT_DIR, unreal.Material, unreal.MaterialFactoryNew())
 
 
+LOOP_S = 10.0  # the web loop's length; every motion in the materials repeats on it exactly
+
+
+def breathe(m, depth, per_instance=False, x=-1100, y=800):
+    """1 - depth/2 + depth/2 * sin(2 pi (t + phase) / LOOP_S): a slow swell, seamless over the loop."""
+    t = mel.create_material_expression(m, unreal.MaterialExpressionTime, x, y)
+    src = t
+    if per_instance:
+        r = mel.create_material_expression(m, unreal.MaterialExpressionPerInstanceRandom, x, y + 80)
+        k = mel.create_material_expression(m, unreal.MaterialExpressionMultiply, x + 150, y + 80)
+        mel.connect_material_expressions(r, "", k, "A")
+        k.set_editor_property("const_b", LOOP_S)
+        src = _op(m, unreal.MaterialExpressionAdd, t, k, x + 300, y)
+    sn = mel.create_material_expression(m, unreal.MaterialExpressionSine, x + 450, y)
+    sn.set_editor_property("period", LOOP_S)
+    mel.connect_material_expressions(src, "", sn, "")
+    a = mel.create_material_expression(m, unreal.MaterialExpressionMultiply, x + 600, y)
+    mel.connect_material_expressions(sn, "", a, "A")
+    a.set_editor_property("const_b", depth / 2)
+    b = mel.create_material_expression(m, unreal.MaterialExpressionAdd, x + 750, y)
+    mel.connect_material_expressions(a, "", b, "A")
+    b.set_editor_property("const_b", 1 - depth / 2)
+    return b
+
+
+def build_depth():
+    """Post-process disparity for the web parallax: 2 / distance in metres (as the blue field's depth map)."""
+    m = _create("M_Disparity")
+    m.set_editor_property("material_domain", unreal.MaterialDomain.MD_POST_PROCESS)
+    st = mel.create_material_expression(m, unreal.MaterialExpressionSceneTexture, -600, 0)
+    st.set_editor_property("scene_texture_id", unreal.SceneTextureId.PPI_SCENE_DEPTH)
+    d = mel.create_material_expression(m, unreal.MaterialExpressionDivide, -350, 0)
+    d.set_editor_property("const_a", 200.0)  # depth is in cm: 2 / (d / 100)
+    mel.connect_material_expressions(st, "Color", d, "B")
+    sat = mel.create_material_expression(m, unreal.MaterialExpressionSaturate, -150, 0)
+    mel.connect_material_expressions(d, "", sat, "")
+    mel.connect_material_property(sat, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    mel.recompile_material(m)
+    return m
+
+
 def build_foliage():
     m = _create("M_Foliage")
     m.set_editor_property("blend_mode", unreal.BlendMode.BLEND_MASKED)
@@ -145,7 +186,8 @@ def build_foliage():
     mel.connect_material_expressions(lum, "", ss, "Value")
     col = _op(m, unreal.MaterialExpressionMultiply, _vector(m, "GlowColour", -800, 400, unreal.LinearColor(0.3, 0.8, 1.0, 1)),
               _scalar(m, "Glow", -800, 500, 0.0), -550, 400)
-    em = _op(m, unreal.MaterialExpressionMultiply, ss, col, -300, 200)
+    em0 = _op(m, unreal.MaterialExpressionMultiply, ss, col, -300, 200)
+    em = _op(m, unreal.MaterialExpressionMultiply, em0, breathe(m, 0.35, per_instance=True), -150, 250)
     mel.connect_material_property(em, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     mel.recompile_material(m)
     return m

@@ -8,3 +8,4 @@ Config/DefaultInput.ini
 gen/
 __pycache__/
 *.out
+logs/
