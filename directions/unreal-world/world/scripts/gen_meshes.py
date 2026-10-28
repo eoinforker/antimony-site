@@ -15,14 +15,15 @@ from terrain import height  # noqa: E402
 M = 100.0  # metres to centimetres
 
 # The crystal: the mark's hexagon (viewBox 0-100) turned into a hexagonal bipyramid.
-CRYSTAL_UNIT_M = 20.0           # one mark unit; the crystal is 90 units tall = 1.8 km
-CRYSTAL_CENTRE_M = (3200.0, 0.0, 1100.0)
-BREAK_STROKE = 2.2              # line thickness in mark units (the print uses 5.2; thinner reads better at scale)
+CRYSTAL_UNIT_M = 28.0           # one mark unit; the crystal is 90 units tall = 2.5 km
+CRYSTAL_CENTRE_M = (3600.0, 0.0, 1300.0)
+EDGE_STROKE = 1.6               # the crystal's edge bars (shadow only)
+BREAK_STROKE = 1.4              # line thickness in mark units (the print uses 5.2; thinner reads better at scale)
 
 
 class Obj:
-    def __init__(self):
-        self.v, self.vn, self.f = [], [], []
+    def __init__(self, uv=lambda p: (p[0] / 800.0, p[1] / 800.0)):
+        self.v, self.vn, self.f, self.uv = [], [], [], uv  # uv: planar projection of a vertex (cm) to texture space
 
     def vert(self, p):
         self.v.append(p)
@@ -43,8 +44,9 @@ class Obj:
         with open(path, "w") as fh:
             fh.write(f"o {name}\n")
             fh.writelines(f"v {x:.2f} {y:.2f} {z:.2f}\n" for x, y, z in self.v)
+            fh.writelines("vt %.5f %.5f\n" % self.uv(p) for p in self.v)   # one UV per vertex, same index
             fh.writelines(f"vn {x:.5f} {y:.5f} {z:.5f}\n" for x, y, z in self.vn)
-            fh.writelines("f " + " ".join(f"{v}//{n}" for v, n in face) + "\n" for face in self.f)
+            fh.writelines("f " + " ".join(f"{v}/{v}/{n}" for v, n in face) + "\n" for face in self.f)
 
 
 def grid(obj, x0, x1, y0, y1, step, skip=None):
@@ -79,7 +81,7 @@ def crystal():
                        cy + 28 * u * math.sin(math.radians(30 + 60 * k)), cz + z * u) for k in range(6)]
     top, bot = (cx, cy, cz + 45 * u), (cx, cy, cz - 45 * u)
     up, lo = ring(21), ring(-21)
-    obj = Obj()
+    obj = Obj(uv=lambda p: (p[1] / u, p[2] / u))
     for k in range(6):
         k2 = (k + 1) % 6
         obj.tri(top, up[k], up[k2])
@@ -89,33 +91,55 @@ def crystal():
     return obj
 
 
+def strokes(obj, segments, h, depth_axis):
+    """Square bars along 3D segments (half-width h); each is lengthened by h so the joints meet cleanly."""
+    for p, q in segments:
+        d = [q[i] - p[i] for i in range(3)]
+        length = math.sqrt(sum(x * x for x in d))
+        d = [x / length for x in d]
+        side = [d[1] * depth_axis[2] - d[2] * depth_axis[1], d[2] * depth_axis[0] - d[0] * depth_axis[2],
+                d[0] * depth_axis[1] - d[1] * depth_axis[0]]
+        sl = math.sqrt(sum(x * x for x in side)) or 1.0
+        side = [x / sl for x in side]
+        depth = [side[1] * d[2] - side[2] * d[1], side[2] * d[0] - side[0] * d[2], side[0] * d[1] - side[1] * d[0]]
+        p = [p[i] - d[i] * h for i in range(3)]
+        q = [q[i] + d[i] * h for i in range(3)]
+        corners = []
+        for end in (p, q):
+            for s_, t in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+                corners.append(tuple(end[i] + s_ * h * side[i] + t * h * depth[i] for i in range(3)))
+        for a_, b_, c_, d_ in [(0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7), (3, 2, 1, 0), (4, 5, 6, 7)]:
+            A, B, C, D = (corners[i] for i in (a_, b_, c_, d_))
+            obj.tri(A, B, C)
+            obj.tri(A, C, D)
+
+
 def break_mark():
     """The Break as light inside the crystal: the A, the chevron and the stem, in the plane facing the camera."""
     cx, cy, cz = (c * M for c in CRYSTAL_CENTRE_M)
     u = CRYSTAL_UNIT_M * M
     to3 = lambda mx, my: (cx, cy + (mx - 50) * u, cz + (50 - my) * u)
     lines = [((22, 71), (50, 15)), ((50, 15), (78, 71)), ((22, 71), (50, 58)), ((50, 58), (78, 71)), ((50, 3), (50, 15))]
-    h = BREAK_STROKE * u / 2
-    obj = Obj()
-    for a, b in lines:
-        p, q = to3(*a), to3(*b)
-        d = [q[i] - p[i] for i in range(3)]
-        length = math.sqrt(sum(x * x for x in d))
-        d = [x / length for x in d]
-        side = (0.0, -d[2], d[1])            # in the Y-Z plane, perpendicular to the stroke
-        depth = (1.0, 0.0, 0.0)
-        # Extend each stroke by half its width so the joints meet cleanly.
-        p = [p[i] - d[i] * h for i in range(3)]
-        q = [q[i] + d[i] * h for i in range(3)]
-        corners = []
-        for end in (p, q):
-            for s, t in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
-                corners.append(tuple(end[i] + s * h * side[i] + t * h * depth[i] for i in range(3)))
-        quads = [(0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7), (3, 2, 1, 0), (4, 5, 6, 7)]
-        for a_, b_, c_, d_ in quads:
-            A, B, C, D = (corners[i] for i in (a_, b_, c_, d_))
-            obj.tri(A, B, C)
-            obj.tri(A, C, D)
+    obj = Obj(uv=lambda p: (p[1] / u, p[2] / u))
+    strokes(obj, [(to3(*a), to3(*b)) for a, b in lines], BREAK_STROKE * u / 2, (1.0, 0.0, 0.0))
+    return obj
+
+
+def crystal_edges():
+    """Bars along the crystal's 30 edges. Hidden in the render; they only cast shadow, so the light behind the
+    crystal comes through its faces and the edges cut it into shafts in the mist (a gobo, as on a film set)."""
+    cx, cy, cz = (c * M for c in CRYSTAL_CENTRE_M)
+    u = CRYSTAL_UNIT_M * M
+    ring = lambda z: [(cx + 28 * u * math.cos(math.radians(30 + 60 * k)),
+                       cy + 28 * u * math.sin(math.radians(30 + 60 * k)), cz + z * u) for k in range(6)]
+    top, bot = (cx, cy, cz + 45 * u), (cx, cy, cz - 45 * u)
+    up, lo = ring(21), ring(-21)
+    segs = []
+    for k in range(6):
+        k2 = (k + 1) % 6
+        segs += [(top, up[k]), (up[k], up[k2]), (up[k], lo[k]), (lo[k], lo[k2]), (lo[k], bot)]
+    obj = Obj(uv=lambda p: (p[1] / u, p[2] / u))
+    strokes(obj, segs, EDGE_STROKE * u / 2, (1.0, 0.0, 0.0))
     return obj
 
 
@@ -129,6 +153,7 @@ def main(out):
     far.write(os.path.join(out, "SM_TerrainFar.obj"), "SM_TerrainFar")
     crystal().write(os.path.join(out, "SM_Crystal.obj"), "SM_Crystal")
     break_mark().write(os.path.join(out, "SM_Break.obj"), "SM_Break")
+    crystal_edges().write(os.path.join(out, "SM_CrystalEdges.obj"), "SM_CrystalEdges")
     print("wrote", sorted(os.listdir(out)))
 
 
