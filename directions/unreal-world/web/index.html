@@ -148,7 +148,7 @@ html.opening .paper { visibility: hidden; }
 var html = document.documentElement, $ = function (id) { return document.getElementById(id); };
 /* the two renders: the wide frame and the tall frame composed for phones; where the paper, the stone and the
    crystal are in each (fractions). The tall one is used on any screen narrower than three by four. */
-var FRS = /*FRAMES*/{"wide": {"w": 2560, "h": 1440, "paper": [0.312, 0.8088, 0.3434, 0.8377], "stone": [0.2562, 0.4825, 0.4422, 0.8116], "crystal": [0.3133, 0.5534, 0.3879, 0.7449], "stone_disp": 0.186}, "phone": {"w": 1080, "h": 2340, "paper": [0.3498, 0.7104, 0.4161, 0.7267], "stone": [0.2331, 0.5282, 0.6283, 0.7114], "crystal": [0.352, 0.5675, 0.51, 0.6746], "stone_disp": 0.186}}/*END*/;
+var FRS = /*FRAMES*/{"wide": {"w": 3840, "h": 2160, "paper": [0.3656, 0.0917, 0.496, 0.4308], "stone": [0.32, -0.027, 0.5416, 0.5495], "stone_disp": 0.5699}, "phone": {"w": 1080, "h": 2340, "paper": [0.2681, 0.3763, 0.4435, 0.4928], "stone": [0.2067, 0.3355, 0.5049, 0.5336], "stone_disp": 0.5696}}/*END*/;
 var TALL = matchMedia("(max-aspect-ratio: 3/4)").matches;
 var FR = TALL ? FRS.phone : FRS.wide, SET = TALL ? "-phone" : "";
 var KEY = "antimony.world";

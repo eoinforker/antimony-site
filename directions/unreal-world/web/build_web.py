@@ -51,6 +51,16 @@ def project(cam, sensor, pts, w, h):
     return out
 
 
+def sample(png, u, v, n=5):
+    """Mean value (0-1) of an n x n patch of a grey PNG at (u, v): the pivot must match the texture's own encoding."""
+    wh = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0", png],
+                        capture_output=True, text=True, check=True).stdout.strip().split(",")
+    x, y = int(int(wh[0]) * u), int(int(wh[1]) * v)
+    raw = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", png, "-vf", f"crop={n}:{n}:{x}:{y}", "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+                         capture_output=True, check=True).stdout
+    return sum(raw) / len(raw) / 255
+
+
 def poster_box(look, cam, sensor, w, h):
     x, y, yaw = look["lightbox"]
     W, H, foot = 1.16, 1.74, 0.45
@@ -71,21 +81,27 @@ name, line, look = concepts.look(args.concept)
 phone_cam = dict(look["camera"], yaw=look["camera"]["yaw"] + 3.0, pitch=look["camera"]["pitch"] + 2.0, focal=17.0)
 frames = {}
 for key, pat, loopdir, depth_pat, cam, sensor, (w, h), suffix in [
-        ("wide", "hero_final_0000.png", "loop", "hero_depth_0000*isparity*.png", look["camera"], (36.0, 20.25), (2560, 1440), ""),
+        ("wide", "hero_final_0000.png", "loop", "hero_depth_0000*isparity*.png", look["camera"], (36.0, 20.25), (3840, 2160), ""),
         ("phone", "phone_final_0000.png", "loop_phone", "phone_depth_0000*isparity*.png", phone_cam, (16.6, 36.0), (1080, 2340), "-phone")]:
     still = os.path.join(R, pat)
     if not os.path.exists(still):
         print("missing", still)
         continue
-    ff("-i", still, "-c:v", "libwebp", "-quality", "86", os.path.join(A, f"still{suffix}.webp"))
-    ff("-i", still, "-c:v", "libaom-av1", "-still-picture", "1", "-crf", "24", "-pix_fmt", "yuv420p", os.path.join(A, f"still{suffix}.avif"))
+    sw_ = "scale=2560:-2" if key == "wide" else "scale=1080:-2"   # the page's still; the full 4K is kept in ../world/renders
+    ff("-i", still, "-vf", sw_, "-c:v", "libwebp", "-quality", "82", os.path.join(A, f"still{suffix}.webp"))
+    ff("-i", still, "-vf", sw_, "-c:v", "libaom-av1", "-still-picture", "1", "-crf", "28", "-pix_fmt", "yuv420p",
+       os.path.join(A, f"still{suffix}.avif"))
+    full = os.path.join(HERE, "..", "world", "renders")
+    os.makedirs(full, exist_ok=True)
+    ff("-i", still, "-c:v", "libwebp", "-quality", "92", os.path.join(full, f"{name}{suffix}-{w}x{h}.webp"))
     lw = 1920 if key == "wide" else 720
     loop = sorted(glob.glob(os.path.join(R, loopdir, "*.png")))
     if loop:
         src = os.path.join(R, loopdir, re.sub(r"\d{4}\.png$", "%04d.png", os.path.basename(loop[0])))
-        ff("-framerate", "24", "-i", src, "-vf", f"scale={lw}:-2", "-c:v", "libx264", "-preset", "slow", "-crf", "21",
+        # Frame 0 is a first-frame artefact (warm-up); 1 to 239 wrap cleanly (239 to 1 matches adjacent frames).
+        ff("-framerate", "24", "-start_number", "1", "-i", src, "-vf", f"scale={lw}:-2", "-c:v", "libx264", "-preset", "slow", "-crf", "21",
            "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-an", os.path.join(A, f"loop{suffix}.mp4"))
-        ff("-framerate", "24", "-i", src, "-vf", f"scale={lw}:-2", "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "34",
+        ff("-framerate", "24", "-start_number", "1", "-i", src, "-vf", f"scale={lw}:-2", "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "34",
            "-row-mt", "1", "-an", os.path.join(A, f"loop{suffix}.webm"))
     dp = sorted(glob.glob(os.path.join(R, depth_pat)))
     if dp:
@@ -96,6 +112,9 @@ for key, pat, loopdir, depth_pat, cam, sensor, (w, h), suffix in [
     frames[key] = {"w": w, "h": h, "paper": box,
                    "stone": [round(box[0] - bw * pad, 4), round(box[1] - bh * pad, 4), round(box[2] + bw * pad, 4), round(box[3] + bh * pad, 4)],
                    "stone_disp": round(min(1.0, 2.0 / dist), 4)}
+    dpng = os.path.join(A, f"depth{suffix}.png")
+    if os.path.exists(dpng):  # the depth map is stored sRGB-encoded: read the pivot from it at the print
+        frames[key]["stone_disp"] = round(sample(dpng, (box[0] + box[2]) / 2, (box[1] + box[3]) / 2), 4)
 
 page = os.path.join(HERE, "index.html")
 html = open(page).read()

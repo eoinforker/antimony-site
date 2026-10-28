@@ -167,13 +167,11 @@ def build_print(m):
     v.set_editor_property("r", False); v.set_editor_property("g", True)
     mel.connect_material_expressions(uv, "", u, "")
     mel.connect_material_expressions(uv, "", v, "")
-    # ...and the pitch also turns it end for end: flip both (1 - v, 1 - u).
-    fv = mel.create_material_expression(m, unreal.MaterialExpressionOneMinus, -820, -50)
+    # ...and stands it upside down: flip the vertical (v, 1 - u). Checked against the print: mark above the name.
     fu = mel.create_material_expression(m, unreal.MaterialExpressionOneMinus, -820, 50)
-    mel.connect_material_expressions(v, "", fv, "")
     mel.connect_material_expressions(u, "", fu, "")
     sw = mel.create_material_expression(m, unreal.MaterialExpressionAppendVector, -750, 0)
-    mel.connect_material_expressions(fv, "", sw, "A")
+    mel.connect_material_expressions(v, "", sw, "A")
     mel.connect_material_expressions(fu, "", sw, "B")
     mel.connect_material_expressions(sw, "", tex, "UVs")
     k = param(m, unreal.MaterialExpressionScalarParameter, "Strength", -600, 300, 6.0)
@@ -638,7 +636,7 @@ def camera_and_sequence():
     sequence("HeroSeq", CAMERA, (36.0, 20.25), 1)
     sequence("HeroLoop", CAMERA, (36.0, 20.25), loop)
     sequence("PhoneSeq", PHONE, (16.6, 36.0), 1)
-    sequence("PhoneLoop", PHONE, (16.6, 36.0), loop)
+    sequence("PhoneLoopSeq", PHONE, (16.6, 36.0), loop)  # not "PhoneLoop": that name is the render preset
 
 
 def presets():

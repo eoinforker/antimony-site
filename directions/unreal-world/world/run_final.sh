@@ -13,7 +13,7 @@ python3 -I "$DIR/scripts/gen_meshes.py" "$DIR/gen" >/dev/null
 rm -rf "$DIR/Saved/MovieRenders"
 CONCEPT=$n "$BIN/UnrealEditor-Cmd" "$PROJ" -ExecutePythonScript="$DIR/scripts/build_world.py" "${COMMON[@]}" > "$DIR/logs/final_build_$n.log" 2>&1
 grep -q ANTIMONY_BUILD_OK "$DIR/logs/final_build_$n.log" || { echo "FINAL BUILD FAILED"; exit 1; }
-for job in "HeroSeq Final" "PhoneSeq PhoneFinal" "HeroSeq Depth" "PhoneSeq PhoneDepth" "HeroLoop Loop" "PhoneLoop PhoneLoop"; do
+for job in "HeroSeq Final" "PhoneSeq PhoneFinal" "HeroSeq Depth" "PhoneSeq PhoneDepth" "HeroLoop Loop" "PhoneLoopSeq PhoneLoop"; do
   set -- $job
   w=1920; h=1080; case $2 in Phone*) w=720; h=1560;; esac
   "$BIN/UnrealEditor" "$PROJ" /Game/Hero/Hero -game -LevelSequence=/Game/Hero/$1 -MoviePipelineConfig=/Game/Hero/$2 \
