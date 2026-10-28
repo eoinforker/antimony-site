@@ -167,9 +167,14 @@ def build_print(m):
     v.set_editor_property("r", False); v.set_editor_property("g", True)
     mel.connect_material_expressions(uv, "", u, "")
     mel.connect_material_expressions(uv, "", v, "")
+    # ...and the pitch also turns it end for end: flip both (1 - v, 1 - u).
+    fv = mel.create_material_expression(m, unreal.MaterialExpressionOneMinus, -820, -50)
+    fu = mel.create_material_expression(m, unreal.MaterialExpressionOneMinus, -820, 50)
+    mel.connect_material_expressions(v, "", fv, "")
+    mel.connect_material_expressions(u, "", fu, "")
     sw = mel.create_material_expression(m, unreal.MaterialExpressionAppendVector, -750, 0)
-    mel.connect_material_expressions(v, "", sw, "A")
-    mel.connect_material_expressions(u, "", sw, "B")
+    mel.connect_material_expressions(fv, "", sw, "A")
+    mel.connect_material_expressions(fu, "", sw, "B")
     mel.connect_material_expressions(sw, "", tex, "UVs")
     k = param(m, unreal.MaterialExpressionScalarParameter, "Strength", -600, 300, 6.0)
     mul = mel.create_material_expression(m, unreal.MaterialExpressionMultiply, -300, 100)
@@ -309,7 +314,7 @@ def main():
         "crystal": instance(m_crystal, "MI_Crystal", {"Strength": CRYSTAL_GLOW}),
         "print": instance(m_print, "MI_Print", {"Strength": PRINT_GLOW}),
         "case": instance(m_lit, "MI_Case", {"Roughness": 0.35}, {"Base": srgb(INK, 1.0)}),
-        "ground": M.surface_for("forest_floor_sfjmafua_8k", surface, "MI_Ground", lc(NIGHT_TINT, 0.32), tiling=4.0, roughness=0.9),
+        "ground": M.surface_for("mossy_grass_vcjmej0s_8k", surface, "MI_Ground", lc(NIGHT_TINT, 0.45), tiling=5.0, roughness=0.9),
         "ground_far": M.surface_for("forest_floor_sfjmafua_8k", surface, "MI_GroundFar", lc(NIGHT_TINT, 0.4), tiling=0.4,
                                     roughness=0.95, normal_strength=0.3),
     }
@@ -366,7 +371,7 @@ def main():
         place(mono[0], 150, -32, yaw=160, scale=100.0, mats=rock_mat("philopappos-monument-greece", k=0.9), sink=1.0, label="Monument")
 
     # Firs: on the left bank and behind the ruin, then thinning onto the ridges. Each tree model takes a share.
-    tree_folders = ["christmass_trees_pack", "trees_60_fbx", "mobile_trees_model"]
+    tree_folders = ["christmass_trees_pack"]  # Trees60 and the mobile trees lose their leaf alpha on import: blobs
     tree_mats = {}
 
     def tree_look(part, folder):
@@ -427,6 +432,17 @@ def main():
     unreal.log("ANTIMONY_BUILD_OK")
 
 
+def rotate(r, v):
+    """Turn a vector by a Rotator, as Unreal's FRotationMatrix does (roll, then pitch, then yaw)."""
+    sp, cp = math.sin(math.radians(r.pitch)), math.cos(math.radians(r.pitch))
+    sy, cy = math.sin(math.radians(r.yaw)), math.cos(math.radians(r.yaw))
+    sr, cr = math.sin(math.radians(r.roll)), math.cos(math.radians(r.roll))
+    X = (cp * cy, cp * sy, sp)
+    Y = (sr * sp * cy - cr * sy, sr * sp * sy + cr * cy, -sr * cp)
+    Z = (-(cr * sp * cy + sr * sy), cy * sr - cr * sp * sy, cr * cp)
+    return unreal.Vector(*(v.x * X[i] + v.y * Y[i] + v.z * Z[i] for i in range(3)))
+
+
 def crystal_cluster(mesh, mat, shift):
     """Smaller crystals round the giant's foot, leaning out, so it reads as a formation grown from the land."""
     cx, cy, cz = (CRYSTAL_CENTRE_M[0] + shift[0], CRYSTAL_CENTRE_M[1] + shift[1], CRYSTAL_CENTRE_M[2] + shift[2])
@@ -440,7 +456,7 @@ def crystal_cluster(mesh, mat, shift):
         rot = unreal.Rotator(rng.uniform(-22, 22), rng.uniform(-22, 22), rng.uniform(0, 360))
         # The mesh is built around the crystal centre C; put s*C (rotated) where this crystal's centre should be.
         centre = unreal.Vector(foot[0] * 100, foot[1] * 100, (height(*foot) + half_h * s * 0.75) * 100)
-        moved = rot.rotate_vector(unreal.Vector(CRYSTAL_CENTRE_M[0] * 100 * s, CRYSTAL_CENTRE_M[1] * 100 * s, CRYSTAL_CENTRE_M[2] * 100 * s))
+        moved = rotate(rot, unreal.Vector(CRYSTAL_CENTRE_M[0] * 100 * s, CRYSTAL_CENTRE_M[1] * 100 * s, CRYSTAL_CENTRE_M[2] * 100 * s))
         a = eas.spawn_actor_from_class(unreal.StaticMeshActor, centre - moved, rot)
         a.static_mesh_component.set_static_mesh(mesh)
         a.static_mesh_component.set_material(0, mat)
@@ -454,18 +470,23 @@ def stars():
     m = tools.create_asset("M_Star", "/Game/Hero/Mat", unreal.Material, unreal.MaterialFactoryNew())
     m.set_editor_property("blend_mode", unreal.BlendMode.BLEND_ADDITIVE)
     m.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_UNLIT)
-    m.set_editor_property("apply_fogging", False)
-    k = param(m, unreal.MaterialExpressionVectorParameter, "Colour", -400, 0, unreal.LinearColor(40, 44, 55, 1))
+    for prop in ("use_translucency_vertex_fog", "apply_fogging"):  # stars sit beyond the mist: no fog on them
+        try:
+            m.set_editor_property(prop, False)
+            break
+        except Exception:
+            pass
+    k = param(m, unreal.MaterialExpressionVectorParameter, "Colour", -400, 0, unreal.LinearColor(26, 29, 38, 1))
     mel.connect_material_property(k, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     mel.recompile_material(m)
     sphere = eal.load_asset("/Engine/BasicShapes/Sphere")
     rng = random.Random(3)
     pts = []
     R_M = 9000.0
-    for _ in range(5000):
+    for _ in range(9000):
         az, el = rng.uniform(0, 2 * math.pi), math.asin(rng.uniform(0.02, 1.0))
         x, y, z = R_M * math.cos(el) * math.cos(az), R_M * math.cos(el) * math.sin(az), R_M * math.sin(el)
-        s = 8.0 * (1.0 + 2.5 * rng.random() ** 6)  # most faint and small, a few bright
+        s = 3.5 * (1.0 + 3.0 * rng.random() ** 8)  # most faint and small, a few bright
         pts.append(unreal.Transform(unreal.Vector(x * 100, y * 100, z * 100), unreal.Rotator(0, 0, 0), unreal.Vector(s, s, s)))
     host = eas.spawn_actor_from_class(unreal.Actor, unreal.Vector(0, 0, 0))
     host.set_actor_label("Stars")

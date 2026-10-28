@@ -32,7 +32,7 @@ CONCEPTS = {
     5: ("violet-storm", "Saturated violet mist, the crystal lit from above through a break in dark cloud.",
         dict(light=dict(pitch=-60.0, yaw=170.0, lux=6.0, colour="#C8B4FF", scatter=10.0), tint=(1.0, 0.9, 1.15),
              fog=dict(density=0.04, falloff=0.02, inscatter="#8A6CD8", vol_extinction=0.9, start_m=12.0),
-             exposure=-0.3, crystal_glow=9.0)),
+             exposure=-0.3, crystal_glow=22.0, break_glow=14.0)),
     6: ("at-the-foot", "Close under the crystal: its base rising out of the flowers, scale overhead.",
         dict(crystal_shift=(-2950.0, 0.0, -1240.0), camera=dict(x=-2.0, y=0.0, eye=0.6, pitch=26.0, yaw=0.0, focal=16.0, fstop=4.0, focus_m=20.0),
              light=dict(pitch=-35.0, yaw=200.0, lux=8.0, colour="#D8E2FF", scatter=8.0), crystal_glow=4.0, break_glow=5.0,
@@ -49,7 +49,7 @@ CONCEPTS = {
          dict(light=dict(pitch=-30.0, yaw=150.0, lux=0.25, colour="#9FB4FF", scatter=2.0), exposure=3.6, stars=True,
               fog=dict(density=0.008, falloff=0.05, inscatter="#33407A", vol_extinction=0.5, start_m=30.0),
               camera=dict(x=-2.0, y=0.0, eye=0.95, pitch=22.0, yaw=-1.0, focal=18.0, fstop=2.8, focus_m=14.0),
-              sky_light=0.6, crystal_glow=14.0, break_glow=16.0, white_temp=6500.0, mie=0.004)),
+              sky_light=0.6, crystal_glow=4.5, break_glow=10.0, white_temp=6500.0, mie=0.004)),
 }
 
 
