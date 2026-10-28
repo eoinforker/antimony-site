@@ -50,7 +50,7 @@ CONCEPT = int(os.environ.get("CONCEPT", "1"))
 CONCEPT_NAME, CONCEPT_LINE, LOOK = concepts.look(CONCEPT)
 CAMERA, LIGHT, FOG = LOOK["camera"], dict(LOOK["light"], shafts=False), LOOK["fog"]
 EXPOSURE_EV = LOOK["exposure"]   # exposure compensation in stops (manual exposure; positive is brighter)
-FLOWER_GLOW = 14.0               # emissive strength of the petals (only the bright parts of the albedo glow)
+FLOWER_GLOW = LOOK["flower_glow"]  # emissive strength of the petals (only the bright parts of the albedo glow)
 CRYSTAL_GLOW = LOOK["crystal_glow"]
 BREAK_GLOW = LOOK["break_glow"]
 PRINT_GLOW = 2.2
@@ -333,15 +333,9 @@ def main():
     place(gen["SM_TerrainNear"], 0, 0, z=0, mats=mi["ground"], label="TerrainNear")
     place(gen["SM_TerrainFar"], 0, 0, z=0, mats=mi["ground_far"], label="TerrainFar")
     sx, sy, sz = LOOK["crystal_shift"]  # the crystal's meshes are built in place; a concept may move them
-    crystal = place(gen["SM_Crystal"], sx, sy, z=sz, mats=mi["crystal"], label="Crystal")
-    crystal.static_mesh_component.set_editor_property("cast_shadow", False)
-    # The gobo: the crystal's edges cast shadow, unseen, so its faces let the light through in shafts.
-    edges = place(gen["SM_CrystalEdges"], sx, sy, z=sz, mats=instance(m_lit, "MI_Shade", {}, {"Base": srgb(INK)}), label="CrystalEdges")
-    edges.static_mesh_component.set_editor_property("cast_hidden_shadow", True)
-    edges.static_mesh_component.set_editor_property("visible", False)
-    brk = place(gen["SM_Break"], sx, sy, z=sz, mats=mi["break"], label="Break")
-    crystal_cluster(gen["SM_Crystal"], mi["crystal"], (sx, sy, sz))
-    brk.static_mesh_component.set_editor_property("cast_shadow", True)   # the Break cuts the light too
+    if LOOK["crystal"]:
+        crystal_scene(gen, mi, m_lit, sx, sy, sz)
+
 
     # The great rock on the right, and stones in the flowers.
     for folder, x, y, yaw, s, sink in [("nordic_beach_rock_formation_vd4iecjva_raw", 14.0, 10.0, 105, 1.7, 0.8),
@@ -430,6 +424,19 @@ def main():
     for p in ("/Game/Hero", "/Game/Gen", "/Game/FabTex"):
         eal.save_directory(p, only_if_is_dirty=False, recursive=True)
     unreal.log("ANTIMONY_BUILD_OK")
+
+
+def crystal_scene(gen, mi, m_lit, sx, sy, sz):
+    """The giant crystal with the Break inside (concepts 1 to 10; dropped after the owner's review on 28 Oct)."""
+    crystal = place(gen["SM_Crystal"], sx, sy, z=sz, mats=mi["crystal"], label="Crystal")
+    crystal.static_mesh_component.set_editor_property("cast_shadow", False)
+    # The gobo: the crystal's edges cast shadow, unseen, so its faces let the light through in shafts.
+    edges = place(gen["SM_CrystalEdges"], sx, sy, z=sz, mats=instance(m_lit, "MI_Shade", {}, {"Base": srgb(INK)}), label="CrystalEdges")
+    edges.static_mesh_component.set_editor_property("cast_hidden_shadow", True)
+    edges.static_mesh_component.set_editor_property("visible", False)
+    brk = place(gen["SM_Break"], sx, sy, z=sz, mats=mi["break"], label="Break")
+    crystal_cluster(gen["SM_Crystal"], mi["crystal"], (sx, sy, sz))
+    brk.static_mesh_component.set_editor_property("cast_shadow", True)   # the Break cuts the light too
 
 
 def rotate(r, v):

@@ -13,7 +13,13 @@ BASE = dict(
     fog=dict(density=0.022, falloff=0.018, inscatter="#B9C6F2", vol_extinction=0.7, start_m=14.0),
     exposure=-1.0, white_temp=6000.0, tint=(0.94, 0.97, 1.08), sky_light=0.55, mie=0.012,
     crystal_glow=6.5, break_glow=7.0, crystal_shift=(0.0, 0.0, 0.0), stars=False, lightbox=(15.0, -3.4, -22.0),
+    crystal=True, flower_glow=14.0,
 )
+
+# After the first ten (28 Oct): no giant form in the sky. The landscape carries the beauty; the poster is the one made
+# thing in it. Light comes low through the firs so the trees cut the rays; the flowers glow softly, not as neon.
+POSTER_CAM = dict(x=-2.0, y=-1.0, eye=1.0, pitch=7.0, yaw=-9.0, focal=24.0, fstop=4.0, focus_m=17.5)
+
 
 CONCEPTS = {
     1: ("field-under-the-crystal", "Low in the flowers, the crystal backlit in lavender haze, light breaking off its edge.", {}),
@@ -50,6 +56,27 @@ CONCEPTS = {
               fog=dict(density=0.008, falloff=0.05, inscatter="#33407A", vol_extinction=0.5, start_m=30.0),
               camera=dict(x=-2.0, y=0.0, eye=0.95, pitch=22.0, yaw=-1.0, focal=18.0, fstop=2.8, focus_m=14.0),
               sky_light=0.6, crystal_glow=4.5, break_glow=10.0, white_temp=6500.0, mie=0.004)),
+    11: ("morning-mist", "Low sun through the firs, rays across the mist, the print standing in the flowers.",
+         dict(crystal=False, camera=POSTER_CAM, flower_glow=4.0,
+              light=dict(pitch=-9.0, yaw=146.0, lux=9.0, colour="#FFE8D2", scatter=9.0),
+              fog=dict(density=0.03, falloff=0.03, inscatter="#C3CDEE", vol_extinction=0.9, start_m=8.0),
+              exposure=-0.6, white_temp=6200.0, tint=(0.96, 0.98, 1.05), sky_light=0.7, mie=0.015)),
+    12: ("blue-dusk", "After sunset: the sky a cold gradient, the field and the print glowing softly in the mist.",
+         dict(crystal=False, camera=POSTER_CAM, flower_glow=7.0,
+              light=dict(pitch=-2.5, yaw=150.0, lux=3.0, colour="#C9D6FF", scatter=6.0),
+              fog=dict(density=0.028, falloff=0.03, inscatter="#6C82C8", vol_extinction=0.9, start_m=8.0),
+              exposure=0.8, white_temp=6800.0, tint=(0.95, 0.98, 1.08), sky_light=0.9, mie=0.012)),
+    13: ("violet-air", "High hazy sun, violet air, firs and cliffs stepping back paler, the print the one clear thing.",
+         dict(crystal=False, camera=POSTER_CAM, flower_glow=4.5,
+              light=dict(pitch=-24.0, yaw=150.0, lux=8.0, colour="#E6DCFF", scatter=7.0),
+              fog=dict(density=0.035, falloff=0.02, inscatter="#A58FE0", vol_extinction=0.8, start_m=10.0),
+              exposure=-0.4, white_temp=6300.0, tint=(1.0, 0.95, 1.1), sky_light=0.7, mie=0.02)),
+    14: ("the-print-in-the-field", "Close on the print in the flowers, firs and rays behind, the land stepping back into violet air.",
+         dict(crystal=False, flower_glow=5.0,
+              camera=dict(x=8.6, y=-0.8, eye=1.05, pitch=6.0, yaw=-17.0, focal=28.0, fstop=2.8, focus_m=6.9),
+              light=dict(pitch=-24.0, yaw=150.0, lux=8.0, colour="#E4E2FF", scatter=7.0),
+              fog=dict(density=0.025, falloff=0.02, inscatter="#9FA8E6", vol_extinction=0.8, start_m=10.0),
+              exposure=-0.1, white_temp=6000.0, tint=(0.96, 0.97, 1.08), sky_light=1.2, mie=0.02)),
 }
 
 
